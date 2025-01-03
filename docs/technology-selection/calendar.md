@@ -1,0 +1,24 @@
+# カレンダーライブラリ
+## 要件
+- イベントが一覧・フックできること
+- 価格をカスタムに記入・フックできること
+- カスタムにより、祝日などの色分けができること
+- 無料であること
+## ライブラリ
+### v-calendar(無償)
+- [https://vcalendar.io/](https://vcalendar.io/)
+- イベントを複数日付で持てない
+- 該当月以外の日付データを見られない
+  - 3月の表示では、2/28のデータを非表示になっている
+### vuetify v-calendar(無償)
+- [https://vuetifyjs.com/ja/components/calendars/](https://vuetifyjs.com/ja/components/calendars/)
+- イベントを複数日付で持てない
+### FullCalendar
+- いけるかも
+## React
+### react-big-calendar
+- [https://github.com/jquense/react-big-calendar](https://github.com/jquense/react-big-calendar)
+## 他の選択肢
+- 有償
+  - [BryntumCalendar](https://bryntum.com/products/calendar/docs/guide/Calendar/quick-start/vue-3)
+  - [MobiscrollEventCalendar](https://demo.mobiscroll.com/vue/eventcalendar)

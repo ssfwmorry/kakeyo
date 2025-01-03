@@ -1,0 +1,687 @@
+<template>
+  <v-container class="px-5 h-100 bg-white">
+    <v-row class="mb-4 mt-30px" no-gutters>
+      <!-- 収入支出 -->
+      <v-col>
+        <v-btn-toggle
+          v-model="isPay"
+          density="compact"
+          variant="outlined"
+          mandatory
+          @update:modelValue="resetInput"
+        >
+          <v-btn :value="true">支出</v-btn>
+          <v-btn :value="false">収入</v-btn>
+        </v-btn-toggle>
+      </v-col>
+      <!-- 日付選択 -->
+      <v-col v-if="isEndInit && isPlannedRecord">
+        <v-select
+          v-model="selectedDayId"
+          density="compact"
+          filled
+          single-line
+          hide-details
+          disable-lookup
+          :items="dayList"
+          item-title="name"
+          item-value="id"
+          class="select-day-by"
+        ></v-select>
+      </v-col>
+      <v-col v-else-if="isEndInit && !isPlannedRecord">
+        <v-btn variant="flat" height="40" class="px-2 fw-nml fs-nml" color="grey-lighten-3">
+          <v-icon size="30" color="grey-darken-1" class="pr-1">{{ $ICONS.CALENDAR }}</v-icon>
+          {{ date }}
+          <v-menu
+            v-model="isShowDatePicker"
+            max-width="600"
+            activator="parent"
+            transition="scale-transition"
+            :close-on-content-click="false"
+          >
+            <v-date-picker
+              :model-value="date"
+              :display-value="date"
+              show-adjacent-months
+              hide-header
+              min="2000-01-01"
+              max="2099-12-31"
+              @update:model-value="setDate"
+            ></v-date-picker>
+          </v-menu>
+        </v-btn>
+      </v-col>
+    </v-row>
+    <v-row class="mb-4" no-gutters>
+      <v-col v-if="isEndSelectType()">
+        <!-- タイプ表示 -->
+        <v-text-field
+          readonly
+          hide-details
+          variant="underlined"
+          :append-inner-icon="isShowTypeClearBtn() ? $ICONS.CLOSE : ''"
+          :value="selectedType.type_name"
+          class="text-field-type"
+          @click:append-inner="resetInput()"
+        ></v-text-field>
+      </v-col>
+      <v-col v-if="isSelectedTypeHasSubType()">
+        <!-- サブタイプ表示 -->
+        <v-text-field
+          readonly
+          hide-details
+          variant="underlined"
+          :append-inner-icon="isEndSelectTypeAndSubType() ? $ICONS.CLOSE : ''"
+          :value="selectedSubType.sub_type_name"
+          class="text-field-type"
+          @click:append-inner="selectedSubTypeId = null"
+        >
+          <template v-slot:prepend>
+            <div class="ml-4"><span class="fs-lg">＞</span></div>
+          </template></v-text-field
+        >
+      </v-col>
+    </v-row>
+    <v-row v-if="!isEndSelectType()" class="mb-2" no-gutters>
+      <div
+        v-if="
+          isEndInit && typeList[isPay ? 'pay' : 'income'][isPair ? 'pair' : 'self'].length === 0
+        "
+        class="w-100 text-center"
+      >
+        設定画面でカテゴリと方法を追加してください
+      </div>
+      <!-- タイプ選択 -->
+      <v-col
+        v-for="type of typeList[isPay ? 'pay' : 'income'][isPair ? 'pair' : 'self']"
+        :key="type.type_id"
+        cols="3"
+        class="mb-1"
+      >
+        <v-card class="d-flex flex-column" elevation="0">
+          <v-card-actions class="justify-center">
+            <v-avatar
+              size="60"
+              :color="type.color_classification_name"
+              @click="selectedTypeId = type.type_id"
+            ></v-avatar>
+          </v-card-actions>
+          <v-card-subtitle class="text-center py-0 px-2">{{ type.type_name }}</v-card-subtitle>
+        </v-card>
+      </v-col>
+    </v-row>
+    <v-row v-if="!isEndSelectTypeAndSubType()" class="mb-2" no-gutters>
+      <!-- サブタイプ選択 -->
+      <v-col
+        v-for="subType of selectedType.sub_types"
+        :key="subType.sub_type_id"
+        cols="3"
+        class="mb-2 px-1"
+      >
+        <v-btn
+          dark
+          variant="flat"
+          :color="selectedType.color_classification_name"
+          class="btn-subtype"
+          @click="selectedSubTypeId = subType.sub_type_id"
+          >{{ subType.sub_type_name }}</v-btn
+        >
+      </v-col>
+    </v-row>
+    <div v-if="isEndSelectTypeAndSubType()">
+      <v-row class="mb-4" no-gutters>
+        <!-- 手段 -->
+        <v-col cols="6">
+          <v-select
+            v-model="selectedMethodId"
+            :items="methodList[isPay ? 'pay' : 'income'][isPair && !isInstead ? 'pair' : 'self']"
+            item-title="name"
+            item-value="id"
+            variant="underlined"
+            density="compact"
+            :menu-props="{ maxHeight: 400 }"
+            hide-details
+            disable-lookup
+            :prepend-inner-icon="$ICONS.CREDIT_CARD"
+            single-line
+          ></v-select>
+        </v-col>
+        <!-- 立替切り替え -->
+        <v-spacer />
+        <v-col cols="3" class="d-flex align-center">
+          <div v-if="isPair">
+            <v-checkbox
+              v-model="isInstead"
+              density="compact"
+              hide-details
+              label="立替"
+              class="pt-0 mt-0"
+              @change="selectedMethodId = null"
+            ></v-checkbox>
+          </div>
+        </v-col>
+        <v-spacer />
+      </v-row>
+      <v-row class="mb-4" no-gutters>
+        <!-- メモ -->
+        <v-text-field
+          v-model="memo"
+          placeholder="メモ"
+          variant="underlined"
+          density="compact"
+          hide-details
+          :append-inner-icon="memo !== null ? $ICONS.CLOSE : ''"
+          @click:append-inner="memo = null"
+        />
+      </v-row>
+      <v-row class="mb-2" no-gutters>
+        <v-spacer />
+        <!-- 値段表示 -->
+        <v-col cols="9">
+          <v-text-field
+            readonly
+            density="compact"
+            hide-details
+            suffix=" 円"
+            height="44"
+            variant="outlined"
+            :value="price.toLocaleString()"
+            class="fs-lg text-field-price"
+            :class="{ 'text-field-price-padding': !isShowInitPrice }"
+            :append-inner-icon="price !== 0 ? $ICONS.CLOSE : ''"
+            @click:append-inner="price = 0"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <v-row v-for="i of 3" :key="i" class="mb-1" no-gutters>
+        <!-- 電卓 -->
+        <v-col
+          v-for="j of 3"
+          :key="j"
+          cols="4"
+          :class="{ 'pl-0 pr-1': j === 1, 'pl-1 pr-0': j === 3 }"
+        >
+          <v-btn
+            size="x-large"
+            block
+            variant="flat"
+            color="blue-grey-lighten-4"
+            @click="pushPrice(3 * (3 - i) + j)"
+            >{{ 3 * (3 - i) + j }}</v-btn
+          >
+        </v-col>
+      </v-row>
+      <v-row class="mb-3" no-gutters>
+        <v-col cols="8" class="pl-0">
+          <v-btn
+            size="x-large"
+            block
+            variant="flat"
+            color="blue-grey-lighten-4"
+            @click="pushPrice(0)"
+            >0</v-btn
+          >
+        </v-col>
+        <v-col cols="4" class="pl-1 pr-0">
+          <v-btn
+            size="x-large"
+            block
+            variant="flat"
+            color="blue-grey-lighten-4"
+            @click="popPrice()"
+          >
+            <v-icon>{{ $ICONS.BACKSPACE }}</v-icon>
+          </v-btn>
+        </v-col>
+      </v-row>
+
+      <v-row no-gutters>
+        <!-- ゴミ箱 -->
+        <v-col v-if="id" class="col-btn">
+          <v-btn
+            variant="flat"
+            color="error"
+            class="btn-action"
+            @click="isPlannedRecord ? deletePlannedRecord() : deleteRecord()"
+          >
+            <v-icon>{{ $ICONS.TRASH }}</v-icon>
+          </v-btn>
+        </v-col>
+        <v-col v-else-if="!isPlannedRecord">
+          <v-checkbox
+            v-model="isContinue"
+            density="compact"
+            hide-details
+            label="連続"
+            class="pt-0 mt-0"
+          ></v-checkbox>
+        </v-col>
+        <v-spacer />
+        <!-- 登録変更 -->
+        <v-col cols="5">
+          <v-btn
+            :loading="loading"
+            @click="isPlannedRecord ? upsertPlannedRecord() : upsertRecord()"
+            :disabled="!selectedMethodId || (isPair && !memo)"
+            size="x-large"
+            block
+            variant="flat"
+            color="primary"
+            height="44"
+          >
+            {{ id === null ? '登録' : '変更' }}
+          </v-btn>
+        </v-col>
+      </v-row>
+    </div>
+  </v-container>
+</template>
+
+<script setup lang="ts">
+import TimeUtility from '@/utils/time';
+import { MAX_PRICE } from '@/constants';
+import {
+  crud,
+  dummy,
+  page,
+  routerParamKey,
+  type Crud,
+  type DateString,
+  type Id,
+  type PickeredDate,
+  type Record_,
+  type RouterQueryCalendarToNote,
+  type RouterQueryNoteToCalendar,
+  type UpsertRecordInput,
+} from '@/types/common';
+
+const { enableLoading, disableLoading } = useLoadingStore();
+const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
+const { isDemoLogin } = storeToRefs(loginStore);
+const { isPair, pairId } = storeToRefs(pairStore);
+const { userUid } = storeToRefs(userStore);
+const { routerParam } = useRouterParamStore();
+const { $ICONS } = useNuxtApp();
+const route = useRoute();
+const router = useRouter();
+const {
+  getDayList,
+  getMethodList,
+  getTypeList,
+  upsertRecord: supabaseUpsertRecord,
+  upsertPlannedRecord: supabaseUpsertPlannedRecord,
+  deleteRecord: supabaseDeleteRecord,
+  deletePlannedRecord: supabaseDeletePlannedRecord,
+} = useSupabase();
+const { setToast } = useToastStore();
+
+const isPlannedRecord = ref(false);
+const isEndInit = ref(false);
+const isContinue = ref(false);
+
+const isShowDatePicker = ref(false);
+const id = ref<Id | null>(null);
+const isPay = ref(true);
+const date = ref<DateString>(TimeUtility.GetNowDate(isDemoLogin.value));
+
+const recievedRecordDate = ref<string | null>(null);
+const selectedDayId = ref(null);
+const selectedTypeId = ref<Id | null>(null);
+const selectedSubTypeId = ref<Id | null>(null);
+const memo = ref<string | null>(null);
+const selectedMethodId = ref<Id | null>(null);
+const isInstead = ref<boolean | null>(true);
+const price = ref(0);
+const loading = ref(false);
+const dayList = ref<any[]>([]);
+const typeList = ref({ income: { self: [], pair: [] }, pay: { self: [], pair: [] } } as any);
+const methodList = ref({ income: { self: [], pair: [] }, pay: { self: [], pair: [] } } as any);
+
+const isShowInitPrice = computed(() => price.value !== 0);
+const selectedType = computed(() => {
+  if (selectedTypeId.value === null) return { sub_types: [] };
+  else {
+    const type = typeList.value[isPay.value ? 'pay' : 'income'][
+      isPair.value ? 'pair' : 'self'
+    ].find((e: any) => e.type_id === selectedTypeId.value);
+    return type ?? { sub_types: [] };
+  }
+});
+const selectedSubType = computed(() => {
+  if (selectedTypeId.value === null || selectedSubTypeId.value === null) return {};
+  else {
+    const subtype = (selectedType.value.sub_types ?? []).find(
+      (e: any) => e.sub_type_id === selectedSubTypeId.value
+    );
+    return subtype ?? {};
+  }
+});
+
+const resetInput = () => {
+  selectedTypeId.value = null;
+  selectedSubTypeId.value = null;
+  initSelectedMethodId();
+};
+const isEndSelectType = () => {
+  return selectedTypeId.value !== null;
+};
+const isSelectedTypeHasSubType = () => {
+  return selectedType.value.sub_types.length > 0;
+};
+const isShowTypeClearBtn = () => {
+  if (isEndSelectType()) {
+    if (!isSelectedTypeHasSubType()) return true;
+    else {
+      if (selectedSubTypeId.value === null) return true;
+    }
+  }
+  return false;
+};
+// TypeとSubTypeが選択終了しているか
+const isEndSelectTypeAndSubType = () => {
+  if (isEndSelectType()) {
+    if (!isSelectedTypeHasSubType()) return true;
+    else {
+      if (selectedSubTypeId.value !== null) return true;
+    }
+  }
+  return false;
+};
+const setDate = (value: string) => {
+  const PickeredDate = value as unknown as PickeredDate;
+  // TODO ゼロ埋め処理をUtilsに移行
+  const month = ('0' + String(PickeredDate.$M + 1)).slice(-2);
+  const day = ('0' + String(PickeredDate.$D)).slice(-2);
+  date.value = `${PickeredDate.$y}-${month}-${day}`;
+  isShowDatePicker.value = false;
+};
+const pushPrice = (num: any) => {
+  if (price.value === 0) {
+    price.value = num;
+  } else {
+    if (price.value * 10 + num < MAX_PRICE) price.value = price.value * 10 + num;
+  }
+};
+const popPrice = () => {
+  price.value = Math.floor(price.value / 10);
+};
+const initInputData = () => {
+  id.value = null;
+  isPay.value = true;
+  date.value = TimeUtility.GetNowDate(isDemoLogin.value);
+  recievedRecordDate.value = null;
+  selectedTypeId.value = null;
+  selectedSubTypeId.value = null;
+  memo.value = null;
+  initSelectedMethodId();
+  price.value = 0;
+};
+const initSelectedMethodId = () => {
+  const tmpMethodList: any =
+    methodList.value[isPay.value ? 'pay' : 'income'][
+      isPair.value && !isInstead.value ? 'pair' : 'self'
+    ];
+  if (tmpMethodList.length > 0) {
+    selectedMethodId.value = tmpMethodList[0].id;
+  } else {
+    selectedMethodId.value = null;
+  }
+};
+const initSelectedDayId = () => {
+  selectedDayId.value = (dayList.value[0] as any).id;
+};
+const setPageRecord = (record: Record_, c: Crud) => {
+  // 新規作成の場合
+  if (c === crud.CREATE) {
+    initSelectedMethodId();
+    date.value = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
+    return;
+  }
+
+  // 編集の場合
+  id.value = record.id;
+  isPay.value = record.is_pay;
+  date.value = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
+  // TODO
+  // if (!!pPlannedRecordId) recievedRecordDate.value = date.value;
+  price.value = record.price;
+  memo.value = record.memo ?? null;
+  selectedMethodId.value = record.method_id;
+  isInstead.value = record.is_instead;
+  selectedTypeId.value = record.type_id;
+  selectedSubTypeId.value = record.sub_type_id;
+};
+const setPagePlannedRecord = async ({
+  planned_record_id: pPlannedRecordId,
+  is_pay: pIsPay,
+  price: pPrice,
+  memo: pMemo,
+  day_classification_id: pDayClassificationId,
+  method_id: pMethodId,
+  type_id: pTypeId,
+  sub_type_id: pSubTypeId,
+  pair_user_name: pPairUserName,
+}: any) => {
+  const apiRes = await getDayList({ isDemoLogin: isDemoLogin.value });
+  if (apiRes.error !== null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+  dayList.value = apiRes.data ?? [];
+
+  // 新規作成の場合
+  if (pPlannedRecordId === null) {
+    initSelectedMethodId();
+    initSelectedDayId();
+    return;
+  }
+
+  // 編集の場合
+  id.value = pPlannedRecordId;
+  isPay.value = pIsPay;
+  price.value = pPrice;
+  memo.value = pMemo;
+  selectedDayId.value = pDayClassificationId;
+  selectedMethodId.value = pMethodId;
+  isInstead.value = !!pPairUserName;
+  selectedTypeId.value = pTypeId;
+  selectedSubTypeId.value = pSubTypeId;
+};
+const upsertRecord = async () => {
+  if (!validateRecordAndShowErrorMsg()) return;
+  loading.value = true;
+
+  const payload: UpsertRecordInput = {
+    id: id.value,
+    datetime: TimeUtility.ConvertDateStrToDatetime(date.value),
+    isPay: isPay.value,
+    methodId: selectedMethodId.value ?? dummy.nm,
+    isInstead: isInstead.value,
+    typeId: selectedTypeId.value ?? dummy.nm,
+    subTypeId: selectedSubTypeId.value,
+    price: price.value,
+    memo: memo.value,
+  };
+  const apiRes = await supabaseUpsertRecord(
+    {
+      isDemoLogin: isDemoLogin.value,
+      userUid: userUid.value ?? dummy.str,
+      isPair: isPair.value,
+      pairId: pairId.value ?? dummy.nm,
+    },
+    payload
+  );
+  if (apiRes.error !== null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+
+  if (isContinue.value) {
+    setToast('登録しました');
+    initInputData();
+  } else {
+    setToast(id.value === null ? '登録しました' : '変更しました');
+    const query: RouterQueryNoteToCalendar = { focus: date.value };
+    router.push({ name: page.CALENDAR, query });
+  }
+  loading.value = false;
+};
+const upsertPlannedRecord = async () => {
+  if (!validateRecordAndShowErrorMsg()) return;
+
+  const payload = {
+    id: id.value,
+    dayClassificationId: selectedDayId.value,
+    isPay: isPay.value,
+    methodId: selectedMethodId.value,
+    isInstead: isInstead.value,
+    typeId: selectedTypeId.value,
+    subTypeId: selectedSubTypeId.value,
+    price: price.value,
+    memo: memo.value,
+  };
+  const apiRes = await supabaseUpsertPlannedRecord({} as any, payload);
+  if (apiRes.error !== null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+
+  setToast(id.value === null ? '登録しました' : '変更しました');
+  router.push({ name: page.SETTING });
+};
+const validateRecordAndShowErrorMsg = () => {
+  // ボタンが非活性なので以下は起こらない想定
+  if (!selectedMethodId.value || !selectedType.value) {
+    return false;
+  }
+  if (
+    !!recievedRecordDate.value &&
+    !TimeUtility.IsSameYearMonth(recievedRecordDate.value, date.value)
+  ) {
+    setToast('定期的なものは同月中のみ変更可能です', 'error');
+    return false;
+  }
+  return true;
+};
+const deleteRecord = async () => {
+  if (id.value === null) throw new Error('deleteRecord');
+  const apiRes = await supabaseDeleteRecord({ isDemoLogin: isDemoLogin.value }, id.value);
+  if (apiRes.error !== null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+  setToast('削除しました');
+  const query: RouterQueryNoteToCalendar = { focus: date.value };
+  router.push({ name: page.CALENDAR, query });
+};
+const deletePlannedRecord = async () => {
+  const payload = { id: id.value };
+  const apiRes = await supabaseDeletePlannedRecord({} as any, payload);
+  if (apiRes.error !== null) {
+    // TODO 紐づく reord が存在する時、全てを null に更新してからplanned_recordを削除する
+    if (apiRes.error.code === '23503') {
+      setToast('紐づくデータがあるので削除できません', 'error');
+    } else {
+      alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    }
+    return;
+  }
+
+  setToast('削除しました');
+  router.push({ name: page.SETTING });
+};
+
+watch(isPair, (newValue, oldValue) => {
+  if (isPlannedRecord.value && id.value != null) {
+    // planned_record 編集時、isPair の切り替えをできなくする
+    router.push({ name: page.SETTING });
+    setToast('共有の変更はできません', 'error');
+    return;
+  }
+  selectedTypeId.value = null;
+  selectedSubTypeId.value = null;
+  selectedMethodId.value = null;
+});
+
+// created
+(async () => {
+  enableLoading();
+
+  const apiResType = await getTypeList({ isDemoLogin: isDemoLogin.value, userUid: userUid.value });
+  // const apiResType = { error: null, message: null, data: null };
+  if (apiResType.error != null) {
+    alert(apiResType.message + `(Error: ${JSON.stringify(apiResType.error)})`);
+    return;
+  }
+  const apiResMethod = await getMethodList({
+    isDemoLogin: isDemoLogin.value,
+    userUid: userUid.value,
+  });
+  if (apiResMethod.error != null) {
+    alert(apiResMethod.message + `(Error: ${JSON.stringify(apiResMethod.error)})`);
+    return;
+  }
+  typeList.value = apiResType.data;
+  methodList.value = apiResMethod.data;
+
+  const routerQuery = route.query as RouterQueryCalendarToNote;
+  if (routerQuery.routerParamKey === routerParamKey.PLANNED_RECORD) {
+    // 定期定期な収入・支出の場合
+    isPlannedRecord.value = true;
+    await setPagePlannedRecord(route.params.plannedRecord);
+  } else if (routerQuery.routerParamKey === routerParamKey.RECORD) {
+    const record = routerParam(routerParamKey.RECORD) as Record_ | null;
+    if (record !== null) setPageRecord(record, routerQuery.crud);
+    else initSelectedMethodId();
+  } else {
+    initSelectedMethodId();
+  }
+
+  isEndInit.value = true;
+  disableLoading();
+})();
+</script>
+
+<style scoped lang="scss">
+:deep(.select-day-by) {
+  width: 140px;
+  .v-input__slot:before {
+    border-width: 0 !important;
+  }
+}
+.text-field-type {
+  padding-top: 0;
+  margin-top: 0;
+}
+// v-btnに可変の高さ：https://tech-blog.optim.co.jp/entry/2021/12/22/130000
+.btn-subtype {
+  height: auto !important;
+  width: 100%;
+  max-width: 100%;
+  min-height: 42px;
+  padding: 0 4px !important;
+  display: block !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important; // SafariEで非対応
+  word-break: break-word; // Safari対応
+}
+:deep(.text-field-price input) {
+  text-align: right;
+}
+:deep(.text-field-price .v-text-field__suffix) {
+  opacity: 1;
+  padding-left: 8px;
+}
+:deep(.text-field-price-padding .v-text-field__slot) {
+  padding-right: 28px;
+}
+.col-btn {
+  margin-right: 10px;
+  flex-grow: 0;
+}
+// 手段のv-selectのmenuの表示
+.v-menu__content {
+  max-height: 80vh;
+}
+</style>
