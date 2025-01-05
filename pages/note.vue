@@ -8,7 +8,7 @@
           density="compact"
           variant="outlined"
           mandatory
-          @update:modelValue="resetInput"
+          @update:model-value="resetInput"
         >
           <v-btn :value="true">支出</v-btn>
           <v-btn :value="false">収入</v-btn>
@@ -157,7 +157,7 @@
               hide-details
               label="立替"
               class="pt-0 mt-0"
-              @change="selectedMethodId = null"
+              @update:model-value="selectedMethodId = null"
             ></v-checkbox>
           </div>
         </v-col>

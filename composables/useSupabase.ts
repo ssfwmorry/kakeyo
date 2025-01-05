@@ -2,7 +2,10 @@ import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/constants';
 import type {
   DateRange,
+  GetMethodSummaryRpc,
   GetRecordListRpc,
+  GetTypeSummaryOutput,
+  GetTypeSummaryRpc,
   Id,
   SupabaseApiAuth,
   SupabaseApiAuthGet,
@@ -562,53 +565,81 @@ const supabaseApi = {
       message: 'month_sum 取得',
     };
   },
-  async getTypeOrMethodSummary(
-    { rootGetters, commit }: any,
-    { isPay, isType, isPair, isIncludeInstead, year, month }: any
+  async getTypeSummary(
+    { isDemoLogin, userUid }: SupabaseApiAuthGet,
+    { isPay, isPair, isIncludeInstead, year, month }: any
   ) {
     // prettier-ignore
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.GET_TYPE_OR_METHOD_SUMMARY(isPay, isType, isPair, isIncludeInstead, year, month);
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_TYPE_OR_METHOD_SUMMARY(isPay, true, isPair, isIncludeInstead, year, month);
 
     let outData, outError;
     const payload = {
-      input_user_id: rootGetters.userUID,
+      input_user_id: userUid,
       input_is_pay: isPay,
       input_is_pair: isPair,
       input_is_include_instead: isIncludeInstead,
       input_year: year,
       input_month: month,
     };
-    if (isType) {
-      let groupedData: any = [];
-      const { data, error } = await supabase.rpc('get_type_summary', payload);
-      if (error === null) {
-        (data ?? []).forEach((typeObj: any, i: number) => {
-          if (i == 0 || groupedData[groupedData.length - 1].type_id != typeObj.type_id) {
-            typeObj['sub_types'] = [];
-            groupedData.push(typeObj);
-          }
-          groupedData[groupedData.length - 1].sub_types.push({
-            sub_type_id: typeObj.sub_type_id,
-            sub_type_name: typeObj.sub_type_name,
-            sub_type_sum: typeObj.sub_type_sum,
-          });
+    const { data, error } = await supabase.rpc<any, { Returns: GetTypeSummaryRpc[] | null }>(
+      'get_type_summary',
+      payload
+    );
+    if (error === null) {
+      let groupedData: GetTypeSummaryOutput[] = [];
+      (data ?? []).forEach((typeObj: GetTypeSummaryRpc, i: number) => {
+        if (i == 0 || groupedData[groupedData.length - 1].type_id != typeObj.type_id) {
+          groupedData.push({ ...typeObj, sub_types: [] });
+        }
+        groupedData[groupedData.length - 1].sub_types.push({
+          sub_type_id: typeObj.sub_type_id,
+          sub_type_name: typeObj.sub_type_name,
+          sub_type_sum: typeObj.sub_type_sum,
         });
-      } else {
-        groupedData = data;
-      }
-      [outData, outError] = [groupedData, error];
+      });
+      [outData, outError] = [groupedData, null];
     } else {
-      const { data, error } = await supabase.rpc('get_method_summary', payload);
       [outData, outError] = [data, error];
     }
     if (outError != null) {
-      return { data: outData, error: outError, message: 'type or method summary 一覧' };
+      return { data: outData, error: outError, message: 'type summary 一覧' };
     }
 
     return {
       data: outData,
       error: null,
-      message: 'type or method summary 一覧',
+      message: 'type summary 一覧',
+    };
+  },
+  async getMethodSummary(
+    { isDemoLogin, userUid }: SupabaseApiAuthGet,
+    { isPay, isPair, isIncludeInstead, year, month }: any
+  ) {
+    // prettier-ignore
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_TYPE_OR_METHOD_SUMMARY(isPay, false, isPair, isIncludeInstead, year, month);
+
+    let outData, outError;
+    const payload = {
+      input_user_id: userUid,
+      input_is_pay: isPay,
+      input_is_pair: isPair,
+      input_is_include_instead: isIncludeInstead,
+      input_year: year,
+      input_month: month,
+    };
+    const { data, error } = await supabase.rpc<any, { Returns: GetMethodSummaryRpc[] | null }>(
+      'get_method_summary',
+      payload
+    );
+    [outData, outError] = [data, error];
+    if (outError != null) {
+      return { data: outData, error: outError, message: 'method summary 一覧' };
+    }
+
+    return {
+      data: outData,
+      error: null,
+      message: ' method summary 一覧',
     };
   },
   async getSummariedRecordList(

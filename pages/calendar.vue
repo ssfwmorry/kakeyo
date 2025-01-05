@@ -123,7 +123,7 @@
                 density="compact"
                 variant="flat"
                 :class="`bg-${selectedPlan.backgroundColor}`"
-                class="mr-3 pa-0 btn-icon size-28"
+                class="mr-3 pa-0 btn-icon size-28 tex-white"
               >
                 <v-icon>{{ selectedPlan.isPair ? $ICONS.SHARE : '' }}</v-icon>
               </v-btn>

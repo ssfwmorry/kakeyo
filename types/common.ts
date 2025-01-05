@@ -53,9 +53,13 @@ export type RouterQueryPlanToCalendar = {
 };
 
 export type Id = number;
+export type ColorString = 'red' | 'blue'; // TODO
+export type YearString = string; // YYYY
+export type MonthString = string; // MM
 export type DateString = string; // YYYY-MM-DD
 export type DatetimeString = string; // YYYY-MM-DD HH:MM:SS
 export type DbDatetimeString = string; // ex..2024-12-31T20:06:38+09:00
+export type YearMonthObj = { year: YearString; month: MonthString }; // {year: YYYY, month: MM}
 
 export const boolStr = {
   TRUE: 'true',
@@ -221,4 +225,34 @@ export type GetRecordListRpc = {
   type_color_classification_name: string;
   is_pair: boolean;
   pair_user_name: string | null;
+};
+
+export type GetTypeSummaryRpc = {
+  type_name: string;
+  type_id: number;
+  is_pair: boolean;
+  sub_type_name: string;
+  sub_type_id: number;
+  color_name: string;
+  sub_type_sum: number;
+  sum: number;
+};
+export type GetTypeSummaryOutput = {
+  type_name: string;
+  type_id: number;
+  is_pair: boolean;
+  sub_type_name: string;
+  sub_type_id: number;
+  color_name: string;
+  sub_type_sum: number;
+  sum: number;
+  sub_types: { sub_type_id: number; sub_type_name: string; sub_type_sum: number }[];
+};
+export type GetMethodSummaryRpc = {
+  method_name: string;
+  method_id: number;
+  pair_user_name: string | null;
+  color_name: string;
+  is_pair: boolean;
+  sum: number;
 };

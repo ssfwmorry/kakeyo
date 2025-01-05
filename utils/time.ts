@@ -1,5 +1,5 @@
 import { DEMO_USER_INFO } from '@/constants';
-import type { DateString, DatetimeString } from '@/types/common';
+import type { DateString, DatetimeString, YearMonthObj } from '@/types/common';
 import type { Dayjs } from 'dayjs';
 import JapaneseHolidays from 'japanese-holidays';
 const config = useRuntimeConfig();
@@ -24,7 +24,7 @@ const TimeUtility = {
     return Number(NowDateJst().toISOString().substring(0, 4));
   },
   // ex.. RET: {year: '2022', month: '01'}
-  GetNowYearMonthObj: (isDemo: boolean) => {
+  GetNowYearMonthObj: (isDemo: boolean): YearMonthObj => {
     const dateStr = isDemo
       ? DEMO_USER_INFO(config).NOW_DATE
       : NowDateJst().toISOString().substring(0, 10);
