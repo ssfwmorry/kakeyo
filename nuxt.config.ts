@@ -5,6 +5,15 @@ import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
  * アルファベット順に記載
  */
 export default defineNuxtConfig({
+  app: {
+    head: {
+      meta: [
+        { name: 'theme-color', content: '#000' },
+        { name: 'robots', content: 'noindex' },
+      ],
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    },
+  },
   build: {
     transpile: ['vuetify'],
   },
@@ -14,6 +23,7 @@ export default defineNuxtConfig({
   modules: [
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
+    '@vite-pwa/nuxt',
     (_options, nuxt) => {
       nuxt.hooks.hook('vite:extendConfig', (config) => {
         // @ts-expect-error
@@ -21,6 +31,23 @@ export default defineNuxtConfig({
       });
     },
   ],
+  pwa: {
+    devOptions: { enabled: false },
+    includeAssets: ['favicon.ico', 'pwa-icon.png'],
+    manifest: {
+      background_color: '#000',
+      description: '',
+      display: 'standalone',
+      icons: [{ src: 'pwa-icon.png', type: 'image/png' }],
+      lang: 'ja',
+      name: 'かけよ',
+      short_name: 'かけよ',
+      start_url: '/',
+      theme_color: '#000',
+    },
+    registerType: 'autoUpdate',
+    workbox: { navigateFallback: null },
+  },
   runtimeConfig: {
     public: {
       firebaseApiKey: process.env.NUXT_PUBLIC_FIREBASE_API_KEY,
