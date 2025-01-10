@@ -18,6 +18,7 @@
         <v-btn-toggle
           v-model="isPay"
           variant="outlined"
+          density="compact"
           mandatory
           @update:model-value="updateChart"
         >
@@ -30,6 +31,7 @@
         <v-btn-toggle
           v-model="isType"
           variant="outlined"
+          density="compact"
           mandatory
           @update:model-value="updateChart"
         >
@@ -42,6 +44,7 @@
         <v-btn-toggle
           v-model="isIncludeInstead"
           variant="outlined"
+          density="compact"
           mandatory
           @update:model-value="updateChart"
         >

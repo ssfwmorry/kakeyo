@@ -64,10 +64,10 @@ const setPieShowSetting = ({ isPay, isType, isMonth, focus }: PieShowSetting) =>
 const changeTab = () => {
   switch (tabMode.value) {
     case tab.PIE:
-      summaryPie.value.updateChart();
+      summaryPie.value?.updateChart();
       break;
     case tab.BAR:
-      // summaryBar.value.updateChart();
+      summaryBar.value?.updateChart();
       break;
     case tab.SETTLEMENT:
       // summarySettlement.value.updateChart();

@@ -1,3 +1,4 @@
+// TODO 適切な場所に配置する
 export const format = {
   Date: 'YYYY-MM-DD',
   MonthDate: 'MM/DD',
@@ -56,6 +57,7 @@ export type Id = number;
 export type ColorString = 'red' | 'blue'; // TODO
 export type YearString = string; // YYYY
 export type MonthString = string; // MM
+export type YearMonthString = string; // YYYY-MM
 export type DateString = string; // YYYY-MM-DD
 export type DatetimeString = string; // YYYY-MM-DD HH:MM:SS
 export type DbDatetimeString = string; // ex..2024-12-31T20:06:38+09:00
@@ -255,4 +257,9 @@ export type GetMethodSummaryRpc = {
   color_name: string;
   is_pair: boolean;
   sum: number;
+};
+export type GetPayAndIncomeListRpc = {
+  year_month: string;
+  pay_sum: number;
+  income_sum: number;
 };

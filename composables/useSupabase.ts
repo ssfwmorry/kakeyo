@@ -3,6 +3,7 @@ import { DEMO_DATA } from '@/constants';
 import type {
   DateRange,
   GetMethodSummaryRpc,
+  GetPayAndIncomeListRpc,
   GetRecordListRpc,
   GetTypeSummaryOutput,
   GetTypeSummaryRpc,
@@ -680,22 +681,29 @@ const supabaseApi = {
 
     return { data: data, error: error, message: 'paired_record 一覧' };
   },
-  async getPayAndIncomeList({ rootGetters, commit }: any, { year, isPair, isIncludeInstead }: any) {
+  async getPayAndIncomeList(
+    { isDemoLogin, userUid }: SupabaseApiAuthGet,
+    { year, isPair, isIncludeInstead }: any
+  ) {
     // prettier-ignore
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.GET_PAY_AND_INCOME_LIST(year, isPair, isIncludeInstead);
+    if (isDemoLogin)
+      return DEMO_DATA.SUPABASE.GET_PAY_AND_INCOME_LIST(year, isPair, isIncludeInstead);
 
     // TODO よりよい状況バリデーションチェック
-    if (rootGetters.isPair && rootGetters.pairId == null) {
-      return { data: null, error: 'isPair と pairID の関係性', message: 'pay_and_income 一覧' };
-    }
+    // if (isPair && pairId == null) {
+    //   return { data: null, error: 'isPair と pairID の関係性', message: 'pay_and_income 一覧' };
+    // }
 
     const payload = {
-      input_user_id: rootGetters.userUID,
+      input_user_id: userUid,
       input_year: year,
       input_is_pair: isPair,
       input_is_include_instead: isIncludeInstead,
     };
-    const { data, error } = await supabase.rpc('get_pay_and_income_list', payload);
+    const { data, error } = await supabase.rpc<any, { Returns: GetPayAndIncomeListRpc[] | null }>(
+      'get_pay_and_income_list',
+      payload
+    );
     if (error !== null || !Array.isArray(data)) {
       return { data: data, error: error, message: 'pay_and_income 一覧' };
     }
