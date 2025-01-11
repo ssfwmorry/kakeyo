@@ -31,7 +31,7 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
-    <v-app-bar flat absolute color="grey-lighten-4" height="48" class="mx-auto app-bar-padding">
+    <v-app-bar flat absolute color="grey-lighten-4" height="40" class="mx-auto app-bar-padding">
       <div class="app-bar-content">
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       </div>
@@ -41,8 +41,8 @@
       >
         <v-switch
           v-model="isPair"
-          inset
           hide-details
+          color="primary"
           density="compact"
           :true-value="true"
           :false-value="false"
@@ -72,7 +72,7 @@
         :show-arrows="false"
         align-tabs="center"
         :hide-slider="true"
-        height="60"
+        height="80"
         class="w-100"
       >
         <!-- todo toが同じ場合リダイレクト -->
@@ -295,7 +295,7 @@ const logOut = async () => {
   max-width: inherit !important;
   min-width: 30px !important;
   margin: 0 !important;
-  padding: 0 !important;
+  padding: 0 0 12px 0 !important;
 }
 :deep(.v-slide-group__prev),
 :deep(.v-slide-group__next) {

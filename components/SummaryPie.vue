@@ -82,7 +82,7 @@
         no-gutters
       >
         <v-col>
-          <v-card variant="outlined">
+          <v-card variant="outlined" class="card-border">
             <v-row no-gutters>
               <v-col cols="7" class="py-1 pl-1 d-flex align-center">
                 <!-- TODO records と 共通化 -->
@@ -101,7 +101,6 @@
                     <v-row no-gutters class="d-flex align-center">
                       <v-icon
                         v-if="typeOrMethod.isPair && !typeOrMethod.pairUserName"
-                        small
                         class="mr-2"
                         >{{ $ICONS.SHARE }}</v-icon
                       >
@@ -122,6 +121,7 @@
                 <v-btn
                   icon
                   block
+                  size="small"
                   variant="flat"
                   class="font-weight-bold"
                   @click="
@@ -151,7 +151,7 @@
                     <v-btn
                       icon
                       block
-                      small
+                      size="small"
                       variant="flat"
                       class="font-weight-bold"
                       @click="
@@ -269,7 +269,6 @@ const updateShowSetting = (setting: PieShowSetting) => {
   isMonth.value = setting.isMonth;
   focus.value = setting.focus;
 };
-
 const movePrev = async () => {
   focus.value = TimeUtility.PrevMonthInYearMonthObj(focus.value);
   await updateChart();
@@ -278,7 +277,6 @@ const moveNext = async () => {
   focus.value = TimeUtility.NextMonthInYearMonthObj(focus.value);
   await updateChart();
 };
-
 const updateChart = async () => {
   enableLoading();
 

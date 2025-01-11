@@ -46,7 +46,7 @@
                 v-if="isReset"
                 color="blue darken-3"
                 :disabled="!email"
-                class="w-50 white--text"
+                class="w-50 text-white"
                 @click="resetPassword()"
               >
                 送信
@@ -55,7 +55,7 @@
                 v-else-if="isSignUp"
                 color="blue darken-3"
                 :disabled="!email || !password || !confirmPassword"
-                class="w-50 white--text"
+                class="w-50 text-white"
                 @click="signUp()"
               >
                 登録
@@ -64,7 +64,7 @@
                 v-else
                 color="blue darken-3"
                 :disabled="!email || !password"
-                class="w-50 white--text"
+                class="w-50 text-white"
                 @click="userLogin()"
               >
                 ログイン

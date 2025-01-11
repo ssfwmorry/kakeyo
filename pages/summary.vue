@@ -1,6 +1,12 @@
 <template>
   <div class="h-100 bg-white">
-    <v-tabs v-model="tabMode" grow bg-color="blue-grey-lighten-4" @update:model-value="changeTab">
+    <v-tabs
+      v-model="tabMode"
+      grow
+      density="comfortable"
+      bg-color="blue-grey-lighten-4"
+      @update:model-value="changeTab"
+    >
       <v-tab :value="tab.PIE">
         <v-icon class="mr-2">{{ $ICONS.CHART_PIE }}</v-icon
         >分類
@@ -30,7 +36,6 @@
 
 <script setup lang="ts">
 import TimeUtility from '@/utils/time';
-import type { YearMonthObj } from '@/types/common';
 import type { PieShowSetting } from '~/components/SummaryPie.vue';
 
 const loginStore = useLoginStore();
@@ -70,7 +75,7 @@ const changeTab = () => {
       summaryBar.value?.updateChart();
       break;
     case tab.SETTLEMENT:
-      // summarySettlement.value.updateChart();
+      summarySettlement.value?.updateChart();
       break;
     default:
       alert('呼ばれないはず');
