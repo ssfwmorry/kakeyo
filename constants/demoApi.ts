@@ -1,4 +1,4 @@
-import type { GetRecordListRpc } from '@/types/common';
+import type { GetPairedRecordListRpc, GetRecordListRpc } from '@/types/common';
 
 const DEMO_DATA = {
   IS_RELEASE: true, // false: デモログインで動的レスポンス、true: デモログインで静的レスポンス
@@ -4977,7 +4977,7 @@ const DEMO_DATA = {
         ];
       }
       return {
-        data: data,
+        data: data as GetPairedRecordListRpc[],
         error: null,
         message: 'demo',
       };

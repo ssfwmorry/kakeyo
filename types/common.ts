@@ -54,7 +54,7 @@ export type RouterQueryPlanToCalendar = {
 };
 
 export type Id = number;
-export type ColorString = 'red' | 'blue'; // TODO
+export type ColorString = string; // TODO: あらかじめ決められた文字列のみを許可する
 export type YearString = string; // YYYY
 export type MonthString = string; // MM
 export type YearMonthString = string; // YYYY-MM
@@ -262,4 +262,19 @@ export type GetPayAndIncomeListRpc = {
   year_month: string;
   pay_sum: number;
   income_sum: number;
+};
+export type GetPairedRecordListRpc = {
+  id: number;
+  is_self: boolean | null;
+  is_pay: boolean;
+  price: number;
+  memo: string | null;
+  is_instead: boolean | null;
+  is_settled: boolean | null;
+  is_planned_record: boolean;
+  method_name: string;
+  method_color_classification_name: string;
+  type_name: string;
+  sub_type_name: string | null;
+  type_color_classification_name: string;
 };

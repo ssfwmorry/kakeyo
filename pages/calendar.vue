@@ -8,7 +8,7 @@
         movePrev();
       },
     }"
-    class="px-1 h-100 bg-white"
+    class="pa-1 h-100 bg-white"
   >
     <PaginationBar
       :title="calendarTitle"
@@ -111,7 +111,7 @@
     <!-- plan 表示 -->
     <v-row v-if="selectedPlan" no-gutters class="px-2">
       <v-col>
-        <v-card variant="outlined" class="pa-2">
+        <v-card variant="outlined" class="pa-2 card-border">
           <v-row no-gutters class="mb-1">
             <v-col cols="9">
               <v-card-title class="py-0 px-1 fs-nml">

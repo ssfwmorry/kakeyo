@@ -3,6 +3,7 @@ import { DEMO_DATA } from '@/constants';
 import type {
   DateRange,
   GetMethodSummaryRpc,
+  GetPairedRecordListRpc,
   GetPayAndIncomeListRpc,
   GetRecordListRpc,
   GetTypeSummaryOutput,
@@ -286,16 +287,16 @@ const supabaseApi = {
       return { data: null, error: '想定外の状況', message: 'record upsert 想定外の状況' };
     }
   },
-  async settleRecord({ rootGetters, commit }: any, { id }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
-    if (id === null) return { data: null, error: 'no id', message: 'is_settled 更新' };
+  async settleRecords({ isDemoLogin }: SupabaseApiAuth, ids: number[]) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+    if (ids.length === 0) return { data: null, error: 'no id', message: 'is_settled 更新' };
 
     const { data, error } = await supabase
       .from('records')
       .update({
         is_settled: true,
       })
-      .eq('id', id);
+      .eq('id', ids);
     return { data: data, error: error, message: 'is_settled 更新' };
   },
 
@@ -667,14 +668,17 @@ const supabaseApi = {
 
     return { data: data, error: error, message: 'summaried_record 一覧' };
   },
-  async getPairedRecordList({ rootGetters, commit }: any, { yearMonth }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.GET_PAIRED_RECORD_LIST(yearMonth);
+  async getPairedRecordList({ isDemoLogin, userUid }: SupabaseApiAuthGet, { yearMonth }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PAIRED_RECORD_LIST(yearMonth);
 
     const payload = {
-      input_user_id: rootGetters.userUID,
+      input_user_id: userUid,
       input_year_month: yearMonth,
     };
-    const { data, error } = await supabase.rpc('get_paired_record_list', payload);
+    const { data, error } = await supabase.rpc<any, { Returns: GetPairedRecordListRpc[] | null }>(
+      'get_paired_record_list',
+      payload
+    );
     if (error !== null || !Array.isArray(data)) {
       return { data: data, error: error, message: 'paired_record 一覧' };
     }

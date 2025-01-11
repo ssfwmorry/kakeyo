@@ -2,7 +2,7 @@
   <v-card
     variant="outlined"
     :class="{ 'text--disabled grey-lighten-5': props.isDisable }"
-    class="pa-1"
+    class="pa-1 card-border"
   >
     <v-row no-gutters>
       <v-col class="d-flex justify-space-between">
@@ -65,6 +65,7 @@
 <script setup lang="ts">
 const { $ICONS } = useNuxtApp();
 const emits = defineEmits();
+
 type Props = {
   isDisable: boolean;
   isPairType: boolean;

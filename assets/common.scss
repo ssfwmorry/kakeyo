@@ -64,6 +64,10 @@
   pointer-events: none;
 }
 
+.card-border {
+  border: thin solid rgba(0, 0, 0, 0.12) !important;
+}
+
 .txt-blue {
   color: blue !important;
 }
