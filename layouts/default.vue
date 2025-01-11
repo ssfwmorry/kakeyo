@@ -280,7 +280,7 @@ const logOut = async () => {
   background-position: 54px 55px, 0px 0px, 0px 0px, 0px 0px, 0px 0px;
 }
 .p-footer {
-  padding-bottom: 60px !important;
+  padding-bottom: $footer-height !important;
 }
 
 // トースト
