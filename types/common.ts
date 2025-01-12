@@ -30,6 +30,8 @@ export const routerParamKey = {
   PLANNED_RECORD: 'PLANNED_RECORD',
   RECORD: 'RECORD',
   PLAN: 'PLAN',
+  RECORDS_QUERY_PARAM: 'RECORDS_QUERY_PARAM',
+  SUMMARY_QUERY_PARAM: 'SUMMARY_QUERY_PARAM',
 } as const;
 export type RouterParamKey = (typeof routerParamKey)[keyof typeof routerParamKey];
 
@@ -43,6 +45,7 @@ export type RouterQueryCalendarToNote = {
   routerParamKey: (typeof routerParamKey)[keyof typeof routerParamKey];
   crud: Crud;
 };
+export type RouterQueryRecordsToNote = RouterQueryCalendarToNote;
 export type RouterQueryNoteToCalendar = {
   focus: DateString;
 };
@@ -195,6 +198,26 @@ export type DateRecordList = Record<
 > & { isHoliday: boolean; holidayStr: string | null };
 
 export type CalendarList = Record<DateString, DateRecordList>;
+
+export type RecordsQueryParam = {
+  id: number;
+  subtypeId: number | null;
+  isPay: boolean;
+  isMonth: boolean;
+  isType: boolean;
+  isPair: boolean;
+  isIncludeInstead: boolean | null;
+  focus: YearMonthObj;
+  name: string;
+  color: ColorString;
+  pairUserName: string | null;
+};
+export type SummaryQueryParam = {
+  isPay: boolean;
+  isType: boolean;
+  isMonth: boolean;
+  focus: YearMonthObj;
+};
 
 export type UpsertRecordInput = {
   id: number | null;

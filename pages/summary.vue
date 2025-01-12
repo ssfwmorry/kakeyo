@@ -36,10 +36,12 @@
 
 <script setup lang="ts">
 import TimeUtility from '@/utils/time';
-import type { PieShowSetting } from '~/components/SummaryPie.vue';
+import { routerParamKey, type SummaryQueryParam } from '@/types/common';
 
-const loginStore = useLoginStore();
+const [loginStore, pairStore] = [useLoginStore(), usePairStore()];
+const { isExistPair } = storeToRefs(pairStore);
 const { isDemoLogin } = storeToRefs(loginStore);
+const { routerParam } = useRouterParamStore();
 
 // 1 から始まるnumberのみ許容される
 const tab = {
@@ -49,18 +51,17 @@ const tab = {
 } as const;
 type Tab = (typeof tab)[keyof typeof tab];
 const tabMode = ref<Tab>(tab.PIE);
-const pieShowSetting = ref<PieShowSetting>({
+const pieShowSetting = ref<SummaryQueryParam>({
   isPay: true,
   isType: true,
   isMonth: true,
   focus: TimeUtility.GetNowYearMonthObj(isDemoLogin.value),
 });
-const isExistPair = ref<boolean>(true);
 const summaryBar = ref();
 const summaryPie = ref();
 const summarySettlement = ref();
 
-const setPieShowSetting = ({ isPay, isType, isMonth, focus }: PieShowSetting) => {
+const setPieShowSetting = ({ isPay, isType, isMonth, focus }: SummaryQueryParam) => {
   // records 画面からの遷移の場合は focus が yearMonthObj の形式となる
   if (!focus) return;
   pieShowSetting.value = { isPay, isType, isMonth, focus };
@@ -85,9 +86,9 @@ const changeTab = () => {
 
 // created
 (async () => {
-  // pieShowSetting.value.focus = TimeUtility.GetNowYearMonthObj(isDemoLogin.value);
   // storeから取得
-  // setPieShowSetting(route.params);
-  // if (!this.$store.getters.pairId) this.isExistPair = false;
+  const param = routerParam(routerParamKey.SUMMARY_QUERY_PARAM) as SummaryQueryParam | null;
+  if (param === null) return;
+  setPieShowSetting(param);
 })();
 </script>

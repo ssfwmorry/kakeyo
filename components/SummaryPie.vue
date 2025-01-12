@@ -124,15 +124,7 @@
                   size="small"
                   variant="flat"
                   class="font-weight-bold"
-                  @click="
-                    goRecordsShowPage(
-                      typeOrMethod.id,
-                      typeOrMethod.name,
-                      typeOrMethod.color,
-                      typeOrMethod.pairUserName,
-                      null
-                    )
-                  "
+                  @click="goRecordsShowPage(typeOrMethod, null)"
                   >＞</v-btn
                 >
               </v-col>
@@ -154,15 +146,7 @@
                       size="small"
                       variant="flat"
                       class="font-weight-bold"
-                      @click="
-                        goRecordsShowPage(
-                          typeOrMethod.id,
-                          typeOrMethod.name + (subtype.name ? ' ー ' + subtype.name : ''),
-                          typeOrMethod.color,
-                          null,
-                          subtype.id
-                        )
-                      "
+                      @click="goRecordsShowPage(typeOrMethod, subtype)"
                       >＞</v-btn
                     >
                   </v-col>
@@ -182,8 +166,11 @@ import StringUtility from '@/utils/string';
 import {
   dummy,
   page,
+  routerParamKey,
   type GetMethodSummaryRpc,
   type GetTypeSummaryOutput,
+  type RecordsQueryParam,
+  type SummaryQueryParam,
   type YearMonthObj,
 } from '@/types/common';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -199,7 +186,7 @@ type PieData = {
     }
   ];
 };
-type TypeListSubs = { name: string; value: string; id: number };
+type TypeListSubs = { name: string | null; value: string; id: number };
 type TypeOrMethod = {
   name: string;
   value: string;
@@ -210,27 +197,22 @@ type TypeOrMethod = {
   subs: TypeListSubs[];
 };
 type TypeOrMethodList = TypeOrMethod[];
-export type PieShowSetting = {
-  isPay: boolean;
-  isType: boolean;
-  isMonth: boolean;
-  focus: YearMonthObj;
-};
 const pieOptions = {
   responsive: true,
   maintainAspectRatio: false,
 } as const;
 
 type Props = {
-  showSetting: PieShowSetting;
+  showSetting: SummaryQueryParam;
 };
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
 const { isDemoLogin } = storeToRefs(loginStore);
-const { isPair, pairId } = storeToRefs(pairStore);
+const { isExistPair, isPair } = storeToRefs(pairStore);
 const { userUid } = storeToRefs(userStore);
 const { getMethodSummary, getTypeSummary } = useSupabase();
+const { setRouterParam } = useRouterParamStore();
 const router = useRouter();
 
 const focus = ref<YearMonthObj>(TimeUtility.GetNowYearMonthObj(isDemoLogin.value));
@@ -261,9 +243,7 @@ const focusPeriod = computed(() => {
   }
 });
 
-const isExistPair = computed(() => !!pairId);
-
-const updateShowSetting = (setting: PieShowSetting) => {
+const updateShowSetting = (setting: SummaryQueryParam) => {
   isPay.value = setting.isPay;
   isType.value = setting.isType;
   isMonth.value = setting.isMonth;
@@ -355,7 +335,7 @@ const convertShowData = (monthSummary: GetTypeSummaryOutput[] | GetMethodSummary
     if (isType.value) {
       ((typeOrMethodSummary as GetTypeSummaryOutput).sub_types ?? []).forEach((subTypeObj: any) => {
         typeOrMethod.subs.push({
-          name: subTypeObj.sub_type_name,
+          name: subTypeObj.sub_type_name !== '' ? subTypeObj.sub_type_name : null,
           value: StringUtility.ConvertIntToShowStr(subTypeObj.sub_type_sum),
           id: subTypeObj.sub_type_id,
         });
@@ -367,30 +347,23 @@ const convertShowData = (monthSummary: GetTypeSummaryOutput[] | GetMethodSummary
 
   return { pie: pieData, list: typeOrMethodList };
 };
-const goRecordsShowPage = (
-  typeOrMethodId: number,
-  name: string,
-  color: string,
-  pairUserName: string | null,
-  subtypeId: number | null
-) => {
-  // TODO 訂正
-  router.push({
-    name: page.RECORDS,
-    // params: {
-    //   id: typeOrMethodId,
-    //   subtypeId: subtypeId,
-    //   isPay: this.isPay,
-    //   isMonth: this.isMonth,
-    //   isType: this.isType,
-    //   isPair: this.isPair,
-    //   isIncludeInstead: this.isExistPair ? this.isIncludeInstead : null,
-    //   focus: this.focus,
-    //   name: name,
-    //   color: color,
-    //   pairUserName: pairUserName,
-    // },
-  });
+const goRecordsShowPage = (typeOrMethod: TypeOrMethod, subType: TypeListSubs | null) => {
+  const tmpSubTypeName = subType === null || subType.name === null ? '' : ` - ${subType.name}`;
+  const recordsQuery: RecordsQueryParam = {
+    id: typeOrMethod.id,
+    subtypeId: subType !== null ? subType.id : null,
+    isPay: isPay.value,
+    isMonth: isMonth.value,
+    isType: isType.value,
+    isPair: isPair.value,
+    isIncludeInstead: isExistPair.value ? isExistPair.value : null,
+    focus: focus.value,
+    name: typeOrMethod.name + tmpSubTypeName,
+    color: typeOrMethod.color,
+    pairUserName: typeOrMethod.pairUserName,
+  };
+  setRouterParam(routerParamKey.RECORDS_QUERY_PARAM, recordsQuery);
+  router.push({ name: page.RECORDS });
 };
 
 // created
