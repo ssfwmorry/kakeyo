@@ -39,7 +39,7 @@ import TimeUtility from '@/utils/time';
 import { routerParamKey, type SummaryQueryParam } from '@/types/common';
 
 const [loginStore, pairStore] = [useLoginStore(), usePairStore()];
-const { isExistPair } = storeToRefs(pairStore);
+const { isExistPair, isPair } = storeToRefs(pairStore);
 const { isDemoLogin } = storeToRefs(loginStore);
 const { routerParam } = useRouterParamStore();
 
@@ -66,23 +66,29 @@ const setPieShowSetting = ({ isPay, isType, isMonth, focus }: SummaryQueryParam)
   if (!focus) return;
   pieShowSetting.value = { isPay, isType, isMonth, focus };
 };
-
-const changeTab = () => {
+const updateChart = async (isEnableSettlementUpdate: boolean) => {
   switch (tabMode.value) {
     case tab.PIE:
-      summaryPie.value?.updateChart();
+      await summaryPie.value?.updateChart();
       break;
     case tab.BAR:
-      summaryBar.value?.updateChart();
+      await summaryBar.value?.updateChart();
       break;
     case tab.SETTLEMENT:
-      summarySettlement.value?.updateChart();
+      if (isEnableSettlementUpdate) await summarySettlement.value?.updateChart();
       break;
     default:
       alert('呼ばれないはず');
       break;
   }
 };
+const changeTab = async () => {
+  await updateChart(true);
+};
+
+watch(isPair, async (newValue, oldValue) => {
+  await updateChart(false);
+});
 
 // created
 (async () => {
