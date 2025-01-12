@@ -645,14 +645,14 @@ const supabaseApi = {
     };
   },
   async getSummariedRecordList(
-    { rootGetters, commit }: any,
+    { isDemoLogin, userUid }: SupabaseApiAuthGet,
     { isPay, isType, isPair, isIncludeInstead, yearMonth, id, subtypeId }: any
   ) {
     // prettier-ignore
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.GET_SUMMARIED_RECORD_LIST(isPay, isType, isPair, isIncludeInstead, yearMonth, id, subtypeId);
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_SUMMARIED_RECORD_LIST(isPay, isType, isPair, isIncludeInstead, yearMonth, id, subtypeId);
 
     const payload = {
-      input_user_id: rootGetters.userUID,
+      input_user_id: userUid,
       input_is_pay: isPay,
       input_is_type: isType,
       input_is_pair: isPair,

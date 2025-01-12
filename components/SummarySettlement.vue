@@ -389,7 +389,6 @@ const settleRecords = async () => {
   enableLoading();
 
   const idList = getRecordIdList(selectedRateList.value);
-  console.log(idList);
 
   const apiRes = await supabaseSettleRecords({ isDemoLogin: isDemoLogin.value }, idList);
   if (apiRes.error !== null) {
@@ -416,10 +415,8 @@ const getRecordIdList = (selectedRateList: RateList) => {
   return ret;
 };
 const openDialog = (record: Record, isMe: boolean) => {
-  console.log('test');
   // TODO 一回設定した精算率を変更できないようにしているが、のちのち変更できるようにする
   if (step.value !== stepStatus.GOING || !record.isNew || record.is_settled) return;
-  console.log('test1');
 
   dialog.value = {
     isShow: true,

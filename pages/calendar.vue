@@ -215,7 +215,7 @@ import dayjs from 'dayjs';
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
 const { isDemoLogin } = storeToRefs(loginStore);
-const { isPair, pairId } = storeToRefs(pairStore);
+const { isExistPair, isPair, pairId } = storeToRefs(pairStore);
 const { userUid } = storeToRefs(userStore);
 const { setIsPair } = usePairStore();
 const { $ICONS } = useNuxtApp();
@@ -295,13 +295,10 @@ const selectedDate = ref<DateString | null>(null);
 const selectedDayRecords = ref<Record_[]>([]);
 const selectedPlan = ref<EventGetPlan | null>(null);
 const monthSum = ref({ ['SELF']: 0, ['PAIR']: 0, ['BOTH']: 0 });
-
-const isExistPair = ref(true);
 const showRecordMode = ref<ShareType>('BOTH');
 const isShowMemoInput = ref(false);
 const isPairMemo = ref(false);
 const memoText = ref<string | null>(null);
-
 const isEndInit = ref(false);
 
 const calendarTitle = computed(() =>
@@ -692,8 +689,6 @@ const deleteMemo = async (id: Id | null) => {
 (async () => {})();
 
 onMounted(async () => {
-  if (!pairId.value) isExistPair.value = false;
-
   await getMemoList();
 
   setPageFocus(route.query as RouterQueryNoteToCalendar | RouterQueryPlanToCalendar);

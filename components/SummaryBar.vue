@@ -150,7 +150,7 @@ const barOptions: ChartOptions = {
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
 const { isDemoLogin } = storeToRefs(loginStore);
-const { isPair, pairId } = storeToRefs(pairStore);
+const { isExistPair, isPair } = storeToRefs(pairStore);
 const { userUid } = storeToRefs(userStore);
 const { getPayAndIncomeList } = useSupabase();
 
@@ -170,8 +170,6 @@ const barDataPay = ref<BarData>({
 });
 const sumPay = ref('0');
 const tableData = ref<TableData[]>([]);
-
-const isExistPair = computed(() => !!pairId);
 
 const movePrev = async () => {
   year.value = TimeUtility.PrevYear(year.value);
