@@ -3,12 +3,11 @@
 ## Project Setup
 
 - Firebase にプロジェクトを作成し、CLI を入れておく
-  - `env.example` を参考に、 `.env` を作成する
   - `.firebaserc` と `firebase.json` を書き換える
 - Supabase にプロジェクトを作成する
   - 開発用のデータベース `develop` と 本番用のデータベース `public` を作成しておく
-  - `env.example` を参考に、 `.env` を作成する
 - NodeJS を入れておく
+- `env.example` を参考に、 ローカル実行用の `.env` と本番ビルド用の `env.prod` を作成する
 
 ## Build Setup
 
