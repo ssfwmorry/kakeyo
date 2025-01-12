@@ -65,7 +65,7 @@
     </v-row>
 
     <v-row no-gutters>
-      <v-table dense class="px-3 w-100">
+      <v-table density="compact" class="px-3 w-100">
         <thead>
           <tr>
             <th v-for="header in ['月', '支出', '収入', '収支']" :key="header" class="text-left">
