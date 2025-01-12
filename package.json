@@ -5,7 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
+    "generate": "dotenv -e .env.prod nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
@@ -33,6 +33,7 @@
     "@mdi/js": "^7.4.47",
     "@types/japanese-holidays": "^1.0.3",
     "@vite-pwa/nuxt": "^0.10.6",
+    "dotenv-cli": "^8.0.0",
     "sass": "^1.77.2",
     "sass-loader": "^14.2.1",
     "typescript": "^5.4.5",
