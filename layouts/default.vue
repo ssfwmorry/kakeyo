@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { APP_NAME, LOCAL_STORAGE_KEY } from '@/constants';
+import { APP_NAME } from '@/constants';
 import { page } from '@/types/common';
 
 type PageItem = {
@@ -221,11 +221,8 @@ const logOut = async () => {
   drawer.value = false;
 };
 
-// created での処理
-(() => {
-  isCalendarPageMain.value =
-    localStorage.getItem(LOCAL_STORAGE_KEY.IS_CALENDAR_PAGE_MAIN) === 'false' ? false : true;
-})();
+// created
+(async () => {})();
 </script>
 
 <style lang="scss" scoped>

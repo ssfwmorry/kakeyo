@@ -176,7 +176,6 @@
 </template>
 
 <script setup lang="ts">
-import { LOCAL_STORAGE_KEY as LSK } from '@/constants';
 import {
   type ShareType,
   type DateString,
@@ -406,9 +405,9 @@ const updateRange = async () => {
         borderColor: 'black',
         textColor: 'black',
         display: 'background',
-        backgroundColor: 'rgb(255,181,195)', // opacity:0.3後にpinkに近いもの
+        backgroundColor: 'rgba(255,255,255,0)',
         type: eventType.HOLIDAY,
-        classNames: [],
+        classNames: ['is-holiday'],
         startStr: dateStr,
       });
     }
@@ -717,31 +716,32 @@ onMounted(async () => {
     padding: 0;
   }
 }
-// セル曜日背景
+// セル祝日
+:deep(.fc-daygrid-day:has(.is-holiday)) {
+  color: $vuetify-red;
+}
+// テーブルヘッダ日曜日and土曜日
 :deep(.fc-scrollgrid-section-header tr) {
-  th:first-child {
-    background-color: #ffebef; // pink opacity:0.3(--fc-bg-event-opacity)
+  th:first-child a {
+    color: $vuetify-red;
   }
-  th:last-child {
-    background-color: #dceff9; // skyblue opacity:0.3(--fc-bg-event-opacity)
+  th:last-child a {
+    color: $vuetify-blue;
   }
 }
+// セル日曜日and土曜日
 :deep(.fc-daygrid-body tr) {
-  td:first-child {
-    background-color: #ffebef; // pink opacity:0.3(--fc-bg-event-opacity)
+  td:first-child a {
+    color: $vuetify-red;
   }
-  td:last-child {
-    background-color: #dceff9; // skyblue opacity:0.3(--fc-bg-event-opacity)
+  td:last-child a {
+    color: $vuetify-blue;
   }
 }
-// セル、backgroundイベントがある背景
-:deep(.fc .fc-bg-event :not(.fc-event-today)) {
-  // 日付文字列が薄まる場合に、文字が見えなくなるのを消す
-  opacity: 1;
+// セル本日
+:deep(.fc-day-today) {
+  background-color: #ffff00 !important; // yellow-accent2;
 }
-// :deep(.fc-daygrid-day-bg .fc-bg-event) {
-//   opacity: 1;
-// }
 // イベント
 :deep(.fc-daygrid-day-events) {
   margin-bottom: 0.3rem !important;

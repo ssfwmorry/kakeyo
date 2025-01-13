@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { APP_NAME, DEMO_USER_INFO, LOCAL_STORAGE_KEY } from '@/constants';
+import { APP_NAME, DEMO_USER_INFO } from '@/constants';
 import { dummy, page } from '@/types/common';
 
 const ContentList = [
@@ -217,7 +217,7 @@ const userLogin = async () => {
   setUserLogin();
   setUser(apiRes.data);
   setPairId(apiResPairId.data);
-  goFirstPage();
+  goCalendarPage();
 };
 
 const demoLogin = async () => {
@@ -230,17 +230,11 @@ const demoLogin = async () => {
   setDemoLogin();
   setUser(apiRes.data);
   setPairId(DEMO_USER_INFO(config).ID);
-  goFirstPage();
+  goCalendarPage();
 };
 
-const goFirstPage = () => {
-  const isCalendarPageMain =
-    localStorage.getItem(LOCAL_STORAGE_KEY.IS_CALENDAR_PAGE_MAIN) === 'false' ? false : true;
-  if (isCalendarPageMain) {
-    router.push({ name: page.CALENDAR });
-  } else {
-    router.push({ name: page.NOTE });
-  }
+const goCalendarPage = () => {
+  router.push({ name: page.CALENDAR });
 };
 
 const showSignUp = () => {
