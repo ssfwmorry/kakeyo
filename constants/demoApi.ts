@@ -1,4 +1,8 @@
-import type { GetPairedRecordListRpc, GetRecordListRpc } from '@/types/common';
+import type {
+  GetPairedRecordListRpc,
+  GetPlannedRecordListRpc,
+  GetRecordListRpc,
+} from '@/types/common';
 
 const DEMO_DATA = {
   IS_RELEASE: true, // false: デモログインで動的レスポンス、true: デモログインで静的レスポンス
@@ -238,14 +242,13 @@ const DEMO_DATA = {
             method_color_classification_name: 'brown',
             type_id: 211,
             type_name: '給与',
-            type_color_classification_id: 6,
             type_color_classification_name: 'blue',
             sub_type_id: null,
             sub_type_name: null,
             is_pair: false,
             is_self: true,
           },
-        ],
+        ] as GetPlannedRecordListRpc[],
         pair: [
           {
             planned_record_id: 21,
@@ -261,14 +264,13 @@ const DEMO_DATA = {
             method_color_classification_name: 'green',
             type_id: 122,
             type_name: '生活基盤',
-            type_color_classification_id: 9,
             type_color_classification_name: 'teal',
             sub_type_id: 1221,
             sub_type_name: '家賃',
             is_pair: true,
             is_self: false,
           },
-        ],
+        ] as GetPlannedRecordListRpc[],
       },
       error: null,
       message: 'demo',

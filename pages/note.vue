@@ -290,6 +290,7 @@ import {
   type DateString,
   type Id,
   type PickeredDate,
+  type PlannedRecord,
   type Record_,
   type RouterQueryCalendarToNote,
   type RouterQueryNoteToCalendar,
@@ -326,7 +327,7 @@ const isPay = ref(true);
 const date = ref<DateString>(TimeUtility.GetNowDate(isDemoLogin.value));
 
 const recievedRecordDate = ref<string | null>(null);
-const selectedDayId = ref(null);
+const selectedDayId = ref<number | null>(null);
 const selectedTypeId = ref<Id | null>(null);
 const selectedSubTypeId = ref<Id | null>(null);
 const memo = ref<string | null>(null);
@@ -443,8 +444,6 @@ const setPageRecord = (record: Record_, c: Crud) => {
   id.value = record.id;
   isPay.value = record.is_pay;
   date.value = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
-  // TODO
-  // if (!!pPlannedRecordId) recievedRecordDate.value = date.value;
   price.value = record.price;
   memo.value = record.memo ?? null;
   selectedMethodId.value = record.method_id;
@@ -452,17 +451,9 @@ const setPageRecord = (record: Record_, c: Crud) => {
   selectedTypeId.value = record.type_id;
   selectedSubTypeId.value = record.sub_type_id;
 };
-const setPagePlannedRecord = async ({
-  planned_record_id: pPlannedRecordId,
-  is_pay: pIsPay,
-  price: pPrice,
-  memo: pMemo,
-  day_classification_id: pDayClassificationId,
-  method_id: pMethodId,
-  type_id: pTypeId,
-  sub_type_id: pSubTypeId,
-  pair_user_name: pPairUserName,
-}: any) => {
+const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
+  isPlannedRecord.value = true;
+
   const apiRes = await getDayList({ isDemoLogin: isDemoLogin.value });
   if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
@@ -471,22 +462,22 @@ const setPagePlannedRecord = async ({
   dayList.value = apiRes.data ?? [];
 
   // 新規作成の場合
-  if (pPlannedRecordId === null) {
+  if (c === crud.CREATE) {
     initSelectedMethodId();
     initSelectedDayId();
     return;
   }
 
   // 編集の場合
-  id.value = pPlannedRecordId;
-  isPay.value = pIsPay;
-  price.value = pPrice;
-  memo.value = pMemo;
-  selectedDayId.value = pDayClassificationId;
-  selectedMethodId.value = pMethodId;
-  isInstead.value = !!pPairUserName;
-  selectedTypeId.value = pTypeId;
-  selectedSubTypeId.value = pSubTypeId;
+  id.value = plannedRecord.id;
+  isPay.value = plannedRecord.is_pay;
+  price.value = plannedRecord.price;
+  memo.value = plannedRecord.memo ?? null;
+  selectedDayId.value = plannedRecord.day_classification_id;
+  selectedMethodId.value = plannedRecord.method_id;
+  isInstead.value = !!plannedRecord.pair_user_name;
+  selectedTypeId.value = plannedRecord.type_id;
+  selectedSubTypeId.value = plannedRecord.sub_type_id;
 };
 const upsertRecord = async () => {
   if (!validateRecordAndShowErrorMsg()) return;
@@ -541,7 +532,15 @@ const upsertPlannedRecord = async () => {
     price: price.value,
     memo: memo.value,
   };
-  const apiRes = await supabaseUpsertPlannedRecord({} as any, payload);
+  const apiRes = await supabaseUpsertPlannedRecord(
+    {
+      isDemoLogin: isDemoLogin.value,
+      userUid: userUid.value ?? dummy.str,
+      isPair: isPair.value,
+      pairId: pairId.value ?? dummy.nm,
+    },
+    payload
+  );
   if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;
@@ -577,7 +576,7 @@ const deleteRecord = async () => {
 };
 const deletePlannedRecord = async () => {
   const payload = { id: id.value };
-  const apiRes = await supabaseDeletePlannedRecord({} as any, payload);
+  const apiRes = await supabaseDeletePlannedRecord({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
     // TODO 紐づく reord が存在する時、全てを null に更新してからplanned_recordを削除する
     if (apiRes.error.code === '23503') {
@@ -627,9 +626,9 @@ watch(isPair, (newValue, oldValue) => {
 
   const routerQuery = route.query as RouterQueryCalendarToNote;
   if (routerQuery.routerParamKey === routerParamKey.PLANNED_RECORD) {
-    // 定期定期な収入・支出の場合
-    isPlannedRecord.value = true;
-    await setPagePlannedRecord(route.params.plannedRecord);
+    const plannedRecord = routerParam(routerParamKey.PLANNED_RECORD) as PlannedRecord | null;
+    if (plannedRecord !== null) await setPagePlannedRecord(plannedRecord, routerQuery.crud);
+    else initSelectedMethodId();
   } else if (routerQuery.routerParamKey === routerParamKey.RECORD) {
     const record = routerParam(routerParamKey.RECORD) as Record_ | null;
     if (record !== null) setPageRecord(record, routerQuery.crud);

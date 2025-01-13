@@ -46,6 +46,7 @@ export type RouterQueryCalendarToNote = {
   crud: Crud;
 };
 export type RouterQueryRecordsToNote = RouterQueryCalendarToNote;
+export type RouterQuerySettingToNote = RouterQueryCalendarToNote;
 export type RouterQueryNoteToCalendar = {
   focus: DateString;
 };
@@ -60,6 +61,7 @@ export type Id = number;
 export type ColorString = string; // TODO: あらかじめ決められた文字列のみを許可する
 export type YearString = string; // YYYY
 export type MonthString = string; // MM
+export type DayString = string; // 毎月 DD 日
 export type YearMonthString = string; // YYYY-MM
 export type DateString = string; // YYYY-MM-DD
 export type DatetimeString = string; // YYYY-MM-DD HH:MM:SS
@@ -187,6 +189,27 @@ export type Record_ = {
   type_id: number;
   type_name: string;
 };
+export type PlannedRecord = {
+  id: number;
+  // is_pair: boolean;
+  is_pay: boolean;
+  // is_self: boolean | null;
+  memo: string | null | undefined; // toto 精査
+  // method_color_classification_name: string;
+  method_id: number;
+  // method_name: string;
+  pair_user_name: string | null;
+  price: number;
+  sub_type_id: number | null;
+  // sub_type_name: string | null;
+  // type_color_classification_id: number;
+  // type_color_classification_name: string;
+  type_id: number;
+  // type_name: string;
+  day_classification_id: number;
+  // sort: number;
+  // updated_at: DatetimeString;
+};
 
 export type DateRecordList = Record<
   ShareType,
@@ -304,4 +327,25 @@ export type GetPairedRecordListRpc = {
 export type GetColorListRpc = {
   id: number;
   name: string;
+};
+export type GetPlannedRecordListRpc = {
+  planned_record_id: number;
+  is_self: boolean | null;
+  is_pay: boolean;
+  price: number;
+  memo: string | null;
+  sort: number;
+  updated_at: DbDatetimeString;
+  is_pair: boolean;
+  pair_user_name: string | null;
+  day_classification_id: number;
+  day_classification_name: DayString;
+  method_id: number;
+  method_name: string;
+  method_color_classification_name: ColorString;
+  type_id: number;
+  type_name: string;
+  type_color_classification_name: ColorString;
+  sub_type_id: number | null;
+  sub_type_name: string | null;
 };

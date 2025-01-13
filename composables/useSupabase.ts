@@ -5,6 +5,7 @@ import type {
   GetMethodSummaryRpc,
   GetPairedRecordListRpc,
   GetPayAndIncomeListRpc,
+  GetPlannedRecordListRpc,
   GetRecordListRpc,
   GetTypeSummaryOutput,
   GetTypeSummaryRpc,
@@ -320,13 +321,16 @@ const supabaseApi = {
     const { data, error } = await supabase.from('records').delete().eq('id', id);
     return { data: data, error: error, message: 'record 削除' };
   },
-  async getPlannedRecordList({ rootGetters, commit }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.GET_PLANNED_RECORD_LIST;
+  async getPlannedRecordList({ isDemoLogin, userUid }: SupabaseApiAuthGet) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PLANNED_RECORD_LIST;
 
-    const payload = { input_user_id: rootGetters.userUID };
-    const { data, error } = await supabase.rpc('get_planned_record_list', payload);
-    if (error != null) {
-      return { data: data, error: error, message: 'planned_record 一覧' };
+    const payload = { input_user_id: userUid };
+    const { data, error } = await supabase.rpc<any, { Returns: GetPlannedRecordListRpc[] | null }>(
+      'get_planned_record_list',
+      payload
+    );
+    if (error != null || data === null) {
+      return { data: { self: [], pair: [] }, error: error, message: 'planned_record 一覧' };
     }
 
     return {
@@ -339,21 +343,21 @@ const supabaseApi = {
     };
   },
   async upsertPlannedRecord(
-    { rootGetters, commit }: any,
+    { isDemoLogin, userUid, isPair, pairId }: SupabaseApiAuthUpsert,
     { id, dayClassificationId, isPay, methodId, isInstead, typeId, subTypeId, price, memo }: any
   ) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     if (id === null) {
-      if (rootGetters.isPair && rootGetters.pairId == null) {
+      if (isPair && pairId == null) {
         return { data: null, error: 'isPair と pairID の関係性', message: 'method 挿入' };
       }
 
       // 挿入
       const { data, error } = await supabase.from('planned_records').insert([
         {
-          user_id: rootGetters.isPair && !isInstead ? null : rootGetters.userUID,
-          pair_id: rootGetters.isPair ? rootGetters.pairId : null,
+          user_id: isPair && !isInstead ? null : userUid,
+          pair_id: isPair ? pairId : null,
           day_classification_id: dayClassificationId,
           is_pay: isPay,
           method_id: methodId,
@@ -369,8 +373,8 @@ const supabaseApi = {
       const { data, error } = await supabase
         .from('planned_records')
         .update({
-          user_id: rootGetters.isPair && !isInstead ? null : rootGetters.userUID,
-          pair_id: rootGetters.isPair ? rootGetters.pairId : null,
+          user_id: isPair && !isInstead ? null : userUid,
+          pair_id: isPair ? pairId : null,
           day_classification_id: dayClassificationId,
           is_pay: isPay,
           method_id: methodId,
@@ -385,14 +389,14 @@ const supabaseApi = {
       return { data: null, error: true, message: 'planned_record upsert 想定外の状況' };
     }
   },
-  async deletePlannedRecord({ rootGetters, commit }: any, { id }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async deletePlannedRecord({ isDemoLogin }: SupabaseApiAuth, { id }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.from('planned_records').delete().eq('id', id);
     return { data: data, error: error, message: 'planned_record 削除' };
   },
-  async swapPlannedRecord({ rootGetters, commit }: any, { prevId, nextId }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async swapPlannedRecord({ isDemoLogin }: SupabaseApiAuth, { prevId, nextId }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.rpc('swap_planned_record', { id1: prevId, id2: nextId });
     return { data: data, error: error, message: 'planned_record 入替' };

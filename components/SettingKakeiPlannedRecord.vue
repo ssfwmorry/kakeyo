@@ -19,8 +19,9 @@
             <v-col class="d-flex justify-center align-end">
               <v-btn
                 v-if="plannedRecordIndex < plannedRecordList[isPair ? 'pair' : 'self'].length - 1"
-                icon
-                small
+                size="small"
+                variant="flat"
+                :icon="$ICONS.ARROW_DOWN"
                 @click.stop="
                   swapSort(
                     plannedRecord.planned_record_id,
@@ -28,8 +29,7 @@
                       .planned_record_id
                   )
                 "
-                ><v-icon>{{ $ICONS.ARROW_DOWN }}</v-icon></v-btn
-              >
+              ></v-btn>
             </v-col>
           </v-row>
         </v-col>
@@ -38,7 +38,9 @@
             :isDisable="false"
             :isPairType="plannedRecord.is_pair"
             :typeColor="plannedRecord.type_color_classification_name"
-            :typeAndSubtype="typeAndSubtype(plannedRecord)"
+            :typeAndSubtype="
+              StringUtility.typeAndSubtype(plannedRecord.type_name, plannedRecord.sub_type_name)
+            "
             :isShowPlannedIcon="true"
             :isEnableEdit="
               plannedRecord.is_self ||
@@ -48,9 +50,11 @@
             :userName="plannedRecord.pair_user_name ? plannedRecord.pair_user_name : ''"
             :methodColor="plannedRecord.method_color_classification_name"
             :methodName="plannedRecord.method_name"
-            :memo="plannedRecord.memo"
+            :memo="plannedRecord.memo ?? ''"
             :isShowBlueColorPrice="!plannedRecord.is_pay"
-            :price="ConvertIntToShowStrWithIsPay(plannedRecord)"
+            :price="
+              StringUtility.ConvertIntToShowStrWithIsPay(plannedRecord.price, plannedRecord.is_pay)
+            "
             @edit="goPlannedRecordEditPage(plannedRecord)"
           ></RecordCard>
         </v-col>
@@ -58,8 +62,8 @@
       <v-row no-gutters>
         <v-col class="d-flex justify-end">
           <v-btn
-            depressed
             rounded
+            variant="flat"
             color="primary"
             height="32"
             width="70"
@@ -72,85 +76,94 @@
   </div>
 </template>
 
-<script>
-import StringUtility from '@/plugins/utilities/string';
+<script setup lang="ts">
+import StringUtility from '@/utils/string';
+import {
+  crud,
+  dummy,
+  page,
+  routerParamKey,
+  type GetPlannedRecordListRpc,
+  type PlannedRecord,
+  type RouterQuerySettingToNote,
+} from '@/types/common';
 
-export default {
-  name: 'SettingKakeiPlannedRecord',
-  data() {
-    return {
-      plannedRecordList: { self: [], pair: [] },
-    };
-  },
-  computed: {
-    isPair: {
-      get() {
-        return this.$store.getters.isPair;
-      },
-    },
-  },
-  async created() {
-    await this.updateShowData();
-  },
-  methods: {
-    async updateShowData() {
-      const apiRes = await this.$store.dispatch('supabase-api/getPlannedRecordList');
-      if (apiRes.error != null) {
-        alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        return;
-      }
-      this.plannedRecordList = apiRes.data;
-    },
-    goPlannedRecordEditPage(plannedRecord) {
-      this.$router.push({
-        name: 'note',
-        params: { plannedRecord: plannedRecord },
-        query: { edit: true, isPlannedRecord: true },
-      });
-    },
-    goPlannedRecordCreatePage() {
-      // 形式的に、不要な id 系のフィールドもすべて指定
-      const tmpPlannedRecord = {
-        planned_record_id: null,
-        is_pay: true,
-        price: 0,
-        memo: null,
-        sort: null,
-        updated_at: null,
-        is_pair: null,
-        day_classification_id: null,
-        method_id: null,
-        type_id: null,
-        type_color_classification_id: null,
-        sub_type_id: null,
-      };
-      this.$router.push({
-        name: 'note',
-        params: { plannedRecord: tmpPlannedRecord },
-        query: { edit: false, isPlannedRecord: true },
-      });
-    },
-    async swapSort(prevId, nextId) {
-      const payload = { prevId: prevId, nextId: nextId };
-      const apiRes = await this.$store.dispatch('supabase-api/swapPlannedRecord', payload);
-      if (apiRes.error !== null) {
-        alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        return;
-      }
+const { enableLoading, disableLoading } = useLoadingStore();
+const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
+const { isDemoLogin } = storeToRefs(loginStore);
+const { isPair } = storeToRefs(pairStore);
+const { userUid } = storeToRefs(userStore);
+const { $ICONS } = useNuxtApp();
+const { setRouterParam } = useRouterParamStore();
+const router = useRouter();
+const { getPlannedRecordList, swapPlannedRecord } = useSupabase();
+const { setToast } = useToastStore();
 
-      await this.updateShowData();
-      this.$store.commit('toast', { message: '入れ替えました' });
-    },
-    typeAndSubtype({ type_name, sub_type_name }) {
-      if (sub_type_name) {
-        return type_name + ' ー ' + sub_type_name;
-      } else {
-        return type_name;
-      }
-    },
-    ConvertIntToShowStrWithIsPay({ price, is_pay }) {
-      return StringUtility.ConvertIntToShowStrWithIsPay(price, is_pay);
-    },
-  },
+type PlannedRecordList = {
+  self: GetPlannedRecordListRpc[];
+  pair: GetPlannedRecordListRpc[];
 };
+
+const plannedRecordList = ref<PlannedRecordList>({ self: [], pair: [] });
+
+const updateShowData = async () => {
+  const apiRes = await getPlannedRecordList({
+    isDemoLogin: isDemoLogin.value,
+    userUid: userUid.value ?? dummy.str,
+  });
+  if (apiRes.error != null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+  plannedRecordList.value = apiRes.data;
+};
+const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListRpc) => {
+  const tmpPlannedRecord: PlannedRecord = {
+    ...plannedRecord,
+    id: plannedRecord.planned_record_id,
+  };
+  setRouterParam(routerParamKey.PLANNED_RECORD, tmpPlannedRecord);
+  const query: RouterQuerySettingToNote = {
+    routerParamKey: routerParamKey.PLANNED_RECORD,
+    crud: crud.UPDATE,
+  };
+  router.push({ name: page.NOTE, query });
+};
+const goPlannedRecordCreatePage = () => {
+  const tmpPlannedRecord: PlannedRecord = {
+    id: dummy.nm,
+    is_pay: dummy.bl,
+    price: dummy.nm,
+    memo: null,
+    day_classification_id: dummy.nm,
+    method_id: dummy.nm,
+    type_id: dummy.nm,
+    sub_type_id: null,
+    pair_user_name: null,
+  };
+  setRouterParam(routerParamKey.PLANNED_RECORD, tmpPlannedRecord);
+  const query: RouterQuerySettingToNote = {
+    routerParamKey: routerParamKey.PLANNED_RECORD,
+    crud: crud.CREATE,
+  };
+  router.push({ name: page.NOTE, query });
+};
+const swapSort = async (prevId: number, nextId: number) => {
+  enableLoading();
+  const payload = { prevId: prevId, nextId: nextId };
+  const apiRes = await swapPlannedRecord({ isDemoLogin: isDemoLogin.value }, payload);
+  if (apiRes.error !== null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+
+  await updateShowData();
+  disableLoading();
+  setToast('入れ替えました');
+};
+
+// created
+(async () => {
+  await updateShowData();
+})();
 </script>
