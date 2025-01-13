@@ -191,24 +191,14 @@ export type Record_ = {
 };
 export type PlannedRecord = {
   id: number;
-  // is_pair: boolean;
   is_pay: boolean;
-  // is_self: boolean | null;
   memo: string | null | undefined; // toto 精査
-  // method_color_classification_name: string;
   method_id: number;
-  // method_name: string;
   pair_user_name: string | null;
   price: number;
   sub_type_id: number | null;
-  // sub_type_name: string | null;
-  // type_color_classification_id: number;
-  // type_color_classification_name: string;
   type_id: number;
-  // type_name: string;
   day_classification_id: number;
-  // sort: number;
-  // updated_at: DatetimeString;
 };
 
 export type DateRecordList = Record<

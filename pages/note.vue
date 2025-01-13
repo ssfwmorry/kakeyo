@@ -607,7 +607,10 @@ watch(isPair, (newValue, oldValue) => {
 (async () => {
   enableLoading();
 
-  const apiResType = await getTypeList({ isDemoLogin: isDemoLogin.value, userUid: userUid.value });
+  const apiResType = await getTypeList({
+    isDemoLogin: isDemoLogin.value,
+    userUid: userUid.value ?? dummy.str,
+  });
   // const apiResType = { error: null, message: null, data: null };
   if (apiResType.error != null) {
     alert(apiResType.message + `(Error: ${JSON.stringify(apiResType.error)})`);

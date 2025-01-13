@@ -10,38 +10,39 @@
         no-gutters
       >
         <v-col>
-          <v-card outlined class="pa-1">
+          <v-card variant="outlined" class="pa-1 card-border">
             <v-row no-gutters>
               <v-col cols="9" class="px-4 d-flex justify-start align-center">
                 <v-btn
-                  small
+                  size="28"
                   dark
-                  depressed
-                  width="28"
-                  min-width="28"
-                  :class="planType.color_classification_name"
+                  variant="flat"
+                  :class="`bg-${planType.color_classification_name}`"
                   class="mr-3 btn-icon"
-                >
-                  <v-icon>{{ isPair ? $ICONS.SHARE : '' }}</v-icon></v-btn
+                  ><v-icon>{{ isPair ? $ICONS.SHARE : '' }}</v-icon> </v-btn
                 >{{ planType.plan_type_name }}
               </v-col>
               <v-col cols="2" class="pr-4 d-flex justify-center align-center">
                 <v-btn
                   v-if="planTypeIndex < planTypeList[isPair ? 'pair' : 'self'].length - 1"
-                  icon
+                  variant="flat"
+                  density="compact"
+                  :icon="$ICONS.ARROW_DOWN"
                   @click.stop="
                     swapSort(
                       planType.plan_type_id,
                       planTypeList[isPair ? 'pair' : 'self'][planTypeIndex + 1].plan_type_id
                     )
                   "
-                  ><v-icon>{{ $ICONS.ARROW_DOWN }}</v-icon></v-btn
-                >
+                ></v-btn>
               </v-col>
               <v-col cols="1" class="pr-4 d-flex justify-center align-center">
-                <v-btn icon @click.stop="openEditDialog(planType)"
-                  ><v-icon>{{ $ICONS.PENCIL }}</v-icon></v-btn
-                >
+                <v-btn
+                  :icon="$ICONS.PENCIL"
+                  variant="flat"
+                  density="compact"
+                  @click.stop="openEditDialog(planType)"
+                ></v-btn>
               </v-col>
             </v-row>
           </v-card>
@@ -50,12 +51,12 @@
       <v-row no-gutters>
         <v-col class="d-flex justify-end">
           <v-btn
-            depressed
+            variant="flat"
             rounded
             color="primary"
             height="32"
             width="70"
-            @click="openCreateDialog('planType', null)"
+            @click="openCreateDialog()"
             >＋</v-btn
           >
         </v-col>
@@ -63,130 +64,144 @@
     </div>
 
     <SettingDialog
-      v-model="dialog"
+      v-model="planTypeDialog"
       title="カテゴリ名"
-      :colorList="colorList"
+      :colorList="props.colorList"
+      @closeDialog="closeDialog"
       @upsert="upsertApi()"
       @delete="deleteApi()"
     />
   </div>
 </template>
 
-<script>
-export default {
-  components: {
-    SettingDialog: () => import('@/components/SettingDialog'),
-  },
-  name: 'SettingPlanType',
-  data() {
-    return {
-      isEdit: true,
+<script setup lang="ts">
+import type { TypeDialog } from '@/components/SettingKakeiType.vue';
+import type { ColorList } from '@/pages/setting.vue';
+import { dummy } from '@/types/common';
 
-      planTypeList: { self: [], pair: [] },
+const { enableLoading, disableLoading } = useLoadingStore();
+const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
+const { isDemoLogin } = storeToRefs(loginStore);
+const { isPair, pairId } = storeToRefs(pairStore);
+const { userUid } = storeToRefs(userStore);
+const { $ICONS } = useNuxtApp();
+const { deletePlanType, getPlanTypeList, swapPlanType, upsertPlanType } = useSupabase();
+const { setToast } = useToastStore();
 
-      dialog: {
-        isShow: false,
-        isWithColor: true,
-        selectedId: null,
-        selectedName: '',
-        selectedColorId: null,
-      },
-    };
-  },
-  computed: {
-    isPair: {
-      get() {
-        return this.$store.getters.isPair;
-      },
-    },
-  },
-  props: {
-    colorList: {
-      type: Array,
-      default: () => [],
-      required: true,
-    },
-  },
-  async created() {
-    await this.updateShowData();
-  },
-  methods: {
-    async updateShowData() {
-      const apiRes = await this.$store.dispatch('supabase-api/getPlanTypeList');
-      if (apiRes.error != null) {
-        alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        return;
-      }
-      this.planTypeList = apiRes.data;
-    },
-    openCreateDialog() {
-      this.dialog = {
-        isShow: true,
-        isWithColor: true,
-        selectedId: null,
-        selectedName: '',
-        selectedColorId: null,
-      };
-    },
-    openEditDialog({ plan_type_id, plan_type_name, color_classification_id }) {
-      this.dialog = {
-        isShow: true,
-        isWithColor: true,
-        selectedId: plan_type_id,
-        selectedName: plan_type_name,
-        selectedColorId: color_classification_id,
-      };
-    },
-    async upsertApi() {
-      const payload = {
-        id: this.dialog.selectedId,
-        name: this.dialog.selectedName,
-        colorId: this.dialog.selectedColorId,
-      };
-      const apiRes = await this.$store.dispatch('supabase-api/upsertPlanType', payload);
-      if (apiRes.error !== null) {
-        alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        return;
-      }
-
-      await this.updateShowData();
-      this.$store.commit('toast', {
-        message: this.dialog.selectedId ? '変更しました' : '登録しました',
-      });
-      this.dialog.isShow = false;
-    },
-    async deleteApi() {
-      const payload = { id: this.dialog.selectedId };
-      const apiRes = await this.$store.dispatch('supabase-api/deletePlanType', payload);
-      if (apiRes.error !== null) {
-        if (apiRes.error.code === '23503') {
-          this.$store.commit('toast', {
-            color: 'error',
-            message: '紐づくデータがあるので削除できません',
-          });
-        } else {
-          alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        }
-        return;
-      }
-
-      await this.updateShowData();
-      this.$store.commit('toast', { message: '削除しました' });
-      this.dialog.isShow = false;
-    },
-    async swapSort(prevId, nextId) {
-      const payload = { prevId: prevId, nextId: nextId };
-      const apiRes = await this.$store.dispatch('supabase-api/swapPlanType', payload);
-      if (apiRes.error !== null) {
-        alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        return;
-      }
-
-      await this.updateShowData();
-      this.$store.commit('toast', { message: '入れ替えました' });
-    },
-  },
+type Props = {
+  colorList: ColorList;
 };
+const props = defineProps<Props>();
+type PlanTypeList = {
+  self: any[];
+  pair: any[];
+};
+type PlanTypeDialog = TypeDialog;
+
+const planTypeList = ref<PlanTypeList>({ self: [], pair: [] });
+const planTypeDialog = ref<PlanTypeDialog>({
+  isShow: false,
+  isWithColor: true,
+  id: null,
+  name: null,
+  colorId: null,
+});
+
+const updateShowData = async () => {
+  const apiRes = await getPlanTypeList({
+    isDemoLogin: isDemoLogin.value,
+    userUid: userUid.value ?? dummy.str,
+  });
+  if (apiRes.error != null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+  planTypeList.value = apiRes.data;
+};
+const openCreateDialog = () => {
+  planTypeDialog.value = {
+    isShow: true,
+    isWithColor: true,
+    id: null,
+    name: null,
+    colorId: null,
+  };
+};
+const openEditDialog = ({ plan_type_id, plan_type_name, color_classification_id }: any) => {
+  planTypeDialog.value = {
+    isShow: true,
+    isWithColor: true,
+    id: plan_type_id,
+    name: plan_type_name,
+    colorId: color_classification_id,
+  };
+};
+const closeDialog = () => {
+  planTypeDialog.value.isShow = false;
+};
+const upsertApi = async () => {
+  enableLoading();
+  const payload = {
+    id: planTypeDialog.value.id,
+    name: planTypeDialog.value.name,
+    colorId: planTypeDialog.value.colorId,
+  };
+  const apiRes = await upsertPlanType(
+    {
+      isDemoLogin: isDemoLogin.value,
+      userUid: userUid.value ?? dummy.str,
+      isPair: isPair.value,
+      pairId: pairId.value ?? dummy.nm,
+    },
+
+    payload
+  );
+  if (apiRes.error !== null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+
+  await updateShowData();
+  disableLoading();
+  setToast(planTypeDialog.value.id ? '変更しました' : '登録しました');
+  closeDialog();
+};
+const deleteApi = async () => {
+  enableLoading();
+  const payload = { id: planTypeDialog.value.id };
+  const apiRes = await deletePlanType({ isDemoLogin: isDemoLogin.value }, payload);
+  if (apiRes.error !== null) {
+    if (apiRes.error.code === '23503') {
+      setToast('紐づくデータがあるので削除できません', 'error');
+    } else {
+      alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    }
+    return;
+  }
+
+  await updateShowData();
+  disableLoading();
+  setToast('削除しました');
+  closeDialog();
+};
+const swapSort = async (prevId: number, nextId: number) => {
+  enableLoading();
+  const payload = { prevId: prevId, nextId: nextId };
+  const apiRes = await swapPlanType({ isDemoLogin: isDemoLogin.value }, payload);
+  if (apiRes.error !== null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+
+  await updateShowData();
+  disableLoading();
+  setToast('入れ替えました');
+};
+
+// created
+(async () => {
+  await updateShowData();
+})();
 </script>
 
 <style scoped lang="scss">

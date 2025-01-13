@@ -33,7 +33,7 @@ const supabaseApi = {
     }
     return { data: data[0].id as Id, error: null };
   },
-  async getTypeList({ isDemoLogin, userUid }: any) {
+  async getTypeList({ isDemoLogin, userUid }: SupabaseApiAuthGet) {
     if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_TYPE_LIST;
 
     const payload = { input_user_id: userUid };
@@ -479,20 +479,23 @@ const supabaseApi = {
       message: 'plan_type 取得',
     };
   },
-  async upsertPlanType({ rootGetters, commit }: any, { id, name, colorId }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async upsertPlanType(
+    { isDemoLogin, userUid, isPair, pairId }: SupabaseApiAuthUpsert,
+    { id, name, colorId }: any
+  ) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     if (id === null) {
       // TODO よりよい状況バリデーションチェック
-      if (rootGetters.isPair && rootGetters.pairId == null) {
+      if (isPair && pairId == null) {
         return { data: null, error: 'isPair と pairID の関係性', message: 'plan_type 挿入' };
       }
       // 挿入
       const { data, error } = await supabase.from('plan_types').insert([
         {
           name: name,
-          user_id: rootGetters.isPair ? null : rootGetters.userUID,
-          pair_id: rootGetters.isPair ? rootGetters.pairId : null,
+          user_id: isPair ? null : userUid,
+          pair_id: isPair ? pairId : null,
           color_classification_id: colorId,
         },
       ]);
@@ -511,14 +514,14 @@ const supabaseApi = {
       return { data: null, error: true, message: 'plan_type upsert 想定外の状況' };
     }
   },
-  async deletePlanType({ rootGetters, commit }: any, { id }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async deletePlanType({ isDemoLogin }: SupabaseApiAuth, { id }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.from('plan_types').delete().eq('id', id);
     return { data: data, error: error, message: 'plan_type 削除' };
   },
-  async swapPlanType({ rootGetters, commit }: any, { prevId, nextId }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async swapPlanType({ isDemoLogin }: SupabaseApiAuth, { prevId, nextId }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.rpc('swap_plan_type', { id1: prevId, id2: nextId });
     return { data: data, error: error, message: 'plan_type 入替' };
@@ -724,7 +727,7 @@ const supabaseApi = {
     }
     return { data: data, error: error, message: 'pay_and_income 一覧' };
   },
-  async getDayList({ isDemoLogin }: any) {
+  async getDayList({ isDemoLogin }: SupabaseApiAuth) {
     if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_DAY_LIST;
 
     const { data, error } = await supabase.from('day_classifications').select('id, name, value');
