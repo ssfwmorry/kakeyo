@@ -14,7 +14,7 @@
       <SettingPlanType :colorList="colorList" />
     </v-tabs-window-item>
     <v-tabs-window-item :value="tab.OTHER" class="pt-2 px-2 page-tab-item">
-      <!-- <SettingGeneral /> -->
+      <SettingGeneral />
     </v-tabs-window-item>
   </v-tabs-window>
 </template>

@@ -120,7 +120,7 @@ export const useFirebase = () => {
       return DEMO_DATA.DELETE_USER;
     return firebaseDeleteUser(Auth.currentUser)
       .then(() => {
-        return { error: null };
+        return { message: '', error: null };
       })
       .catch((err) => {
         console.log('deleteUserError', err);
