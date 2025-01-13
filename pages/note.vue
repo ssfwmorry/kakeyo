@@ -187,7 +187,7 @@
             height="44"
             variant="outlined"
             :value="price.toLocaleString()"
-            class="fs-lg text-field-price"
+            class="text-field-price"
             :class="{ 'text-field-price-padding': !isShowInitPrice }"
             :append-inner-icon="price !== 0 ? $ICONS.CLOSE : ''"
             @click:append-inner="price = 0"
@@ -669,6 +669,7 @@ watch(isPair, (newValue, oldValue) => {
   word-break: break-word; // Safari対応
 }
 :deep(.text-field-price input) {
+  font-size: $fontsize-large;
   text-align: right;
 }
 :deep(.text-field-price .v-text-field__suffix) {

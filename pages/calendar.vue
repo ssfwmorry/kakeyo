@@ -712,6 +712,7 @@ onMounted(async () => {
 }
 // セルの日付表示
 :deep(.fc-daygrid-day-top) {
+  height: 14px;
   font-size: 0.8rem !important;
   font-weight: 550 !important;
   justify-content: start;
