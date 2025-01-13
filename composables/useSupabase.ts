@@ -14,6 +14,7 @@ import type {
   SupabaseApiAuthUpsert,
   UpsertRecordInput,
 } from '@/types/common';
+import type { PostgrestError } from '@supabase/supabase-js';
 
 const supabaseApi = {
   async getPairId({ uid }: any) {
@@ -77,12 +78,15 @@ const supabaseApi = {
       message: 'type 取得',
     };
   },
-  async upsertType({ rootGetters, commit }: any, { id, name, isPay, colorId }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async upsertType(
+    { isDemoLogin, userUid, isPair, pairId }: SupabaseApiAuthUpsert,
+    { id, name, isPay, colorId }: any
+  ) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     if (id === null) {
       // TODO よりよい状況バリデーションチェック, 他の API も
-      if (rootGetters.isPair && rootGetters.pairId == null) {
+      if (isPair && pairId == null) {
         return { data: null, error: 'isPair と pairID の関係性', message: 'type 挿入' };
       }
 
@@ -90,8 +94,8 @@ const supabaseApi = {
       const { data, error } = await supabase.from('types').insert([
         {
           name: name,
-          user_id: rootGetters.isPair ? null : rootGetters.userUID,
-          pair_id: rootGetters.isPair ? rootGetters.pairId : null,
+          user_id: isPair ? null : userUid,
+          pair_id: isPair ? pairId : null,
           is_pay: isPay,
           color_classification_id: colorId,
         },
@@ -111,20 +115,20 @@ const supabaseApi = {
       return { data: null, error: true, message: 'type upsert 想定外の状況' };
     }
   },
-  async deleteType({ rootGetters, commit }: any, { id }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async deleteType({ isDemoLogin }: SupabaseApiAuth, { id }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.from('types').delete().eq('id', id);
     return { data: data, error: error, message: 'type 削除' };
   },
-  async swapType({ rootGetters, commit }: any, { prevId, nextId }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async swapType({ isDemoLogin }: SupabaseApiAuth, { prevId, nextId }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.rpc('swap_type', { id1: prevId, id2: nextId });
     return { data: data, error: error, message: 'type 入替' };
   },
-  async upsertSubType({ rootGetters, commit }: any, { id, typeId, name }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async upsertSubType({ isDemoLogin }: SupabaseApiAuth, { id, typeId, name }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     if (id === null) {
       // 挿入
@@ -143,19 +147,19 @@ const supabaseApi = {
       return { data: null, error: true, message: 'sub_types upsert 想定外の状況' };
     }
   },
-  async deleteSubType({ rootGetters, commit }: any, { id }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async deleteSubType({ isDemoLogin }: SupabaseApiAuth, { id }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.from('sub_types').delete().eq('id', id);
     return { data: data, error: error, message: 'sub_type 削除' };
   },
-  async swapSubType({ rootGetters, commit }: any, { prevId, nextId }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async swapSubType({ isDemoLogin }: SupabaseApiAuth, { prevId, nextId }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.rpc('swap_sub_type', { id1: prevId, id2: nextId });
     return { data: data, error: error, message: 'sub_type 入替' };
   },
-  async getMethodList({ isDemoLogin, userUid }: any) {
+  async getMethodList({ isDemoLogin, userUid }: SupabaseApiAuthGet) {
     if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_METHOD_LIST;
 
     const payload = { input_user_id: userUid };
@@ -719,10 +723,13 @@ const supabaseApi = {
     const { data, error } = await supabase.from('day_classifications').select('id, name, value');
     return { data: data, error: error, message: 'day_classifications 取得' };
   },
-  async getColorList({ rootGetters, commit }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.GET_COLOR_LIST;
+  async getColorList({ isDemoLogin }: SupabaseApiAuth) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_COLOR_LIST;
 
-    const { data, error } = await supabase.from('color_classifications').select('id, name');
+    const { data, error } = (await supabase.from('color_classifications').select('id, name')) as {
+      data: { id: number; name: string }[] | null;
+      error: PostgrestError | null;
+    };
     return { data: data, error: error, message: 'color_classifications 取得' };
   },
 };

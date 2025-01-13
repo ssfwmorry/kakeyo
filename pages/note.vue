@@ -616,7 +616,7 @@ watch(isPair, (newValue, oldValue) => {
   }
   const apiResMethod = await getMethodList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value,
+    userUid: userUid.value ?? dummy.str,
   });
   if (apiResMethod.error != null) {
     alert(apiResMethod.message + `(Error: ${JSON.stringify(apiResMethod.error)})`);

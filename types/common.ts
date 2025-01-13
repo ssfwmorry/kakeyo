@@ -301,3 +301,7 @@ export type GetPairedRecordListRpc = {
   sub_type_name: string | null;
   type_color_classification_name: string;
 };
+export type GetColorListRpc = {
+  id: number;
+  name: string;
+};
