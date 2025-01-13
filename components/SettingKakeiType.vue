@@ -10,9 +10,12 @@
             <v-btn :value="false" min-width="70" class="px-0">収入</v-btn>
           </v-btn-toggle>
           <div class="ml-4 d-flex align-center">
-            <v-btn icon variant="outlined" @click="isEdit = !isEdit" size="x-small"
-              ><v-icon>{{ isEdit ? $ICONS.SWAP_VERTICAL : $ICONS.PENCIL }}</v-icon></v-btn
-            >
+            <v-btn
+              size="x-small"
+              variant="outlined"
+              :icon="isEdit ? $ICONS.SWAP_VERTICAL : $ICONS.PENCIL"
+              @click="isEdit = !isEdit"
+            ></v-btn>
           </div>
         </v-col>
       </v-row>

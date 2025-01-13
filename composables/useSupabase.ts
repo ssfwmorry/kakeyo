@@ -183,11 +183,14 @@ const supabaseApi = {
       message: 'method 一覧',
     };
   },
-  async upsertMethod({ rootGetters, commit }: any, { id, name, isPay, colorId }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async upsertMethod(
+    { isDemoLogin, userUid, isPair, pairId }: SupabaseApiAuthUpsert,
+    { id, name, isPay, colorId }: any
+  ) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     if (id === null) {
-      if (rootGetters.isPair && rootGetters.pairId == null) {
+      if (isPair && pairId == null) {
         return { data: null, error: 'isPair と pairID の関係性', message: 'method 挿入' };
       }
 
@@ -195,8 +198,8 @@ const supabaseApi = {
       const { data, error } = await supabase.from('methods').insert([
         {
           name: name,
-          user_id: rootGetters.isPair ? null : rootGetters.userUID,
-          pair_id: rootGetters.isPair ? rootGetters.pairId : null,
+          user_id: isPair ? null : userUid,
+          pair_id: isPair ? pairId : null,
           is_pay: isPay,
           color_classification_id: colorId,
         },
@@ -216,14 +219,14 @@ const supabaseApi = {
       return { data: null, error: true, message: 'method upsert 想定外の状況' };
     }
   },
-  async deleteMethod({ rootGetters, commit }: any, { id }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async deleteMethod({ isDemoLogin }: SupabaseApiAuth, { id }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.from('methods').delete().eq('id', id);
     return { data: data, error: error, message: 'method 削除' };
   },
-  async swapMethod({ rootGetters, commit }: any, { prevId, nextId }: any) {
-    if (rootGetters.isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  async swapMethod({ isDemoLogin }: SupabaseApiAuth, { prevId, nextId }: any) {
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
     const { data, error } = await supabase.rpc('swap_method', { id1: prevId, id2: nextId });
     return { data: data, error: error, message: 'type 入替' };

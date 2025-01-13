@@ -4,14 +4,17 @@
     <div class="px-3 mb-4">
       <v-row no-gutters class="mb-3">
         <v-col class="d-flex flex-row">
-          <v-btn-toggle v-model="isPay" active-class="blue-grey lighten-1" color="white" mandatory>
+          <v-btn-toggle v-model="isPay" density="compact" variant="outlined" mandatory>
             <v-btn :value="true" width="70" class="px-0">支払</v-btn>
             <v-btn :value="false" min-width="70" class="px-0">受取</v-btn>
           </v-btn-toggle>
           <div class="ml-4 d-flex align-center">
-            <v-btn icon outlined @click="isEdit = !isEdit"
-              ><v-icon>{{ isEdit ? $ICONS.SWAP_VERTICAL : $ICONS.PENCIL }}</v-icon></v-btn
-            >
+            <v-btn
+              size="x-small"
+              variant="outlined"
+              :icon="isEdit ? $ICONS.SWAP_VERTICAL : $ICONS.PENCIL"
+              @click="isEdit = !isEdit"
+            ></v-btn>
           </div>
         </v-col>
       </v-row>
@@ -24,26 +27,32 @@
           cols="6"
           class="mb-2 col-method"
         >
-          <v-card outlined class="pa-2 d-flex align-center" min-height="54">
+          <v-card variant="outlined" class="pa-2 d-flex align-center card-border" min-height="54">
             <v-row no-gutters class="">
               <v-col
                 cols="10"
                 class="d-flex align-center"
-                :class="`${method.color_classification_name}--text`"
+                :class="`text-${method.color_classification_name}`"
               >
                 {{ method.name }}
               </v-col>
               <v-col cols="2" class="d-flex justify-center align-center">
-                <v-btn v-if="isEdit" icon @click.stop="openEditDialog(method)"
-                  ><v-icon>{{ $ICONS.PENCIL }}</v-icon></v-btn
-                >
+                <v-btn
+                  v-if="isEdit"
+                  density="compact"
+                  variant="flat"
+                  :icon="$ICONS.PENCIL"
+                  @click.stop="openEditDialog(method)"
+                ></v-btn>
                 <v-btn
                   v-else-if="
                     !isEdit &&
                     methodIndex <
                       methodList[isPay ? 'pay' : 'income'][isPair ? 'pair' : 'self'].length - 1
                   "
-                  icon
+                  density="compact"
+                  variant="flat"
+                  :icon="methodIndex % 2 === 0 ? $ICONS.ARROW_RIGHT : $ICONS.ARROW_BOTTOM_LEFT"
                   @click.stop="
                     swapSort(
                       method.id,
@@ -52,11 +61,8 @@
                       ].id
                     )
                   "
-                  ><v-icon>{{
-                    methodIndex % 2 === 0 ? $ICONS.ARROW_RIGHT : $ICONS.ARROW_BOTTOM_LEFT
-                  }}</v-icon></v-btn
-                >
-                <v-btn v-else icon disabled></v-btn>
+                ></v-btn>
+                <v-btn v-else :icon="''" density="compact" variant="flat"></v-btn>
               </v-col>
             </v-row>
           </v-card>
@@ -65,7 +71,7 @@
       <v-row no-gutters>
         <v-col class="d-flex justify-end">
           <v-btn
-            depressed
+            variant="flat"
             rounded
             color="primary"
             height="32"
@@ -78,137 +84,140 @@
     </div>
 
     <SettingDialog
-      v-model="dialog"
+      v-model="methodDialog"
       title="方法名"
-      :colorList="colorList"
+      :colorList="props.colorList"
+      @closeDialog="closeDialog"
       @upsert="upsertApi()"
       @delete="deleteApi()"
     />
   </div>
 </template>
 
-<script>
-export default {
-  components: {
-    SettingDialog: () => import('@/components/SettingDialog'),
-  },
-  name: 'SettingKakeiMethod',
-  data() {
-    return {
-      isPay: true,
-      isEdit: true,
+<script setup lang="ts">
+import type { ColorList } from '@/pages/setting.vue';
+import type { TypeDialog } from '@/components/SettingKakeiType.vue';
+import { dummy } from '@/types/common';
 
-      methodList: {
-        income: { self: [], pair: [] },
-        pay: { self: [], pair: [] },
-      },
+const { enableLoading, disableLoading } = useLoadingStore();
+const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
+const { isDemoLogin } = storeToRefs(loginStore);
+const { isPair, pairId } = storeToRefs(pairStore);
+const { userUid } = storeToRefs(userStore);
+const { $ICONS } = useNuxtApp();
+const { deleteMethod, getMethodList, swapMethod, upsertMethod } = useSupabase();
+const { setToast } = useToastStore();
 
-      dialog: {
-        isShow: false,
-        isWithColor: true,
-        selectedId: null,
-        selectedName: '',
-        selectedColorId: null,
-      },
-    };
-  },
-  computed: {
-    isPair: {
-      get() {
-        return this.$store.getters.isPair;
-      },
-    },
-  },
-  props: {
-    colorList: {
-      type: Array,
-      default: () => [],
-      required: true,
-    },
-  },
-  async created() {
-    await this.updateShowData();
-  },
-  methods: {
-    async updateShowData() {
-      const apiRes = await this.$store.dispatch('supabase-api/getMethodList');
-      if (apiRes.error != null) {
-        alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        return;
-      }
-      this.methodList = apiRes.data;
-    },
-    openCreateDialog() {
-      this.dialog = {
-        isShow: true,
-        isWithColor: true,
-        selectedId: null,
-        selectedName: '',
-        selectedColorId: null,
-      };
-    },
-    openEditDialog({ id, name, color_classification_id }) {
-      this.dialog = {
-        isShow: true,
-        isWithColor: true,
-        selectedId: id,
-        selectedName: name,
-        selectedColorId: color_classification_id,
-      };
-    },
-    async upsertApi() {
-      const payload = {
-        id: this.dialog.selectedId,
-        name: this.dialog.selectedName,
-        isPay: this.isPay,
-        colorId: this.dialog.selectedColorId,
-      };
-      const apiRes = await this.$store.dispatch('supabase-api/upsertMethod', payload);
-      if (apiRes.error !== null) {
-        alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        return;
-      }
-
-      await this.updateShowData();
-      this.$store.commit('toast', {
-        message: this.dialog.selectedId ? '変更しました' : '登録しました',
-      });
-      this.dialog.isShow = false;
-    },
-    async deleteApi(mode) {
-      const payload = { id: this.dialog.selectedId };
-      const apiRes = await this.$store.dispatch('supabase-api/deleteMethod', payload);
-      if (apiRes.error !== null) {
-        if (apiRes.error.code === '23503') {
-          this.$store.commit('toast', {
-            color: 'error',
-            message: '紐づくデータがあるので削除できません',
-          });
-        } else {
-          alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        }
-        return;
-      }
-
-      await this.updateShowData();
-      this.$store.commit('toast', { message: '削除しました' });
-      this.dialog.isShow = false;
-    },
-    async swapSort(prevId, nextId) {
-      const payload = { prevId: prevId, nextId: nextId };
-      const apiRes = await this.$store.dispatch('supabase-api/swapMethod', payload);
-      if (apiRes.error !== null) {
-        alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-        return;
-      }
-
-      await this.updateShowData();
-      this.$store.commit('toast', {
-        message: '入れ替えました',
-      });
-    },
-  },
+type Props = {
+  colorList: ColorList;
 };
+const props = defineProps<Props>();
+
+type MethodDialog = TypeDialog;
+const isPay = ref<boolean>(true);
+const isEdit = ref<boolean>(true);
+const methodList = ref({ income: { self: [], pair: [] }, pay: { self: [], pair: [] } } as any);
+const methodDialog = ref<MethodDialog>({
+  isShow: false,
+  isWithColor: true,
+  id: null,
+  name: null,
+  colorId: null,
+});
+
+const updateShowData = async () => {
+  const apiRes = await getMethodList({
+    isDemoLogin: isDemoLogin.value,
+    userUid: userUid.value ?? dummy.str,
+  });
+  if (apiRes.error != null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+  methodList.value = apiRes.data;
+};
+const openCreateDialog = () => {
+  methodDialog.value = {
+    isShow: true,
+    isWithColor: true,
+    id: null,
+    name: null,
+    colorId: null,
+  };
+};
+const openEditDialog = ({ id, name, color_classification_id }: any) => {
+  methodDialog.value = {
+    isShow: true,
+    isWithColor: true,
+    id: id,
+    name: name,
+    colorId: color_classification_id,
+  };
+};
+const closeDialog = () => {
+  methodDialog.value.isShow = false;
+};
+const upsertApi = async () => {
+  enableLoading();
+  const auth = {
+    isDemoLogin: isDemoLogin.value,
+    userUid: userUid.value ?? dummy.str,
+    isPair: isPair.value,
+    pairId: pairId.value ?? dummy.nm,
+  };
+  const payload = {
+    id: methodDialog.value.id,
+    name: methodDialog.value.name,
+    isPay: isPay.value,
+    colorId: methodDialog.value.colorId,
+  };
+  const apiRes = await upsertMethod(auth, payload);
+  if (apiRes.error !== null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+
+  await updateShowData();
+  disableLoading();
+  setToast(methodDialog.value.id ? '変更しました' : '登録しました');
+  methodDialog.value.isShow = false;
+};
+const deleteApi = async () => {
+  enableLoading();
+  const payload = { id: methodDialog.value.id };
+  const apiRes = await deleteMethod({ isDemoLogin: isDemoLogin.value }, payload);
+  if (apiRes.error !== null) {
+    if (apiRes.error.code === '23503') {
+      setToast('紐づくデータがあるので削除できません', 'error');
+    } else {
+      alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    }
+    return;
+  }
+
+  await updateShowData();
+  disableLoading();
+  setToast('削除しました');
+  methodDialog.value.isShow = false;
+};
+const swapSort = async (prevId: number, nextId: number) => {
+  enableLoading();
+  const payload = { prevId: prevId, nextId: nextId };
+  const apiRes = await swapMethod({ isDemoLogin: isDemoLogin.value }, payload);
+  if (apiRes.error !== null) {
+    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    return;
+  }
+
+  await updateShowData();
+  disableLoading();
+  setToast('入れ替えました');
+};
+
+// created
+(async () => {
+  await updateShowData();
+})();
 </script>
 
 <style scoped lang="scss">

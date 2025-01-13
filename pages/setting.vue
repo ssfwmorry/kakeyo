@@ -7,7 +7,7 @@
   <v-tabs-window v-model="tabMode" :touchless="true" class="h-100 bg-white">
     <v-tabs-window-item :value="tab.KAKEI" class="pt-2 px-2 page-tab-item">
       <SettingKakeiType :colorList="colorList" />
-      <!-- <SettingKakeiMethod :colorList="colorList" /> -->
+      <SettingKakeiMethod :colorList="colorList" />
       <!-- <SettingKakeiPlannedRecord /> -->
     </v-tabs-window-item>
     <v-tabs-window-item :value="tab.KAKEI" class="pt-2 px-2 page-tab-item">
@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GetColorListRpc } from '~/types/common';
+import type { GetColorListRpc } from '@/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const loginStore = useLoginStore();
