@@ -18,11 +18,7 @@
     ></PaginationBar>
 
     <v-row no-gutters class="mb-3">
-      <FullCalendar :options="calendarOptions" ref="fullCalendar" class="w-100">
-        <!-- <template #eventContent="arg">
-          <v-btn @click="test(arg)">{{ arg.event.title }}</v-btn>
-        </template> -->
-      </FullCalendar>
+      <FullCalendar :options="calendarOptions" ref="fullCalendar" class="w-100" />
     </v-row>
 
     <v-row no-gutters class="mb-2">
