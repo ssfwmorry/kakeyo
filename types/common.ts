@@ -7,7 +7,7 @@ export const format = {
 export const page = {
   BANK: 'bank',
   CALENDAR: 'calendar',
-  INDEX: '/',
+  INDEX: 'index',
   INQURY: 'inqury',
   LOGIN: 'login',
   NOTE: 'note',
