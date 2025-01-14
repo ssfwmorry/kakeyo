@@ -295,7 +295,7 @@ import {
   type RouterQueryCalendarToNote,
   type RouterQueryNoteToCalendar,
   type UpsertRecordInput,
-} from '@/types/common';
+} from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];

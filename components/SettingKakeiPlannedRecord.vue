@@ -86,7 +86,7 @@ import {
   type GetPlannedRecordListRpc,
   type PlannedRecord,
   type RouterQuerySettingToNote,
-} from '@/types/common';
+} from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];

@@ -135,7 +135,7 @@ import {
   type Plan,
   type RouterQueryCalendarToPlan,
   type RouterQueryPlanToCalendar,
-} from '@/types/common';
+} from '@/utils/types/common';
 import dayjs, { type Dayjs } from 'dayjs';
 
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];

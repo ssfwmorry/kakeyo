@@ -97,7 +97,7 @@
 <script setup lang="ts">
 import type { ColorList } from '@/pages/setting.vue';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
-import { dummy } from '@/types/common';
+import { dummy } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];

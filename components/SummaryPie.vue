@@ -172,7 +172,7 @@ import {
   type RecordsQueryParam,
   type SummaryQueryParam,
   type YearMonthObj,
-} from '@/types/common';
+} from '@/utils/types/common';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'vue-chartjs';
 ChartJS.register(ArcElement, Tooltip, Legend);

@@ -2,7 +2,7 @@ import type {
   GetPairedRecordListRpc,
   GetPlannedRecordListRpc,
   GetRecordListRpc,
-} from '@/types/common';
+} from '@/utils/types/common';
 
 const DEMO_DATA = {
   IS_RELEASE: true, // false: デモログインで動的レスポンス、true: デモログインで静的レスポンス

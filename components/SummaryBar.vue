@@ -100,7 +100,7 @@
 <script setup lang="ts">
 import TimeUtility from '@/utils/time';
 import StringUtility from '@/utils/string';
-import { dummy, type GetPayAndIncomeListRpc, type YearMonthString } from '~/types/common';
+import { dummy, type GetPayAndIncomeListRpc, type YearMonthString } from '@/utils/types/common';
 import {
   Chart as ChartJS,
   Title,

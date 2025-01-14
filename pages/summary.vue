@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import TimeUtility from '@/utils/time';
-import { routerParamKey, type SummaryQueryParam } from '@/types/common';
+import { routerParamKey, type SummaryQueryParam } from '@/utils/types/common';
 
 const [loginStore, pairStore] = [useLoginStore(), usePairStore()];
 const { isExistPair, isPair } = storeToRefs(pairStore);

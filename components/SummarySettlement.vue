@@ -196,7 +196,7 @@ import {
   type ColorString,
   type GetPairedRecordListRpc,
   type YearMonthObj,
-} from '@/types/common';
+} from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];

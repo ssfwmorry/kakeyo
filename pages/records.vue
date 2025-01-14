@@ -108,7 +108,7 @@ import {
   type RouterQueryCalendarToNote,
   type SummaryQueryParam,
   type YearMonthObj,
-} from '@/types/common';
+} from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, userStore] = [useLoginStore(), useUserStore()];

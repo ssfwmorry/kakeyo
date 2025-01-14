@@ -196,7 +196,7 @@ import {
   dummy,
   page,
   format,
-} from '@/types/common';
+} from '@/utils/types/common';
 import TimeUtility from '@/utils/time';
 import StringUtility from '@/utils/string';
 // https://fullcalendar.io/docs

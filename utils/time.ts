@@ -1,5 +1,5 @@
 import { DEMO_USER_INFO } from '@/constants';
-import type { DateString, DatetimeString, YearMonthObj } from '@/types/common';
+import type { DateString, DatetimeString, YearMonthObj } from '@/utils/types/common';
 import type { Dayjs } from 'dayjs';
 import JapaneseHolidays from 'japanese-holidays';
 const config = useRuntimeConfig();

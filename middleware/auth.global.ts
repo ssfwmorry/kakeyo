@@ -1,4 +1,4 @@
-import { page } from '@/types/common';
+import { page } from '@/utils/types/common';
 const OKPageList = [page.INQUIRY, page.LOGIN] as string[];
 
 export default defineNuxtRouteMiddleware((to, from) => {

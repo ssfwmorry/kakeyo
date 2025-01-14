@@ -117,7 +117,7 @@
 
 <script setup lang="ts">
 import { APP_NAME, DEMO_USER_INFO } from '@/constants';
-import { dummy, page } from '@/types/common';
+import { dummy, page } from '@/utils/types/common';
 
 const ContentList = [
   {

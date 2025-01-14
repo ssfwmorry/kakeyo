@@ -14,7 +14,7 @@ import type {
   SupabaseApiAuthGet,
   SupabaseApiAuthUpsert,
   UpsertRecordInput,
-} from '@/types/common';
+} from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 
 const supabaseApi = {
