@@ -15,5 +15,30 @@
   "vetur.validation.script": false,
   "css.validate": false,
   "scss.validate": false,
-  "vetur.validation.style": false
+  "vetur.validation.style": false,
+  "cSpell.words": [
+    "chartjs",
+    "composables",
+    "datatime",
+    "Datetime",
+    "daygrid",
+    "firebaserc",
+    "fullcalendar",
+    "iconsets",
+    "Kakei",
+    "kakeibo",
+    "Kakeyo",
+    "materialdesignicons",
+    "Nuxt",
+    "persistedstate",
+    "pinia",
+    "Postgrest",
+    "scrollgrid",
+    "Strs",
+    "Supabase",
+    "touchless",
+    "vuetify",
+    "Webstoryboy",
+    "zindex"
+  ]
 }

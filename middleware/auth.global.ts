@@ -1,5 +1,5 @@
 import { page } from '@/types/common';
-const OKPageList = [page.INQURY, page.LOGIN] as string[];
+const OKPageList = [page.INQUIRY, page.LOGIN] as string[];
 
 export default defineNuxtRouteMiddleware((to, from) => {
   const loginStore = useLoginStore();

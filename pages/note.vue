@@ -289,7 +289,7 @@ import {
   type Crud,
   type DateString,
   type Id,
-  type PickeredDate,
+  type PickedDate,
   type PlannedRecord,
   type Record_,
   type RouterQueryCalendarToNote,
@@ -326,7 +326,7 @@ const id = ref<Id | null>(null);
 const isPay = ref(true);
 const date = ref<DateString>(TimeUtility.GetNowDate(isDemoLogin.value));
 
-const recievedRecordDate = ref<string | null>(null);
+const receivedRecordDate = ref<string | null>(null);
 const selectedDayId = ref<number | null>(null);
 const selectedTypeId = ref<Id | null>(null);
 const selectedSubTypeId = ref<Id | null>(null);
@@ -390,11 +390,11 @@ const isEndSelectTypeAndSubType = () => {
   return false;
 };
 const setDate = (value: string) => {
-  const PickeredDate = value as unknown as PickeredDate;
+  const PickedDate = value as unknown as PickedDate;
   // TODO ゼロ埋め処理をUtilsに移行
-  const month = ('0' + String(PickeredDate.$M + 1)).slice(-2);
-  const day = ('0' + String(PickeredDate.$D)).slice(-2);
-  date.value = `${PickeredDate.$y}-${month}-${day}`;
+  const month = ('0' + String(PickedDate.$M + 1)).slice(-2);
+  const day = ('0' + String(PickedDate.$D)).slice(-2);
+  date.value = `${PickedDate.$y}-${month}-${day}`;
   isShowDatePicker.value = false;
 };
 const pushPrice = (num: any) => {
@@ -411,7 +411,7 @@ const initInputData = () => {
   id.value = null;
   isPay.value = true;
   date.value = TimeUtility.GetNowDate(isDemoLogin.value);
-  recievedRecordDate.value = null;
+  receivedRecordDate.value = null;
   selectedTypeId.value = null;
   selectedSubTypeId.value = null;
   memo.value = null;
@@ -555,8 +555,8 @@ const validateRecordAndShowErrorMsg = () => {
     return false;
   }
   if (
-    !!recievedRecordDate.value &&
-    !TimeUtility.IsSameYearMonth(recievedRecordDate.value, date.value)
+    !!receivedRecordDate.value &&
+    !TimeUtility.IsSameYearMonth(receivedRecordDate.value, date.value)
   ) {
     setToast('定期的なものは同月中のみ変更可能です', 'error');
     return false;
@@ -578,7 +578,7 @@ const deletePlannedRecord = async () => {
   const payload = { id: id.value };
   const apiRes = await supabaseDeletePlannedRecord({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
-    // TODO 紐づく reord が存在する時、全てを null に更新してからplanned_recordを削除する
+    // TODO 紐づく record が存在する時、全てを null に更新してからplanned_recordを削除する
     if (apiRes.error.code === '23503') {
       setToast('紐づくデータがあるので削除できません', 'error');
     } else {

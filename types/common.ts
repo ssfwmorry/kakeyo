@@ -8,7 +8,7 @@ export const page = {
   BANK: 'bank',
   CALENDAR: 'calendar',
   INDEX: 'index',
-  INQURY: 'inqury',
+  INQUIRY: 'inquiry',
   LOGIN: 'login',
   NOTE: 'note',
   PLAN: 'plan',
@@ -74,7 +74,7 @@ export const boolStr = {
 } as const;
 export type BoolString = (typeof boolStr)[keyof typeof boolStr];
 
-export type PickeredDate = {
+export type PickedDate = {
   $y: number;
   $M: number;
   $D: number;
@@ -124,7 +124,7 @@ export type ExternalEventPlan = {
   type: 'PLAN';
   startStr: DateString;
   endStr: DateString;
-  dbEnd: Date | null; // DBに登録されている終了日。このときBaseEventGetendは次の日を示す
+  dbEnd: Date | null; // DBに登録されている終了日。このときBaseEventGetEndは次の日を示す
   memo: string | null;
   planId: number; // id はライブラリの定義に string として既存
   isPair: boolean;

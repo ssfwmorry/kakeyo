@@ -4285,7 +4285,7 @@ const DEMO_DATA = {
     },
     // MEMO id で判別しているため isPair の考慮は不要
     // TODO isIncludeInsteadを考慮
-    GET_SUMMARIED_RECORD_LIST: (
+    GET_SUMMARIZED_RECORD_LIST: (
       isPay: any,
       isType: any,
       isPair: any,
@@ -4353,7 +4353,7 @@ const DEMO_DATA = {
         pair_user_name: null,
         is_instead: false,
       };
-      const shokkiData = {
+      const plateData = {
         record_id: 5,
         is_self: false,
         datetime: '2022-01-27 12:00:00',
@@ -4374,7 +4374,7 @@ const DEMO_DATA = {
         pair_user_name: '相手',
         is_instead: true,
       };
-      const hamigakikoData = {
+      const toothData = {
         id: 6,
         is_self: true,
         datetime: '2022-01-29 12:00:00',
@@ -4416,7 +4416,7 @@ const DEMO_DATA = {
           data = [rentalData];
         } else if (id == 121) {
           // 日用品
-          data = [shokkiData, hamigakikoData];
+          data = [plateData, toothData];
         } else if (subtypeId == 1221) {
           // 家賃
           data = [rentalData];
@@ -4433,10 +4433,10 @@ const DEMO_DATA = {
           data = [rentalData];
         } else if (id == 999) {
           // 相手 現金
-          data = [shokkiData];
+          data = [plateData];
         } else if (id == 112 && isPair) {
           // 自分 クレカ
-          data = [hamigakikoData];
+          data = [toothData];
         }
       }
       return {

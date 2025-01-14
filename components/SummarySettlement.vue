@@ -47,9 +47,9 @@
                 合計：
                 <span>{{ reportedDataByRate[selectedRateIndex].sum.toLocaleString() }}、</span>
                 現状：
-                <span>{{ reportedDataByRate[selectedRateIndex].asis.toLocaleString() }}、</span>
+                <span>{{ reportedDataByRate[selectedRateIndex].asIs.toLocaleString() }}、</span>
                 期待：
-                <span>{{ reportedDataByRate[selectedRateIndex].tobe.toLocaleString() }}</span>
+                <span>{{ reportedDataByRate[selectedRateIndex].toBe.toLocaleString() }}</span>
               </div>
               <v-divider class="mt-1" />
             </v-row>
@@ -261,12 +261,12 @@ const reportedDataByRate = computed(() => {
       if (record.isMe) sumMe += record.price;
     }
 
-    const tobe = Math.round(sum * RATE_LIST[rate.colorIndex]);
+    const toBe = Math.round(sum * RATE_LIST[rate.colorIndex]);
     ret.push({
-      sum: sum,
-      asis: sumMe,
-      tobe: tobe,
-      diff: tobe - sumMe, // 本来払うべき金額から実際に払った金額を減らす、つまりまだ払っていない金額
+      sum,
+      asIs: sumMe,
+      toBe,
+      diff: toBe - sumMe, // 本来払うべき金額から実際に払った金額を減らす、つまりまだ払っていない金額
     });
   }
 

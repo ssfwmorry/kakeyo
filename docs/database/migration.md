@@ -151,10 +151,10 @@ alter table public.records add column is_instead boolean;
 - `develop.get_method_summary`
 - `public.get_method_summary`
 
-## 20240102\_開発 と 本番 DB に get_summaried_record_list と get_planned_record_list を反映させる作業
+## 20240102\_開発 と 本番 DB に get_summarized_record_list と get_planned_record_list を反映させる作業
 
-- `develop.get_summaried_record_list`
-- `public.get_summaried_record_list`
+- `develop.get_summarized_record_list`
+- `public.get_summarized_record_list`
 - `develop.get_planned_record_list`
 - `public.get_planned_record_list`
 

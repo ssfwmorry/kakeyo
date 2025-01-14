@@ -182,10 +182,10 @@ const sideBarItems = computed((): PageItem[] => {
     name: 'ログイン',
     to: '/login',
   };
-  const inquryItem = {
+  const inquiryItem = {
     icon: $ICONS.PHONE,
     name: '問い合わせ',
-    to: '/inqury',
+    to: '/inquiry',
   };
   const logoutItem = {
     icon: $ICONS.LOGOUT,
@@ -194,12 +194,12 @@ const sideBarItems = computed((): PageItem[] => {
   };
 
   if (isLoggedIn.value) {
-    return [inquryItem, logoutItem];
+    return [inquiryItem, logoutItem];
   } else {
     if (route.name === 'login') {
-      return [inquryItem];
+      return [inquiryItem];
     } else {
-      return [inquryItem, loginItem];
+      return [inquiryItem, loginItem];
     }
   }
 });

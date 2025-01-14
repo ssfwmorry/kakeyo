@@ -116,7 +116,7 @@ const { setIsPair } = usePairStore();
 const { $ICONS } = useNuxtApp();
 const { routerParam, setRouterParam } = useRouterParamStore();
 const router = useRouter();
-const { getSummariedRecordList } = useSupabase();
+const { getSummarizedRecordList } = useSupabase();
 
 type ShowSetting = {
   isPay: boolean;
@@ -207,7 +207,7 @@ const updateList = async () => {
       yearMonth: TimeUtility.ConvertYearMonthObjToYearMonth(focus.value),
     };
 
-    apiRes = await getSummariedRecordList(
+    apiRes = await getSummarizedRecordList(
       { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? dummy.str },
       payload
     );

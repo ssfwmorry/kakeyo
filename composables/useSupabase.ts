@@ -658,12 +658,12 @@ const supabaseApi = {
       message: ' method summary 一覧',
     };
   },
-  async getSummariedRecordList(
+  async getSummarizedRecordList(
     { isDemoLogin, userUid }: SupabaseApiAuthGet,
     { isPay, isType, isPair, isIncludeInstead, yearMonth, id, subtypeId }: any
   ) {
     // prettier-ignore
-    if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_SUMMARIED_RECORD_LIST(isPay, isType, isPair, isIncludeInstead, yearMonth, id, subtypeId);
+    if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_SUMMARIZED_RECORD_LIST(isPay, isType, isPair, isIncludeInstead, yearMonth, id, subtypeId);
 
     const payload = {
       input_user_id: userUid,
@@ -675,12 +675,12 @@ const supabaseApi = {
       input_id: id,
       input_sub_type_id: subtypeId,
     };
-    const { data, error } = await supabase.rpc('get_summaried_record_list', payload);
+    const { data, error } = await supabase.rpc('get_summarized_record_list', payload);
     if (error !== null || !Array.isArray(data)) {
-      return { data: data, error: error, message: 'summaried_record 一覧' };
+      return { data: data, error: error, message: 'summarized_record 一覧' };
     }
 
-    return { data: data, error: error, message: 'summaried_record 一覧' };
+    return { data: data, error: error, message: 'summarized_record 一覧' };
   },
   async getPairedRecordList({ isDemoLogin, userUid }: SupabaseApiAuthGet, { yearMonth }: any) {
     if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PAIRED_RECORD_LIST(yearMonth);

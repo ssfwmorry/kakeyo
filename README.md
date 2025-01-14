@@ -1,4 +1,4 @@
-# KakeiboApp
+# Kakeyo
 
 ## Project Setup
 

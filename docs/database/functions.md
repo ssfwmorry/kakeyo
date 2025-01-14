@@ -961,7 +961,7 @@ as $$
 $$ language sql;
 ```
 
-## func_get_summaried_record_list
+## func_get_summarized_record_list
 
 - 概要
   - records 画面用に検索された records を複数取得する
@@ -979,9 +979,9 @@ $$ language sql;
 
 ```sql
 -- migration-sort: 17
-drop function if exists develop.get_summaried_record_list(input_user_id varchar(30), input_is_pay boolean, input_is_type boolean, input_is_pair boolean, input_is_include_instead boolean, input_year_month varchar(8), input_id int, input_sub_type_id int);
+drop function if exists develop.get_summarized_record_list(input_user_id varchar(30), input_is_pay boolean, input_is_type boolean, input_is_pair boolean, input_is_include_instead boolean, input_year_month varchar(8), input_id int, input_sub_type_id int);
 
-create or replace function develop.get_summaried_record_list(input_user_id varchar(30), input_is_pay boolean, input_is_type boolean, input_is_pair boolean, input_is_include_instead boolean, input_year_month varchar(8), input_id int, input_sub_type_id int)
+create or replace function develop.get_summarized_record_list(input_user_id varchar(30), input_is_pay boolean, input_is_type boolean, input_is_pair boolean, input_is_include_instead boolean, input_year_month varchar(8), input_id int, input_sub_type_id int)
 returns table (
     record_id integer,
     is_self boolean,
