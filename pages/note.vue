@@ -107,7 +107,7 @@
               @click="selectedTypeId = type.type_id"
             ></v-avatar>
           </v-card-actions>
-          <v-card-subtitle class="text-center py-0 px-2">{{ type.type_name }}</v-card-subtitle>
+          <div class="text-center py-0 px-2">{{ type.type_name }}</div>
         </v-card>
       </v-col>
     </v-row>

@@ -116,10 +116,9 @@
             </v-col>
             <v-col cols="3" class="py-0 pl-1 d-flex align-center">
               <v-btn
-                density="compact"
                 variant="flat"
                 :class="`bg-${selectedPlan.backgroundColor}`"
-                class="mr-3 pa-0 btn-icon size-28 tex-white"
+                class="mr-3 pa-0 btn-icon size-28 text-white"
               >
                 <v-icon>{{ selectedPlan.isPair ? $ICONS.SHARE : '' }}</v-icon>
               </v-btn>
@@ -136,9 +135,9 @@
               ></pre>
             </v-col>
             <v-col cols="2" class="d-flex justify-center align-center">
-              <v-card-subtitle class="px-2 py-0">
+              <div class="px-2 py-0">
                 <v-btn :icon="$ICONS.PENCIL" variant="flat" @click="goPlanEditPage()"></v-btn>
-              </v-card-subtitle>
+              </div>
             </v-col>
           </v-row>
         </v-card>

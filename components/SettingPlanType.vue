@@ -18,7 +18,7 @@
                   dark
                   variant="flat"
                   :class="`bg-${planType.color_classification_name}`"
-                  class="mr-3 btn-icon"
+                  class="mr-3 btn-icon text-white"
                   ><v-icon>{{ isPair ? $ICONS.SHARE : '' }}</v-icon> </v-btn
                 >{{ planType.plan_type_name }}
               </v-col>

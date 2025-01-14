@@ -3,7 +3,7 @@
     <v-col>
       <v-toolbar flat color="white" height="55">
         <v-spacer />
-        <v-btn fab variant="text" class="fs-lg" icon="" @click="prevFunc"> ＜ </v-btn>
+        <v-btn variant="text" class="fs-lg" icon="" @click="prevFunc"> ＜ </v-btn>
         <v-spacer />
         <div class="text-center">
           <v-toolbar-title>
@@ -12,7 +12,7 @@
           <h5>{{ props.subtitle }}</h5>
         </div>
         <v-spacer />
-        <v-btn fab variant="text" class="fs-lg" icon="" @click="nextFunc"> ＞ </v-btn>
+        <v-btn variant="text" class="fs-lg" icon="" @click="nextFunc"> ＞ </v-btn>
         <v-spacer />
       </v-toolbar>
     </v-col>

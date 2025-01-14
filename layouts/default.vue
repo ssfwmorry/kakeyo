@@ -238,7 +238,7 @@ const logOut = async () => {
   justify-content: center;
   position: absolute;
   width: 3.5rem;
-  height: 48px;
+  height: 40px;
   background-color: red;
   color: white;
   top: 0;

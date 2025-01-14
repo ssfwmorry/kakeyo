@@ -86,7 +86,7 @@
             <v-row no-gutters>
               <v-col cols="7" class="py-1 pl-1 d-flex align-center">
                 <!-- TODO records と 共通化 -->
-                <v-card-subtitle v-if="isType" class="py-0 pl-2">
+                <div v-if="isType" class="py-0 pl-2">
                   <v-avatar
                     size="25"
                     :color="typeOrMethod.color"
@@ -95,8 +95,8 @@
                   >
                   </v-avatar>
                   {{ typeOrMethod.name }}
-                </v-card-subtitle>
-                <v-card-subtitle v-else class="py-0 pl-2">
+                </div>
+                <div v-else class="py-0 pl-2">
                   <div>
                     <v-row no-gutters class="d-flex align-center">
                       <v-icon
@@ -110,7 +110,7 @@
                       <span :class="`${typeOrMethod.color}--text`">{{ typeOrMethod.name }}</span>
                     </v-row>
                   </div>
-                </v-card-subtitle>
+                </div>
               </v-col>
               <v-col cols="4" class="py-1 d-flex align-center justify-center">
                 <div class="py-0 pr-2">

@@ -27,25 +27,27 @@
             width="200"
             class="d-flex justify-center align-center bg-white"
           >
-            <v-card-subtitle v-if="showSetting.isType" class="py-0 pl-2">
-              <v-btn icon dark width="20" height="20" :color="color" class="mr-2 btn-icon"
-                ><v-icon v-if="showSetting.isPair" small>{{ $ICONS.SHARE }} </v-icon>
-              </v-btn>
+            <div v-if="showSetting.isType" class="py-0 pl-2">
+              <v-avatar
+                size="24"
+                :color="color"
+                :icon="showSetting.isPair ? $ICONS.SHARE : ''"
+                class="mr-2 text-white"
+              >
+              </v-avatar>
               {{ name }}
-            </v-card-subtitle>
-            <v-card-subtitle v-else class="py-0 pl-2">
-              <div>
-                <v-row no-gutters class="d-flex align-center">
-                  <span v-if="showSetting.isPair && pairUserName" class="mr-2 fs-sm">
-                    {{ pairUserName }}
-                  </span>
-                  <v-icon v-else-if="showSetting.isPair" small class="mr-2">
-                    {{ $ICONS.SHARE }}
-                  </v-icon>
-                  <span :class="`${color}--text`">{{ name }}</span>
-                </v-row>
-              </div>
-            </v-card-subtitle>
+            </div>
+            <div v-else class="py-0 pl-2">
+              <v-row no-gutters class="d-flex align-center">
+                <span v-if="showSetting.isPair && pairUserName" class="mr-2 fs-sm">
+                  {{ pairUserName }}
+                </span>
+                <v-icon v-else-if="showSetting.isPair" small class="mr-2">
+                  {{ $ICONS.SHARE }}
+                </v-icon>
+                <span :class="`${color}--text`">{{ name }}</span>
+              </v-row>
+            </div>
           </v-card>
         </v-col>
       </v-row>
