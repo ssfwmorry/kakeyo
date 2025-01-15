@@ -183,16 +183,16 @@
 </template>
 
 <script setup lang="ts">
-import { DUMMY } from '@/utils/constants';
-import TimeUtility from '@/utils/time';
-import StringUtility from '@/utils/string';
-import type { GetPairedRecordListRpc } from '@/utils/types/api';
 import {
-  RATE_LIST,
-  RATE_LABEL_LIST,
-  RATE_COLOR_LIST,
+  DUMMY,
   RATE_BACKGROUND_COLOR_LIST,
+  RATE_COLOR_LIST,
+  RATE_LABEL_LIST,
+  RATE_LIST,
 } from '@/utils/constants';
+import StringUtility from '@/utils/string';
+import TimeUtility from '@/utils/time';
+import type { GetPairedRecordListRpc } from '@/utils/types/api';
 import { type ColorString, type YearMonthObj } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();

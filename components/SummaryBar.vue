@@ -99,18 +99,18 @@
 
 <script setup lang="ts">
 import { DUMMY } from '@/utils/constants';
-import TimeUtility from '@/utils/time';
 import StringUtility from '@/utils/string';
+import TimeUtility from '@/utils/time';
 import type { GetPayAndIncomeListRpc } from '@/utils/types/api';
 import { type YearMonthString } from '@/utils/types/common';
 import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
   BarElement,
   CategoryScale,
+  Chart as ChartJS,
+  Legend,
   LinearScale,
+  Title,
+  Tooltip,
   type ChartOptions,
 } from 'chart.js';
 import { Bar } from 'vue-chartjs';

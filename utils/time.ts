@@ -2,9 +2,9 @@ import { DEMO_USER_INFO } from '@/utils/constants';
 import type { DateString, DatetimeString, YearMonthObj } from '@/utils/types/common';
 import type { Dayjs } from 'dayjs';
 import JapaneseHolidays from 'japanese-holidays';
+
 const config = useRuntimeConfig();
-const StartHHMMSS = '000000';
-const EndHHMMSS = '235959';
+
 // toISOString()ではUTC時刻を返すので9時間進めた時刻を渡す
 const NowDateJst = () => {
   const now = new Date();

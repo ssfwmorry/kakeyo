@@ -95,8 +95,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ColorList } from '@/pages/setting.vue';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
+import type { ColorList } from '@/pages/setting.vue';
 import { DUMMY } from '@/utils/constants';
 
 const { enableLoading, disableLoading } = useLoadingStore();

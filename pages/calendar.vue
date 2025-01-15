@@ -176,32 +176,32 @@
 
 <script setup lang="ts">
 import { DUMMY, PAGE } from '@/utils/constants';
+import StringUtility, { format } from '@/utils/string';
+import TimeUtility from '@/utils/time';
 import type { GetRecordListRpc } from '@/utils/types/api';
 import {
-  type ShareType,
-  type DateString,
-  type Record_,
+  crud,
+  eventType,
+  routerParamKey,
   type CalendarList,
+  type DateString,
+  type EventGetPlan,
+  type EventSet,
   type ExternalEvent,
   type Id,
   type Plan,
-  type EventGetPlan,
-  type EventSet,
+  type Record_,
   type RouterQueryCalendarToNote,
   type RouterQueryCalendarToPlan,
   type RouterQueryNoteToCalendar,
   type RouterQueryPlanToCalendar,
-  eventType,
-  routerParamKey,
-  crud,
+  type ShareType,
 } from '@/utils/types/common';
-import TimeUtility from '@/utils/time';
-import StringUtility, { format } from '@/utils/string';
 // https://fullcalendar.io/docs
-import FullCalendar from '@fullcalendar/vue3';
+import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
-import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
+import FullCalendar from '@fullcalendar/vue3';
 import dayjs from 'dayjs';
 
 const { enableLoading, disableLoading } = useLoadingStore();

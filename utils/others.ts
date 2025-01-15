@@ -45,10 +45,10 @@ const convertRouteParamsRaw = function (obj: Record<string, any>): RouteParamsRa
 };
 
 export {
+  IsInWhiteList,
   IsNotUndefined,
-  IsValidObj,
   IsValidKey,
   IsValidKeyValue,
-  IsInWhiteList,
+  IsValidObj,
   convertRouteParamsRaw,
 };

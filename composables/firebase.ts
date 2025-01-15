@@ -1,4 +1,4 @@
-import { getApps, getApp, initializeApp } from 'firebase/app';
+import { getApp, getApps, initializeApp } from 'firebase/app';
 const config = useRuntimeConfig();
 
 const firebaseConfig = {

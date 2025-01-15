@@ -1,7 +1,15 @@
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail as firebaseSendPasswordResetEmail, sendEmailVerification, signOut as firebaseSignOut, deleteUser as firebaseDeleteUser} from 'firebase/auth'; // prettier-ignore
 import firebaseApp from '@/composables/firebase';
 import { DEMO_DATA, DEMO_USER_INFO } from '@/utils/constants';
 import { IsInWhiteList } from '@/utils/others';
+import {
+  createUserWithEmailAndPassword,
+  deleteUser as firebaseDeleteUser,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
+  signOut as firebaseSignOut,
+  getAuth,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
 const config = useRuntimeConfig();
 const Auth = getAuth(firebaseApp);
 

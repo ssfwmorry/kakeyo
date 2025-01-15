@@ -162,8 +162,8 @@
 
 <script setup lang="ts">
 import { DUMMY, PAGE } from '@/utils/constants';
-import TimeUtility from '@/utils/time';
 import StringUtility from '@/utils/string';
+import TimeUtility from '@/utils/time';
 import type { GetMethodSummaryRpc, GetTypeSummaryOutput } from '@/utils/types/api';
 import {
   routerParamKey,
@@ -171,7 +171,7 @@ import {
   type SummaryQueryParam,
   type YearMonthObj,
 } from '@/utils/types/common';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import { Pie } from 'vue-chartjs';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
