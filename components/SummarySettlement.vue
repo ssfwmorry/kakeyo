@@ -183,25 +183,21 @@
 </template>
 
 <script setup lang="ts">
+import { DUMMY } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
 import StringUtility from '@/utils/string';
+import type { GetPairedRecordListRpc } from '@/utils/types/api';
 import {
   RATE_LIST,
   RATE_LABEL_LIST,
   RATE_COLOR_LIST,
   RATE_BACKGROUND_COLOR_LIST,
-} from '@/constants';
-import {
-  dummy,
-  type ColorString,
-  type GetPairedRecordListRpc,
-  type YearMonthObj,
-} from '@/utils/types/common';
+} from '@/utils/constants';
+import { type ColorString, type YearMonthObj } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
+const [loginStore, userStore] = [useLoginStore(), useUserStore()];
 const { isDemoLogin } = storeToRefs(loginStore);
-const { isPair, pairId } = storeToRefs(pairStore);
 const { userUid } = storeToRefs(userStore);
 const { getPairedRecordList, settleRecords: supabaseSettleRecords } = useSupabase();
 const { setToast } = useToastStore();
@@ -293,7 +289,7 @@ const updateChart = async () => {
     yearMonth: TimeUtility.ConvertYearMonthObjToYearMonth(focus.value),
   };
   const apiRes = await getPairedRecordList(
-    { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? dummy.str },
+    { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
     payload
   );
   if (apiRes.error !== null || apiRes.data === null) {

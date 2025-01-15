@@ -1,5 +1,6 @@
-import { page } from '@/utils/types/common';
-const OKPageList = [page.INQUIRY, page.LOGIN] as string[];
+import { PAGE } from '@/utils/constants';
+
+const OKPageList = [PAGE.INQUIRY, PAGE.LOGIN] as string[];
 
 export default defineNuxtRouteMiddleware((to, from) => {
   const loginStore = useLoginStore();
@@ -7,16 +8,16 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
   if (isLoggedIn.value) {
     // ログイン画面を拒否
-    if (to.name === page.LOGIN) {
-      return navigateTo(`/${page.NOTE}`);
+    if (to.name === PAGE.LOGIN) {
+      return navigateTo(`/${PAGE.NOTE}`);
     }
-    if (to.name === page.INDEX) {
-      return navigateTo(`/${page.CALENDAR}`);
+    if (to.name === PAGE.INDEX) {
+      return navigateTo(`/${PAGE.CALENDAR}`);
     }
   } else {
-    // ログイン前は、限られた page のみアクセス可能
+    // ログイン前は、限られた PAGE のみアクセス可能
     if (!OKPageList.includes(to.name?.toString() ?? '')) {
-      return navigateTo(`/${page.LOGIN}`);
+      return navigateTo(`/${PAGE.LOGIN}`);
     }
   }
 });

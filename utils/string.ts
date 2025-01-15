@@ -1,3 +1,8 @@
+export const format = {
+  Date: 'YYYY-MM-DD',
+  MonthDate: 'MM/DD',
+} as const;
+
 const StringUtility = {
   // ex.. PARAM: 10000(pay想定), RET: '10000' or '+10000'
   ConvertIntToShowStr: (payedPrice: number) => {

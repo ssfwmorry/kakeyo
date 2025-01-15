@@ -175,6 +175,8 @@
 </template>
 
 <script setup lang="ts">
+import { DUMMY, PAGE } from '@/utils/constants';
+import type { GetRecordListRpc } from '@/utils/types/api';
 import {
   type ShareType,
   type DateString,
@@ -185,7 +187,6 @@ import {
   type Plan,
   type EventGetPlan,
   type EventSet,
-  type GetRecordListRpc,
   type RouterQueryCalendarToNote,
   type RouterQueryCalendarToPlan,
   type RouterQueryNoteToCalendar,
@@ -193,12 +194,9 @@ import {
   eventType,
   routerParamKey,
   crud,
-  dummy,
-  page,
-  format,
 } from '@/utils/types/common';
 import TimeUtility from '@/utils/time';
-import StringUtility from '@/utils/string';
+import StringUtility, { format } from '@/utils/string';
 // https://fullcalendar.io/docs
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -338,7 +336,7 @@ const updateRange = async () => {
     start: prev.year + '-' + prev.month + '-21' + ' 00:00:00', // 全月の21日
     end: next.year + '-' + next.month + '-09' + ' 23:59:59', // 翌月の9日
   };
-  const authParam = { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? dummy.str };
+  const authParam = { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR };
 
   // plannedRecord から、足りない record を登録
   const apiResPostRecords = await postRecords(authParam, payload1);
@@ -538,50 +536,50 @@ const showPlan = (plan: EventGetPlan) => {
 const goRecordCreatePage = () => {
   const tmpDate = selectedDate.value ?? TimeUtility.GetNowDate(isDemoLogin.value);
   const record: Record_ = {
-    id: dummy.nm,
+    id: DUMMY.NM,
     datetime: TimeUtility.ConvertDateStrToDatetime(tmpDate),
     is_instead: null,
-    is_pair: dummy.bl,
-    is_pay: dummy.bl,
+    is_pair: DUMMY.BL,
+    is_pay: DUMMY.BL,
     is_self: null,
     memo: null,
-    method_color_classification_name: dummy.str,
-    method_id: dummy.nm,
-    method_name: dummy.str,
+    method_color_classification_name: DUMMY.STR,
+    method_id: DUMMY.NM,
+    method_name: DUMMY.STR,
     pair_user_name: null,
     planned_record_id: null,
-    price: dummy.nm,
+    price: DUMMY.NM,
     sub_type_id: null,
     sub_type_name: null,
-    type_color_classification_name: dummy.str,
-    type_id: dummy.nm,
-    type_name: dummy.str,
+    type_color_classification_name: DUMMY.STR,
+    type_id: DUMMY.NM,
+    type_name: DUMMY.STR,
   };
   setRouterParam(routerParamKey.RECORD, record);
   const query: RouterQueryCalendarToNote = {
     routerParamKey: routerParamKey.RECORD,
     crud: crud.CREATE,
   };
-  router.push({ name: page.NOTE, query });
+  router.push({ name: PAGE.NOTE, query });
 };
 const goPlanCreatePage = () => {
   const tmpDate = selectedDate.value ?? TimeUtility.GetNowDate(isDemoLogin.value);
   const plan: Plan = {
-    id: dummy.nm,
+    id: DUMMY.NM,
     start_date: tmpDate,
     end_date: tmpDate,
-    name: dummy.str,
+    name: DUMMY.STR,
     memo: null,
-    is_pair: dummy.bl,
-    plan_type_id: dummy.nm,
-    plan_type_name: dummy.str,
-    plan_type_color_classification_name: dummy.str,
+    is_pair: DUMMY.BL,
+    plan_type_id: DUMMY.NM,
+    plan_type_name: DUMMY.STR,
+    plan_type_color_classification_name: DUMMY.STR,
   };
   const query: RouterQueryCalendarToPlan = {
     crud: crud.CREATE,
   };
   setRouterParam(routerParamKey.PLAN, plan);
-  router.push({ name: page.PLAN, query });
+  router.push({ name: PAGE.PLAN, query });
 };
 const goRecordEditPage = (record: Record_) => {
   setIsPair(record.is_pair);
@@ -591,7 +589,7 @@ const goRecordEditPage = (record: Record_) => {
     routerParamKey: routerParamKey.RECORD,
     crud: crud.UPDATE,
   };
-  router.push({ name: page.NOTE, query });
+  router.push({ name: PAGE.NOTE, query });
 };
 const goPlanEditPage = () => {
   if (selectedPlan.value === null) throw new Error('goPlanEditPage');
@@ -613,13 +611,13 @@ const goPlanEditPage = () => {
   const query: RouterQueryCalendarToPlan = {
     crud: crud.UPDATE,
   };
-  router.push({ name: page.PLAN, query });
+  router.push({ name: PAGE.PLAN, query });
 };
 const getMemoList = async () => {
   const apiRes = await supabaseGetMemoList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
-    pairId: pairId.value ?? dummy.nm,
+    userUid: userUid.value ?? DUMMY.STR,
+    pairId: pairId.value ?? DUMMY.NM,
   });
   if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
@@ -642,9 +640,9 @@ const addMemo = async () => {
   const apiRes = await supabaseInsertMemo(
     {
       isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value ?? dummy.str,
+      userUid: userUid.value ?? DUMMY.STR,
       isPair: isPair.value,
-      pairId: pairId.value ?? dummy.nm,
+      pairId: pairId.value ?? DUMMY.NM,
     },
     payload
   );

@@ -116,8 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { APP_NAME, DEMO_USER_INFO } from '@/constants';
-import { dummy, page } from '@/utils/types/common';
+import { APP_NAME, DEMO_USER_INFO, DUMMY, PAGE } from '@/utils/constants';
 
 const ContentList = [
   {
@@ -200,11 +199,11 @@ const userLogin = async () => {
   const apiRes = await signInByUserLogin(payload);
   if (apiRes.error === 'EmailVerifiedError') {
     // TODO 本人確認メールで認証が終わっていないので再送する
-    errorMsg.value = apiRes.message ?? dummy.str;
+    errorMsg.value = apiRes.message ?? DUMMY.STR;
     return;
   }
   if (apiRes.error !== null || apiRes.data == null) {
-    errorMsg.value = apiRes.message ?? dummy.str;
+    errorMsg.value = apiRes.message ?? DUMMY.STR;
     return;
   }
 
@@ -234,7 +233,7 @@ const demoLogin = async () => {
 };
 
 const goCalendarPage = () => {
-  router.push({ name: page.CALENDAR });
+  router.push({ name: PAGE.CALENDAR });
 };
 
 const showSignUp = () => {

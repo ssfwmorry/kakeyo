@@ -161,14 +161,12 @@
 </template>
 
 <script setup lang="ts">
+import { DUMMY, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
 import StringUtility from '@/utils/string';
+import type { GetMethodSummaryRpc, GetTypeSummaryOutput } from '@/utils/types/api';
 import {
-  dummy,
-  page,
   routerParamKey,
-  type GetMethodSummaryRpc,
-  type GetTypeSummaryOutput,
   type RecordsQueryParam,
   type SummaryQueryParam,
   type YearMonthObj,
@@ -271,12 +269,12 @@ const updateChart = async () => {
   let sum: number = 0;
   if (isType.value) {
     apiRes = await getTypeSummary(
-      { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? dummy.str },
+      { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
       payload
     );
   } else {
     apiRes = await getMethodSummary(
-      { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? dummy.str },
+      { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
       payload
     );
   }
@@ -363,7 +361,7 @@ const goRecordsShowPage = (typeOrMethod: TypeOrMethod, subType: TypeListSubs | n
     pairUserName: typeOrMethod.pairUserName,
   };
   setRouterParam(routerParamKey.RECORDS_QUERY_PARAM, recordsQuery);
-  router.push({ name: page.RECORDS });
+  router.push({ name: PAGE.RECORDS });
 };
 
 // created

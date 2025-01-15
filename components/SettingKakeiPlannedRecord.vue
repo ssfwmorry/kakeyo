@@ -77,13 +77,12 @@
 </template>
 
 <script setup lang="ts">
+import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
+import type { GetPlannedRecordListRpc } from '@/utils/types/api';
 import {
   crud,
-  dummy,
-  page,
   routerParamKey,
-  type GetPlannedRecordListRpc,
   type PlannedRecord,
   type RouterQuerySettingToNote,
 } from '@/utils/types/common';
@@ -109,7 +108,7 @@ const plannedRecordList = ref<PlannedRecordList>({ self: [], pair: [] });
 const updateShowData = async () => {
   const apiRes = await getPlannedRecordList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
+    userUid: userUid.value ?? DUMMY.STR,
   });
   if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
@@ -127,17 +126,17 @@ const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListRpc) => {
     routerParamKey: routerParamKey.PLANNED_RECORD,
     crud: crud.UPDATE,
   };
-  router.push({ name: page.NOTE, query });
+  router.push({ name: PAGE.NOTE, query });
 };
 const goPlannedRecordCreatePage = () => {
   const tmpPlannedRecord: PlannedRecord = {
-    id: dummy.nm,
-    is_pay: dummy.bl,
-    price: dummy.nm,
+    id: DUMMY.NM,
+    is_pay: DUMMY.BL,
+    price: DUMMY.NM,
     memo: null,
-    day_classification_id: dummy.nm,
-    method_id: dummy.nm,
-    type_id: dummy.nm,
+    day_classification_id: DUMMY.NM,
+    method_id: DUMMY.NM,
+    type_id: DUMMY.NM,
     sub_type_id: null,
     pair_user_name: null,
   };
@@ -146,7 +145,7 @@ const goPlannedRecordCreatePage = () => {
     routerParamKey: routerParamKey.PLANNED_RECORD,
     crud: crud.CREATE,
   };
-  router.push({ name: page.NOTE, query });
+  router.push({ name: PAGE.NOTE, query });
 };
 const swapSort = async (prevId: number, nextId: number) => {
   enableLoading();

@@ -1,4 +1,4 @@
-import { DEMO_USER_INFO } from '@/constants';
+import { DEMO_USER_INFO } from '@/utils/constants';
 import type { DateString, DatetimeString, YearMonthObj } from '@/utils/types/common';
 import type { Dayjs } from 'dayjs';
 import JapaneseHolidays from 'japanese-holidays';

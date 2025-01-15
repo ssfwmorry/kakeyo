@@ -98,9 +98,11 @@
 </template>
 
 <script setup lang="ts">
+import { DUMMY } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
 import StringUtility from '@/utils/string';
-import { dummy, type GetPayAndIncomeListRpc, type YearMonthString } from '@/utils/types/common';
+import type { GetPayAndIncomeListRpc } from '@/utils/types/api';
+import { type YearMonthString } from '@/utils/types/common';
 import {
   Chart as ChartJS,
   Title,
@@ -189,7 +191,7 @@ const updateChart = async () => {
     isIncludeInstead: isExistPair.value ? isIncludeInstead.value : false,
   };
   const apiRes = await getPayAndIncomeList(
-    { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? dummy.str },
+    { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
     payload
   );
   if (apiRes.error !== null) {

@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GetColorListRpc } from '@/utils/types/common';
+import type { GetColorListRpc } from '@/utils/types/api';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const loginStore = useLoginStore();

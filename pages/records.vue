@@ -95,12 +95,11 @@
 </template>
 
 <script setup lang="ts">
+import { DUMMY, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
 import StringUtility from '@/utils/string';
 import {
   crud,
-  dummy,
-  page,
   routerParamKey,
   type ColorString,
   type Record_,
@@ -210,7 +209,7 @@ const updateList = async () => {
     };
 
     apiRes = await getSummarizedRecordList(
-      { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? dummy.str },
+      { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
       payload
     );
   } else {
@@ -240,7 +239,7 @@ const goSummaryPage = () => {
     focus: focus.value,
   };
   setRouterParam(routerParamKey.SUMMARY_QUERY_PARAM, summaryQueryParam);
-  router.push({ name: page.SUMMARY });
+  router.push({ name: PAGE.SUMMARY });
 };
 const goRecordEditPage = (record: Record_) => {
   setIsPair(record.is_pair);
@@ -250,7 +249,7 @@ const goRecordEditPage = (record: Record_) => {
     routerParamKey: routerParamKey.RECORD,
     crud: crud.UPDATE,
   };
-  router.push({ name: page.NOTE, query });
+  router.push({ name: PAGE.NOTE, query });
 };
 
 // created
@@ -258,7 +257,7 @@ const goRecordEditPage = (record: Record_) => {
   const recordsQuery = routerParam(routerParamKey.RECORDS_QUERY_PARAM) as RecordsQueryParam | null;
   if (recordsQuery == null) {
     alert('不正な画面遷移です');
-    router.push({ name: page.SUMMARY });
+    router.push({ name: PAGE.SUMMARY });
     return;
   }
   await setPageList(recordsQuery);

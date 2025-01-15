@@ -280,11 +280,10 @@
 
 <script setup lang="ts">
 import TimeUtility from '@/utils/time';
-import { MAX_PRICE } from '@/constants';
+import { DUMMY, MAX_PRICE, PAGE } from '@/utils/constants';
+import type { UpsertRecordInput } from '@/utils/types/api';
 import {
   crud,
-  dummy,
-  page,
   routerParamKey,
   type Crud,
   type DateString,
@@ -294,7 +293,6 @@ import {
   type Record_,
   type RouterQueryCalendarToNote,
   type RouterQueryNoteToCalendar,
-  type UpsertRecordInput,
 } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -487,9 +485,9 @@ const upsertRecord = async () => {
     id: id.value,
     datetime: TimeUtility.ConvertDateStrToDatetime(date.value),
     isPay: isPay.value,
-    methodId: selectedMethodId.value ?? dummy.nm,
+    methodId: selectedMethodId.value ?? DUMMY.NM,
     isInstead: isInstead.value,
-    typeId: selectedTypeId.value ?? dummy.nm,
+    typeId: selectedTypeId.value ?? DUMMY.NM,
     subTypeId: selectedSubTypeId.value,
     price: price.value,
     memo: memo.value,
@@ -497,9 +495,9 @@ const upsertRecord = async () => {
   const apiRes = await supabaseUpsertRecord(
     {
       isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value ?? dummy.str,
+      userUid: userUid.value ?? DUMMY.STR,
       isPair: isPair.value,
-      pairId: pairId.value ?? dummy.nm,
+      pairId: pairId.value ?? DUMMY.NM,
     },
     payload
   );
@@ -514,7 +512,7 @@ const upsertRecord = async () => {
   } else {
     setToast(id.value === null ? '登録しました' : '変更しました');
     const query: RouterQueryNoteToCalendar = { focus: date.value };
-    router.push({ name: page.CALENDAR, query });
+    router.push({ name: PAGE.CALENDAR, query });
   }
   loading.value = false;
 };
@@ -535,9 +533,9 @@ const upsertPlannedRecord = async () => {
   const apiRes = await supabaseUpsertPlannedRecord(
     {
       isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value ?? dummy.str,
+      userUid: userUid.value ?? DUMMY.STR,
       isPair: isPair.value,
-      pairId: pairId.value ?? dummy.nm,
+      pairId: pairId.value ?? DUMMY.NM,
     },
     payload
   );
@@ -547,7 +545,7 @@ const upsertPlannedRecord = async () => {
   }
 
   setToast(id.value === null ? '登録しました' : '変更しました');
-  router.push({ name: page.SETTING });
+  router.push({ name: PAGE.SETTING });
 };
 const validateRecordAndShowErrorMsg = () => {
   // ボタンが非活性なので以下は起こらない想定
@@ -572,7 +570,7 @@ const deleteRecord = async () => {
   }
   setToast('削除しました');
   const query: RouterQueryNoteToCalendar = { focus: date.value };
-  router.push({ name: page.CALENDAR, query });
+  router.push({ name: PAGE.CALENDAR, query });
 };
 const deletePlannedRecord = async () => {
   const payload = { id: id.value };
@@ -588,13 +586,13 @@ const deletePlannedRecord = async () => {
   }
 
   setToast('削除しました');
-  router.push({ name: page.SETTING });
+  router.push({ name: PAGE.SETTING });
 };
 
 watch(isPair, (newValue, oldValue) => {
   if (isPlannedRecord.value && id.value != null) {
     // planned_record 編集時、isPair の切り替えをできなくする
-    router.push({ name: page.SETTING });
+    router.push({ name: PAGE.SETTING });
     setToast('共有の変更はできません', 'error');
     return;
   }
@@ -609,7 +607,7 @@ watch(isPair, (newValue, oldValue) => {
 
   const apiResType = await getTypeList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
+    userUid: userUid.value ?? DUMMY.STR,
   });
   // const apiResType = { error: null, message: null, data: null };
   if (apiResType.error != null) {
@@ -618,7 +616,7 @@ watch(isPair, (newValue, oldValue) => {
   }
   const apiResMethod = await getMethodList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
+    userUid: userUid.value ?? DUMMY.STR,
   });
   if (apiResMethod.error != null) {
     alert(apiResMethod.message + `(Error: ${JSON.stringify(apiResMethod.error)})`);

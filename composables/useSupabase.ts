@@ -1,7 +1,6 @@
 import supabase from '@/composables/supabase';
-import { DEMO_DATA } from '@/constants';
+import { DEMO_DATA } from '@/utils/constants';
 import type {
-  DateRange,
   GetMethodSummaryRpc,
   GetPairedRecordListRpc,
   GetPayAndIncomeListRpc,
@@ -9,12 +8,12 @@ import type {
   GetRecordListRpc,
   GetTypeSummaryOutput,
   GetTypeSummaryRpc,
-  Id,
   SupabaseApiAuth,
   SupabaseApiAuthGet,
   SupabaseApiAuthUpsert,
   UpsertRecordInput,
-} from '@/utils/types/common';
+} from '@/utils/types/api';
+import type { DateRange, Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 
 const supabaseApi = {

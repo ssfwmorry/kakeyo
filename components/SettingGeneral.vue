@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { page } from '@/utils/types/common';
+import { PAGE } from '@/utils/constants';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const { signOut, deleteUser: firebaseDeleteUser } = useFirebase();
@@ -56,6 +56,6 @@ const deleteUser = async () => {
   }
   disableLoading();
   setToast('アカウントを削除しました');
-  router.push({ name: page.LOGIN });
+  router.push({ name: PAGE.LOGIN });
 };
 </script>

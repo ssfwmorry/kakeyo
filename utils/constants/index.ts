@@ -2,7 +2,7 @@
 // 引数に与えることで、環境変数を使えるようにする
 import type { RuntimeConfig } from 'nuxt/schema';
 // 直接 demoApi.ts から import すると 'implicitly has type any' エラーがでる。そのため本ファイルからexportする
-import DEMO_DATA from '@/constants/demoApi';
+import DEMO_DATA from '@/utils/constants/demoApi';
 
 const DbSchema = {
   develop: 'develop',
@@ -23,6 +23,28 @@ const DEMO_USER_INFO = (config: RuntimeConfig) => {
     UID: config.public.demoUserUid,
   };
 };
+
+const DUMMY = {
+  BL: false, // boolean
+  NM: -1, //number
+  STR: 'dummy',
+  DT: new Date(), // date
+  DT_STR: 'YYYY-MM-DD', // dateString
+  DTT_STR: 'YYYY-MM-DD HH:MM:SS', // datatimeString
+} as const;
+
+const PAGE = {
+  BANK: 'bank',
+  CALENDAR: 'calendar',
+  INDEX: 'index',
+  INQUIRY: 'inquiry',
+  LOGIN: 'login',
+  NOTE: 'note',
+  PLAN: 'plan',
+  RECORDS: 'records',
+  SUMMARY: 'summary',
+  SETTING: 'setting',
+} as const;
 
 const COLOR_LIST = [
   'red', // 0
@@ -66,7 +88,9 @@ export {
   COLOR_LIST,
   DEMO_DATA,
   DEMO_USER_INFO,
+  DUMMY,
   EMAIL_WHITE_LIST,
+  PAGE,
   MAX_PRICE,
   RATE_LIST,
   RATE_LABEL_LIST,

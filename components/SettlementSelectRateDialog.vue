@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { RATE_LABEL_LIST as rateList, RATE_COLOR_LIST as colorList } from '@/constants';
+import { RATE_LABEL_LIST as rateList, RATE_COLOR_LIST as colorList } from '@/utils/constants';
 const emits = defineEmits();
 
 type Props = {

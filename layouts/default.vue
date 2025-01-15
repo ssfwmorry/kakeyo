@@ -96,8 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { APP_NAME } from '@/constants';
-import { page } from '@/utils/types/common';
+import { APP_NAME, PAGE } from '@/utils/constants';
 
 type PageItem = {
   icon: string;
@@ -216,7 +215,7 @@ const logOut = async () => {
   await signOut();
   setLogout();
   router.push({
-    name: page.LOGIN,
+    name: PAGE.LOGIN,
   });
   drawer.value = false;
 };

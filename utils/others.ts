@@ -1,6 +1,6 @@
-import { EMAIL_WHITE_LIST } from '@/constants';
-import type { RouteParamsRaw } from 'vue-router';
+import { EMAIL_WHITE_LIST } from '@/utils/constants';
 import { boolStr } from '@/utils/types/common';
+import type { RouteParamsRaw } from 'vue-router';
 const config = useRuntimeConfig();
 
 const IsNotUndefined = function (obj: any) {

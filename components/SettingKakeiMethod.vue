@@ -97,7 +97,7 @@
 <script setup lang="ts">
 import type { ColorList } from '@/pages/setting.vue';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
-import { dummy } from '@/utils/types/common';
+import { DUMMY } from '@/utils/constants';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -128,7 +128,7 @@ const methodDialog = ref<MethodDialog>({
 const updateShowData = async () => {
   const apiRes = await getMethodList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
+    userUid: userUid.value ?? DUMMY.STR,
   });
   if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
@@ -161,9 +161,9 @@ const upsertApi = async () => {
   enableLoading();
   const auth = {
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
+    userUid: userUid.value ?? DUMMY.STR,
     isPair: isPair.value,
-    pairId: pairId.value ?? dummy.nm,
+    pairId: pairId.value ?? DUMMY.NM,
   };
   const payload = {
     id: methodDialog.value.id,

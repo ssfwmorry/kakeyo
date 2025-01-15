@@ -123,12 +123,11 @@
 </template>
 
 <script setup lang="ts">
+import { DUMMY, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
+import { format } from '@/utils/string';
 import {
   crud,
-  dummy,
-  format,
-  page,
   routerParamKey,
   type Crud,
   type Id,
@@ -216,9 +215,9 @@ const upsertPlan = async () => {
   const apiRes = await supabaseUpsertPlan(
     {
       isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value ?? dummy.str,
+      userUid: userUid.value ?? DUMMY.STR,
       isPair: isPair.value,
-      pairId: pairId.value ?? dummy.nm,
+      pairId: pairId.value ?? DUMMY.NM,
     },
     payload
   );
@@ -232,7 +231,7 @@ const upsertPlan = async () => {
   if (tmpDate === null) throw new Error('upsertPlan');
   const dateStr = tmpDate.format(format.Date);
   const query: RouterQueryPlanToCalendar = { focus: dateStr };
-  router.push({ name: page.CALENDAR, query });
+  router.push({ name: PAGE.CALENDAR, query });
 
   loading.value = false;
 };
@@ -284,7 +283,7 @@ const deletePlan = async () => {
   if (tmpDate === null) throw new Error('deletePlan');
   const dateStr = tmpDate.format(format.Date);
   const query: RouterQueryPlanToCalendar = { focus: dateStr };
-  router.push({ name: page.CALENDAR, query });
+  router.push({ name: PAGE.CALENDAR, query });
 };
 const updateMenu = () => {
   if (isOpenDatePicker.value && dates.value.length == 1) dates.value = [];
@@ -306,7 +305,7 @@ watch(isPair, (newValue, oldValue) => {
 (async () => {
   const apiRes = await getPlanTypeList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
+    userUid: userUid.value ?? DUMMY.STR,
   });
   if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);

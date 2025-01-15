@@ -161,7 +161,7 @@
 
 <script setup lang="ts">
 import type { ColorList } from '@/pages/setting.vue';
-import { dummy } from '@/utils/types/common';
+import { DUMMY } from '@/utils/constants';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -218,7 +218,7 @@ const subTypeDialog = ref<SubTypeDialog>({
 const updateShowData = async () => {
   const apiRes = await getTypeList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
+    userUid: userUid.value ?? DUMMY.STR,
   });
   if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
@@ -253,9 +253,9 @@ const upsertApi = async (inputMode: Mode) => {
   let isCreated = false;
   const auth = {
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
+    userUid: userUid.value ?? DUMMY.STR,
     isPair: isPair.value,
-    pairId: pairId.value ?? dummy.nm,
+    pairId: pairId.value ?? DUMMY.NM,
   };
 
   if (inputMode === mode.TYPE) {

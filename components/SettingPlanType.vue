@@ -77,7 +77,7 @@
 <script setup lang="ts">
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
 import type { ColorList } from '@/pages/setting.vue';
-import { dummy } from '@/utils/types/common';
+import { DUMMY } from '@/utils/constants';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -110,7 +110,7 @@ const planTypeDialog = ref<PlanTypeDialog>({
 const updateShowData = async () => {
   const apiRes = await getPlanTypeList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? dummy.str,
+    userUid: userUid.value ?? DUMMY.STR,
   });
   if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
@@ -149,9 +149,9 @@ const upsertApi = async () => {
   const apiRes = await upsertPlanType(
     {
       isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value ?? dummy.str,
+      userUid: userUid.value ?? DUMMY.STR,
       isPair: isPair.value,
-      pairId: pairId.value ?? dummy.nm,
+      pairId: pairId.value ?? DUMMY.NM,
     },
 
     payload
