@@ -303,7 +303,7 @@ const supabaseApi = {
       .update({
         is_settled: true,
       })
-      .eq('id', ids);
+      .in('id', ids);
     return { data: data, error: error, message: 'is_settled 更新' };
   },
 
