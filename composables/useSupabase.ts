@@ -441,6 +441,7 @@ const supabaseApi = {
       const { data, error } = await supabase
         .from('plans')
         .update({
+          user_id: isPair ? null : userUid,
           pair_id: isPair ? pairId : null,
           start_date: startDate,
           end_date: endDate,
