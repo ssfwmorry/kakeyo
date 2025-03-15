@@ -93,7 +93,7 @@ export type GetPairedRecordListRpc = {
   sub_type_name: string | null;
   type_color_classification_name: string;
 };
-export type GetColorListRpc = {
+export type getColorClassificationListRpc = {
   id: number;
   name: string;
 };

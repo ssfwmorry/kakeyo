@@ -305,7 +305,7 @@ const { $ICONS } = useNuxtApp();
 const route = useRoute();
 const router = useRouter();
 const {
-  getDayList,
+  getDayClassificationList,
   getMethodList,
   getTypeList,
   upsertRecord: supabaseUpsertRecord,
@@ -452,7 +452,7 @@ const setPageRecord = (record: Record_, c: Crud) => {
 const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
   isPlannedRecord.value = true;
 
-  const apiRes = await getDayList({ isDemoLogin: isDemoLogin.value });
+  const apiRes = await getDayClassificationList({ isDemoLogin: isDemoLogin.value });
   if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;

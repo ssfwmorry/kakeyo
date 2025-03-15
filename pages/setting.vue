@@ -20,12 +20,12 @@
 </template>
 
 <script setup lang="ts">
-import type { GetColorListRpc } from '@/utils/types/api';
+import type { getColorClassificationListRpc } from '@/utils/types/api';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const loginStore = useLoginStore();
 const { isDemoLogin } = storeToRefs(loginStore);
-const { getColorList } = useSupabase();
+const { getColorClassificationList } = useSupabase();
 
 const tab = {
   KAKEI: 1,
@@ -33,7 +33,7 @@ const tab = {
   OTHER: 3,
 } as const;
 type Tab = (typeof tab)[keyof typeof tab];
-export type ColorList = GetColorListRpc[];
+export type ColorList = getColorClassificationListRpc[];
 
 const tabMode = ref<Tab>(tab.KAKEI);
 const colorList = ref<ColorList>([]);
@@ -42,7 +42,7 @@ const colorList = ref<ColorList>([]);
 (async () => {
   enableLoading();
 
-  const apiRes = await getColorList({ isDemoLogin: isDemoLogin.value });
+  const apiRes = await getColorClassificationList({ isDemoLogin: isDemoLogin.value });
   if (apiRes.data === null || apiRes.error !== null) return;
   colorList.value = apiRes.data;
 
