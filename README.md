@@ -50,10 +50,6 @@ $ firebase use <project-id>
 
 ## 開発規則
 
-### ローカル実行時
-
-`.env` 内 `VUE_APP_SUPABASE_SCHEMA` を `public` → `develop` にする
-
 ### PUSH 時
 
 #### DB 関連の定義
@@ -65,12 +61,7 @@ $ firebase use <project-id>
 
 - DB の変更がある場合には `migrations.md` に作業を記載
 - コミットにタグづけを行う
-  - `{version}-{hash}` の形式とする
-    - `{version}` は `X.X.X` の形式とする
-      - 先頭の `X`: 大きな構造変更があるとき
-      - 真ん中の `X`: DB の変更を伴うとき
-      - 末尾の`X`: フロントのみで解決する、不具合や仕様変更のとき
-      - それぞれの採番は `0` から行う
+  - `{hash}` の形式とする
     - `{hash}` には `firebase deploy` 後のハッシュ値を記載する
 
 ## 実装規則
