@@ -261,9 +261,9 @@ const upsertApi = async (inputMode: Mode) => {
   if (inputMode === mode.TYPE) {
     const payload = {
       id: typeDialog.value.id,
-      name: typeDialog.value.name,
+      name: typeDialog.value.name ?? DUMMY.STR,
       isPay: isPay.value,
-      colorId: typeDialog.value.colorId,
+      colorId: typeDialog.value.colorId ?? DUMMY.NM,
     };
     const apiRes = await upsertType(auth, payload);
     if (apiRes.error !== null) {
@@ -274,8 +274,8 @@ const upsertApi = async (inputMode: Mode) => {
   } else if (inputMode === mode.SUB_TYPE) {
     const payload = {
       id: subTypeDialog.value.id,
-      typeId: subTypeDialog.value.parentId,
-      name: subTypeDialog.value.name,
+      typeId: subTypeDialog.value.parentId ?? DUMMY.NM,
+      name: subTypeDialog.value.name ?? DUMMY.STR,
     };
     const apiRes = await upsertSubType(auth, payload);
     if (apiRes.error !== null) {
@@ -297,11 +297,14 @@ const deleteApi = async (inputMode: Mode) => {
   enableLoading();
   let apiRes;
   if (inputMode === mode.TYPE) {
-    apiRes = await deleteType({ isDemoLogin: isDemoLogin.value }, { id: typeDialog.value.id });
+    apiRes = await deleteType(
+      { isDemoLogin: isDemoLogin.value },
+      { id: typeDialog.value.id ?? DUMMY.NM }
+    );
   } else if (inputMode === mode.SUB_TYPE) {
     apiRes = await deleteSubType(
       { isDemoLogin: isDemoLogin.value },
-      { id: subTypeDialog.value.id }
+      { id: subTypeDialog.value.id ?? DUMMY.NM }
     );
   } else {
     alert('想定外');

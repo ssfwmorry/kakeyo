@@ -198,26 +198,19 @@ const updateList = async () => {
     isType: showSetting.value.isType,
     isPair: showSetting.value.isPair,
     isIncludeInstead: showSetting.value.isIncludeInstead ?? false,
-    id: showSetting.value.id,
+    id: showSetting.value.id ?? DUMMY.NM,
     subtypeId: showSetting.value.subtypeId,
   };
-  let apiRes;
-  if (showSetting.value.isMonth) {
-    const payload = {
-      ...tmpPayload,
-      yearMonth: TimeUtility.ConvertYearMonthObjToYearMonth(focus.value),
-    };
+  const payload = {
+    ...tmpPayload,
+    yearMonth: TimeUtility.ConvertYearMonthObjToYearMonth(focus.value),
+  };
 
-    apiRes = await getSummarizedRecordList(
-      { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
-      payload
-    );
-  } else {
-    // todo
-    alert('予期せぬエラー');
-    return;
-  }
-  if (apiRes.error !== null) {
+  const apiRes = await getSummarizedRecordList(
+    { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
+    payload
+  );
+  if (apiRes.error !== null || apiRes.data === null) {
     alert(apiRes.message + `(Error: ${apiRes.error})`);
     return;
   }

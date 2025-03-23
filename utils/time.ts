@@ -72,7 +72,7 @@ const TimeUtility = {
     return dBResDatetime.substring(0, 10);
   },
   // ex.. PARAM: '2022-01-01', RET: '2022-01'
-  ConvertDateStrToYearMonth: (dateStr: string) => {
+  ConvertDateStrToYearMonth: (dateStr: DateString) => {
     if (!dateStr) return null;
     return dateStr.substring(0, 7);
   },

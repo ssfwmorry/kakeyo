@@ -386,7 +386,7 @@ const settleRecords = async () => {
 
   const idList = getRecordIdList(selectedRateList.value);
 
-  const apiRes = await supabaseSettleRecords({ isDemoLogin: isDemoLogin.value }, idList);
+  const apiRes = await supabaseSettleRecords({ isDemoLogin: isDemoLogin.value }, { ids: idList });
   if (apiRes.error !== null) {
     if (apiRes.error === 'no id') {
       alert('データがありません。');

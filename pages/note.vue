@@ -521,11 +521,11 @@ const upsertPlannedRecord = async () => {
 
   const payload = {
     id: id.value,
-    dayClassificationId: selectedDayId.value,
+    dayClassificationId: selectedDayId.value ?? DUMMY.NM,
     isPay: isPay.value,
-    methodId: selectedMethodId.value,
+    methodId: selectedMethodId.value ?? DUMMY.NM,
     isInstead: isInstead.value,
-    typeId: selectedTypeId.value,
+    typeId: selectedTypeId.value ?? DUMMY.NM,
     subTypeId: selectedSubTypeId.value,
     price: price.value,
     memo: memo.value,
@@ -563,7 +563,7 @@ const validateRecordAndShowErrorMsg = () => {
 };
 const deleteRecord = async () => {
   if (id.value === null) throw new Error('deleteRecord');
-  const apiRes = await supabaseDeleteRecord({ isDemoLogin: isDemoLogin.value }, id.value);
+  const apiRes = await supabaseDeleteRecord({ isDemoLogin: isDemoLogin.value }, { id: id.value });
   if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;
@@ -573,7 +573,7 @@ const deleteRecord = async () => {
   router.push({ name: PAGE.CALENDAR, query });
 };
 const deletePlannedRecord = async () => {
-  const payload = { id: id.value };
+  const payload = { id: id.value ?? DUMMY.NM };
   const apiRes = await supabaseDeletePlannedRecord({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
     // TODO 紐づく record が存在する時、全てを null に更新してからplanned_recordを削除する

@@ -1,14 +1,30 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
 import type { SupabaseApiAuth, SupabaseApiAuthGet, SupabaseApiAuthUpsert } from '@/utils/types/api';
+import type {
+  DeleteInput,
+  DeleteOutput,
+  SwapInput,
+  SwapOutput,
+  UpsertOutput,
+} from './common.interface';
+import type { GetPlanTypeListOutput, UpsertPlanTypeInput } from './planType.interface';
+import { RPC_GET_PLAN_TYPE_LIST, type GetPlanTypeListRpc } from './rpc/getPlanTypeList.interface';
+import { RPC_SWAP_PLAN_TYPE, type SwapRpc } from './rpc/swap.interface';
 
-export const getPlanTypeList = async ({ isDemoLogin, userUid }: SupabaseApiAuthGet) => {
+export const getPlanTypeList = async ({
+  isDemoLogin,
+  userUid,
+}: SupabaseApiAuthGet): Promise<GetPlanTypeListOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PLAN_TYPE_LIST;
 
   const payload = { input_user_id: userUid };
-  const { data, error } = await supabase.rpc('get_plan_type_list', payload);
-  if (error != null) {
-    return { data: data, error: error, message: 'plan_type 一覧' };
+  const { data, error } = await supabase.rpc<typeof RPC_GET_PLAN_TYPE_LIST, GetPlanTypeListRpc>(
+    RPC_GET_PLAN_TYPE_LIST,
+    payload
+  );
+  if (error != null || data === null) {
+    return { data: { self: [], pair: [] }, error: error, message: 'plan_type 一覧' };
   }
 
   return {
@@ -20,10 +36,11 @@ export const getPlanTypeList = async ({ isDemoLogin, userUid }: SupabaseApiAuthG
     message: 'plan_type 取得',
   };
 };
+
 export const upsertPlanType = async (
   { isDemoLogin, userUid, isPair, pairId }: SupabaseApiAuthUpsert,
-  { id, name, colorId }: any
-) => {
+  { id, name, colorId }: UpsertPlanTypeInput
+): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   if (id === null) {
@@ -52,18 +69,28 @@ export const upsertPlanType = async (
       .eq('id', id);
     return { data: data, error: error, message: 'plan_type 更新' };
   } else {
-    return { data: null, error: true, message: 'plan_type upsert 想定外の状況' };
+    return { data: null, error: '想定外', message: 'plan_type upsert 想定外の状況' };
   }
 };
-export const deletePlanType = async ({ isDemoLogin }: SupabaseApiAuth, { id }: any) => {
+
+export const deletePlanType = async (
+  { isDemoLogin }: SupabaseApiAuth,
+  { id }: DeleteInput
+): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const { data, error } = await supabase.from('plan_types').delete().eq('id', id);
   return { data: data, error: error, message: 'plan_type 削除' };
 };
-export const swapPlanType = async ({ isDemoLogin }: SupabaseApiAuth, { prevId, nextId }: any) => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.rpc('swap_plan_type', { id1: prevId, id2: nextId });
+export const swapPlanType = async (
+  { isDemoLogin }: SupabaseApiAuth,
+  { prevId, nextId }: SwapInput
+): Promise<SwapOutput> => {
+  if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  const { data, error } = await supabase.rpc<typeof RPC_SWAP_PLAN_TYPE, SwapRpc>(
+    RPC_SWAP_PLAN_TYPE,
+    { id1: prevId, id2: nextId }
+  );
   return { data: data, error: error, message: 'plan_type 入替' };
 };

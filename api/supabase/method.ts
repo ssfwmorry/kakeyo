@@ -1,35 +1,52 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
 import type { SupabaseApiAuth, SupabaseApiAuthGet, SupabaseApiAuthUpsert } from '@/utils/types/api';
+import type {
+  DeleteInput,
+  DeleteOutput,
+  SwapInput,
+  SwapOutput,
+  UpsertOutput,
+} from './common.interface';
+import type { GetMethodListOutput, UpsertMethodInput } from './method.interface';
+import { RPC_GET_METHOD_LIST, type GetMethodListRpc } from './rpc/getMethodList.interface';
+import { RPC_SWAP_METHOD, type SwapRpc } from './rpc/swap.interface';
 
-export const getMethodList = async ({ isDemoLogin, userUid }: SupabaseApiAuthGet) => {
+export const getMethodList = async ({
+  isDemoLogin,
+  userUid,
+}: SupabaseApiAuthGet): Promise<GetMethodListOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_METHOD_LIST;
 
   const payload = { input_user_id: userUid };
-  const { data, error } = await supabase.rpc('get_method_list', payload);
-  if (error != null) {
-    return { data: data, error: error, message: 'method 一覧' };
+  const { data, error } = await supabase.rpc<typeof RPC_GET_METHOD_LIST, GetMethodListRpc>(
+    RPC_GET_METHOD_LIST,
+    payload
+  );
+  if (error != null || data === null) {
+    return { data: null, error: error, message: 'method 一覧' };
   }
 
   return {
     data: {
       income: {
-        self: data.filter((e: any) => !e.is_pair && !e.is_pay),
-        pair: data.filter((e: any) => e.is_pair && !e.is_pay),
+        self: data.filter((e) => !e.is_pair && !e.is_pay),
+        pair: data.filter((e) => e.is_pair && !e.is_pay),
       },
       pay: {
-        self: data.filter((e: any) => !e.is_pair && e.is_pay),
-        pair: data.filter((e: any) => e.is_pair && e.is_pay),
+        self: data.filter((e) => !e.is_pair && e.is_pay),
+        pair: data.filter((e) => e.is_pair && e.is_pay),
       },
     },
     error: error,
     message: 'method 一覧',
   };
 };
+
 export const upsertMethod = async (
   { isDemoLogin, userUid, isPair, pairId }: SupabaseApiAuthUpsert,
-  { id, name, isPay, colorId }: any
-) => {
+  { id, name, isPay, colorId }: UpsertMethodInput
+): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   if (id === null) {
@@ -59,18 +76,28 @@ export const upsertMethod = async (
       .eq('id', id);
     return { data: data, error: error, message: 'method 更新' };
   } else {
-    return { data: null, error: true, message: 'method upsert 想定外の状況' };
+    return { data: null, error: '想定外の状況', message: 'method upsert 想定外の状況' };
   }
 };
-export const deleteMethod = async ({ isDemoLogin }: SupabaseApiAuth, { id }: any) => {
+
+export const deleteMethod = async (
+  { isDemoLogin }: SupabaseApiAuth,
+  { id }: DeleteInput
+): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const { data, error } = await supabase.from('methods').delete().eq('id', id);
   return { data: data, error: error, message: 'method 削除' };
 };
-export const swapMethod = async ({ isDemoLogin }: SupabaseApiAuth, { prevId, nextId }: any) => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.rpc('swap_method', { id1: prevId, id2: nextId });
+export const swapMethod = async (
+  { isDemoLogin }: SupabaseApiAuth,
+  { prevId, nextId }: SwapInput
+): Promise<SwapOutput> => {
+  if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  const { data, error } = await supabase.rpc<typeof RPC_SWAP_METHOD, SwapRpc>(RPC_SWAP_METHOD, {
+    id1: prevId,
+    id2: nextId,
+  });
   return { data: data, error: error, message: 'type 入替' };
 };

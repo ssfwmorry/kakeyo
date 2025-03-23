@@ -31,6 +31,7 @@ const DUMMY = {
   DT: new Date(), // date
   DT_STR: 'YYYY-MM-DD', // dateString
   DTT_STR: 'YYYY-MM-DD HH:MM:SS', // datatimeString
+  YM_STR: 'YYYY-MM', // yearMonthString
 } as const;
 
 const PAGE = {

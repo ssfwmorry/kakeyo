@@ -1,8 +1,4 @@
-import type {
-  GetPairedRecordListRpc,
-  GetPlannedRecordListRpc,
-  GetRecordListRpc,
-} from '@/utils/types/api';
+import type { GetPairedRecordListRpc, GetRecordListRpc } from '@/utils/types/api';
 
 const DEMO_DATA = {
   IS_RELEASE: true, // false: デモログインで動的レスポンス、true: デモログインで静的レスポンス
@@ -24,6 +20,7 @@ const DEMO_DATA = {
               type_id: 11,
               type_name: '食費',
               is_pay: true,
+              is_pair: false,
               type_sort: 111,
               color_classification_id: 1,
               color_classification_name: 'red',
@@ -40,6 +37,7 @@ const DEMO_DATA = {
               type_id: 12,
               type_name: '交通費',
               is_pay: true,
+              is_pair: false,
               type_sort: 112,
               color_classification_id: 6,
               color_classification_name: 'blue',
@@ -52,6 +50,7 @@ const DEMO_DATA = {
               type_id: 13,
               type_name: '日用品',
               is_pay: true,
+              is_pair: false,
               type_sort: 113,
               color_classification_id: 10,
               color_classification_name: 'green',
@@ -61,6 +60,7 @@ const DEMO_DATA = {
               type_id: 14,
               type_name: '旅行',
               is_pay: true,
+              is_pair: false,
               type_sort: 113,
               color_classification_id: 10,
               color_classification_name: 'green',
@@ -79,6 +79,7 @@ const DEMO_DATA = {
               type_id: 16,
               type_name: '身だしなみ',
               is_pay: true,
+              is_pair: false,
               type_sort: 114,
               color_classification_id: 7,
               color_classification_name: 'light-blue',
@@ -91,6 +92,7 @@ const DEMO_DATA = {
               type_id: 115,
               type_name: '趣味',
               is_pay: true,
+              is_pair: false,
               type_sort: 115,
               color_classification_id: 12,
               color_classification_name: 'lime',
@@ -102,6 +104,7 @@ const DEMO_DATA = {
               type_id: 121,
               type_name: '日用品',
               is_pay: true,
+              is_pair: true,
               type_sort: 121,
               color_classification_id: 8,
               color_classification_name: 'cyan',
@@ -111,6 +114,7 @@ const DEMO_DATA = {
               type_id: 122,
               type_name: '生活基盤',
               is_pay: true,
+              is_pair: true,
               type_sort: 122,
               color_classification_id: 9,
               color_classification_name: 'teal',
@@ -124,6 +128,7 @@ const DEMO_DATA = {
               type_id: 123,
               type_name: '食費',
               is_pay: true,
+              is_pair: true,
               type_sort: 123,
               color_classification_id: 12,
               color_classification_name: 'lime',
@@ -133,6 +138,7 @@ const DEMO_DATA = {
               type_id: 124,
               type_name: 'その他',
               is_pay: true,
+              is_pair: true,
               type_sort: 124,
               color_classification_id: 17,
               color_classification_name: 'grey',
@@ -146,6 +152,7 @@ const DEMO_DATA = {
               type_id: 211,
               type_name: '給与',
               is_pay: false,
+              is_pair: false,
               type_sort: 211,
               color_classification_id: 6,
               color_classification_name: 'blue',
@@ -157,6 +164,7 @@ const DEMO_DATA = {
               type_id: 221,
               type_name: '貯金',
               is_pay: false,
+              is_pair: true,
               type_sort: 221,
               color_classification_id: 6,
               color_classification_name: 'blue',
@@ -179,6 +187,7 @@ const DEMO_DATA = {
               sort: 111,
               color_classification_id: 17,
               color_classification_name: 'grey',
+              is_pair: false,
             },
             {
               id: 112,
@@ -187,6 +196,7 @@ const DEMO_DATA = {
               sort: 112,
               color_classification_id: 5,
               color_classification_name: 'indigo',
+              is_pair: false,
             },
           ],
           pair: [
@@ -197,6 +207,7 @@ const DEMO_DATA = {
               sort: 121,
               color_classification_id: 10,
               color_classification_name: 'green',
+              is_pair: true,
             },
           ],
         },
@@ -209,6 +220,7 @@ const DEMO_DATA = {
               sort: 211,
               color_classification_id: 15,
               color_classification_name: 'brown',
+              is_pair: false,
             },
           ],
           pair: [
@@ -219,6 +231,7 @@ const DEMO_DATA = {
               sort: 221,
               color_classification_id: 15,
               color_classification_name: 'brown',
+              is_pair: true,
             },
           ],
         },
@@ -234,6 +247,7 @@ const DEMO_DATA = {
             is_pay: false,
             price: 0,
             memo: '金額確定後に修正',
+            pair_user_name: null,
             sort: 11,
             updated_at: '2021-12-31 00:00:00',
             day_classification_id: 4,
@@ -249,13 +263,14 @@ const DEMO_DATA = {
             is_pair: false,
             is_self: true,
           },
-        ] as GetPlannedRecordListRpc[],
+        ],
         pair: [
           {
             planned_record_id: 21,
             is_pay: true,
             price: 50000,
             memo: null,
+            pair_user_name: '自分',
             sort: 21,
             updated_at: '2021-12-31 00:00:00',
             day_classification_id: 1,
@@ -271,7 +286,7 @@ const DEMO_DATA = {
             is_pair: true,
             is_self: false,
           },
-        ] as GetPlannedRecordListRpc[],
+        ],
       },
       error: null,
       message: 'demo',
@@ -4278,7 +4293,7 @@ const DEMO_DATA = {
         }
       }
       return {
-        data: data,
+        data: data ?? [],
         error: null,
         message: 'demo',
       };
@@ -4440,7 +4455,7 @@ const DEMO_DATA = {
         }
       }
       return {
-        data: data,
+        data: data ?? [],
         error: null,
         message: 'demo',
       };

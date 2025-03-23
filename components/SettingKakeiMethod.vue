@@ -167,9 +167,9 @@ const upsertApi = async () => {
   };
   const payload = {
     id: methodDialog.value.id,
-    name: methodDialog.value.name,
+    name: methodDialog.value.name ?? DUMMY.STR,
     isPay: isPay.value,
-    colorId: methodDialog.value.colorId,
+    colorId: methodDialog.value.colorId ?? DUMMY.NM,
   };
   const apiRes = await upsertMethod(auth, payload);
   if (apiRes.error !== null) {
@@ -184,7 +184,7 @@ const upsertApi = async () => {
 };
 const deleteApi = async () => {
   enableLoading();
-  const payload = { id: methodDialog.value.id };
+  const payload = { id: methodDialog.value.id ?? DUMMY.NM };
   const apiRes = await deleteMethod({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
     if (apiRes.error.code === '23503') {

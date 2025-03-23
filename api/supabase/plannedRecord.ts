@@ -1,20 +1,34 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import type { SupabaseApiAuth, SupabaseApiAuthGet, SupabaseApiAuthUpsert } from '@/utils/types/api';
 import type {
-  GetPlannedRecordListRpc,
-  SupabaseApiAuth,
-  SupabaseApiAuthGet,
-  SupabaseApiAuthUpsert,
-} from '@/utils/types/api';
+  DeleteInput,
+  DeleteOutput,
+  SwapInput,
+  SwapOutput,
+  UpsertOutput,
+} from './common.interface';
+import type {
+  GetPlannedRecordListOutput,
+  UpsertPlannedRecordInput,
+} from './plannedRecord.interface';
+import {
+  RPC_GET_PLANNED_RECORD_LIST,
+  type GetPlannedRecordListRpc,
+} from './rpc/getPlannedRecordList.interface';
+import { RPC_SWAP_PLANNED_RECORD, type SwapRpc } from './rpc/swap.interface';
 
-export const getPlannedRecordList = async ({ isDemoLogin, userUid }: SupabaseApiAuthGet) => {
+export const getPlannedRecordList = async ({
+  isDemoLogin,
+  userUid,
+}: SupabaseApiAuthGet): Promise<GetPlannedRecordListOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PLANNED_RECORD_LIST;
 
   const payload = { input_user_id: userUid };
-  const { data, error } = await supabase.rpc<any, { Returns: GetPlannedRecordListRpc[] | null }>(
-    'get_planned_record_list',
-    payload
-  );
+  const { data, error } = await supabase.rpc<
+    typeof RPC_GET_PLANNED_RECORD_LIST,
+    GetPlannedRecordListRpc
+  >(RPC_GET_PLANNED_RECORD_LIST, payload);
   if (error != null || data === null) {
     return { data: { self: [], pair: [] }, error: error, message: 'planned_record 一覧' };
   }
@@ -28,10 +42,21 @@ export const getPlannedRecordList = async ({ isDemoLogin, userUid }: SupabaseApi
     message: 'planned_record 一覧',
   };
 };
+
 export const upsertPlannedRecord = async (
   { isDemoLogin, userUid, isPair, pairId }: SupabaseApiAuthUpsert,
-  { id, dayClassificationId, isPay, methodId, isInstead, typeId, subTypeId, price, memo }: any
-) => {
+  {
+    id,
+    dayClassificationId,
+    isPay,
+    methodId,
+    isInstead,
+    typeId,
+    subTypeId,
+    price,
+    memo,
+  }: UpsertPlannedRecordInput
+): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   if (id === null) {
@@ -72,21 +97,29 @@ export const upsertPlannedRecord = async (
       .eq('id', id);
     return { data: data, error: error, message: 'planned_record 更新' };
   } else {
-    return { data: null, error: true, message: 'planned_record upsert 想定外の状況' };
+    return { data: null, error: '想定外', message: 'planned_record upsert 想定外の状況' };
   }
 };
-export const deletePlannedRecord = async ({ isDemoLogin }: SupabaseApiAuth, { id }: any) => {
+
+export const deletePlannedRecord = async (
+  { isDemoLogin }: SupabaseApiAuth,
+  { id }: DeleteInput
+): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const { data, error } = await supabase.from('planned_records').delete().eq('id', id);
   return { data: data, error: error, message: 'planned_record 削除' };
 };
+
 export const swapPlannedRecord = async (
   { isDemoLogin }: SupabaseApiAuth,
-  { prevId, nextId }: any
-) => {
+  { prevId, nextId }: SwapInput
+): Promise<SwapOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+  const { data, error } = await supabase.rpc<typeof RPC_SWAP_PLANNED_RECORD, SwapRpc>(
+    RPC_SWAP_PLANNED_RECORD,
+    { id1: prevId, id2: nextId }
+  );
 
-  const { data, error } = await supabase.rpc('swap_planned_record', { id1: prevId, id2: nextId });
   return { data: data, error: error, message: 'planned_record 入替' };
 };

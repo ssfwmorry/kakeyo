@@ -208,7 +208,7 @@ const upsertPlan = async () => {
     id: id.value,
     startDate: period.start,
     endDate: period.end,
-    planTypeId: selectedPlanTypeId.value,
+    planTypeId: selectedPlanTypeId.value ?? DUMMY.NM,
     name: name.value,
     memo: memo.value,
   };
@@ -273,7 +273,8 @@ const getPlanPeriod = () => {
 const deletePlan = async () => {
   if (id.value === null) throw new Error('deletePlan');
 
-  const apiRes = await supabaseDeletePlan({ isDemoLogin: isDemoLogin.value }, id.value);
+  const payload = { id: id.value };
+  const apiRes = await supabaseDeletePlan({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;

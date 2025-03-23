@@ -328,7 +328,9 @@ const updateRange = async () => {
   const events: EventSet[] = [];
 
   fullCalendar.value.getApi().gotoDate(focus.value);
-  const payload1 = { yearMonth: TimeUtility.ConvertDateStrToYearMonth(focus.value) };
+  const payload1 = {
+    yearMonth: TimeUtility.ConvertDateStrToYearMonth(focus.value) ?? DUMMY.YM_STR,
+  };
   const focusObj = TimeUtility.ConvertDateStrToYearMonthObj(focus.value);
   const prev = TimeUtility.PrevMonthInYearMonthObj(focusObj);
   const next = TimeUtility.NextMonthInYearMonthObj(focusObj);
@@ -363,7 +365,7 @@ const updateRange = async () => {
 
   // plan を追加
   const apiResPlans = await getPlanList(authParam, payload2);
-  if (apiResPlans.error !== null) {
+  if (apiResPlans.error !== null || apiResPlans.data === null) {
     alert(apiResPlans.message + `(Error: ${JSON.stringify(apiResPlans.error)})`);
     return;
   }
@@ -617,7 +619,7 @@ const getMemoList = async () => {
   const apiRes = await supabaseGetMemoList({
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value ?? DUMMY.STR,
-    pairId: pairId.value ?? DUMMY.NM,
+    pairId: pairId.value,
   });
   if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
@@ -641,7 +643,6 @@ const addMemo = async () => {
     {
       isDemoLogin: isDemoLogin.value,
       userUid: userUid.value ?? DUMMY.STR,
-      isPair: isPair.value,
       pairId: pairId.value ?? DUMMY.NM,
     },
     payload
@@ -663,7 +664,7 @@ const deleteMemo = async (id: Id | null) => {
   enableLoading();
 
   const payload = {
-    id: id,
+    id: id ?? DUMMY.NM,
   };
   const apiRes = await supabaseDeleteMemo({ isDemoLogin: isDemoLogin.value }, payload);
 

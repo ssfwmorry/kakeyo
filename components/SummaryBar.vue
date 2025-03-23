@@ -194,7 +194,7 @@ const updateChart = async () => {
     { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
     payload
   );
-  if (apiRes.error !== null) {
+  if (apiRes.error !== null || apiRes.data === null) {
     alert(apiRes.message + `(Error: ${apiRes.error})`);
     return;
   }

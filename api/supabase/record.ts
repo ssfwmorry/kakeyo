@@ -1,38 +1,73 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import type { SupabaseApiAuth, SupabaseApiAuthGet, SupabaseApiAuthUpsert } from '@/utils/types/api';
+import type { DeleteInput, DeleteOutput, UpsertOutput } from './common.interface';
 import type {
-  GetMethodSummaryRpc,
-  GetPairedRecordListRpc,
-  GetPayAndIncomeListRpc,
-  GetRecordListRpc,
+  GetMethodSummaryInput,
+  GetMethodSummaryOutput,
+  GetMonthSumInput,
+  GetMonthSumOutput,
+  GetPairedRecordListInput,
+  GetPairedRecordListOutput,
+  GetPayAndIncomeListInput,
+  GetPayAndIncomeListOutput,
+  GetRecordListInput,
+  GetRecordListOutput,
+  GetSummarizedRecordListInput,
+  GetSummarizedRecordListOutput,
+  GetTypeSummaryInput,
   GetTypeSummaryOutput,
-  GetTypeSummaryRpc,
-  SupabaseApiAuth,
-  SupabaseApiAuthGet,
-  SupabaseApiAuthUpsert,
+  GetTypeSummaryRow,
+  PostRecordsInput,
+  PostRecordsOutput,
+  SettleRecordsInput,
+  SettleRecordsOutput,
   UpsertRecordInput,
-} from '@/utils/types/api';
-import type { DateRange, Id } from '@/utils/types/common';
+} from './record.interface';
+import { RPC_GET_METHOD_SUMMARY, type GetMethodSummaryRpc } from './rpc/getMethodSummary.interface';
+import { RPC_GET_MONTH_SUM, type GetMonthSumRpc } from './rpc/getMonthSum.interface';
+import {
+  RPC_GET_PAIRED_RECORD_LIST,
+  type GetPairedRecordListRpc,
+} from './rpc/getPairedRecordList.interface';
+import {
+  RPC_GET_PAY_AND_INCOME_LIST,
+  type GetPayAndIncomeListRpc,
+} from './rpc/getPayAndIncomeList.interface';
+import { RPC_GET_RECORD_LIST, type GetRecordListRpc } from './rpc/getRecordList.interface';
+import {
+  RPC_GET_SUMMARIZED_RECORD_LIST,
+  type GetSummarizedRecordListRpc,
+} from './rpc/getSummarizedRecordList.interface';
+import {
+  RPC_GET_TYPE_SUMMARY,
+  type GetTypeSummaryRpc,
+  type GetTypeSummaryRpcRow,
+} from './rpc/getTypeSummary.interface';
+import { RPC_POST_RECORDS, type PostRecordsRpc } from './rpc/postRecords.interface';
 
 export const getRecordList = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
-  { start, end }: DateRange
-) => {
+  { start, end }: GetRecordListInput
+): Promise<GetRecordListOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_RECORD_LIST;
 
-  // prettier-ignore
-  const payload = {input_user_id: userUid, input_start_datetime: start, input_end_datetime: end};
-  const { data, error } = await supabase.rpc('get_record_list', payload);
-  if (error != null) {
-    return { data: data, error: error, message: 'record 一覧' };
+  const payload = { input_user_id: userUid, input_start_datetime: start, input_end_datetime: end };
+  const { data, error } = await supabase.rpc<typeof RPC_GET_RECORD_LIST, GetRecordListRpc>(
+    RPC_GET_RECORD_LIST,
+    payload
+  );
+  if (error != null || data === null) {
+    return { data: [], error: error, message: 'record 一覧' };
   }
 
-  return { data: data as GetRecordListRpc[], error: error, message: 'record 一覧' };
+  return { data: data, error: error, message: 'record 一覧' };
 };
+
 export const upsertRecord = async (
   { isDemoLogin, userUid, isPair, pairId }: SupabaseApiAuthUpsert,
   { id, datetime, isPay, methodId, isInstead, typeId, subTypeId, price, memo }: UpsertRecordInput
-) => {
+): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   if (id === null) {
@@ -80,7 +115,11 @@ export const upsertRecord = async (
     return { data: null, error: '想定外の状況', message: 'record upsert 想定外の状況' };
   }
 };
-export const settleRecords = async ({ isDemoLogin }: SupabaseApiAuth, ids: number[]) => {
+
+export const settleRecords = async (
+  { isDemoLogin }: SupabaseApiAuth,
+  { ids }: SettleRecordsInput
+): Promise<SettleRecordsOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
   if (ids.length === 0) return { data: null, error: 'no id', message: 'is_settled 更新' };
 
@@ -92,17 +131,25 @@ export const settleRecords = async ({ isDemoLogin }: SupabaseApiAuth, ids: numbe
     .in('id', ids);
   return { data: data, error: error, message: 'is_settled 更新' };
 };
+
 export const postRecords = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
-  { yearMonth }: any
-) => {
+  { yearMonth }: PostRecordsInput
+): Promise<PostRecordsOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const payload = { input_user_id: userUid, input_year_month: yearMonth };
-  const { data, error } = await supabase.rpc('post_records', payload);
+  const { data, error } = await supabase.rpc<typeof RPC_POST_RECORDS, PostRecordsRpc>(
+    RPC_POST_RECORDS,
+    payload
+  );
   return { data: data, error: error, message: 'planned_record が未設定の record 登録' };
 };
-export const deleteRecord = async ({ isDemoLogin }: SupabaseApiAuth, id: Id) => {
+
+export const deleteRecord = async (
+  { isDemoLogin }: SupabaseApiAuth,
+  { id }: DeleteInput
+): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const { data, error } = await supabase.from('records').delete().eq('id', id);
@@ -111,15 +158,17 @@ export const deleteRecord = async ({ isDemoLogin }: SupabaseApiAuth, id: Id) => 
 
 export const getMonthSum = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
-  { yearMonth }: any
-) => {
+  { yearMonth }: GetMonthSumInput
+): Promise<GetMonthSumOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_MONTH_SUM(yearMonth);
 
   const payload = { input_user_id: userUid, input_year_month: yearMonth };
-  const { data, error } = await supabase.rpc('get_month_sum', payload);
-  if (error !== null || !Array.isArray(data)) {
-    return { data: data, error: error, message: 'month_sum 取得' };
-  } else if (data === null || data.length != 1) {
+  const { data, error } = await supabase.rpc<typeof RPC_GET_MONTH_SUM, GetMonthSumRpc>(
+    RPC_GET_MONTH_SUM,
+    payload
+  );
+
+  if (error !== null || !Array.isArray(data) || data === null || data.length != 1) {
     return {
       data: { ['SELF']: 0, ['PAIR']: 0, ['BOTH']: 0 },
       error: error,
@@ -136,12 +185,20 @@ export const getMonthSum = async (
     message: 'month_sum 取得',
   };
 };
+
 export const getTypeSummary = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
-  { isPay, isPair, isIncludeInstead, year, month }: any
-) => {
-  // prettier-ignore
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_TYPE_OR_METHOD_SUMMARY(isPay, true, isPair, isIncludeInstead, year, month);
+  { isPay, isPair, isIncludeInstead, year, month }: GetTypeSummaryInput
+): Promise<GetTypeSummaryOutput> => {
+  if (isDemoLogin)
+    return DEMO_DATA.SUPABASE.GET_TYPE_OR_METHOD_SUMMARY(
+      isPay,
+      true,
+      isPair,
+      isIncludeInstead,
+      year,
+      month
+    );
 
   let outData, outError;
   const payload = {
@@ -152,13 +209,13 @@ export const getTypeSummary = async (
     input_year: year,
     input_month: month,
   };
-  const { data, error } = await supabase.rpc<any, { Returns: GetTypeSummaryRpc[] | null }>(
-    'get_type_summary',
+  const { data, error } = await supabase.rpc<typeof RPC_GET_TYPE_SUMMARY, GetTypeSummaryRpc>(
+    RPC_GET_TYPE_SUMMARY,
     payload
   );
   if (error === null) {
-    let groupedData: GetTypeSummaryOutput[] = [];
-    (data ?? []).forEach((typeObj: GetTypeSummaryRpc, i: number) => {
+    let groupedData: GetTypeSummaryRow[] = [];
+    (data ?? []).forEach((typeObj: GetTypeSummaryRpcRow, i: number) => {
       if (i == 0 || groupedData[groupedData.length - 1].type_id != typeObj.type_id) {
         groupedData.push({ ...typeObj, sub_types: [] });
       }
@@ -182,12 +239,20 @@ export const getTypeSummary = async (
     message: 'type summary 一覧',
   };
 };
+
 export const getMethodSummary = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
-  { isPay, isPair, isIncludeInstead, year, month }: any
-) => {
-  // prettier-ignore
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_TYPE_OR_METHOD_SUMMARY(isPay, false, isPair, isIncludeInstead, year, month);
+  { isPay, isPair, isIncludeInstead, year, month }: GetMethodSummaryInput
+): Promise<GetMethodSummaryOutput> => {
+  if (isDemoLogin)
+    return DEMO_DATA.SUPABASE.GET_TYPE_OR_METHOD_SUMMARY(
+      isPay,
+      false,
+      isPair,
+      isIncludeInstead,
+      year,
+      month
+    );
 
   let outData, outError;
   const payload = {
@@ -198,8 +263,8 @@ export const getMethodSummary = async (
     input_year: year,
     input_month: month,
   };
-  const { data, error } = await supabase.rpc<any, { Returns: GetMethodSummaryRpc[] | null }>(
-    'get_method_summary',
+  const { data, error } = await supabase.rpc<typeof RPC_GET_METHOD_SUMMARY, GetMethodSummaryRpc>(
+    RPC_GET_METHOD_SUMMARY,
     payload
   );
   [outData, outError] = [data, error];
@@ -213,12 +278,29 @@ export const getMethodSummary = async (
     message: ' method summary 一覧',
   };
 };
+
 export const getSummarizedRecordList = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
-  { isPay, isType, isPair, isIncludeInstead, yearMonth, id, subtypeId }: any
-) => {
-  // prettier-ignore
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_SUMMARIZED_RECORD_LIST(isPay, isType, isPair, isIncludeInstead, yearMonth, id, subtypeId);
+  {
+    isPay,
+    isType,
+    isPair,
+    isIncludeInstead,
+    yearMonth,
+    id,
+    subtypeId,
+  }: GetSummarizedRecordListInput
+): Promise<GetSummarizedRecordListOutput> => {
+  if (isDemoLogin)
+    return DEMO_DATA.SUPABASE.GET_SUMMARIZED_RECORD_LIST(
+      isPay,
+      isType,
+      isPair,
+      isIncludeInstead,
+      yearMonth,
+      id,
+      subtypeId
+    );
 
   const payload = {
     input_user_id: userUid,
@@ -230,37 +312,49 @@ export const getSummarizedRecordList = async (
     input_id: id,
     input_sub_type_id: subtypeId,
   };
-  const { data, error } = await supabase.rpc('get_summarized_record_list', payload);
+  const { data, error } = await supabase.rpc<
+    typeof RPC_GET_SUMMARIZED_RECORD_LIST,
+    GetSummarizedRecordListRpc
+  >(RPC_GET_SUMMARIZED_RECORD_LIST, payload);
   if (error !== null || !Array.isArray(data)) {
-    return { data: data, error: error, message: 'summarized_record 一覧' };
+    return { data: [], error: error, message: 'summarized_record 一覧' };
   }
 
-  return { data: data, error: error, message: 'summarized_record 一覧' };
+  const outData = data.map((e) => {
+    // TODO 不要なrecord_idも渡してしまう
+    return {
+      ...e,
+      id: e.record_id,
+    };
+  });
+  return { data: outData, error: error, message: 'summarized_record 一覧' };
 };
+
 export const getPairedRecordList = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
-  { yearMonth }: any
-) => {
+  { yearMonth }: GetPairedRecordListInput
+): Promise<GetPairedRecordListOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PAIRED_RECORD_LIST(yearMonth);
 
   const payload = {
     input_user_id: userUid,
     input_year_month: yearMonth,
   };
-  const { data, error } = await supabase.rpc<any, { Returns: GetPairedRecordListRpc[] | null }>(
-    'get_paired_record_list',
-    payload
-  );
+  const { data, error } = await supabase.rpc<
+    typeof RPC_GET_PAIRED_RECORD_LIST,
+    GetPairedRecordListRpc
+  >(RPC_GET_PAIRED_RECORD_LIST, payload);
   if (error !== null || !Array.isArray(data)) {
     return { data: data, error: error, message: 'paired_record 一覧' };
   }
 
   return { data: data, error: error, message: 'paired_record 一覧' };
 };
+
 export const getPayAndIncomeList = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
-  { year, isPair, isIncludeInstead }: any
-) => {
+  { year, isPair, isIncludeInstead }: GetPayAndIncomeListInput
+): Promise<GetPayAndIncomeListOutput> => {
   // prettier-ignore
   if (isDemoLogin)
     return DEMO_DATA.SUPABASE.GET_PAY_AND_INCOME_LIST(year, isPair, isIncludeInstead);
@@ -276,10 +370,10 @@ export const getPayAndIncomeList = async (
     input_is_pair: isPair,
     input_is_include_instead: isIncludeInstead,
   };
-  const { data, error } = await supabase.rpc<any, { Returns: GetPayAndIncomeListRpc[] | null }>(
-    'get_pay_and_income_list',
-    payload
-  );
+  const { data, error } = await supabase.rpc<
+    typeof RPC_GET_PAY_AND_INCOME_LIST,
+    GetPayAndIncomeListRpc
+  >(RPC_GET_PAY_AND_INCOME_LIST, payload);
   if (error !== null || !Array.isArray(data)) {
     return { data: data, error: error, message: 'pay_and_income 一覧' };
   }

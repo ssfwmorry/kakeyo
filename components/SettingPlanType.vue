@@ -112,7 +112,7 @@ const updateShowData = async () => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value ?? DUMMY.STR,
   });
-  if (apiRes.error != null) {
+  if (apiRes.error != null || apiRes.data === null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;
   }
@@ -143,8 +143,8 @@ const upsertApi = async () => {
   enableLoading();
   const payload = {
     id: planTypeDialog.value.id,
-    name: planTypeDialog.value.name,
-    colorId: planTypeDialog.value.colorId,
+    name: planTypeDialog.value.name ?? DUMMY.STR,
+    colorId: planTypeDialog.value.colorId ?? DUMMY.NM,
   };
   const apiRes = await upsertPlanType(
     {
@@ -168,7 +168,7 @@ const upsertApi = async () => {
 };
 const deleteApi = async () => {
   enableLoading();
-  const payload = { id: planTypeDialog.value.id };
+  const payload = { id: planTypeDialog.value.id ?? DUMMY.NM };
   const apiRes = await deletePlanType({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
     if (apiRes.error.code === '23503') {
