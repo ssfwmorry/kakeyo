@@ -15,7 +15,7 @@ export type GetRecordListRpcRow = {
   is_pay: boolean;
   price: number;
   memo: string | null;
-  is_instead: boolean;
+  is_instead: boolean | null;
   planned_record_id: number | null;
   method_id: number;
   method_name: string;

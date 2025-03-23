@@ -98,10 +98,10 @@
 </template>
 
 <script setup lang="ts">
+import type { GetPayAndIncomeListRpcRow } from '@/api/supabase/rpc/getPayAndIncomeList.interface';
 import { DUMMY } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import type { GetPayAndIncomeListRpc } from '@/utils/types/api';
 import { type YearMonthString } from '@/utils/types/common';
 import {
   BarElement,
@@ -209,7 +209,7 @@ const updateChart = async () => {
   disableLoading();
 };
 const convertShowData = (
-  monthList: GetPayAndIncomeListRpc[]
+  monthList: GetPayAndIncomeListRpcRow[]
 ): { ret1: BarData; ret2: string; ret3: BarData; ret4: string; ret5: TableData[] } => {
   let tmpSeriesPayAndIncome: number[] = [];
   let tmpSumPayAndIncome = 0;

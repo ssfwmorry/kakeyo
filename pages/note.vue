@@ -281,7 +281,6 @@
 <script setup lang="ts">
 import { DUMMY, MAX_PRICE, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
-import type { UpsertRecordInput } from '@/utils/types/api';
 import {
   crud,
   routerParamKey,
@@ -481,7 +480,7 @@ const upsertRecord = async () => {
   if (!validateRecordAndShowErrorMsg()) return;
   loading.value = true;
 
-  const payload: UpsertRecordInput = {
+  const payload = {
     id: id.value,
     datetime: TimeUtility.ConvertDateStrToDatetime(date.value),
     isPay: isPay.value,

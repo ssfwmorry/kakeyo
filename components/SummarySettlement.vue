@@ -183,6 +183,7 @@
 </template>
 
 <script setup lang="ts">
+import type { GetPairedRecordListRpcRow } from '@/api/supabase/rpc/getPairedRecordList.interface';
 import {
   DUMMY,
   RATE_BACKGROUND_COLOR_LIST,
@@ -192,7 +193,6 @@ import {
 } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import type { GetPairedRecordListRpc } from '@/utils/types/api';
 import { type ColorString, type YearMonthObj } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -219,7 +219,7 @@ type Record = {
   labelColor: string | null;
   backgroundColor: string | null;
   isNew: boolean;
-} & GetPairedRecordListRpc;
+} & GetPairedRecordListRpcRow;
 type RecordList = {
   ME: Record[];
   PARTNER: Record[];
@@ -310,7 +310,7 @@ const updateChart = async () => {
   step.value = isExistUnsettledRecord.value ? stepStatus.READY : stepStatus.DONE;
   disableLoading();
 };
-const convertShowData = (records: GetPairedRecordListRpc[]) => {
+const convertShowData = (records: GetPairedRecordListRpcRow[]) => {
   let coupleSum = 0;
   let recordList: RecordList = {
     ['ME']: [],

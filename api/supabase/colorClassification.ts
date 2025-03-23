@@ -1,7 +1,7 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
-import type { SupabaseApiAuth } from '@/utils/types/api';
 import type { GetColorClassificationListOutput } from './colorClassification.interface';
+import type { SupabaseApiAuth } from './common.interface';
 
 export const getColorClassificationList = async ({
   isDemoLogin,

@@ -1,9 +1,9 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
-import type { SupabaseApiAuth } from '@/utils/types/api';
 import type {
   DeleteInput,
   DeleteOutput,
+  SupabaseApiAuth,
   SwapInput,
   SwapOutput,
   UpsertOutput,

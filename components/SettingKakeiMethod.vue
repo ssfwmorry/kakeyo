@@ -95,8 +95,8 @@
 </template>
 
 <script setup lang="ts">
+import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
-import type { ColorList } from '@/pages/setting.vue';
 import { DUMMY } from '@/utils/constants';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -109,7 +109,7 @@ const { deleteMethod, getMethodList, swapMethod, upsertMethod } = useSupabase();
 const { setToast } = useToastStore();
 
 type Props = {
-  colorList: ColorList;
+  colorList: GetColorClassificationListOutput['data'];
 };
 const props = defineProps<Props>();
 

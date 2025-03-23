@@ -161,10 +161,11 @@
 </template>
 
 <script setup lang="ts">
+import type { GetTypeSummaryRow } from '@/api/supabase/record.interface';
+import type { GetMethodSummaryRpcRow } from '@/api/supabase/rpc/getMethodSummary.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import type { GetMethodSummaryRpc, GetTypeSummaryOutput } from '@/utils/types/api';
 import {
   routerParamKey,
   type RecordsQueryParam,
@@ -294,7 +295,7 @@ const getTypeOrMethodSum = (monthSummary: any[]) => {
     return sum + item.sum;
   }, 0);
 };
-const convertShowData = (monthSummary: GetTypeSummaryOutput[] | GetMethodSummaryRpc[]) => {
+const convertShowData = (monthSummary: GetTypeSummaryRow[] | GetMethodSummaryRpcRow[]) => {
   let pieData: PieData = { labels: [], datasets: [{ data: [], backgroundColor: [] }] };
   let typeOrMethodList: TypeOrMethodList = [];
   monthSummary.forEach((typeOrMethodSummary, index) => {
@@ -302,16 +303,16 @@ const convertShowData = (monthSummary: GetTypeSummaryOutput[] | GetMethodSummary
     if (sum === 0) return;
 
     const id = isType.value
-      ? (typeOrMethodSummary as GetTypeSummaryOutput).type_id
-      : (typeOrMethodSummary as GetMethodSummaryRpc).method_id;
+      ? (typeOrMethodSummary as GetTypeSummaryRow).type_id
+      : (typeOrMethodSummary as GetMethodSummaryRpcRow).method_id;
     const name = isType.value
-      ? (typeOrMethodSummary as GetTypeSummaryOutput).type_name
-      : (typeOrMethodSummary as GetMethodSummaryRpc).method_name;
+      ? (typeOrMethodSummary as GetTypeSummaryRow).type_name
+      : (typeOrMethodSummary as GetMethodSummaryRpcRow).method_name;
     const color = typeOrMethodSummary.color_name;
     const isPair = typeOrMethodSummary.is_pair;
     const pairUserName = isType.value
       ? ''
-      : (typeOrMethodSummary as GetMethodSummaryRpc).pair_user_name;
+      : (typeOrMethodSummary as GetMethodSummaryRpcRow).pair_user_name;
 
     // 円グラフデータの格納
     pieData.datasets[0].data.push(sum);
@@ -331,7 +332,7 @@ const convertShowData = (monthSummary: GetTypeSummaryOutput[] | GetMethodSummary
 
     // sub_type がある場合を考慮
     if (isType.value) {
-      ((typeOrMethodSummary as GetTypeSummaryOutput).sub_types ?? []).forEach((subTypeObj: any) => {
+      ((typeOrMethodSummary as GetTypeSummaryRow).sub_types ?? []).forEach((subTypeObj: any) => {
         typeOrMethod.subs.push({
           name: subTypeObj.sub_type_name !== '' ? subTypeObj.sub_type_name : null,
           value: StringUtility.ConvertIntToShowStr(subTypeObj.sub_type_sum),

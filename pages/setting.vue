@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import type { getColorClassificationListRpc } from '@/utils/types/api';
+import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const loginStore = useLoginStore();
@@ -33,10 +33,9 @@ const tab = {
   OTHER: 3,
 } as const;
 type Tab = (typeof tab)[keyof typeof tab];
-export type ColorList = getColorClassificationListRpc[];
 
 const tabMode = ref<Tab>(tab.KAKEI);
-const colorList = ref<ColorList>([]);
+const colorList = ref<GetColorClassificationListOutput['data']>([]);
 
 // created
 (async () => {

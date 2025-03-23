@@ -178,7 +178,6 @@
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import type { GetRecordListRpc } from '@/utils/types/api';
 import {
   crud,
   eventType,
@@ -198,6 +197,7 @@ import {
   type ShareType,
 } from '@/utils/types/common';
 // https://fullcalendar.io/docs
+import type { GetRecordListRpcRow } from '@/api/supabase/rpc/getRecordList.interface';
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
@@ -441,7 +441,7 @@ const daySum = (calendarList: CalendarList, date: DateString, mode: ShareType) =
   }
 };
 
-const getDaySumList = (recordList: GetRecordListRpc[]): CalendarList => {
+const getDaySumList = (recordList: GetRecordListRpcRow[]): CalendarList => {
   let daySums: CalendarList = {};
   recordList.forEach((r) => {
     const record: Record_ = {

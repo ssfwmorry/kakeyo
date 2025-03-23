@@ -1,5 +1,3 @@
-import type { GetPairedRecordListRpc, GetRecordListRpc } from '@/utils/types/api';
-
 const DEMO_DATA = {
   IS_RELEASE: true, // false: デモログインで動的レスポンス、true: デモログインで静的レスポンス
   NOW_DATE: '2022-01-13',
@@ -3085,7 +3083,7 @@ const DEMO_DATA = {
         },
         {
           record_id: 745,
-          is_self: null,
+          is_self: true,
           datetime: '2022-01-08T16:48:49+09:00',
           is_pay: true,
           price: 0,
@@ -3803,7 +3801,7 @@ const DEMO_DATA = {
           is_pair: true,
           pair_user_name: '自分',
         },
-      ] as GetRecordListRpc[],
+      ],
       error: null,
       message: 'demo',
     },
@@ -4995,7 +4993,7 @@ const DEMO_DATA = {
         ];
       }
       return {
-        data: data as GetPairedRecordListRpc[],
+        data: data,
         error: null,
         message: 'demo',
       };

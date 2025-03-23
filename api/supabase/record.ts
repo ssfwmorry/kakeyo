@@ -1,7 +1,13 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
-import type { SupabaseApiAuth, SupabaseApiAuthGet, SupabaseApiAuthUpsert } from '@/utils/types/api';
-import type { DeleteInput, DeleteOutput, UpsertOutput } from './common.interface';
+import type {
+  DeleteInput,
+  DeleteOutput,
+  SupabaseApiAuth,
+  SupabaseApiAuthGet,
+  SupabaseApiAuthUpsert,
+  UpsertOutput,
+} from './common.interface';
 import type {
   GetMethodSummaryInput,
   GetMethodSummaryOutput,

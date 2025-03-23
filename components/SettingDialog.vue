@@ -61,13 +61,13 @@
 </template>
 
 <script setup lang="ts">
+import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 import type { SubTypeDialog, TypeDialog } from '@/components/SettingKakeiType.vue';
-import type { ColorList } from '@/pages/setting.vue';
 
 type Props = {
   modelValue: TypeDialog | SubTypeDialog;
   title: string;
-  colorList: ColorList | undefined;
+  colorList: GetColorClassificationListOutput['data'] | undefined;
 };
 const props = defineProps<Props>();
 const emits = defineEmits();

@@ -1,7 +1,11 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
-import type { SupabaseApiAuth, SupabaseApiAuthGet } from '@/utils/types/api';
-import type { DeleteInput, DeleteOutput } from './common.interface';
+import type {
+  DeleteInput,
+  DeleteOutput,
+  SupabaseApiAuth,
+  SupabaseApiAuthGet,
+} from './common.interface';
 import type { GetMemoListOutput, InsertMemoInput, InsertMemoOutput } from './memo.interface';
 
 export const getMemoList = async ({

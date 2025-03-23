@@ -77,9 +77,10 @@
 </template>
 
 <script setup lang="ts">
+import type { GetPlannedRecordListOutput } from '@/api/supabase/plannedRecord.interface';
+import type { GetPlannedRecordListRpcRow } from '@/api/supabase/rpc/getPlannedRecordList.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
-import type { GetPlannedRecordListRpc } from '@/utils/types/api';
 import {
   crud,
   routerParamKey,
@@ -98,12 +99,7 @@ const router = useRouter();
 const { getPlannedRecordList, swapPlannedRecord } = useSupabase();
 const { setToast } = useToastStore();
 
-type PlannedRecordList = {
-  self: GetPlannedRecordListRpc[];
-  pair: GetPlannedRecordListRpc[];
-};
-
-const plannedRecordList = ref<PlannedRecordList>({ self: [], pair: [] });
+const plannedRecordList = ref<GetPlannedRecordListOutput['data']>({ self: [], pair: [] });
 
 const updateShowData = async () => {
   const apiRes = await getPlannedRecordList({
@@ -116,7 +112,7 @@ const updateShowData = async () => {
   }
   plannedRecordList.value = apiRes.data;
 };
-const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListRpc) => {
+const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListRpcRow) => {
   const tmpPlannedRecord: PlannedRecord = {
     ...plannedRecord,
     id: plannedRecord.planned_record_id,

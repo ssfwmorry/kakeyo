@@ -1,6 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
-import type { SupabaseApiAuth } from '@/utils/types/api';
+import type { SupabaseApiAuth } from './common.interface';
 import type { GetDayClassificationListOutput } from './dayClassification.interface';
 
 export const getDayClassificationList = async ({

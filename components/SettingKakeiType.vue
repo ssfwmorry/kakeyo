@@ -160,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ColorList } from '@/pages/setting.vue';
+import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 import { DUMMY } from '@/utils/constants';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -174,7 +174,7 @@ const { deleteType, deleteSubType, getTypeList, swapType, swapSubType, upsertTyp
 const { setToast } = useToastStore();
 
 type Props = {
-  colorList: ColorList;
+  colorList: GetColorClassificationListOutput['data'];
 };
 const props = defineProps<Props>();
 const mode = {
