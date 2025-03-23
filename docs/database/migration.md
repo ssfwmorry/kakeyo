@@ -210,3 +210,29 @@ update public.records set is_settled = false where is_instead = true;
 
 - `develop.get_pay_and_income_list`
 - `public.get_pay_and_income_list`
+
+## 20240623\_開発と本番 DB に memos を反映させる作業
+
+```sql
+-- publicも同様
+drop table if exists develop.memos cascade;
+create table develop.memos (
+    id      serial      primary key,
+    user_id varchar(28),
+    memo    varchar(30) not null,
+
+    foreign key (user_id) references develop.users (uid),
+    foreign key (pair_id) references develop.pairs (id)
+);
+
+alter table develop.memos
+    enable row level security;
+
+create policy "develop.memos all"
+    on develop.memos for all
+    to anon
+    using (
+        true
+    )
+;
+```

@@ -17,6 +17,7 @@
 - 45: records(planned_records の後)
 - 50: plan_types
 - 55: plans(plan_types の後)
+- 60: memos
 
 ## transaction tables
 
@@ -514,6 +515,50 @@ create policy "develop.plan_types all"
 | id  | user_id | pair_id | name | color_classification_id | sort |
 | :-- | :-----: | :-----: | :--: | :---------------------: | :--: |
 | 1   |    2    |    -    | 仕事 |            1            |  1   |
+
+### memos
+
+#### schema
+
+| name    |  type  |  size  | required | auto_increment |    key    | remarks                |
+| :------ | :----: | :----: | :------: | :------------: | :-------: | :--------------------- |
+| id      |  int   |   -    |    v     |       v        |    PK     | -                      |
+| user_id | string |   28   |    -     |       -        | users.uid | pair_id とどちらか必須 |
+| pair_id |  int   |   -    |    -     |       -        | pairs.id  | user_id とどちらか必須 |
+| memo    | string | max 30 |    v     |       -        |     -     | -                      |
+
+#### migration
+
+```sql
+-- migration-sort: 60
+drop table if exists develop.memos cascade;
+create table develop.memos (
+    id      serial      primary key,
+    user_id varchar(28),
+    pair_id integer,
+    memo    varchar(30) not null,
+
+    foreign key (user_id) references develop.users (uid),
+    foreign key (pair_id) references develop.pairs (id)
+);
+
+alter table develop.memos
+    enable row level security;
+
+create policy "develop.memos all"
+    on develop.memos for all
+    to anon
+    using (
+        true
+    )
+;
+```
+
+#### example
+
+| id  | user_id | pair_id |   memo   |
+| :-- | :-----: | :-----: | :------: |
+| 1   |    2    |    -    | 歯磨き粉 |
 
 ## master tables
 
