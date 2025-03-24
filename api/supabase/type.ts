@@ -1,6 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
-import humps from 'humps';
+import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
   DeleteOutput,
@@ -46,7 +46,7 @@ export const getTypeList = async ({
     let groupedData: GetTypeListItem[] = [];
     data.forEach((row, i: number) => {
       if (i == 0 || groupedData[groupedData.length - 1].typeId != row.type_id) {
-        groupedData.push({ ...humps.camelizeKeys<GetTypeListRpcRow>(row), subTypes: [] });
+        groupedData.push({ ...camelizeKeys<GetTypeListRpcRow>(row), subTypes: [] });
       }
       if (row.sub_type_id !== null && row.sub_type_name !== null && row.sub_type_sort !== null) {
         groupedData[groupedData.length - 1].subTypes.push({

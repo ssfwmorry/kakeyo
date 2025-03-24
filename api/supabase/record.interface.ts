@@ -7,6 +7,7 @@ import type {
   YearString,
 } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
+import type { Camelized } from 'humps';
 import type { GetMethodSummaryRpcRow } from './rpc/getMethodSummary.interface';
 import type { GetPairedRecordListRpcRow } from './rpc/getPairedRecordList.interface';
 import type { GetPayAndIncomeListRpcRow } from './rpc/getPayAndIncomeList.interface';
@@ -16,8 +17,9 @@ import type { GetTypeSummaryRpcRow } from './rpc/getTypeSummary.interface';
 
 export interface GetRecordListInput extends DateRange {}
 
+export type GetRecordListItem = Camelized<GetRecordListRpcRow>;
 export interface GetRecordListOutput {
-  data: GetRecordListRpcRow[];
+  data: GetRecordListItem[];
   error: PostgrestError | null;
   message: string;
 }

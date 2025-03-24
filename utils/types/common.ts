@@ -163,17 +163,6 @@ export type PlannedRecord = {
   day_classification_id: number;
 };
 
-export type DateRecordList = Record<
-  ShareType,
-  {
-    // recordがない場合はnull
-    sum: number | null;
-    records: Record_[];
-  }
-> & { isHoliday: boolean; holidayStr: string | null };
-
-export type CalendarList = Record<DateString, DateRecordList>;
-
 export type RecordsQueryParam = {
   id: number;
   subtypeId: number | null;

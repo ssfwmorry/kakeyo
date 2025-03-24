@@ -147,24 +147,24 @@
     <!-- record 表示 -->
     <v-row v-if="selectedDayRecords" no-gutters>
       <v-col>
-        <v-row v-for="record in selectedDayRecords" :key="record.id" no-gutters class="mb-1">
+        <v-row v-for="record in selectedDayRecords" :key="record.recordId" no-gutters class="mb-1">
           <v-col>
             <RecordCard
-              :isDisable="showRecordMode === 'BOTH' && !record.is_self"
-              :isPairType="record.is_pair ?? false"
-              :typeColor="record.type_color_classification_name"
-              :typeAndSubtype="StringUtility.typeAndSubtype(record.type_name, record.sub_type_name)"
-              :isShowPlannedIcon="!!record.planned_record_id"
+              :isDisable="showRecordMode === 'BOTH' && !record.isSelf"
+              :isPairType="record.isPair ?? false"
+              :typeColor="record.typeColorClassificationName"
+              :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
+              :isShowPlannedIcon="!!record.plannedRecordId"
               :isEnableEdit="
-                (record.is_self ?? false) || ((record.is_pair ?? false) && !record.is_instead)
+                (record.isSelf ?? false) || ((record.isPair ?? false) && !record.isInstead)
               "
-              :isPairMethod="(record.is_pair ?? false) && !(record.is_instead ?? false)"
-              :userName="record.pair_user_name ? record.pair_user_name : ''"
-              :methodColor="record.method_color_classification_name"
-              :methodName="record.method_name"
+              :isPairMethod="(record.isPair ?? false) && !(record.isInstead ?? false)"
+              :userName="record.pairUserName ?? ''"
+              :methodColor="record.methodColorClassificationName"
+              :methodName="record.methodName"
               :memo="record.memo ?? ''"
-              :isShowBlueColorPrice="!record.is_pay"
-              :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.is_pay)"
+              :isShowBlueColorPrice="!record.isPay"
+              :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
               @edit="goRecordEditPage(record)"
             ></RecordCard>
           </v-col>
@@ -175,6 +175,7 @@
 </template>
 
 <script setup lang="ts">
+import type { GetRecordListItem } from '@/api/supabase/record.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
@@ -182,7 +183,6 @@ import {
   crud,
   eventType,
   routerParamKey,
-  type CalendarList,
   type DateString,
   type EventGetPlan,
   type EventSet,
@@ -197,12 +197,21 @@ import {
   type ShareType,
 } from '@/utils/types/common';
 // https://fullcalendar.io/docs
-import type { GetRecordListRpcRow } from '@/api/supabase/rpc/getRecordList.interface';
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/vue3';
 import dayjs from 'dayjs';
+import { decamelizeKeys } from 'humps';
+
+type DateRecordList = Record<
+  ShareType,
+  {
+    sum: number;
+    records: GetRecordListItem[];
+  }
+> & { isHoliday: boolean; holidayStr: string | null };
+type CalendarList = Record<DateString, DateRecordList>;
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -284,7 +293,7 @@ const memoList = ref<
 >([]);
 const selectedDayForShow = ref<string | null>(null);
 const selectedDate = ref<DateString | null>(null);
-const selectedDayRecords = ref<Record_[]>([]);
+const selectedDayRecords = ref<GetRecordListItem[]>([]);
 const selectedPlan = ref<EventGetPlan | null>(null);
 const monthSum = ref({ ['SELF']: 0, ['PAIR']: 0, ['BOTH']: 0 });
 const showRecordMode = ref<ShareType>('BOTH');
@@ -441,17 +450,11 @@ const daySum = (calendarList: CalendarList, date: DateString, mode: ShareType) =
   }
 };
 
-const getDaySumList = (recordList: GetRecordListRpcRow[]): CalendarList => {
+const getDaySumList = (recordList: GetRecordListItem[]): CalendarList => {
   let daySums: CalendarList = {};
-  recordList.forEach((r) => {
-    const record: Record_ = {
-      ...r,
-      id: r.record_id,
-      datetime: r.datetime, // TODO DbDatetimeStringをDatetimeStringに変換する
-    };
-
+  recordList.forEach((record) => {
     const dateStr = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
-    const recordPrice = record.price === 0 || record.is_pay ? record.price : record.price * -1;
+    const recordPrice = record.price === 0 || record.isPay ? record.price : record.price * -1;
     if (!(dateStr in daySums)) {
       daySums[dateStr] = {
         ['SELF']: { sum: 0, records: [] },
@@ -462,25 +465,25 @@ const getDaySumList = (recordList: GetRecordListRpcRow[]): CalendarList => {
       };
     }
     // SELF
-    if (!record.is_pair && record.is_self) {
+    if (!record.isPair && record.isSelf) {
       daySums[dateStr]['SELF'].records.push(record);
       daySums[dateStr]['SELF'] = {
-        sum: (daySums[dateStr]['SELF'].sum ?? 0) + recordPrice,
+        sum: daySums[dateStr]['SELF'].sum + recordPrice,
         records: daySums[dateStr]['SELF'].records,
       };
     }
     // PAIR
-    if (record.is_pair) {
+    if (record.isPair) {
       daySums[dateStr]['PAIR'].records.push(record);
       daySums[dateStr]['PAIR'] = {
-        sum: (daySums[dateStr]['PAIR'].sum ?? 0) + recordPrice,
+        sum: daySums[dateStr]['PAIR'].sum + recordPrice,
         records: daySums[dateStr]['PAIR'].records,
       };
     }
     // BOTH
     daySums[dateStr]['BOTH'].records.push(record);
     daySums[dateStr]['BOTH'] = {
-      sum: (daySums[dateStr]['BOTH'].sum ?? 0) + (record.is_self ? recordPrice : 0),
+      sum: daySums[dateStr]['BOTH'].sum + (record.isSelf ? recordPrice : 0),
       records: daySums[dateStr]['BOTH'].records,
     };
   });
@@ -498,7 +501,7 @@ const updatePaddingRecords = (calendarList: CalendarList) => {
     const date = dayjs(start).add(i, 'd');
     const dateStr = date.format(format.Date);
     if (!(dateStr in calendarList)) {
-      const empty = { sum: null, records: [] };
+      const empty = { sum: 0, records: [] };
       calendarList[dateStr] = {
         SELF: empty,
         PAIR: empty,
@@ -583,10 +586,14 @@ const goPlanCreatePage = () => {
   setRouterParam(routerParamKey.PLAN, plan);
   router.push({ name: PAGE.PLAN, query });
 };
-const goRecordEditPage = (record: Record_) => {
-  setIsPair(record.is_pair);
+const goRecordEditPage = (record: GetRecordListItem) => {
+  setIsPair(record.isPair);
 
-  setRouterParam(routerParamKey.RECORD, record);
+  const tmpRecord: Record_ = {
+    ...decamelizeKeys<GetRecordListItem>(record),
+    id: record.recordId,
+  };
+  setRouterParam(routerParamKey.RECORD, tmpRecord);
   const query: RouterQueryCalendarToNote = {
     routerParamKey: routerParamKey.RECORD,
     crud: crud.UPDATE,

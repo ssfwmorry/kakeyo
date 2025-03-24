@@ -1,5 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
   DeleteOutput,
@@ -40,7 +41,11 @@ import {
   RPC_GET_PAY_AND_INCOME_LIST,
   type GetPayAndIncomeListRpc,
 } from './rpc/getPayAndIncomeList.interface';
-import { RPC_GET_RECORD_LIST, type GetRecordListRpc } from './rpc/getRecordList.interface';
+import {
+  RPC_GET_RECORD_LIST,
+  type GetRecordListRpc,
+  type GetRecordListRpcRow,
+} from './rpc/getRecordList.interface';
 import {
   RPC_GET_SUMMARIZED_RECORD_LIST,
   type GetSummarizedRecordListRpc,
@@ -67,7 +72,8 @@ export const getRecordList = async (
     return { data: [], error: error, message: 'record 一覧' };
   }
 
-  return { data: data, error: error, message: 'record 一覧' };
+  const camelizedData = camelizeKeys<{ data: GetRecordListRpcRow[] }>({ data });
+  return { data: camelizedData.data, error: error, message: 'record 一覧' };
 };
 
 export const upsertRecord = async (
