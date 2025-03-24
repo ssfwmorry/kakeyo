@@ -61,7 +61,7 @@
           hide-details
           variant="underlined"
           :append-inner-icon="isShowTypeClearBtn() ? $ICONS.CLOSE : ''"
-          :value="selectedType.type_name"
+          :value="selectedType?.typeName"
           class="text-field-type"
           @click:append-inner="resetInput()"
         ></v-text-field>
@@ -73,7 +73,7 @@
           hide-details
           variant="underlined"
           :append-inner-icon="isEndSelectTypeAndSubType() ? $ICONS.CLOSE : ''"
-          :value="selectedSubType.sub_type_name"
+          :value="selectedSubType?.subTypeName"
           class="text-field-type"
           @click:append-inner="selectedSubTypeId = null"
         >
@@ -95,7 +95,7 @@
       <!-- タイプ選択 -->
       <v-col
         v-for="type of typeList[isPay ? 'pay' : 'income'][isPair ? 'pair' : 'self']"
-        :key="type.type_id"
+        :key="type.typeId"
         cols="3"
         class="mb-1"
       >
@@ -103,29 +103,29 @@
           <v-card-actions class="justify-center">
             <v-avatar
               size="60"
-              :color="type.color_classification_name"
-              @click="selectedTypeId = type.type_id"
+              :color="type.colorClassificationName"
+              @click="selectedTypeId = type.typeId"
             ></v-avatar>
           </v-card-actions>
-          <div class="text-center py-0 px-2">{{ type.type_name }}</div>
+          <div class="text-center py-0 px-2">{{ type.typeName }}</div>
         </v-card>
       </v-col>
     </v-row>
     <v-row v-if="!isEndSelectTypeAndSubType()" class="mb-2" no-gutters>
       <!-- サブタイプ選択 -->
       <v-col
-        v-for="subType of selectedType.sub_types"
-        :key="subType.sub_type_id"
+        v-for="subType of selectedType?.subTypes ?? []"
+        :key="subType.subTypeId"
         cols="3"
         class="mb-2 px-1"
       >
         <v-btn
           dark
           variant="flat"
-          :color="selectedType.color_classification_name"
+          :color="selectedType?.colorClassificationName ?? ''"
           class="btn-subtype"
-          @click="selectedSubTypeId = subType.sub_type_id"
-          >{{ subType.sub_type_name }}</v-btn
+          @click="selectedSubTypeId = subType.subTypeId"
+          >{{ subType.subTypeName }}</v-btn
         >
       </v-col>
     </v-row>
@@ -279,6 +279,7 @@
 </template>
 
 <script setup lang="ts">
+import type { GetTypeListOutput } from '@/api/supabase/type.interface';
 import { DUMMY, MAX_PRICE, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
 import {
@@ -333,26 +334,29 @@ const isInstead = ref<boolean | null>(true);
 const price = ref(0);
 const loading = ref(false);
 const dayList = ref<any[]>([]);
-const typeList = ref({ income: { self: [], pair: [] }, pay: { self: [], pair: [] } } as any);
+const typeList = ref<GetTypeListOutput['data']>({
+  income: { self: [], pair: [] },
+  pay: { self: [], pair: [] },
+});
 const methodList = ref({ income: { self: [], pair: [] }, pay: { self: [], pair: [] } } as any);
 
 const isShowInitPrice = computed(() => price.value !== 0);
 const selectedType = computed(() => {
-  if (selectedTypeId.value === null) return { sub_types: [] };
+  if (selectedTypeId.value === null) return null;
   else {
     const type = typeList.value[isPay.value ? 'pay' : 'income'][
       isPair.value ? 'pair' : 'self'
-    ].find((e: any) => e.type_id === selectedTypeId.value);
-    return type ?? { sub_types: [] };
+    ].find((e) => e.typeId === selectedTypeId.value);
+    return type ?? null;
   }
 });
 const selectedSubType = computed(() => {
-  if (selectedTypeId.value === null || selectedSubTypeId.value === null) return {};
+  if (selectedTypeId.value === null || selectedSubTypeId.value === null) return null;
   else {
-    const subtype = (selectedType.value.sub_types ?? []).find(
-      (e: any) => e.sub_type_id === selectedSubTypeId.value
+    const subtype = (selectedType.value?.subTypes ?? []).find(
+      (e) => e.subTypeId === selectedSubTypeId.value
     );
-    return subtype ?? {};
+    return subtype ?? null;
   }
 });
 
@@ -365,7 +369,7 @@ const isEndSelectType = () => {
   return selectedTypeId.value !== null;
 };
 const isSelectedTypeHasSubType = () => {
-  return selectedType.value.sub_types.length > 0;
+  return (selectedType.value?.subTypes ?? []).length > 0;
 };
 const isShowTypeClearBtn = () => {
   if (isEndSelectType()) {
@@ -608,7 +612,6 @@ watch(isPair, (newValue, oldValue) => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value ?? DUMMY.STR,
   });
-  // const apiResType = { error: null, message: null, data: null };
   if (apiResType.error != null) {
     alert(apiResType.message + `(Error: ${JSON.stringify(apiResType.error)})`);
     return;

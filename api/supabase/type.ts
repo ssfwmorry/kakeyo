@@ -1,5 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import humps from 'humps';
 import type {
   DeleteInput,
   DeleteOutput,
@@ -16,7 +17,7 @@ import {
   type GetTypeListRpcRow,
 } from './rpc/getTypeList.interface';
 import { RPC_SWAP_TYPE, type SwapRpc } from './rpc/swap.interface';
-import type { GetTypeListOutput, GetTypeListRow, UpsertTypeInput } from './type.interface';
+import type { GetTypeListItem, GetTypeListOutput, UpsertTypeInput } from './type.interface';
 
 export const getTypeList = async ({
   isDemoLogin,
@@ -30,26 +31,28 @@ export const getTypeList = async ({
     payload
   );
   if (error != null || data === null) {
-    return { data: null, error: error, message: 'type 一覧' };
+    return {
+      data: { income: { self: [], pair: [] }, pay: { self: [], pair: [] } },
+      error: error,
+      message: 'type 一覧',
+    };
   }
 
   const incomeSelf = data.filter((e) => !e.is_pair && !e.is_pay);
   const incomePair = data.filter((e) => e.is_pair && !e.is_pay);
   const paySelf = data.filter((e) => !e.is_pair && e.is_pay);
   const payPair = data.filter((e) => e.is_pair && e.is_pay);
-  // TODO 型でOmitした、不要なパラメータも渡されている
   const getGroupedType = (data: GetTypeListRpcRow[]) => {
-    let groupedData: GetTypeListRow[] = [];
-    (data ?? []).forEach((row: any, i: number) => {
-      if (i == 0 || groupedData[groupedData.length - 1].type_id != row.type_id) {
-        row['sub_types'] = [];
-        groupedData.push(row);
+    let groupedData: GetTypeListItem[] = [];
+    data.forEach((row, i: number) => {
+      if (i == 0 || groupedData[groupedData.length - 1].typeId != row.type_id) {
+        groupedData.push({ ...humps.camelizeKeys<GetTypeListRpcRow>(row), subTypes: [] });
       }
-      if (row.sub_type_id !== null) {
-        groupedData[groupedData.length - 1].sub_types.push({
-          sub_type_id: row.sub_type_id,
-          sub_type_name: row.sub_type_name,
-          sub_type_sort: row.sub_type_sort,
+      if (row.sub_type_id !== null && row.sub_type_name !== null && row.sub_type_sort !== null) {
+        groupedData[groupedData.length - 1].subTypes.push({
+          subTypeId: row.sub_type_id,
+          subTypeName: row.sub_type_name,
+          subTypeSort: row.sub_type_sort,
         });
       }
     });
@@ -67,7 +70,7 @@ export const getTypeList = async ({
         pair: getGroupedType(payPair),
       },
     },
-    error: error,
+    error: null,
     message: 'type 取得',
   };
 };

@@ -1,25 +1,31 @@
 import type { Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
+import type { Camelized } from 'humps';
 import type { GetTypeListRpcRow } from './rpc/getTypeList.interface';
 
-export type GetTypeListRow = Omit<
-  GetTypeListRpcRow,
-  'sub_type_id' | 'sub_type_name' | 'sub_type_sort'
-> & {
-  sub_types: { sub_type_id: number; sub_type_name: string; sub_type_sort: number }[];
+export type GetTypeListItemSubTypeListItem = {
+  subTypeId: number;
+  subTypeName: string;
+  subTypeSort: number;
 };
+export type GetTypeListItem = Camelized<
+  Omit<GetTypeListRpcRow, 'sub_type_id' | 'sub_type_name' | 'sub_type_sort'> & {
+    subTypes: GetTypeListItemSubTypeListItem[];
+  }
+>;
+
 export interface GetTypeListOutput {
   // TODO isPayとisPairが確定しているので型を調整する
   data: {
     income: {
-      self: GetTypeListRow[];
-      pair: GetTypeListRow[];
+      self: GetTypeListItem[];
+      pair: GetTypeListItem[];
     };
     pay: {
-      self: GetTypeListRow[];
-      pair: GetTypeListRow[];
+      self: GetTypeListItem[];
+      pair: GetTypeListItem[];
     };
-  } | null;
+  };
   error: PostgrestError | null;
   message: string;
 }

@@ -22,7 +22,7 @@
 
       <v-row
         v-for="(type, typeIndex) of typeList[isPay ? 'pay' : 'income'][isPair ? 'pair' : 'self']"
-        :key="type.type_id"
+        :key="type.typeId"
         class="mb-2"
         no-gutters
       >
@@ -32,11 +32,11 @@
               <v-col cols="10" class="px-4 d-flex justify-start align-center">
                 <v-avatar
                   size="30"
-                  :color="type.color_classification_name"
+                  :color="type.colorClassificationName"
                   :icon="isPair ? $ICONS.SHARE : ''"
                   class="mr-3 text-white"
                 ></v-avatar>
-                {{ type.type_name }}
+                {{ type.typeName }}
               </v-col>
               <v-col cols="2" class="pr-4 d-flex justify-center align-center">
                 <v-btn
@@ -58,9 +58,9 @@
                   @click.stop="
                     swapSort(
                       mode.TYPE,
-                      type.type_id,
+                      type.typeId,
                       typeList[isPay ? 'pay' : 'income'][isPair ? 'pair' : 'self'][typeIndex + 1]
-                        .type_id
+                        .typeId
                     )
                   "
                 ></v-btn>
@@ -70,13 +70,13 @@
             <v-divider class="mb-1" />
             <v-row no-gutters class="pa-1">
               <v-col
-                v-for="(subType, subTypeIndex) of type.sub_types"
-                :key="subType.sub_type_id"
+                v-for="(subType, subTypeIndex) of type.subTypes"
+                :key="subType.subTypeId"
                 cols="6"
                 class="col-subtype"
               >
                 <v-row no-gutters>
-                  <v-col cols="10" class="fs-sm"> {{ subType.sub_type_name }} </v-col>
+                  <v-col cols="10" class="fs-sm"> {{ subType.subTypeName }} </v-col>
                   <v-col cols="2" class="d-flex justify-center align-center">
                     <v-btn
                       v-if="isEdit"
@@ -84,10 +84,10 @@
                       size="x-small"
                       variant="flat"
                       density="compact"
-                      @click.stop="openEditSubTypeDialog(subType)"
+                      @click.stop="openEditSubTypeDialog(type.typeId, subType)"
                     ></v-btn>
                     <v-btn
-                      v-else-if="!isEdit && subTypeIndex < type.sub_types.length - 1"
+                      v-else-if="!isEdit && subTypeIndex < type.subTypes.length - 1"
                       :icon="subTypeIndex % 2 === 0 ? $ICONS.ARROW_RIGHT : $ICONS.ARROW_BOTTOM_LEFT"
                       size="x-small"
                       variant="flat"
@@ -95,8 +95,8 @@
                       @click.stop="
                         swapSort(
                           'SUB_TYPE',
-                          subType.sub_type_id,
-                          type.sub_types[subTypeIndex + 1].sub_type_id
+                          subType.subTypeId,
+                          type.subTypes[subTypeIndex + 1].subTypeId
                         )
                       "
                     ></v-btn>
@@ -161,6 +161,11 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
+import type {
+  GetTypeListItem,
+  GetTypeListItemSubTypeListItem,
+  GetTypeListOutput,
+} from '@/api/supabase/type.interface';
 import { DUMMY } from '@/utils/constants';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -199,7 +204,10 @@ export type SubTypeDialog = {
 
 const isPay = ref<boolean>(true);
 const isEdit = ref<boolean>(true);
-const typeList = ref({ income: { self: [], pair: [] }, pay: { self: [], pair: [] } } as any);
+const typeList = ref<GetTypeListOutput['data']>({
+  income: { self: [], pair: [] },
+  pay: { self: [], pair: [] },
+});
 const typeDialog = ref<TypeDialog>({
   isShow: false,
   isWithColor: true,
@@ -235,13 +243,13 @@ const openCreateTypeDialog = () => {
     colorId: null,
   };
 };
-const openEditTypeDialog = ({ type_id, type_name, color_classification_id }: any) => {
+const openEditTypeDialog = ({ typeId, typeName, colorClassificationId }: GetTypeListItem) => {
   typeDialog.value = {
     isShow: true,
     isWithColor: true,
-    id: type_id,
-    name: type_name,
-    colorId: color_classification_id,
+    id: typeId,
+    name: typeName,
+    colorId: colorClassificationId,
   };
 };
 const closeDialog = () => {
@@ -324,22 +332,25 @@ const deleteApi = async (inputMode: Mode) => {
   setToast('削除しました');
   closeDialog();
 };
-const openCreateSubTypeDialog = ({ type_id }: any) => {
+const openCreateSubTypeDialog = ({ typeId }: GetTypeListItem) => {
   subTypeDialog.value = {
     isShow: true,
     isWithColor: false,
     id: null,
-    parentId: type_id,
+    parentId: typeId,
     name: null,
   };
 };
-const openEditSubTypeDialog = ({ sub_type_id, type_id, sub_type_name }: any) => {
+const openEditSubTypeDialog = (
+  typeId: number,
+  { subTypeId, subTypeName }: GetTypeListItemSubTypeListItem
+) => {
   subTypeDialog.value = {
     isShow: true,
     isWithColor: false,
-    id: sub_type_id,
-    parentId: type_id,
-    name: sub_type_name,
+    id: subTypeId,
+    parentId: typeId,
+    name: subTypeName,
   };
 };
 const swapSort = async (inputMode: Mode, prevId: number, nextId: number) => {
