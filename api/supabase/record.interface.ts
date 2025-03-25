@@ -120,8 +120,9 @@ export interface GetSummarizedRecordListOutput {
 export interface GetPairedRecordListInput {
   yearMonth: YearMonthString;
 }
+export type GetPairedRecordItem = Camelized<GetPairedRecordListRpcRow>;
 export interface GetPairedRecordListOutput {
-  data: GetPairedRecordListRpcRow[] | null;
+  data: GetPairedRecordItem[];
   error: PostgrestError | null;
   message: string;
 }

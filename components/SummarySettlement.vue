@@ -94,17 +94,17 @@
         <RecordCard
           :isDisable="false"
           :isPairType="true"
-          :typeColor="record.type_color_classification_name"
-          :typeAndSubtype="StringUtility.typeAndSubtype(record.type_name, record.sub_type_name)"
-          :isShowPlannedIcon="record.is_planned_record"
+          :typeColor="record.typeColorClassificationName"
+          :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
+          :isShowPlannedIcon="record.isPlannedRecord"
           :isEnableEdit="false"
           :isPairMethod="true"
           :userName="''"
-          :methodColor="record.method_color_classification_name"
-          :methodName="record.method_name"
+          :methodColor="record.methodColorClassificationName"
+          :methodName="record.methodName"
           :memo="record.memo ?? ''"
-          :isShowBlueColorPrice="!record.is_pay"
-          :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.is_pay)"
+          :isShowBlueColorPrice="!record.isPay"
+          :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
         ></RecordCard>
       </v-col>
     </v-row>
@@ -116,21 +116,19 @@
           <v-col>
             <v-badge
               dot
-              :model-value="step == 2 && record.isNew && !record.is_settled"
+              :model-value="step == 2 && record.isNew && !record.isSettled"
               class="w-100"
             >
               <RecordCardHalf
                 :labelColor="record.labelColor"
                 :backgroundColor="record.backgroundColor"
-                :typeColor="record.type_color_classification_name"
-                :typeAndSubtype="
-                  StringUtility.typeAndSubtype(record.type_name, record.sub_type_name)
-                "
-                :isShowPlannedIcon="record.is_planned_record"
-                :isSettled="record.is_settled ?? false"
+                :typeColor="record.typeColorClassificationName"
+                :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
+                :isShowPlannedIcon="record.isPlannedRecord"
+                :isSettled="record.isSettled ?? false"
                 :memo="record.memo ?? ''"
-                :isShowBlueColorPrice="!record.is_pay"
-                :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.is_pay)"
+                :isShowBlueColorPrice="!record.isPay"
+                :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
                 @click.native="openDialog(record, true)"
                 class="w-100"
               ></RecordCardHalf>
@@ -150,21 +148,19 @@
           <v-col>
             <v-badge
               dot
-              :model-value="step == 2 && record.isNew && !record.is_settled"
+              :model-value="step == 2 && record.isNew && !record.isSettled"
               class="w-100"
             >
               <RecordCardHalf
                 :labelColor="record.labelColor"
                 :backgroundColor="record.backgroundColor"
-                :typeColor="record.type_color_classification_name"
-                :typeAndSubtype="
-                  StringUtility.typeAndSubtype(record.type_name, record.sub_type_name)
-                "
-                :isShowPlannedIcon="record.is_planned_record"
-                :isSettled="record.is_settled ?? false"
+                :typeColor="record.typeColorClassificationName"
+                :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
+                :isShowPlannedIcon="record.isPlannedRecord"
+                :isSettled="record.isSettled ?? false"
                 :memo="record.memo ?? ''"
-                :isShowBlueColorPrice="!record.is_pay"
-                :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.is_pay)"
+                :isShowBlueColorPrice="!record.isPay"
+                :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
                 @click.native="openDialog(record, false)"
                 class="w-100"
               ></RecordCardHalf>
@@ -183,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GetPairedRecordListRpcRow } from '@/api/supabase/rpc/getPairedRecordList.interface';
+import type { GetPairedRecordItem } from '@/api/supabase/record.interface';
 import {
   DUMMY,
   RATE_BACKGROUND_COLOR_LIST,
@@ -219,7 +215,7 @@ type Record = {
   labelColor: string | null;
   backgroundColor: string | null;
   isNew: boolean;
-} & GetPairedRecordListRpcRow;
+} & GetPairedRecordItem;
 type RecordList = {
   ME: Record[];
   PARTNER: Record[];
@@ -292,7 +288,7 @@ const updateChart = async () => {
     { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
     payload
   );
-  if (apiRes.error !== null || apiRes.data === null) {
+  if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;
   }
@@ -310,7 +306,7 @@ const updateChart = async () => {
   step.value = isExistUnsettledRecord.value ? stepStatus.READY : stepStatus.DONE;
   disableLoading();
 };
-const convertShowData = (records: GetPairedRecordListRpcRow[]) => {
+const convertShowData = (records: GetPairedRecordItem[]) => {
   let coupleSum = 0;
   let recordList: RecordList = {
     ['ME']: [],
@@ -327,21 +323,21 @@ const convertShowData = (records: GetPairedRecordListRpcRow[]) => {
       isNew: true,
     };
 
-    if (record.is_settled === false) isExistUnsettledRecord = true;
+    if (record.isSettled === false) isExistUnsettledRecord = true;
 
     let recordPrice;
-    if (record.is_settled || record.price === 0) {
+    if (record.isSettled || record.price === 0) {
       recordPrice = 0;
-    } else if (record.is_pay) {
+    } else if (record.isPay) {
       recordPrice = record.price;
     } else {
       recordPrice = record.price * -1;
     }
 
-    if (record.is_self) {
+    if (record.isSelf) {
       // ME
       recordList['ME'].push(record);
-    } else if (!record.is_instead) {
+    } else if (!record.isInstead) {
       // COUPLE
       recordList['COUPLE'].push(record);
       coupleSum += recordPrice;
@@ -412,7 +408,7 @@ const getRecordIdList = (selectedRateList: RateList) => {
 };
 const openDialog = (record: Record, isMe: boolean) => {
   // TODO 一回設定した精算率を変更できないようにしているが、のちのち変更できるようにする
-  if (step.value !== stepStatus.GOING || !record.isNew || record.is_settled) return;
+  if (step.value !== stepStatus.GOING || !record.isNew || record.isSettled) return;
 
   dialog.value = {
     isShow: true,

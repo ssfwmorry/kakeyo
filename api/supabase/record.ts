@@ -40,6 +40,7 @@ import { RPC_GET_MONTH_SUM, type GetMonthSumRpc } from './rpc/getMonthSum.interf
 import {
   RPC_GET_PAIRED_RECORD_LIST,
   type GetPairedRecordListRpc,
+  type GetPairedRecordListRpcRow,
 } from './rpc/getPairedRecordList.interface';
 import {
   RPC_GET_PAY_AND_INCOME_LIST,
@@ -358,10 +359,11 @@ export const getPairedRecordList = async (
     GetPairedRecordListRpc
   >(RPC_GET_PAIRED_RECORD_LIST, payload);
   if (error !== null || !Array.isArray(data)) {
-    return { data: data, error: error, message: 'paired_record 一覧' };
+    return { data: [], error: error, message: 'paired_record 一覧' };
   }
 
-  return { data: data, error: error, message: 'paired_record 一覧' };
+  const camelizedData = camelizeKeys<{ data: GetPairedRecordListRpcRow[] }>({ data });
+  return { data: camelizedData.data, error: error, message: 'paired_record 一覧' };
 };
 
 export const getPayAndIncomeList = async (
