@@ -1,5 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
   DeleteOutput,
@@ -11,7 +12,11 @@ import type {
   UpsertOutput,
 } from './common.interface';
 import type { GetMethodListOutput, UpsertMethodInput } from './method.interface';
-import { RPC_GET_METHOD_LIST, type GetMethodListRpc } from './rpc/getMethodList.interface';
+import {
+  RPC_GET_METHOD_LIST,
+  type GetMethodListRpc,
+  type GetMethodListRpcRow,
+} from './rpc/getMethodList.interface';
 import { RPC_SWAP_METHOD, type SwapRpc } from './rpc/swap.interface';
 
 export const getMethodList = async ({
@@ -26,18 +31,23 @@ export const getMethodList = async ({
     payload
   );
   if (error != null || data === null) {
-    return { data: null, error: error, message: 'method 一覧' };
+    return {
+      data: { pay: { self: [], pair: [] }, income: { self: [], pair: [] } },
+      error: error,
+      message: 'method 一覧',
+    };
   }
 
+  const camelizedData = camelizeKeys<{ data: GetMethodListRpcRow[] }>({ data });
   return {
     data: {
       income: {
-        self: data.filter((e) => !e.is_pair && !e.is_pay),
-        pair: data.filter((e) => e.is_pair && !e.is_pay),
+        self: camelizedData.data.filter((e) => !e.isPair && !e.isPay),
+        pair: camelizedData.data.filter((e) => e.isPair && !e.isPay),
       },
       pay: {
-        self: data.filter((e) => !e.is_pair && e.is_pay),
-        pair: data.filter((e) => e.is_pair && e.is_pay),
+        self: camelizedData.data.filter((e) => !e.isPair && e.isPay),
+        pair: camelizedData.data.filter((e) => e.isPair && e.isPay),
       },
     },
     error: error,

@@ -32,7 +32,7 @@
               <v-col
                 cols="10"
                 class="d-flex align-center"
-                :class="`text-${method.color_classification_name}`"
+                :class="`text-${method.colorClassificationName}`"
               >
                 {{ method.name }}
               </v-col>
@@ -96,6 +96,7 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
+import type { GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
 import { DUMMY } from '@/utils/constants';
 
@@ -116,7 +117,10 @@ const props = defineProps<Props>();
 type MethodDialog = TypeDialog;
 const isPay = ref<boolean>(true);
 const isEdit = ref<boolean>(true);
-const methodList = ref({ income: { self: [], pair: [] }, pay: { self: [], pair: [] } } as any);
+const methodList = ref<GetMethodListOutput['data']>({
+  income: { self: [], pair: [] },
+  pay: { self: [], pair: [] },
+});
 const methodDialog = ref<MethodDialog>({
   isShow: false,
   isWithColor: true,

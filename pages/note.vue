@@ -279,6 +279,7 @@
 </template>
 
 <script setup lang="ts">
+import type { GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { GetTypeListOutput } from '@/api/supabase/type.interface';
 import { DUMMY, MAX_PRICE, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
@@ -338,7 +339,10 @@ const typeList = ref<GetTypeListOutput['data']>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
 });
-const methodList = ref({ income: { self: [], pair: [] }, pay: { self: [], pair: [] } } as any);
+const methodList = ref<GetMethodListOutput['data']>({
+  income: { self: [], pair: [] },
+  pay: { self: [], pair: [] },
+});
 
 const isShowInitPrice = computed(() => price.value !== 0);
 const selectedType = computed(() => {
