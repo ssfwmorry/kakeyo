@@ -161,8 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GetTypeSummaryRow } from '@/api/supabase/record.interface';
-import type { GetMethodSummaryRpcRow } from '@/api/supabase/rpc/getMethodSummary.interface';
+import type { GetMethodSummaryItem, GetTypeSummaryItem } from '@/api/supabase/record.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
@@ -285,7 +284,7 @@ const updateChart = async () => {
   }
   sum = getTypeOrMethodSum(apiRes.data ?? []);
   monthListSum.value = StringUtility.ConvertIntToShowStrWithIsPay(sum, isPay.value);
-  const { pie, list } = convertShowData(apiRes.data ?? []);
+  const { pie, list } = convertShowData(apiRes.data);
   [pieData.value, typeOrMethodList.value] = [pie, list];
 
   disableLoading();
@@ -295,24 +294,24 @@ const getTypeOrMethodSum = (monthSummary: any[]) => {
     return sum + item.sum;
   }, 0);
 };
-const convertShowData = (monthSummary: GetTypeSummaryRow[] | GetMethodSummaryRpcRow[]) => {
+const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSummaryItem[]) => {
   let pieData: PieData = { labels: [], datasets: [{ data: [], backgroundColor: [] }] };
   let typeOrMethodList: TypeOrMethodList = [];
-  monthSummary.forEach((typeOrMethodSummary, index) => {
-    const sum = typeOrMethodSummary.sum ?? 0;
+  monthSummaryList.forEach((typeOrMethodSummary) => {
+    const sum = typeOrMethodSummary.sum;
     if (sum === 0) return;
 
     const id = isType.value
-      ? (typeOrMethodSummary as GetTypeSummaryRow).type_id
-      : (typeOrMethodSummary as GetMethodSummaryRpcRow).method_id;
+      ? (typeOrMethodSummary as GetTypeSummaryItem).typeId
+      : (typeOrMethodSummary as GetMethodSummaryItem).methodId;
     const name = isType.value
-      ? (typeOrMethodSummary as GetTypeSummaryRow).type_name
-      : (typeOrMethodSummary as GetMethodSummaryRpcRow).method_name;
-    const color = typeOrMethodSummary.color_name;
-    const isPair = typeOrMethodSummary.is_pair;
+      ? (typeOrMethodSummary as GetTypeSummaryItem).typeName
+      : (typeOrMethodSummary as GetMethodSummaryItem).methodName;
+    const color = typeOrMethodSummary.colorName;
+    const isPair = typeOrMethodSummary.isPair;
     const pairUserName = isType.value
       ? ''
-      : (typeOrMethodSummary as GetMethodSummaryRpcRow).pair_user_name;
+      : (typeOrMethodSummary as GetMethodSummaryItem).pairUserName;
 
     // 円グラフデータの格納
     pieData.datasets[0].data.push(sum);
@@ -330,13 +329,13 @@ const convertShowData = (monthSummary: GetTypeSummaryRow[] | GetMethodSummaryRpc
       subs: [],
     };
 
-    // sub_type がある場合を考慮
+    // subType がある場合を考慮
     if (isType.value) {
-      ((typeOrMethodSummary as GetTypeSummaryRow).sub_types ?? []).forEach((subTypeObj: any) => {
+      (typeOrMethodSummary as GetTypeSummaryItem).subTypes.forEach((subTypeObj) => {
         typeOrMethod.subs.push({
-          name: subTypeObj.sub_type_name !== '' ? subTypeObj.sub_type_name : null,
-          value: StringUtility.ConvertIntToShowStr(subTypeObj.sub_type_sum),
-          id: subTypeObj.sub_type_id,
+          name: subTypeObj.subTypeName,
+          value: StringUtility.ConvertIntToShowStr(subTypeObj.subTypeSum),
+          id: subTypeObj.subTypeId,
         });
       });
     }

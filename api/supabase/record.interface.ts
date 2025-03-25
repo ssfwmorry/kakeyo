@@ -70,11 +70,17 @@ export interface GetTypeSummaryInput {
   year: YearString;
   month: MonthString;
 }
-export type GetTypeSummaryRow = GetTypeSummaryRpcRow & {
-  sub_types: { sub_type_id: number; sub_type_name: string; sub_type_sum: number }[];
+
+export type GetTypeSummaryItemSubTypeListItem = {
+  subTypeId: number;
+  subTypeName: string;
+  subTypeSum: number;
+};
+export type GetTypeSummaryItem = Camelized<GetTypeSummaryRpcRow> & {
+  subTypes: GetTypeSummaryItemSubTypeListItem[];
 };
 export interface GetTypeSummaryOutput {
-  data: GetTypeSummaryRow[] | null;
+  data: GetTypeSummaryItem[];
   error: PostgrestError | null;
   message: string;
 }
@@ -86,8 +92,9 @@ export interface GetMethodSummaryInput {
   year: YearString;
   month: MonthString;
 }
+export type GetMethodSummaryItem = Camelized<GetMethodSummaryRpcRow>;
 export interface GetMethodSummaryOutput {
-  data: GetMethodSummaryRpcRow[] | null;
+  data: GetMethodSummaryItem[];
   error: PostgrestError | null;
   message: string;
 }

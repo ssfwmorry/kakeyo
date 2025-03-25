@@ -23,15 +23,19 @@ import type {
   GetSummarizedRecordListInput,
   GetSummarizedRecordListOutput,
   GetTypeSummaryInput,
+  GetTypeSummaryItem,
   GetTypeSummaryOutput,
-  GetTypeSummaryRow,
   PostRecordsInput,
   PostRecordsOutput,
   SettleRecordsInput,
   SettleRecordsOutput,
   UpsertRecordInput,
 } from './record.interface';
-import { RPC_GET_METHOD_SUMMARY, type GetMethodSummaryRpc } from './rpc/getMethodSummary.interface';
+import {
+  RPC_GET_METHOD_SUMMARY,
+  type GetMethodSummaryRpc,
+  type GetMethodSummaryRpcRow,
+} from './rpc/getMethodSummary.interface';
 import { RPC_GET_MONTH_SUM, type GetMonthSumRpc } from './rpc/getMonthSum.interface';
 import {
   RPC_GET_PAIRED_RECORD_LIST,
@@ -212,7 +216,6 @@ export const getTypeSummary = async (
       month
     );
 
-  let outData, outError;
   const payload = {
     input_user_id: userUid,
     input_is_pay: isPay,
@@ -225,28 +228,24 @@ export const getTypeSummary = async (
     RPC_GET_TYPE_SUMMARY,
     payload
   );
-  if (error === null) {
-    let groupedData: GetTypeSummaryRow[] = [];
-    (data ?? []).forEach((typeObj: GetTypeSummaryRpcRow, i: number) => {
-      if (i == 0 || groupedData[groupedData.length - 1].type_id != typeObj.type_id) {
-        groupedData.push({ ...typeObj, sub_types: [] });
-      }
-      groupedData[groupedData.length - 1].sub_types.push({
-        sub_type_id: typeObj.sub_type_id,
-        sub_type_name: typeObj.sub_type_name,
-        sub_type_sum: typeObj.sub_type_sum,
-      });
-    });
-    [outData, outError] = [groupedData, null];
-  } else {
-    [outData, outError] = [data, error];
-  }
-  if (outError != null) {
-    return { data: outData, error: outError, message: 'type summary 一覧' };
+  if (error !== null || data === null) {
+    return { data: [], error: error, message: 'type summary 一覧' };
   }
 
+  const groupedData: GetTypeSummaryItem[] = [];
+  data.forEach((row, i) => {
+    if (i == 0 || groupedData[groupedData.length - 1].typeId != row.type_id) {
+      groupedData.push({ ...camelizeKeys<GetTypeSummaryRpcRow>(row), subTypes: [] });
+    }
+    groupedData[groupedData.length - 1].subTypes.push({
+      subTypeId: row.sub_type_id,
+      subTypeName: row.sub_type_name,
+      subTypeSum: row.sub_type_sum,
+    });
+  });
+
   return {
-    data: outData,
+    data: groupedData,
     error: null,
     message: 'type summary 一覧',
   };
@@ -266,7 +265,6 @@ export const getMethodSummary = async (
       month
     );
 
-  let outData, outError;
   const payload = {
     input_user_id: userUid,
     input_is_pay: isPay,
@@ -279,13 +277,13 @@ export const getMethodSummary = async (
     RPC_GET_METHOD_SUMMARY,
     payload
   );
-  [outData, outError] = [data, error];
-  if (outError != null) {
-    return { data: outData, error: outError, message: 'method summary 一覧' };
+  if (error !== null || data === null) {
+    return { data: [], error: error, message: 'method summary 一覧' };
   }
 
+  const camelizedData = camelizeKeys<{ data: GetMethodSummaryRpcRow[] }>({ data });
   return {
-    data: outData,
+    data: camelizedData.data,
     error: null,
     message: ' method summary 一覧',
   };
