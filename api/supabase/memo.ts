@@ -1,5 +1,7 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import type { Memo } from '@/utils/types/model';
+import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
   DeleteOutput,
@@ -20,7 +22,14 @@ export const getMemoList = async ({
     .from('memos')
     .select('id, memo, pair_id')
     .or(`user_id.eq.${userUid}${wherePairId}`);
-  return { data: data, error: error, message: 'memos 取得' };
+  if (error !== null || data === null) {
+    return { data: [], error: error, message: 'memos 取得' };
+  }
+
+  const camelizedData = camelizeKeys<{
+    data: Pick<Memo, 'id' | 'memo' | 'pair_id'>[];
+  }>({ data });
+  return { data: camelizedData.data, error: error, message: 'memos 取得' };
 };
 
 export const insertMemo = async (

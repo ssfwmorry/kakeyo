@@ -92,7 +92,7 @@
           label
           class="mr-2 mb-1"
           @click:close="deleteMemo(memo.id)"
-          ><v-icon small v-if="!!memo.pair_id" class="mr-1">{{ $ICONS.SHARE }}</v-icon>
+          ><v-icon small v-if="!!memo.pairId" class="mr-1">{{ $ICONS.SHARE }}</v-icon>
           {{ memo.memo }}
         </v-chip>
       </v-col>
@@ -197,6 +197,7 @@ import {
   type ShareType,
 } from '@/utils/types/common';
 // https://fullcalendar.io/docs
+import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
@@ -284,13 +285,7 @@ const calendarOptions = ref<CalendarOptions>({
   eventClick: handleShowPlan,
 });
 const daySumList = ref<CalendarList>({});
-const memoList = ref<
-  {
-    id: number;
-    memo: string;
-    pair_id: number | null;
-  }[]
->([]);
+const memoList = ref<GetMemoListOutput['data']>([]);
 const selectedDayForShow = ref<string | null>(null);
 const selectedDate = ref<DateString | null>(null);
 const selectedDayRecords = ref<GetRecordListItem[]>([]);
@@ -633,7 +628,7 @@ const getMemoList = async () => {
     return;
   }
 
-  memoList.value = apiRes.data ?? [];
+  memoList.value = apiRes.data;
 };
 const addMemo = async () => {
   if (!memoText.value) {

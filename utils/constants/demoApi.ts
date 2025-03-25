@@ -4168,10 +4168,10 @@ const DEMO_DATA = {
     },
     GET_MEMO_LIST: {
       data: [
-        { id: 1, memo: '牛乳購入', pair_id: 1 },
-        { id: 2, memo: '試験料振込', pair_id: null },
-        { id: 3, memo: '切手購入', pair_id: null },
-        { id: 4, memo: 'ディナー予約', pair_id: 1 },
+        { id: 1, memo: '牛乳購入', pairId: 1 },
+        { id: 2, memo: '試験料振込', pairId: null },
+        { id: 3, memo: '切手購入', pairId: null },
+        { id: 4, memo: 'ディナー予約', pairId: 1 },
       ],
       error: null,
       message: 'demo',
