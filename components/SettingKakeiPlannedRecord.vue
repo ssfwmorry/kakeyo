@@ -5,14 +5,14 @@
     <div class="px-3 mb-4">
       <v-row
         v-for="(plannedRecord, plannedRecordIndex) of plannedRecordList[isPair ? 'pair' : 'self']"
-        :key="plannedRecord.planned_record_id"
+        :key="plannedRecord.plannedRecordId"
         no-gutters
         class="mb-2"
       >
         <v-col cols="2" class="pa-2 fs-sm">
           <v-row no-gutters class="h-50">
             <v-col class="d-flex justify-center align-center">
-              {{ plannedRecord.day_classification_name }}</v-col
+              {{ plannedRecord.dayClassificationName }}</v-col
             >
           </v-row>
           <v-row no-gutters class="h-50">
@@ -24,9 +24,9 @@
                 :icon="$ICONS.ARROW_DOWN"
                 @click.stop="
                   swapSort(
-                    plannedRecord.planned_record_id,
+                    plannedRecord.plannedRecordId,
                     plannedRecordList[isPair ? 'pair' : 'self'][plannedRecordIndex + 1]
-                      .planned_record_id
+                      .plannedRecordId
                   )
                 "
               ></v-btn>
@@ -36,24 +36,23 @@
         <v-col cols="10">
           <RecordCard
             :isDisable="false"
-            :isPairType="plannedRecord.is_pair"
-            :typeColor="plannedRecord.type_color_classification_name"
+            :isPairType="plannedRecord.isPair"
+            :typeColor="plannedRecord.typeColorClassificationName"
             :typeAndSubtype="
-              StringUtility.typeAndSubtype(plannedRecord.type_name, plannedRecord.sub_type_name)
+              StringUtility.typeAndSubtype(plannedRecord.typeName, plannedRecord.subTypeName)
             "
             :isShowPlannedIcon="true"
             :isEnableEdit="
-              plannedRecord.is_self ||
-              (plannedRecord.is_pair && plannedRecord.pair_user_name == null)
+              plannedRecord.isSelf || (plannedRecord.isPair && plannedRecord.pairUserName == null)
             "
-            :isPairMethod="plannedRecord.is_pair && plannedRecord.pair_user_name == null"
-            :userName="plannedRecord.pair_user_name ? plannedRecord.pair_user_name : ''"
-            :methodColor="plannedRecord.method_color_classification_name"
-            :methodName="plannedRecord.method_name"
+            :isPairMethod="plannedRecord.isPair && plannedRecord.pairUserName == null"
+            :userName="plannedRecord.pairUserName ?? ''"
+            :methodColor="plannedRecord.methodColorClassificationName"
+            :methodName="plannedRecord.methodName"
             :memo="plannedRecord.memo ?? ''"
-            :isShowBlueColorPrice="!plannedRecord.is_pay"
+            :isShowBlueColorPrice="!plannedRecord.isPay"
             :price="
-              StringUtility.ConvertIntToShowStrWithIsPay(plannedRecord.price, plannedRecord.is_pay)
+              StringUtility.ConvertIntToShowStrWithIsPay(plannedRecord.price, plannedRecord.isPay)
             "
             @edit="goPlannedRecordEditPage(plannedRecord)"
           ></RecordCard>
@@ -77,8 +76,10 @@
 </template>
 
 <script setup lang="ts">
-import type { GetPlannedRecordListOutput } from '@/api/supabase/plannedRecord.interface';
-import type { GetPlannedRecordListRpcRow } from '@/api/supabase/rpc/getPlannedRecordList.interface';
+import type {
+  GetPlannedRecordListItem,
+  GetPlannedRecordListOutput,
+} from '@/api/supabase/plannedRecord.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import {
@@ -87,6 +88,7 @@ import {
   type PlannedRecord,
   type RouterQuerySettingToNote,
 } from '@/utils/types/common';
+import { decamelizeKeys } from 'humps';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -112,10 +114,11 @@ const updateShowData = async () => {
   }
   plannedRecordList.value = apiRes.data;
 };
-const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListRpcRow) => {
+const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListItem) => {
+  // TODO
   const tmpPlannedRecord: PlannedRecord = {
-    ...plannedRecord,
-    id: plannedRecord.planned_record_id,
+    ...decamelizeKeys<GetPlannedRecordListItem>(plannedRecord),
+    id: plannedRecord.plannedRecordId,
   };
   setRouterParam(routerParamKey.PLANNED_RECORD, tmpPlannedRecord);
   const query: RouterQuerySettingToNote = {

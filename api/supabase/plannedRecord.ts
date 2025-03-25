@@ -1,5 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
   DeleteOutput,
@@ -17,6 +18,7 @@ import type {
 import {
   RPC_GET_PLANNED_RECORD_LIST,
   type GetPlannedRecordListRpc,
+  type GetPlannedRecordListRpcRow,
 } from './rpc/getPlannedRecordList.interface';
 import { RPC_SWAP_PLANNED_RECORD, type SwapRpc } from './rpc/swap.interface';
 
@@ -35,10 +37,11 @@ export const getPlannedRecordList = async ({
     return { data: { self: [], pair: [] }, error: error, message: 'planned_record 一覧' };
   }
 
+  const camelizedData = camelizeKeys<{ data: GetPlannedRecordListRpcRow[] }>({ data });
   return {
     data: {
-      self: data.filter((e: any) => !e.is_pair),
-      pair: data.filter((e: any) => e.is_pair),
+      self: camelizedData.data.filter((e) => !e.isPair),
+      pair: camelizedData.data.filter((e) => e.isPair),
     },
     error: error,
     message: 'planned_record 一覧',
