@@ -4308,7 +4308,7 @@ const DEMO_DATA = {
       isIncludeInstead: boolean,
       yearMonth: YearMonthString,
       id: Id,
-      subtypeId: Id
+      subtypeId: Id | null
     ) => {
       const launchData = {
         id: 2,
