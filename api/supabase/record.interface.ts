@@ -17,7 +17,7 @@ import type { GetTypeSummaryRpcRow } from './rpc/getTypeSummary.interface';
 
 export interface GetRecordListInput extends DateRange {}
 
-export type GetRecordListItem = Camelized<GetRecordListRpcRow>;
+export type GetRecordListItem = Camelized<Omit<GetRecordListRpcRow, 'record_id'>> & { id: Id };
 export interface GetRecordListOutput {
   data: GetRecordListItem[];
   error: PostgrestError | null;
@@ -108,8 +108,11 @@ export interface GetSummarizedRecordListInput {
   id: Id;
   subtypeId: Id | null;
 }
+export type GetSummarizedRecordItem = Camelized<
+  Omit<GetSummarizedRecordListRpcRow, 'record_id'>
+> & { id: Id };
 export interface GetSummarizedRecordListOutput {
-  data: (Omit<GetSummarizedRecordListRpcRow, 'record_id'> & { id: Id })[] | null;
+  data: GetSummarizedRecordItem[];
   error: PostgrestError | null;
   message: string;
 }

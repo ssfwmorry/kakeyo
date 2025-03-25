@@ -147,7 +147,7 @@
     <!-- record 表示 -->
     <v-row v-if="selectedDayRecords" no-gutters>
       <v-col>
-        <v-row v-for="record in selectedDayRecords" :key="record.recordId" no-gutters class="mb-1">
+        <v-row v-for="record in selectedDayRecords" :key="record.id" no-gutters class="mb-1">
           <v-col>
             <RecordCard
               :isDisable="showRecordMode === 'BOTH' && !record.isSelf"
@@ -589,9 +589,9 @@ const goPlanCreatePage = () => {
 const goRecordEditPage = (record: GetRecordListItem) => {
   setIsPair(record.isPair);
 
+  // TODO
   const tmpRecord: Record_ = {
     ...decamelizeKeys<GetRecordListItem>(record),
-    id: record.recordId,
   };
   setRouterParam(routerParamKey.RECORD, tmpRecord);
   const query: RouterQueryCalendarToNote = {

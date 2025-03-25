@@ -69,20 +69,18 @@
             <v-col>
               <RecordCard
                 :isDisable="false"
-                :isPairType="record.is_pair"
-                :typeColor="record.type_color_classification_name"
-                :typeAndSubtype="
-                  StringUtility.typeAndSubtype(record.type_name, record.sub_type_name)
-                "
-                :isShowPlannedIcon="!!record.planned_record_id"
-                :isEnableEdit="record.is_self || (record.is_pair && !record.is_instead)"
-                :isPairMethod="record.is_pair && !record.is_instead"
-                :userName="record.pair_user_name ? record.pair_user_name : ''"
-                :methodColor="record.method_color_classification_name"
-                :methodName="record.method_name"
+                :isPairType="record.isPair"
+                :typeColor="record.typeColorClassificationName"
+                :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
+                :isShowPlannedIcon="!!record.plannedRecordId"
+                :isEnableEdit="record.isSelf || (record.isPair && !record.isInstead)"
+                :isPairMethod="record.isPair && !record.isInstead"
+                :userName="record.pairUserName ?? ''"
+                :methodColor="record.methodColorClassificationName"
+                :methodName="record.methodName"
                 :memo="record.memo ?? ''"
-                :isShowBlueColorPrice="!record.is_pay"
-                :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.is_pay)"
+                :isShowBlueColorPrice="!record.isPay"
+                :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
                 @edit="goRecordEditPage(record)"
               ></RecordCard>
             </v-col>
@@ -95,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+import type { GetSummarizedRecordItem } from '@/api/supabase/record.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
@@ -108,6 +107,7 @@ import {
   type SummaryQueryParam,
   type YearMonthObj,
 } from '@/utils/types/common';
+import { decamelizeKeys } from 'humps';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, userStore] = [useLoginStore(), useUserStore()];
@@ -143,7 +143,7 @@ const showSetting = ref<ShowSetting>({
   id: null,
   subtypeId: null,
 });
-const recordList = ref<Record_[]>([]);
+const recordList = ref<GetSummarizedRecordItem[]>([]);
 
 const focusPeriod = computed(() => {
   if (showSetting.value.isMonth) {
@@ -234,10 +234,14 @@ const goSummaryPage = () => {
   setRouterParam(routerParamKey.SUMMARY_QUERY_PARAM, summaryQueryParam);
   router.push({ name: PAGE.SUMMARY });
 };
-const goRecordEditPage = (record: Record_) => {
-  setIsPair(record.is_pair);
+const goRecordEditPage = (record: GetSummarizedRecordItem) => {
+  setIsPair(record.isPair);
 
-  setRouterParam(routerParamKey.RECORD, record);
+  // TODO
+  const tmpRecord: Record_ = {
+    ...decamelizeKeys<GetSummarizedRecordItem>(record),
+  };
+  setRouterParam(routerParamKey.RECORD, tmpRecord);
   const query: RouterQueryCalendarToNote = {
     routerParamKey: routerParamKey.RECORD,
     crud: crud.UPDATE,

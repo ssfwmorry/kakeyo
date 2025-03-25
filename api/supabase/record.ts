@@ -53,6 +53,7 @@ import {
 import {
   RPC_GET_SUMMARIZED_RECORD_LIST,
   type GetSummarizedRecordListRpc,
+  type GetSummarizedRecordListRpcRow,
 } from './rpc/getSummarizedRecordList.interface';
 import {
   RPC_GET_TYPE_SUMMARY,
@@ -77,7 +78,10 @@ export const getRecordList = async (
   }
 
   const camelizedData = camelizeKeys<{ data: GetRecordListRpcRow[] }>({ data });
-  return { data: camelizedData.data, error: error, message: 'record 一覧' };
+  const outData = camelizedData.data.map((e) => {
+    return { ...e, id: e.recordId };
+  });
+  return { data: outData, error: error, message: 'record 一覧' };
 };
 
 export const upsertRecord = async (
@@ -302,6 +306,7 @@ export const getSummarizedRecordList = async (
   }: GetSummarizedRecordListInput
 ): Promise<GetSummarizedRecordListOutput> => {
   if (isDemoLogin)
+    // TODO
     return DEMO_DATA.SUPABASE.GET_SUMMARIZED_RECORD_LIST(
       isPay,
       isType,
@@ -330,13 +335,12 @@ export const getSummarizedRecordList = async (
     return { data: [], error: error, message: 'summarized_record 一覧' };
   }
 
-  const outData = data.map((e) => {
+  const camelizedData = camelizeKeys<{ data: GetSummarizedRecordListRpcRow[] }>({ data });
+  const outData = camelizedData.data.map((e) => {
     // TODO 不要なrecord_idも渡してしまう
-    return {
-      ...e,
-      id: e.record_id,
-    };
+    return { ...e, id: e.recordId };
   });
+
   return { data: outData, error: error, message: 'summarized_record 一覧' };
 };
 
