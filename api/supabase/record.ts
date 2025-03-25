@@ -306,7 +306,6 @@ export const getSummarizedRecordList = async (
   }: GetSummarizedRecordListInput
 ): Promise<GetSummarizedRecordListOutput> => {
   if (isDemoLogin)
-    // TODO
     return DEMO_DATA.SUPABASE.GET_SUMMARIZED_RECORD_LIST(
       isPay,
       isType,
