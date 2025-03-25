@@ -1,5 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
   DeleteOutput,
@@ -11,7 +12,11 @@ import type {
   UpsertOutput,
 } from './common.interface';
 import type { GetPlanTypeListOutput, UpsertPlanTypeInput } from './planType.interface';
-import { RPC_GET_PLAN_TYPE_LIST, type GetPlanTypeListRpc } from './rpc/getPlanTypeList.interface';
+import {
+  RPC_GET_PLAN_TYPE_LIST,
+  type GetPlanTypeListRpc,
+  type GetPlanTypeListRpcRow,
+} from './rpc/getPlanTypeList.interface';
 import { RPC_SWAP_PLAN_TYPE, type SwapRpc } from './rpc/swap.interface';
 
 export const getPlanTypeList = async ({
@@ -29,10 +34,11 @@ export const getPlanTypeList = async ({
     return { data: { self: [], pair: [] }, error: error, message: 'plan_type 一覧' };
   }
 
+  const camelizedData = camelizeKeys<{ data: GetPlanTypeListRpcRow[] }>({ data });
   return {
     data: {
-      self: data.filter((e: any) => !e.is_pair),
-      pair: data.filter((e: any) => e.is_pair),
+      self: camelizedData.data.filter((e) => !e.isPair),
+      pair: camelizedData.data.filter((e) => e.isPair),
     },
     error: error,
     message: 'plan_type 取得',

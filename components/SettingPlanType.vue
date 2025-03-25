@@ -5,7 +5,7 @@
     <div class="px-3 mb-4">
       <v-row
         v-for="(planType, planTypeIndex) of planTypeList[isPair ? 'pair' : 'self']"
-        :key="planType.plan_type_id"
+        :key="planType.planTypeId"
         class="mb-3"
         no-gutters
       >
@@ -17,10 +17,10 @@
                   size="28"
                   dark
                   variant="flat"
-                  :class="`bg-${planType.color_classification_name}`"
+                  :class="`bg-${planType.colorClassificationName}`"
                   class="mr-3 btn-icon text-white"
                   ><v-icon>{{ isPair ? $ICONS.SHARE : '' }}</v-icon> </v-btn
-                >{{ planType.plan_type_name }}
+                >{{ planType.planTypeName }}
               </v-col>
               <v-col cols="2" class="pr-4 d-flex justify-center align-center">
                 <v-btn
@@ -30,8 +30,8 @@
                   :icon="$ICONS.ARROW_DOWN"
                   @click.stop="
                     swapSort(
-                      planType.plan_type_id,
-                      planTypeList[isPair ? 'pair' : 'self'][planTypeIndex + 1].plan_type_id
+                      planType.planTypeId,
+                      planTypeList[isPair ? 'pair' : 'self'][planTypeIndex + 1].planTypeId
                     )
                   "
                 ></v-btn>
@@ -76,6 +76,7 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
+import type { GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
 import { DUMMY } from '@/utils/constants';
 
@@ -98,7 +99,7 @@ type PlanTypeList = {
 };
 type PlanTypeDialog = TypeDialog;
 
-const planTypeList = ref<PlanTypeList>({ self: [], pair: [] });
+const planTypeList = ref<GetPlanTypeListOutput['data']>({ self: [], pair: [] });
 const planTypeDialog = ref<PlanTypeDialog>({
   isShow: false,
   isWithColor: true,
@@ -112,7 +113,7 @@ const updateShowData = async () => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value ?? DUMMY.STR,
   });
-  if (apiRes.error != null || apiRes.data === null) {
+  if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;
   }

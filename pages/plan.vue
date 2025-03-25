@@ -123,6 +123,7 @@
 </template>
 
 <script setup lang="ts">
+import type { GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
@@ -159,7 +160,7 @@ const date = ref<Dayjs | null>(null);
 const dates = ref<Dayjs[]>([]);
 const selectedPlanTypeId = ref<number | null>(null);
 const memo = ref<string | null>(null);
-const planTypeList = ref<any>({ self: [], pair: [] });
+const planTypeList = ref<GetPlanTypeListOutput['data']>({ self: [], pair: [] });
 const loading = ref<boolean>(false);
 
 const selectedDateOrPeriod = computed(() => {
@@ -178,7 +179,7 @@ const setPagePlan = (plan: Plan, c: Crud) => {
   if (c === crud.CREATE) {
     const list = planTypeList.value[isPair.value ? 'pair' : 'self'];
     if (list.length > 0) {
-      selectedPlanTypeId.value = list[0].plan_type_id;
+      selectedPlanTypeId.value = list[0].planTypeId;
     } else {
       selectedPlanTypeId.value = null;
     }
