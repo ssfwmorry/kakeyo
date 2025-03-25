@@ -1,5 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
   DeleteOutput,
@@ -9,7 +10,11 @@ import type {
   UpsertOutput,
 } from './common.interface';
 import type { GetPlanListInput, GetPlanListOutput, UpsertPlanInput } from './plan.interface';
-import { RPC_GET_PLAN_LIST, type GetPlanListRpc } from './rpc/getPlanList.interface';
+import {
+  RPC_GET_PLAN_LIST,
+  type GetPlanListRpc,
+  type GetPlanListRpcRow,
+} from './rpc/getPlanList.interface';
 
 export const getPlanList = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
@@ -23,10 +28,11 @@ export const getPlanList = async (
     payload
   );
   if (error != null || data === null) {
-    return { data: data, error: error, message: 'plan 一覧' };
+    return { data: [], error: error, message: 'plan 一覧' };
   }
 
-  return { data: data, error: error, message: 'plan 取得' };
+  const camelizedData = camelizeKeys<{ data: GetPlanListRpcRow[] }>({ data });
+  return { data: camelizedData.data, error: error, message: 'plan 取得' };
 };
 
 export const upsertPlan = async (

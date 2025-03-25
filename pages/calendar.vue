@@ -374,32 +374,32 @@ const updateRange = async () => {
 
   // plan を追加
   const apiResPlans = await getPlanList(authParam, payload2);
-  if (apiResPlans.error !== null || apiResPlans.data === null) {
+  if (apiResPlans.error !== null) {
     alert(apiResPlans.message + `(Error: ${JSON.stringify(apiResPlans.error)})`);
     return;
   }
 
   // plan 分を events に追加
-  apiResPlans.data.forEach((plan: Plan) => {
+  apiResPlans.data.forEach((plan) => {
     events.push({
       title: plan.name,
-      start: dayjs(plan.start_date).toDate(),
+      start: dayjs(plan.startDate).toDate(),
       // events に追加するときに end に1日加算する。画面描画以外のデータ連携は dbEnd をつかう
-      end: dayjs(plan.end_date).add(1, 'd').toDate(),
+      end: dayjs(plan.endDate).add(1, 'd').toDate(),
       allDay: true,
       borderColor: 'black',
       textColor: 'white',
-      backgroundColor: plan.plan_type_color_classification_name,
-      classNames: [`bg-${plan.plan_type_color_classification_name}`],
+      backgroundColor: plan.planTypeColorClassificationName,
+      classNames: [`bg-${plan.planTypeColorClassificationName}`],
       type: eventType.PLAN,
       planId: plan.id,
-      startStr: plan.start_date,
-      endStr: plan.end_date,
-      dbEnd: dayjs(plan.end_date).toDate(),
-      isPair: plan.is_pair,
+      startStr: plan.startDate,
+      endStr: plan.endDate,
+      dbEnd: dayjs(plan.endDate).toDate(),
+      isPair: plan.isPair,
       memo: plan.memo,
-      typeId: plan.plan_type_id,
-      typeName: plan.plan_type_name,
+      typeId: plan.planTypeId,
+      typeName: plan.planTypeName,
     });
   });
   // recordと祝日 分を events に追加

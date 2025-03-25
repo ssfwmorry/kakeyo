@@ -16,7 +16,7 @@ export type GetPlanListRpcRow = {
   is_pair: boolean;
 };
 // TODO: interfaceに置き換える
-export type GetPlanListRpcResponse = GetPlanListRpcRow[] | null;
+type GetPlanListRpcResponse = GetPlanListRpcRow[] | null;
 
 export interface GetPlanListRpc {
   Args: GetPlanListRpcRequest;
