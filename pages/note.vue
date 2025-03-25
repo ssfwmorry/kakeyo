@@ -295,6 +295,7 @@ import {
   type RouterQueryCalendarToNote,
   type RouterQueryNoteToCalendar,
 } from '@/utils/types/common';
+import type { DayClassification } from '~/utils/types/model';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -334,7 +335,7 @@ const selectedMethodId = ref<Id | null>(null);
 const isInstead = ref<boolean | null>(true);
 const price = ref(0);
 const loading = ref(false);
-const dayList = ref<any[]>([]);
+const dayList = ref<DayClassification[]>([]);
 const typeList = ref<GetTypeListOutput['data']>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
@@ -464,7 +465,7 @@ const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;
   }
-  dayList.value = apiRes.data ?? [];
+  dayList.value = apiRes.data;
 
   // 新規作成の場合
   if (c === crud.CREATE) {

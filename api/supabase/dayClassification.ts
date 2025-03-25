@@ -9,5 +9,8 @@ export const getDayClassificationList = async ({
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_DAY_LIST;
 
   const { data, error } = await supabase.from('day_classifications').select('id, name, value');
+  if (error !== null || data === null) {
+    return { data: [], error, message: 'day_classifications 取得' };
+  }
   return { data: data, error: error, message: 'day_classifications 取得' };
 };

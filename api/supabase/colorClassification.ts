@@ -9,5 +9,9 @@ export const getColorClassificationList = async ({
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_COLOR_LIST;
 
   const { data, error } = await supabase.from('color_classifications').select('id, name');
+  if (error !== null || data === null) {
+    return { data: [], error, message: 'color_classifications 取得' };
+  }
+
   return { data: data, error: error, message: 'color_classifications 取得' };
 };

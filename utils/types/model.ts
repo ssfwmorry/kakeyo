@@ -6,6 +6,7 @@ export type ColorClassification = {
 export type DayClassification = {
   id: number;
   name: string;
+  value: number;
 };
 
 export type Memo = {
