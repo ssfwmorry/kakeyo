@@ -132,8 +132,9 @@ export interface GetPayAndIncomeListInput {
   isPair: boolean;
   isIncludeInstead: boolean;
 }
+export type GetPayAndIncomeItem = Camelized<GetPayAndIncomeListRpcRow>;
 export interface GetPayAndIncomeListOutput {
-  data: GetPayAndIncomeListRpcRow[] | null;
+  data: GetPayAndIncomeItem[];
   error: PostgrestError | null;
   message: string;
 }

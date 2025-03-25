@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GetPayAndIncomeListRpcRow } from '@/api/supabase/rpc/getPayAndIncomeList.interface';
+import type { GetPayAndIncomeItem } from '@/api/supabase/record.interface';
 import { DUMMY } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
@@ -194,7 +194,7 @@ const updateChart = async () => {
     { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
     payload
   );
-  if (apiRes.error !== null || apiRes.data === null) {
+  if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${apiRes.error})`);
     return;
   }
@@ -209,7 +209,7 @@ const updateChart = async () => {
   disableLoading();
 };
 const convertShowData = (
-  monthList: GetPayAndIncomeListRpcRow[]
+  monthList: GetPayAndIncomeItem[]
 ): { ret1: BarData; ret2: string; ret3: BarData; ret4: string; ret5: TableData[] } => {
   let tmpSeriesPayAndIncome: number[] = [];
   let tmpSumPayAndIncome = 0;
@@ -220,7 +220,7 @@ const convertShowData = (
   // monthList を 'YYYY-MM' を key にして Map にする
   let monthMap: Record<YearMonthString, { paySum: number; incomeSum: number }> = {};
   monthList.forEach((row) => {
-    monthMap[row.year_month] = { paySum: row.pay_sum, incomeSum: row.income_sum };
+    monthMap[row.yearMonth] = { paySum: row.paySum, incomeSum: row.incomeSum };
   });
 
   // TODO データ格納チェック

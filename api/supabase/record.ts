@@ -45,6 +45,7 @@ import {
 import {
   RPC_GET_PAY_AND_INCOME_LIST,
   type GetPayAndIncomeListRpc,
+  type GetPayAndIncomeListRpcRow,
 } from './rpc/getPayAndIncomeList.interface';
 import {
   RPC_GET_RECORD_LIST,
@@ -370,14 +371,8 @@ export const getPayAndIncomeList = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
   { year, isPair, isIncludeInstead }: GetPayAndIncomeListInput
 ): Promise<GetPayAndIncomeListOutput> => {
-  // prettier-ignore
   if (isDemoLogin)
     return DEMO_DATA.SUPABASE.GET_PAY_AND_INCOME_LIST(year, isPair, isIncludeInstead);
-
-  // TODO よりよい状況バリデーションチェック
-  // if (isPair && pairId == null) {
-  //   return { data: null, error: 'isPair と pairID の関係性', message: 'pay_and_income 一覧' };
-  // }
 
   const payload = {
     input_user_id: userUid,
@@ -389,8 +384,10 @@ export const getPayAndIncomeList = async (
     typeof RPC_GET_PAY_AND_INCOME_LIST,
     GetPayAndIncomeListRpc
   >(RPC_GET_PAY_AND_INCOME_LIST, payload);
-  if (error !== null || !Array.isArray(data)) {
-    return { data: data, error: error, message: 'pay_and_income 一覧' };
+  if (error !== null || data === null) {
+    return { data: [], error: error, message: 'pay_and_income 一覧' };
   }
-  return { data: data, error: error, message: 'pay_and_income 一覧' };
+
+  const camelizedData = camelizeKeys<{ data: GetPayAndIncomeListRpcRow[] }>({ data });
+  return { data: camelizedData.data, error: error, message: 'pay_and_income 一覧' };
 };

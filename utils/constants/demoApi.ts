@@ -1,5 +1,5 @@
-import type { GetPairedRecordItem } from '@/api/supabase/record.interface';
-import type { YearMonthString } from '../types/common';
+import type { GetPairedRecordItem, GetPayAndIncomeItem } from '@/api/supabase/record.interface';
+import type { YearMonthString, YearString } from '../types/common';
 
 const DEMO_DATA = {
   IS_RELEASE: true, // false: デモログインで動的レスポンス、true: デモログインで静的レスポンス
@@ -5002,15 +5002,15 @@ const DEMO_DATA = {
       };
     },
     // TODO isIncludeInstead を考慮
-    GET_PAY_AND_INCOME_LIST: (year: any, isPair: any, isIncludeInstead: any) => {
-      let data: any;
+    GET_PAY_AND_INCOME_LIST: (year: YearString, isPair: boolean, isIncludeInstead: boolean) => {
+      let data: GetPayAndIncomeItem[];
       if (year !== '2022') {
         data = [];
       } else {
         if (isPair) {
-          data = [{ year_month: '2022-01', pay_sum: 53800, income_sum: 0 }];
+          data = [{ yearMonth: '2022-01', paySum: 53800, incomeSum: 0 }];
         } else {
-          data = [{ year_month: '2022-01', pay_sum: 1200, income_sum: 0 }];
+          data = [{ yearMonth: '2022-01', paySum: 1200, incomeSum: 0 }];
         }
       }
       return {
