@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
-import type { GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
+import type { GetPlanTypeListItem, GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
 import { DUMMY } from '@/utils/constants';
 
@@ -93,10 +93,6 @@ type Props = {
   colorList: GetColorClassificationListOutput['data'];
 };
 const props = defineProps<Props>();
-type PlanTypeList = {
-  self: any[];
-  pair: any[];
-};
 type PlanTypeDialog = TypeDialog;
 
 const planTypeList = ref<GetPlanTypeListOutput['data']>({ self: [], pair: [] });
@@ -128,13 +124,17 @@ const openCreateDialog = () => {
     colorId: null,
   };
 };
-const openEditDialog = ({ plan_type_id, plan_type_name, color_classification_id }: any) => {
+const openEditDialog = ({
+  planTypeId,
+  planTypeName,
+  colorClassificationId,
+}: GetPlanTypeListItem) => {
   planTypeDialog.value = {
     isShow: true,
     isWithColor: true,
-    id: plan_type_id,
-    name: plan_type_name,
-    colorId: color_classification_id,
+    id: planTypeId,
+    name: planTypeName,
+    colorId: colorClassificationId,
   };
 };
 const closeDialog = () => {

@@ -403,7 +403,7 @@ const setDate = (value: string) => {
   date.value = `${PickedDate.$y}-${month}-${day}`;
   isShowDatePicker.value = false;
 };
-const pushPrice = (num: any) => {
+const pushPrice = (num: number) => {
   if (price.value === 0) {
     price.value = num;
   } else {
@@ -425,7 +425,7 @@ const initInputData = () => {
   price.value = 0;
 };
 const initSelectedMethodId = () => {
-  const tmpMethodList: any =
+  const tmpMethodList =
     methodList.value[isPay.value ? 'pay' : 'income'][
       isPair.value && !isInstead.value ? 'pair' : 'self'
     ];

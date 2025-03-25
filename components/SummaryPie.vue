@@ -282,14 +282,14 @@ const updateChart = async () => {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;
   }
-  sum = getTypeOrMethodSum(apiRes.data ?? []);
+  sum = getTypeOrMethodSum(apiRes.data);
   monthListSum.value = StringUtility.ConvertIntToShowStrWithIsPay(sum, isPay.value);
   const { pie, list } = convertShowData(apiRes.data);
   [pieData.value, typeOrMethodList.value] = [pie, list];
 
   disableLoading();
 };
-const getTypeOrMethodSum = (monthSummary: any[]) => {
+const getTypeOrMethodSum = (monthSummary: GetTypeSummaryItem[] | GetMethodSummaryItem[]) => {
   return monthSummary.reduce((sum, item) => {
     return sum + item.sum;
   }, 0);

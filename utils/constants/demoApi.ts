@@ -1,5 +1,5 @@
 import type { GetPairedRecordItem, GetPayAndIncomeItem } from '@/api/supabase/record.interface';
-import type { YearMonthString, YearString } from '../types/common';
+import type { Id, MonthString, YearMonthString, YearString } from '../types/common';
 
 const DEMO_DATA = {
   IS_RELEASE: true, // false: デモログインで動的レスポンス、true: デモログインで静的レスポンス
@@ -4176,7 +4176,7 @@ const DEMO_DATA = {
       error: null,
       message: 'demo',
     },
-    GET_MONTH_SUM: (yearMonth: any) => {
+    GET_MONTH_SUM: (yearMonth: YearMonthString) => {
       if (yearMonth !== '2022-01') {
         return {
           data: { ['SELF']: 0, ['PAIR']: 0, ['BOTH']: 0 },
@@ -4192,12 +4192,12 @@ const DEMO_DATA = {
     },
     // TODO isIncludeInstead に対応
     GET_TYPE_OR_METHOD_SUMMARY: (
-      isPay: any,
-      isType: any,
-      isPair: any,
-      isIncludeInstead: any,
-      year: any,
-      month: any
+      isPay: boolean,
+      isType: boolean,
+      isPair: boolean,
+      isIncludeInstead: boolean,
+      year: YearString,
+      month: MonthString
     ) => {
       let data;
       if (year !== '2022' || month !== '01') {
@@ -4302,13 +4302,13 @@ const DEMO_DATA = {
     // MEMO id で判別しているため isPair の考慮は不要
     // TODO isIncludeInsteadを考慮
     GET_SUMMARIZED_RECORD_LIST: (
-      isPay: any,
-      isType: any,
-      isPair: any,
-      isIncludeInstead: any,
-      yearMonth: any,
-      id: any,
-      subtypeId: any
+      isPay: boolean,
+      isType: boolean,
+      isPair: boolean,
+      isIncludeInstead: boolean,
+      yearMonth: YearMonthString,
+      id: Id,
+      subtypeId: Id
     ) => {
       const launchData = {
         id: 2,

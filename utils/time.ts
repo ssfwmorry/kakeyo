@@ -106,13 +106,9 @@ const TimeUtility = {
     let [year, month, day] = dateStr.split('-');
     return { year: year, month: month };
   },
-  // ex.. PARAM: new Date('invalid'), RET: false
-  IsInvalidDate: (dateObj: any) => {
-    return dateObj === null || Number.isNaN(dateObj.getDate());
-  },
   // ex.. PARAM: new Date('2022-01-01'), RET: '2022-01-01'
   ConvertDateObjToDateStr: (dateObj: any) => {
-    if (dateObj === null || Number.isNaN(dateObj.getDate())) return null; // IsInvalidDate()
+    if (dateObj === null || Number.isNaN(dateObj.getDate())) return null;
     const day = ('0' + dateObj.getDate()).slice(-2);
     return (
       dateObj.getFullYear() + '-' + ('0' + String(dateObj.getMonth() + 1)).slice(-2) + '-' + day
@@ -130,10 +126,10 @@ const TimeUtility = {
   },
   // ex.. PARAM: new Date('2022-01-01'), new Date('2022-01-02') , RET: '1月1日〜1月2日'
   // ex.. PARAM: new Date('2022-01-01'), new Date('invalid') , RET: '1月1日'
-  ConvertDateObjsToJPPeriod: (startDateObj: any, endDateObj: any) => {
+  ConvertDateObjsToJPPeriod: (startDateObj: Date, endDateObj: Date | null) => {
     const jpDate = (d: any) => String(d.getMonth() + 1) + '月' + d.getDate() + '日';
-    if (Number.isNaN(startDateObj.getDate())) return null; // IsInvalidDate()
-    if (endDateObj === null || Number.isNaN(endDateObj.getDate())) return jpDate(startDateObj); // IsInvalidDate()
+    if (Number.isNaN(startDateObj.getDate())) return null;
+    if (endDateObj === null || Number.isNaN(endDateObj.getDate())) return jpDate(startDateObj);
     return jpDate(startDateObj) + '〜' + jpDate(endDateObj);
   },
   // ex.. PARAM: ['2022-01-01', '2022-01-02'] , RET: '1/1 〜 1/2'

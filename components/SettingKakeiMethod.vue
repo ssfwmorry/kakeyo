@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
-import type { GetMethodListOutput } from '@/api/supabase/method.interface';
+import type { GetMethodListItem, GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
 import { DUMMY } from '@/utils/constants';
 
@@ -149,13 +149,13 @@ const openCreateDialog = () => {
     colorId: null,
   };
 };
-const openEditDialog = ({ id, name, color_classification_id }: any) => {
+const openEditDialog = ({ id, name, colorClassificationId }: GetMethodListItem) => {
   methodDialog.value = {
     isShow: true,
     isWithColor: true,
     id: id,
     name: name,
-    colorId: color_classification_id,
+    colorId: colorClassificationId,
   };
 };
 const closeDialog = () => {
