@@ -49,6 +49,12 @@
 import { RATE_COLOR_LIST as colorList, RATE_LABEL_LIST as rateList } from '@/utils/constants';
 const emits = defineEmits();
 
+export type DialogInfo = {
+  id: number | null;
+  isMe: boolean | null;
+  colorIndex: number;
+};
+
 type Props = {
   modelValue: {
     isShow: boolean;

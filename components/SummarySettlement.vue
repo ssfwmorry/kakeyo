@@ -180,6 +180,7 @@
 
 <script setup lang="ts">
 import type { GetPairedRecordItem } from '@/api/supabase/record.interface';
+import type { DialogInfo } from '@/components/SettlementSelectRateDialog.vue';
 import {
   DUMMY,
   RATE_BACKGROUND_COLOR_LIST,
@@ -423,7 +424,7 @@ const closeDialog = () => {
     isMe: null,
   };
 };
-const changeRate = (dialogInfo: any) => {
+const changeRate = (dialogInfo: DialogInfo) => {
   dialog.value.isShow = false;
 
   for (const el of ['ME', 'COUPLE', 'PARTNER']) {
@@ -433,7 +434,7 @@ const changeRate = (dialogInfo: any) => {
 
     // RecordCardHalf の表示
     recordList.value[e][index].labelColor = RATE_COLOR_LIST[dialogInfo.colorIndex];
-    recordList.value[e][index].backgroundColor = RATE_BACKGROUND_COLOR_LIST[ dialogInfo.colorIndex]; // prettier-ignore
+    recordList.value[e][index].backgroundColor = RATE_BACKGROUND_COLOR_LIST[dialogInfo.colorIndex];
     recordList.value[e][index].isNew = dialogInfo.colorIndex === null;
 
     // selectedRateList の表示
@@ -444,7 +445,7 @@ const changeRate = (dialogInfo: any) => {
     const record = {
       id: recordList.value[e][index].id,
       price: recordList.value[e][index].price,
-      isMe: dialogInfo.isMe,
+      isMe: dialogInfo.isMe ?? false,
     };
     if (colorIndex === -1) {
       // 新規追加
