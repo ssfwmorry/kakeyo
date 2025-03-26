@@ -74,8 +74,8 @@
         <v-select
           v-model="selectedPlanTypeId"
           :items="planTypeList[isPair ? 'pair' : 'self']"
-          item-title="plan_type_name"
-          item-value="plan_type_id"
+          item-title="planTypeName"
+          item-value="planTypeId"
           density="compact"
           variant="underlined"
           :menu-props="{ maxHeight: 400 }"
@@ -313,6 +313,7 @@ watch(isPair, (newValue, oldValue) => {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;
   }
+  console.log(apiRes.data);
   planTypeList.value = apiRes.data;
 
   const routerQuery = route.query as RouterQueryCalendarToPlan;
