@@ -226,7 +226,7 @@ const convertShowData = (
   // TODO データ格納チェック
   MonthKeys.forEach((monthKey) => {
     const yearMonth = year.value + '-' + monthKey;
-    if (!IsValidKeyValue(monthMap, yearMonth)) {
+    if (!(yearMonth in monthMap)) {
       // リストにない 'YYYY-MM' は sum を0とする
       tmpSeriesPayAndIncome.push(0);
       tmpSeriesPay.push(0);

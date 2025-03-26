@@ -101,33 +101,14 @@ const TimeUtility = {
     );
   },
   // ex.. PARAM: '2022-01-01', RET: {year: '2022', month: '01'}
-  ConvertDateStrToYearMonthObj: (dateStr: string) => {
-    if (!dateStr) return null;
+  ConvertDateStrToYearMonthObj: (dateStr: DateString) => {
     let [year, month, day] = dateStr.split('-');
     return { year: year, month: month };
-  },
-  // ex.. PARAM: new Date('2022-01-01'), RET: '2022-01-01'
-  ConvertDateObjToDateStr: (dateObj: any) => {
-    if (dateObj === null || Number.isNaN(dateObj.getDate())) return null;
-    const day = ('0' + dateObj.getDate()).slice(-2);
-    return (
-      dateObj.getFullYear() + '-' + ('0' + String(dateObj.getMonth() + 1)).slice(-2) + '-' + day
-    );
-  },
-  // ex.. PARAM: new Date('2022-01-01'), new Date('2022-01-01') , RET: true
-  IsEqualDate: (dateObj1: any, dateObj2: any) => {
-    if (dateObj1 === null || dateObj2 === null) return false;
-    if (Number.isNaN(dateObj1.getDate()) || Number.isNaN(dateObj2.getDate())) return false;
-    return (
-      dateObj1.getFullYear() === dateObj2.getFullYear() &&
-      dateObj1.getMonth() === dateObj2.getMonth() &&
-      dateObj1.getDate() === dateObj2.getDate()
-    );
   },
   // ex.. PARAM: new Date('2022-01-01'), new Date('2022-01-02') , RET: '1月1日〜1月2日'
   // ex.. PARAM: new Date('2022-01-01'), new Date('invalid') , RET: '1月1日'
   ConvertDateObjsToJPPeriod: (startDateObj: Date, endDateObj: Date | null) => {
-    const jpDate = (d: any) => String(d.getMonth() + 1) + '月' + d.getDate() + '日';
+    const jpDate = (d: Date) => String(d.getMonth() + 1) + '月' + d.getDate() + '日';
     if (Number.isNaN(startDateObj.getDate())) return null;
     if (endDateObj === null || Number.isNaN(endDateObj.getDate())) return jpDate(startDateObj);
     return jpDate(startDateObj) + '〜' + jpDate(endDateObj);
@@ -154,19 +135,19 @@ const TimeUtility = {
   },
 
   // ex.. PARAM: {year: '2022', month: '01'}, RET: '2022年'
-  ConvertYearMonthObjToJPYear: (yearMonthObj: any) => {
+  ConvertYearMonthObjToJPYear: (yearMonthObj: YearMonthObj) => {
     return yearMonthObj.year + '年';
   },
   // ex.. PARAM: {year: '2022', month: '01'}, RET: '2022年1月'
-  ConvertYearMonthObjToJPYearMonth: (yearMonthObj: any) => {
+  ConvertYearMonthObjToJPYearMonth: (yearMonthObj: YearMonthObj) => {
     return yearMonthObj.year + '年' + Number(yearMonthObj.month) + '月';
   },
   // ex.. PARAM: {year: '2022', month: '01'}, RET: '2022-01'
-  ConvertYearMonthObjToYearMonth: (yearMonthObj: any) => {
+  ConvertYearMonthObjToYearMonth: (yearMonthObj: YearMonthObj) => {
     return yearMonthObj.year + '-' + yearMonthObj.month;
   },
   // ex.. PARAM: {year: '2022', month: '01'}, RET: {year: '2021', month: '12'}
-  PrevMonthInYearMonthObj: (yearMonthObj: any) => {
+  PrevMonthInYearMonthObj: (yearMonthObj: YearMonthObj) => {
     if (yearMonthObj.year === '2000' && yearMonthObj.month === '01') {
       alert('2000年以前のデータはサポートしません');
       return yearMonthObj;
@@ -180,7 +161,7 @@ const TimeUtility = {
     }
   },
   // ex.. PARAM: {year: '2022', month: '01'}, RET: {year: '2022', month: '02'}
-  NextMonthInYearMonthObj: (yearMonthObj: any) => {
+  NextMonthInYearMonthObj: (yearMonthObj: YearMonthObj) => {
     if (yearMonthObj.year === '2099' && yearMonthObj.month === '12') {
       alert('2100年以降のデータはサポートしません');
       return yearMonthObj;
