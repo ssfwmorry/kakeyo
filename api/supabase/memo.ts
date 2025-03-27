@@ -1,6 +1,5 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
-import type { Memo } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
@@ -8,7 +7,12 @@ import type {
   SupabaseApiAuth,
   SupabaseApiAuthGet,
 } from './common.interface';
-import type { GetMemoListOutput, InsertMemoInput, InsertMemoOutput } from './memo.interface';
+import type {
+  DbMemo,
+  GetMemoListOutput,
+  InsertMemoInput,
+  InsertMemoOutput,
+} from './memo.interface';
 
 export const getMemoList = async ({
   isDemoLogin,
@@ -26,9 +30,7 @@ export const getMemoList = async ({
     return { data: [], error: error, message: 'memos 取得' };
   }
 
-  const camelizedData = camelizeKeys<{
-    data: Pick<Memo, 'id' | 'memo' | 'pair_id'>[];
-  }>({ data });
+  const camelizedData = camelizeKeys<{ data: DbMemo[] }>({ data });
   return { data: camelizedData.data, error: error, message: 'memos 取得' };
 };
 

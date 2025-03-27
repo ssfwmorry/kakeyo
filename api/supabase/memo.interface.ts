@@ -1,8 +1,9 @@
 import type { Memo } from '@/utils/types/model';
 import type { PostgrestError } from '@supabase/supabase-js';
-import type { Camelized } from 'humps';
+import type { Decamelized } from 'humps';
 
-type GetMemoListItem = Camelized<Pick<Memo, 'id' | 'memo' | 'pair_id'>>;
+export type DbMemo = Decamelized<Pick<Memo, 'id' | 'memo' | 'pairId'>>;
+type GetMemoListItem = Pick<Memo, 'id' | 'memo' | 'pairId'>;
 export interface GetMemoListOutput {
   data: GetMemoListItem[];
   error: PostgrestError | null;

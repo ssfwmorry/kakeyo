@@ -11,7 +11,7 @@ export type DayClassification = {
 
 export type Memo = {
   id: number;
-  user_id: string | null;
-  pair_id: number | null;
+  userId: string | null;
+  pairId: number | null;
   memo: string;
 };
