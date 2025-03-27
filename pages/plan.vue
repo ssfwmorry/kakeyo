@@ -134,7 +134,7 @@ import {
   type RouterQueryCalendarToPlan,
   type RouterQueryPlanToCalendar,
 } from '@/utils/types/common';
-import { routerParamKey, type PlanViaPage } from '@/utils/types/page';
+import { routerParamKey, type Plan } from '@/utils/types/page';
 import dayjs, { type Dayjs } from 'dayjs';
 
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -173,7 +173,7 @@ const selectedDateOrPeriod = computed(() => {
     return date.value !== null ? date.value.format(format.Date) : '選択してください';
   }
 });
-const setPagePlan = (plan: PlanViaPage, c: Crud) => {
+const setPagePlan = (plan: Plan, c: Crud) => {
   // 新規作成の場合
   if (c === crud.CREATE) {
     const list = planTypeList.value[isPair.value ? 'pair' : 'self'];
@@ -315,7 +315,7 @@ watch(isPair, (newValue, oldValue) => {
   planTypeList.value = apiRes.data;
 
   const routerQuery = route.query as RouterQueryCalendarToPlan;
-  const plan = routerParam<PlanViaPage>(routerParamKey.PLAN);
+  const plan = routerParam<Plan>(routerParamKey.PLAN);
   if (plan == null) throw new Error('created');
   setPagePlan(plan, routerQuery.crud);
 })();

@@ -294,7 +294,7 @@ import {
   type RouterQueryNoteToCalendar,
 } from '@/utils/types/common';
 import type { DayClassification } from '@/utils/types/model';
-import { routerParamKey, type PlannedRecordViaPage } from '@/utils/types/page';
+import { routerParamKey, type PlannedRecord } from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -456,7 +456,7 @@ const setPageRecord = (record: Record_, c: Crud) => {
   selectedTypeId.value = record.type_id;
   selectedSubTypeId.value = record.sub_type_id;
 };
-const setPagePlannedRecord = async (plannedRecord: PlannedRecordViaPage, c: Crud) => {
+const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
   isPlannedRecord.value = true;
 
   const apiRes = await getDayClassificationList({ isDemoLogin: isDemoLogin.value });
@@ -633,7 +633,7 @@ watch(isPair, (newValue, oldValue) => {
 
   const routerQuery = route.query as RouterQueryCalendarToNote;
   if (routerQuery.routerParamKey === routerParamKey.PLANNED_RECORD) {
-    const plannedRecord = routerParam<PlannedRecordViaPage>(routerParamKey.PLANNED_RECORD);
+    const plannedRecord = routerParam<PlannedRecord>(routerParamKey.PLANNED_RECORD);
     if (plannedRecord !== null) await setPagePlannedRecord(plannedRecord, routerQuery.crud);
     else initSelectedMethodId();
   } else if (routerQuery.routerParamKey === routerParamKey.RECORD) {

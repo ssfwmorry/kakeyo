@@ -83,7 +83,7 @@ import type {
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import { crud, type RouterQuerySettingToNote } from '@/utils/types/common';
-import { routerParamKey, type PlannedRecordViaPage } from '@/utils/types/page';
+import { routerParamKey, type PlannedRecord } from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -110,7 +110,7 @@ const updateShowData = async () => {
   plannedRecordList.value = apiRes.data;
 };
 const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListItem) => {
-  const tmpPlannedRecord: PlannedRecordViaPage = {
+  const tmpPlannedRecord: PlannedRecord = {
     ...plannedRecord,
     id: plannedRecord.plannedRecordId,
   };

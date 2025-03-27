@@ -196,7 +196,7 @@ import {
 } from '@/utils/types/common';
 // https://fullcalendar.io/docs
 import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
-import { routerParamKey, type PlanViaPage } from '@/utils/types/page';
+import { routerParamKey, type Plan } from '@/utils/types/page';
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
@@ -563,7 +563,7 @@ const goRecordCreatePage = () => {
 };
 const goPlanCreatePage = () => {
   const tmpDate = selectedDate.value ?? TimeUtility.GetNowDate(isDemoLogin.value);
-  const plan: PlanViaPage = {
+  const plan: Plan = {
     id: DUMMY.NM,
     startDate: tmpDate,
     endDate: tmpDate,
@@ -598,7 +598,7 @@ const goPlanEditPage = () => {
   if (selectedPlan.value === null) throw new Error('goPlanEditPage');
   setIsPair(selectedPlan.value.isPair);
 
-  const plan: PlanViaPage = {
+  const plan: Plan = {
     id: selectedPlan.value.planId,
     startDate: selectedPlan.value.startStr,
     endDate: selectedPlan.value.endStr,

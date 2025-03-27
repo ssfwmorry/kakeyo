@@ -1,5 +1,5 @@
 import type { ColorString, YearMonthObj } from './common';
-import type { Plan, PlannedRecord } from './model';
+import type { Plan as PlanModel, PlannedRecord as PlannedRecordModel } from './model';
 
 export const routerParamKey = {
   PLANNED_RECORD: 'PLANNED_RECORD',
@@ -31,11 +31,11 @@ export type RecordsQueryParam = {
   pairUserName: string | null;
 };
 
-export type PlannedRecordViaPage = Omit<PlannedRecord, 'userId' | 'pairId'> & {
+export type PlannedRecord = Omit<PlannedRecordModel, 'userId' | 'pairId'> & {
   pairUserName: string | null;
 };
 
-export type PlanViaPage = Omit<Plan, 'userId' | 'pairId'> & {
+export type Plan = Omit<PlanModel, 'userId' | 'pairId'> & {
   isPair: boolean;
   planTypeName: string;
   planTypeColorClassificationName: string;
