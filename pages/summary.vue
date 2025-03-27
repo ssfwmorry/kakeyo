@@ -93,7 +93,7 @@ watch(isPair, async (newValue, oldValue) => {
 // created
 (async () => {
   // storeから取得
-  const param = routerParam(routerParamKey.SUMMARY_QUERY_PARAM) as SummaryQueryParam | null;
+  const param = routerParam<SummaryQueryParam>(routerParamKey.SUMMARY_QUERY_PARAM);
   if (param === null) return;
   setPieShowSetting(param);
 })();

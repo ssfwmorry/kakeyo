@@ -316,7 +316,7 @@ watch(isPair, (newValue, oldValue) => {
   planTypeList.value = apiRes.data;
 
   const routerQuery = route.query as RouterQueryCalendarToPlan;
-  const plan = routerParam(routerParamKey.PLAN) as Plan | null;
+  const plan = routerParam<Plan>(routerParamKey.PLAN);
   if (plan == null) throw new Error('created');
   setPagePlan(plan, routerQuery.crud);
 })();

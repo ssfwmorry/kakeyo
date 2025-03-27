@@ -249,7 +249,7 @@ const goRecordEditPage = (record: GetSummarizedRecordItem) => {
 
 // created
 (async () => {
-  const recordsQuery = routerParam(routerParamKey.RECORDS_QUERY_PARAM) as RecordsQueryParam | null;
+  const recordsQuery = routerParam<RecordsQueryParam>(routerParamKey.RECORDS_QUERY_PARAM);
   if (recordsQuery == null) {
     alert('不正な画面遷移です');
     router.push({ name: PAGE.SUMMARY });

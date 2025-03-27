@@ -633,11 +633,11 @@ watch(isPair, (newValue, oldValue) => {
 
   const routerQuery = route.query as RouterQueryCalendarToNote;
   if (routerQuery.routerParamKey === routerParamKey.PLANNED_RECORD) {
-    const plannedRecord = routerParam(routerParamKey.PLANNED_RECORD) as PlannedRecordViaPage | null;
+    const plannedRecord = routerParam<PlannedRecordViaPage>(routerParamKey.PLANNED_RECORD);
     if (plannedRecord !== null) await setPagePlannedRecord(plannedRecord, routerQuery.crud);
     else initSelectedMethodId();
   } else if (routerQuery.routerParamKey === routerParamKey.RECORD) {
-    const record = routerParam(routerParamKey.RECORD) as Record_ | null;
+    const record = routerParam<Record_>(routerParamKey.RECORD);
     if (record !== null) setPageRecord(record, routerQuery.crud);
     else initSelectedMethodId();
   } else {

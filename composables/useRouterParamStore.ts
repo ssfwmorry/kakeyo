@@ -19,8 +19,8 @@ export const useRouterParamStore = defineStore('RouterParamStore', () => {
   });
 
   // getters
-  function routerParam(key: RouterParamKey): RouterParam | null {
-    return state.value[key];
+  function routerParam<T extends RouterParam>(key: RouterParamKey): T | null {
+    return state.value[key] as T | null;
   }
 
   // setters
