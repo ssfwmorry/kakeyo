@@ -187,7 +187,6 @@ import {
   type EventSet,
   type ExternalEvent,
   type Id,
-  type Plan,
   type Record_,
   type RouterQueryCalendarToNote,
   type RouterQueryCalendarToPlan,
@@ -197,7 +196,7 @@ import {
 } from '@/utils/types/common';
 // https://fullcalendar.io/docs
 import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
-import { routerParamKey } from '@/utils/types/page';
+import { routerParamKey, type PlanViaPage } from '@/utils/types/page';
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
@@ -564,16 +563,16 @@ const goRecordCreatePage = () => {
 };
 const goPlanCreatePage = () => {
   const tmpDate = selectedDate.value ?? TimeUtility.GetNowDate(isDemoLogin.value);
-  const plan: Plan = {
+  const plan: PlanViaPage = {
     id: DUMMY.NM,
-    start_date: tmpDate,
-    end_date: tmpDate,
+    startDate: tmpDate,
+    endDate: tmpDate,
     name: DUMMY.STR,
     memo: null,
-    is_pair: DUMMY.BL,
-    plan_type_id: DUMMY.NM,
-    plan_type_name: DUMMY.STR,
-    plan_type_color_classification_name: DUMMY.STR,
+    isPair: isPair.value,
+    planTypeId: DUMMY.NM,
+    planTypeName: DUMMY.STR,
+    planTypeColorClassificationName: DUMMY.STR,
   };
   const query: RouterQueryCalendarToPlan = {
     crud: crud.CREATE,
@@ -599,16 +598,16 @@ const goPlanEditPage = () => {
   if (selectedPlan.value === null) throw new Error('goPlanEditPage');
   setIsPair(selectedPlan.value.isPair);
 
-  const plan: Plan = {
+  const plan: PlanViaPage = {
     id: selectedPlan.value.planId,
-    start_date: selectedPlan.value.startStr,
-    end_date: selectedPlan.value.endStr,
+    startDate: selectedPlan.value.startStr,
+    endDate: selectedPlan.value.endStr,
     name: selectedPlan.value.title,
     memo: selectedPlan.value.memo,
-    is_pair: selectedPlan.value.isPair,
-    plan_type_id: selectedPlan.value.typeId,
-    plan_type_name: selectedPlan.value.typeName,
-    plan_type_color_classification_name: selectedPlan.value.backgroundColor,
+    isPair: selectedPlan.value.isPair,
+    planTypeId: selectedPlan.value.typeId,
+    planTypeName: selectedPlan.value.typeName,
+    planTypeColorClassificationName: selectedPlan.value.backgroundColor,
   };
 
   setRouterParam(routerParamKey.PLAN, plan);

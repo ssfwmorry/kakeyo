@@ -53,18 +53,6 @@ export type PickedDate = {
   $D: number;
 };
 
-export type Plan = {
-  id: number;
-  start_date: DateString;
-  end_date: DateString;
-  name: string;
-  memo: string | null;
-  is_pair: boolean;
-  plan_type_id: number;
-  plan_type_name: string;
-  plan_type_color_classification_name: string;
-};
-
 export const shareType = {
   SELF: 'SELF',
   PAIR: 'PAIR',

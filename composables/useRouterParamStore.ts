@@ -1,12 +1,18 @@
-import type { Plan, Record_ } from '@/utils/types/common';
+import type { Record_ } from '@/utils/types/common';
 import type {
   PlannedRecordViaPage,
+  PlanViaPage,
   RecordsQueryParam,
   RouterParamKey,
   SummaryQueryParam,
 } from '@/utils/types/page';
 
-type RouterParam = Record_ | Plan | PlannedRecordViaPage | RecordsQueryParam | SummaryQueryParam;
+type RouterParam =
+  | Record_
+  | PlanViaPage
+  | PlannedRecordViaPage
+  | RecordsQueryParam
+  | SummaryQueryParam;
 
 export const useRouterParamStore = defineStore('RouterParamStore', () => {
   // state
