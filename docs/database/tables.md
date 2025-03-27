@@ -354,7 +354,7 @@ create policy "develop.records all"
 | is_pay                |   bool   |  -   |    v     |       -        |           -            | -                                                                                |
 | method_id             |   int    |  -   |    v     |       -        |       methods.id       | -                                                                                |
 | type_id               |   int    |  -   |    v     |       -        |        types.id        | -                                                                                |
-| sub_type_id           |   int    |  -   |    v     |       -        |      sub_types.id      | -                                                                                |
+| sub_type_id           |   int    |  -   |          |       -        |      sub_types.id      | -                                                                                |
 | price                 |   int    |  -   |    v     |       -        |           -            | -                                                                                |
 | memo                  |  string  |  -   |    -     |       -        |           -            | -                                                                                |
 | sort                  |   int    |  -   |    v     |       v        |           -            | クエリひとつでスワップするために UK としない                                     |
