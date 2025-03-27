@@ -65,60 +65,6 @@ export type DateRange = {
   end: DateString;
 };
 
-export const eventType = {
-  PLAN: 'PLAN',
-  RECORD: 'RECORD',
-  HOLIDAY: 'HOLIDAY',
-} as const;
-export type ExternalEventPlan = {
-  type: 'PLAN';
-  startStr: DateString;
-  endStr: DateString;
-  dbEnd: Date | null; // DBに登録されている終了日。このときBaseEventGetEndは次の日を示す
-  memo: string | null;
-  planId: number; // id はライブラリの定義に string として既存
-  isPair: boolean;
-  typeId: number;
-  typeName: string;
-};
-export type ExternalEventRecord = {
-  type: 'RECORD';
-  startStr: DateString;
-};
-export type ExternalEventHoliday = {
-  type: 'HOLIDAY';
-  startStr: DateString;
-  // https://fullcalendar.io/docs/eventDisplay
-  display: 'background';
-};
-export type ExternalEvent = ExternalEventPlan | ExternalEventRecord | ExternalEventHoliday;
-// 内部変数として持っておくための型
-export type BaseEventGet = {
-  title: string;
-  start: Date;
-  end: Date | null;
-  allDay: true;
-  textColor: string;
-  borderColor: string;
-  backgroundColor: string;
-  classNames: Array<string>;
-};
-export type EventGetPlan = BaseEventGet & ExternalEventPlan;
-export type EventGetRecord = BaseEventGet & ExternalEventRecord;
-export type EventGet = EventGetPlan | EventGetRecord;
-
-// ライブラリに登録する用の型
-export type EventSet = {
-  title: string;
-  start: Date;
-  end: Date;
-  allDay: true;
-  textColor: string;
-  borderColor: string;
-  backgroundColor: string;
-  classNames: Array<string>;
-} & ExternalEvent;
-
 export type Record_ = {
   id: number;
   datetime: DatetimeString;

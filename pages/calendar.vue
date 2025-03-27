@@ -181,11 +181,7 @@ import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import {
   crud,
-  eventType,
   type DateString,
-  type EventGetPlan,
-  type EventSet,
-  type ExternalEvent,
   type Id,
   type Record_,
   type RouterQueryCalendarToNote,
@@ -197,12 +193,18 @@ import {
 // https://fullcalendar.io/docs
 import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
 import { routerParamKey, type Plan } from '@/utils/types/page';
-import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
+import type { CalendarOptions, EventClickArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/vue3';
 import dayjs from 'dayjs';
 import { decamelizeKeys } from 'humps';
+
+const eventType = {
+  PLAN: 'PLAN',
+  RECORD: 'RECORD',
+  HOLIDAY: 'HOLIDAY',
+} as const;
 
 type DateRecordList = Record<
   ShareType,
@@ -212,6 +214,54 @@ type DateRecordList = Record<
   }
 > & { isHoliday: boolean; holidayStr: string | null };
 type CalendarList = Record<DateString, DateRecordList>;
+type ExternalEventPlan = {
+  type: 'PLAN';
+  startStr: DateString;
+  endStr: DateString;
+  dbEnd: Date | null; // DBに登録されている終了日。このときBaseEventGetEndは次の日を示す
+  memo: string | null;
+  planId: number; // id はライブラリの定義に string として既存
+  isPair: boolean;
+  typeId: number;
+  typeName: string;
+};
+type ExternalEventRecord = {
+  type: 'RECORD';
+  startStr: DateString;
+};
+type ExternalEventHoliday = {
+  type: 'HOLIDAY';
+  startStr: DateString;
+  // https://fullcalendar.io/docs/eventDisplay
+  display: 'background';
+};
+type ExternalEvent = ExternalEventPlan | ExternalEventRecord | ExternalEventHoliday;
+// 内部変数として持っておくための型
+type BaseEventGet = {
+  title: string;
+  start: Date;
+  end: Date | null;
+  allDay: true;
+  textColor: string;
+  borderColor: string;
+  backgroundColor: string;
+  classNames: Array<string>;
+};
+type EventGetPlan = BaseEventGet & ExternalEventPlan;
+type EventGetRecord = BaseEventGet & ExternalEventRecord;
+type EventGet = EventGetPlan | EventGetRecord;
+
+// ライブラリに登録する用の型
+type EventInputExpanded = EventInput & {
+  title: string;
+  start: Date;
+  end: Date;
+  allDay: true;
+  textColor: string;
+  borderColor: string;
+  backgroundColor: string;
+  classNames: Array<string>;
+} & ExternalEvent;
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -328,7 +378,7 @@ const setPageFocus = ({
 const updateRange = async () => {
   if (focus.value === null || fullCalendar.value === undefined) throw new Error('updateRange');
   enableLoading();
-  const events: EventSet[] = [];
+  const events: EventInputExpanded[] = [];
 
   fullCalendar.value.getApi().gotoDate(focus.value);
   const payload1 = {
