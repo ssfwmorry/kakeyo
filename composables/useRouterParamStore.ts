@@ -1,11 +1,5 @@
-import type {
-  Plan,
-  PlannedRecord,
-  Record_,
-  RecordsQueryParam,
-  RouterParamKey,
-  SummaryQueryParam,
-} from '@/utils/types/common';
+import type { Plan, PlannedRecord, Record_ } from '@/utils/types/common';
+import type { RecordsQueryParam, RouterParamKey, SummaryQueryParam } from '@/utils/types/page';
 
 type RouterParam = Record_ | Plan | PlannedRecord | RecordsQueryParam | SummaryQueryParam;
 

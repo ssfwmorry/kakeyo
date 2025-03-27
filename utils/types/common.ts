@@ -1,12 +1,4 @@
-// TODO 適切な場所に配置する
-export const routerParamKey = {
-  PLANNED_RECORD: 'PLANNED_RECORD',
-  RECORD: 'RECORD',
-  PLAN: 'PLAN',
-  RECORDS_QUERY_PARAM: 'RECORDS_QUERY_PARAM',
-  SUMMARY_QUERY_PARAM: 'SUMMARY_QUERY_PARAM',
-} as const;
-export type RouterParamKey = (typeof routerParamKey)[keyof typeof routerParamKey];
+import type { routerParamKey } from './page';
 
 export const crud = {
   CREATE: 'CREATE',
@@ -169,24 +161,4 @@ export type PlannedRecord = {
   sub_type_id: number | null;
   type_id: number;
   day_classification_id: number;
-};
-
-export type RecordsQueryParam = {
-  id: number;
-  subtypeId: number | null;
-  isPay: boolean;
-  isMonth: boolean;
-  isType: boolean;
-  isPair: boolean;
-  isIncludeInstead: boolean | null;
-  focus: YearMonthObj;
-  name: string;
-  color: ColorString;
-  pairUserName: string | null;
-};
-export type SummaryQueryParam = {
-  isPay: boolean;
-  isType: boolean;
-  isMonth: boolean;
-  focus: YearMonthObj;
 };

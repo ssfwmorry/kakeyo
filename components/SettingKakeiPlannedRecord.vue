@@ -82,12 +82,8 @@ import type {
 } from '@/api/supabase/plannedRecord.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
-import {
-  crud,
-  routerParamKey,
-  type PlannedRecord,
-  type RouterQuerySettingToNote,
-} from '@/utils/types/common';
+import { crud, type PlannedRecord, type RouterQuerySettingToNote } from '@/utils/types/common';
+import { routerParamKey } from '@/utils/types/page';
 import { decamelizeKeys } from 'humps';
 
 const { enableLoading, disableLoading } = useLoadingStore();

@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import TimeUtility from '@/utils/time';
-import { routerParamKey, type SummaryQueryParam } from '@/utils/types/common';
+import { routerParamKey, type SummaryQueryParam } from '@/utils/types/page';
 
 const [loginStore, pairStore] = [useLoginStore(), usePairStore()];
 const { isExistPair, isPair } = storeToRefs(pairStore);
@@ -93,8 +93,8 @@ watch(isPair, async (newValue, oldValue) => {
 // created
 (async () => {
   // storeから取得
-  const param = routerParam(routerParamKey.SUMMARY_QUERY_PARAM) as SummaryQueryParam | null;
-  if (param === null) return;
+  const param = routerParam(routerParamKey.SUMMARY_QUERY_PARAM) as SummaryQueryParam | undefined;
+  if (param === undefined) return;
   setPieShowSetting(param);
 })();
 </script>

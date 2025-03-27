@@ -285,7 +285,6 @@ import { DUMMY, MAX_PRICE, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
 import {
   crud,
-  routerParamKey,
   type Crud,
   type DateString,
   type Id,
@@ -295,7 +294,8 @@ import {
   type RouterQueryCalendarToNote,
   type RouterQueryNoteToCalendar,
 } from '@/utils/types/common';
-import type { DayClassification } from '~/utils/types/model';
+import type { DayClassification } from '@/utils/types/model';
+import { routerParamKey } from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];

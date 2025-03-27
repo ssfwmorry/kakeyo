@@ -165,12 +165,8 @@ import type { GetMethodSummaryItem, GetTypeSummaryItem } from '@/api/supabase/re
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import {
-  routerParamKey,
-  type RecordsQueryParam,
-  type SummaryQueryParam,
-  type YearMonthObj,
-} from '@/utils/types/common';
+import { type YearMonthObj } from '@/utils/types/common';
+import { routerParamKey, type RecordsQueryParam, type SummaryQueryParam } from '@/utils/types/page';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import { Pie } from 'vue-chartjs';
 ChartJS.register(ArcElement, Tooltip, Legend);

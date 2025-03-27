@@ -99,14 +99,12 @@ import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import {
   crud,
-  routerParamKey,
   type ColorString,
   type Record_,
-  type RecordsQueryParam,
   type RouterQueryCalendarToNote,
-  type SummaryQueryParam,
   type YearMonthObj,
 } from '@/utils/types/common';
+import { routerParamKey, type RecordsQueryParam, type SummaryQueryParam } from '@/utils/types/page';
 import { decamelizeKeys } from 'humps';
 
 const { enableLoading, disableLoading } = useLoadingStore();

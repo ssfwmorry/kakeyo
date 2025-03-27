@@ -129,13 +129,13 @@ import { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import {
   crud,
-  routerParamKey,
   type Crud,
   type Id,
   type Plan,
   type RouterQueryCalendarToPlan,
   type RouterQueryPlanToCalendar,
 } from '@/utils/types/common';
+import { routerParamKey } from '@/utils/types/page';
 import dayjs, { type Dayjs } from 'dayjs';
 
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -313,7 +313,6 @@ watch(isPair, (newValue, oldValue) => {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;
   }
-  console.log(apiRes.data);
   planTypeList.value = apiRes.data;
 
   const routerQuery = route.query as RouterQueryCalendarToPlan;

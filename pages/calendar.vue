@@ -182,7 +182,6 @@ import TimeUtility from '@/utils/time';
 import {
   crud,
   eventType,
-  routerParamKey,
   type DateString,
   type EventGetPlan,
   type EventSet,
@@ -198,6 +197,7 @@ import {
 } from '@/utils/types/common';
 // https://fullcalendar.io/docs
 import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
+import { routerParamKey } from '@/utils/types/page';
 import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
