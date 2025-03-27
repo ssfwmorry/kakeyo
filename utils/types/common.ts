@@ -151,14 +151,3 @@ export type Record_ = {
   type_id: number;
   type_name: string;
 };
-export type PlannedRecord = {
-  id: number;
-  is_pay: boolean;
-  memo: string | null | undefined; // toto 精査
-  method_id: number;
-  pair_user_name: string | null;
-  price: number;
-  sub_type_id: number | null;
-  type_id: number;
-  day_classification_id: number;
-};

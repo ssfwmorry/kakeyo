@@ -1,7 +1,12 @@
-import type { Plan, PlannedRecord, Record_ } from '@/utils/types/common';
-import type { RecordsQueryParam, RouterParamKey, SummaryQueryParam } from '@/utils/types/page';
+import type { Plan, Record_ } from '@/utils/types/common';
+import type {
+  PlannedRecordViaPage,
+  RecordsQueryParam,
+  RouterParamKey,
+  SummaryQueryParam,
+} from '@/utils/types/page';
 
-type RouterParam = Record_ | Plan | PlannedRecord | RecordsQueryParam | SummaryQueryParam;
+type RouterParam = Record_ | Plan | PlannedRecordViaPage | RecordsQueryParam | SummaryQueryParam;
 
 export const useRouterParamStore = defineStore('RouterParamStore', () => {
   // state
@@ -19,7 +24,7 @@ export const useRouterParamStore = defineStore('RouterParamStore', () => {
   }
 
   // setters
-  function setRouterParam(key: RouterParamKey, value: RouterParam) {
+  function setRouterParam(key: RouterParamKey, value: RouterParam | null) {
     state.value[key] = value;
   }
 

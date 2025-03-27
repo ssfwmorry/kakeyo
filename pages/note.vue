@@ -289,13 +289,12 @@ import {
   type DateString,
   type Id,
   type PickedDate,
-  type PlannedRecord,
   type Record_,
   type RouterQueryCalendarToNote,
   type RouterQueryNoteToCalendar,
 } from '@/utils/types/common';
 import type { DayClassification } from '@/utils/types/model';
-import { routerParamKey } from '@/utils/types/page';
+import { routerParamKey, type PlannedRecordViaPage } from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -457,7 +456,7 @@ const setPageRecord = (record: Record_, c: Crud) => {
   selectedTypeId.value = record.type_id;
   selectedSubTypeId.value = record.sub_type_id;
 };
-const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
+const setPagePlannedRecord = async (plannedRecord: PlannedRecordViaPage, c: Crud) => {
   isPlannedRecord.value = true;
 
   const apiRes = await getDayClassificationList({ isDemoLogin: isDemoLogin.value });
@@ -476,14 +475,14 @@ const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
 
   // 編集の場合
   id.value = plannedRecord.id;
-  isPay.value = plannedRecord.is_pay;
+  isPay.value = plannedRecord.isPay;
   price.value = plannedRecord.price;
   memo.value = plannedRecord.memo ?? null;
-  selectedDayId.value = plannedRecord.day_classification_id;
-  selectedMethodId.value = plannedRecord.method_id;
-  isInstead.value = !!plannedRecord.pair_user_name;
-  selectedTypeId.value = plannedRecord.type_id;
-  selectedSubTypeId.value = plannedRecord.sub_type_id;
+  selectedDayId.value = plannedRecord.dayClassificationId;
+  selectedMethodId.value = plannedRecord.methodId;
+  isInstead.value = !!plannedRecord.pairUserName;
+  selectedTypeId.value = plannedRecord.typeId;
+  selectedSubTypeId.value = plannedRecord.subTypeId;
 };
 const upsertRecord = async () => {
   if (!validateRecordAndShowErrorMsg()) return;
@@ -634,7 +633,7 @@ watch(isPair, (newValue, oldValue) => {
 
   const routerQuery = route.query as RouterQueryCalendarToNote;
   if (routerQuery.routerParamKey === routerParamKey.PLANNED_RECORD) {
-    const plannedRecord = routerParam(routerParamKey.PLANNED_RECORD) as PlannedRecord | null;
+    const plannedRecord = routerParam(routerParamKey.PLANNED_RECORD) as PlannedRecordViaPage | null;
     if (plannedRecord !== null) await setPagePlannedRecord(plannedRecord, routerQuery.crud);
     else initSelectedMethodId();
   } else if (routerQuery.routerParamKey === routerParamKey.RECORD) {

@@ -82,9 +82,8 @@ import type {
 } from '@/api/supabase/plannedRecord.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
-import { crud, type PlannedRecord, type RouterQuerySettingToNote } from '@/utils/types/common';
-import { routerParamKey } from '@/utils/types/page';
-import { decamelizeKeys } from 'humps';
+import { crud, type RouterQuerySettingToNote } from '@/utils/types/common';
+import { routerParamKey, type PlannedRecordViaPage } from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -111,9 +110,8 @@ const updateShowData = async () => {
   plannedRecordList.value = apiRes.data;
 };
 const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListItem) => {
-  // TODO
-  const tmpPlannedRecord: PlannedRecord = {
-    ...decamelizeKeys<GetPlannedRecordListItem>(plannedRecord),
+  const tmpPlannedRecord: PlannedRecordViaPage = {
+    ...plannedRecord,
     id: plannedRecord.plannedRecordId,
   };
   setRouterParam(routerParamKey.PLANNED_RECORD, tmpPlannedRecord);
@@ -124,18 +122,7 @@ const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListItem) => {
   router.push({ name: PAGE.NOTE, query });
 };
 const goPlannedRecordCreatePage = () => {
-  const tmpPlannedRecord: PlannedRecord = {
-    id: DUMMY.NM,
-    is_pay: DUMMY.BL,
-    price: DUMMY.NM,
-    memo: null,
-    day_classification_id: DUMMY.NM,
-    method_id: DUMMY.NM,
-    type_id: DUMMY.NM,
-    sub_type_id: null,
-    pair_user_name: null,
-  };
-  setRouterParam(routerParamKey.PLANNED_RECORD, tmpPlannedRecord);
+  setRouterParam(routerParamKey.PLANNED_RECORD, null);
   const query: RouterQuerySettingToNote = {
     routerParamKey: routerParamKey.PLANNED_RECORD,
     crud: crud.CREATE,

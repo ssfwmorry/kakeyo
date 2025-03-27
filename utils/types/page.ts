@@ -1,4 +1,5 @@
 import type { ColorString, YearMonthObj } from './common';
+import type { PlannedRecord } from './model';
 
 export const routerParamKey = {
   PLANNED_RECORD: 'PLANNED_RECORD',
@@ -27,5 +28,9 @@ export type RecordsQueryParam = {
   focus: YearMonthObj;
   name: string;
   color: ColorString;
+  pairUserName: string | null;
+};
+
+export type PlannedRecordViaPage = Omit<PlannedRecord, 'userId' | 'pairId'> & {
   pairUserName: string | null;
 };
