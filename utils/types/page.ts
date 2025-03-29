@@ -1,4 +1,4 @@
-import type { ColorString, Crud, DateString, DatetimeString, Id, YearMonthObj } from './common';
+import type { ColorString, DateString, DatetimeString, Id, YearMonthObj } from './common';
 import type {
   Plan as PlanModel,
   PlannedRecord as PlannedRecordModel,
@@ -37,15 +37,11 @@ export type RecordsQueryParam = {
 
 export type RouterQueryCalendarToNote = {
   routerParamKey: (typeof routerParamKey)[keyof typeof routerParamKey];
-  crud: Crud;
 };
 export type RouterQueryRecordsToNote = RouterQueryCalendarToNote;
 export type RouterQuerySettingToNote = RouterQueryCalendarToNote;
 export type RouterQueryNoteToCalendar = {
   focus: DateString;
-};
-export type RouterQueryCalendarToPlan = {
-  crud: Crud;
 };
 export type RouterQueryPlanToCalendar = {
   focus: DateString;

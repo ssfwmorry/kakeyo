@@ -97,7 +97,7 @@ import type { GetSummarizedRecordItem } from '@/api/supabase/record.interface';
 import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { Crud, type ColorString, type Id, type YearMonthObj } from '@/utils/types/common';
+import type { ColorString, Id, YearMonthObj } from '@/utils/types/common';
 import {
   routerParamKey,
   type RecordsQueryParam,
@@ -240,7 +240,6 @@ const goRecordEditPage = (record: GetSummarizedRecordItem) => {
   setRouterParam(routerParamKey.RECORD, record);
   const query: RouterQueryCalendarToNote = {
     routerParamKey: routerParamKey.RECORD,
-    crud: Crud.UPDATE,
   };
   router.push({ name: PAGE.NOTE, query });
 };

@@ -34,12 +34,6 @@ export type DateRange = {
   end: DateString;
 };
 
-export const Crud = {
-  CREATE: 'CREATE',
-  UPDATE: 'UPDATE',
-} as const;
-export type Crud = (typeof Crud)[keyof typeof Crud];
-
 export const ShareType = {
   SELF: 'SELF',
   PAIR: 'PAIR',

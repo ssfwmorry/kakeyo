@@ -127,13 +127,8 @@ import type { GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
 import { PAGE } from '@/utils/constants';
 import { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { Crud, type Id } from '@/utils/types/common';
-import {
-  routerParamKey,
-  type Plan,
-  type RouterQueryCalendarToPlan,
-  type RouterQueryPlanToCalendar,
-} from '@/utils/types/page';
+import type { Id } from '@/utils/types/common';
+import { routerParamKey, type Plan, type RouterQueryPlanToCalendar } from '@/utils/types/page';
 import dayjs, { type Dayjs } from 'dayjs';
 
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -172,9 +167,9 @@ const selectedDateOrPeriod = computed(() => {
     return date.value !== null ? date.value.format(format.Date) : '選択してください';
   }
 });
-const setPagePlan = (plan: Plan, c: Crud) => {
+const setPagePlan = (plan: Plan) => {
   // 新規作成の場合
-  if (plan.id == null || c === Crud.CREATE) {
+  if (plan.id == null) {
     const list = planTypeList.value[isPair.value ? 'pair' : 'self'];
     if (list.length > 0) {
       selectedPlanTypeId.value = list[0].planTypeId;
@@ -314,10 +309,9 @@ watch(isPair, (newValue, oldValue) => {
   }
   planTypeList.value = apiRes.data;
 
-  const routerQuery = route.query as RouterQueryCalendarToPlan;
   const plan = routerParam<Plan>(routerParamKey.PLAN);
   if (plan == null) throw new Error('created');
-  setPagePlan(plan, routerQuery.crud);
+  setPagePlan(plan);
 })();
 </script>
 

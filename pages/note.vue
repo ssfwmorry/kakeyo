@@ -283,7 +283,7 @@ import type { GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { GetTypeListOutput } from '@/api/supabase/type.interface';
 import { MAX_PRICE, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
-import { Crud, type DateString, type Id, type PickedDate } from '@/utils/types/common';
+import { type DateString, type Id, type PickedDate } from '@/utils/types/common';
 import type { DayClassification } from '@/utils/types/model';
 import {
   routerParamKey,
@@ -434,9 +434,9 @@ const initSelectedMethodId = () => {
 const initSelectedDayId = () => {
   selectedDayId.value = (dayList.value[0] as any).id;
 };
-const setPageRecord = (record: Record_, c: Crud) => {
+const setPageRecord = (record: Record_) => {
   // 新規作成の場合
-  if (record.id === null || c === Crud.CREATE) {
+  if (record.id === null) {
     initSelectedMethodId();
     date.value = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
     return;
@@ -453,7 +453,7 @@ const setPageRecord = (record: Record_, c: Crud) => {
   selectedTypeId.value = record.typeId;
   selectedSubTypeId.value = record.subTypeId;
 };
-const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
+const setPagePlannedRecord = async (plannedRecord: PlannedRecord) => {
   isPlannedRecord.value = true;
 
   const apiRes = await getDayClassificationList({ isDemoLogin: isDemoLogin.value });
@@ -464,7 +464,7 @@ const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
   dayList.value = apiRes.data;
 
   // 新規作成の場合
-  if (c === Crud.CREATE) {
+  if (plannedRecord.id === null) {
     initSelectedMethodId();
     initSelectedDayId();
     return;
@@ -644,11 +644,11 @@ watch(isPair, (newValue, oldValue) => {
   const routerQuery = route.query as RouterQueryCalendarToNote;
   if (routerQuery.routerParamKey === routerParamKey.PLANNED_RECORD) {
     const plannedRecord = routerParam<PlannedRecord>(routerParamKey.PLANNED_RECORD);
-    if (plannedRecord !== null) await setPagePlannedRecord(plannedRecord, routerQuery.crud);
+    if (plannedRecord !== null) await setPagePlannedRecord(plannedRecord);
     else initSelectedMethodId();
   } else if (routerQuery.routerParamKey === routerParamKey.RECORD) {
     const record = routerParam<Record_>(routerParamKey.RECORD);
-    if (record !== null) setPageRecord(record, routerQuery.crud);
+    if (record !== null) setPageRecord(record);
     else initSelectedMethodId();
   } else {
     initSelectedMethodId();

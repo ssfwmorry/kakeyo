@@ -180,13 +180,12 @@ import type { GetRecordListItem } from '@/api/supabase/record.interface';
 import { PAGE } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { Crud, type DateString, type Id, type ShareType } from '@/utils/types/common';
+import { type DateString, type Id, type ShareType } from '@/utils/types/common';
 import {
   routerParamKey,
   type Plan,
   type Record_,
   type RouterQueryCalendarToNote,
-  type RouterQueryCalendarToPlan,
   type RouterQueryNoteToCalendar,
   type RouterQueryPlanToCalendar,
 } from '@/utils/types/page';
@@ -588,7 +587,6 @@ const goRecordCreatePage = () => {
   setRouterParam(routerParamKey.RECORD, record);
   const query: RouterQueryCalendarToNote = {
     routerParamKey: routerParamKey.RECORD,
-    crud: Crud.CREATE,
   };
   router.push({ name: PAGE.NOTE, query });
 };
@@ -600,11 +598,8 @@ const goPlanCreatePage = () => {
     endDate: tmpDate,
     isPair: isPair.value,
   };
-  const query: RouterQueryCalendarToPlan = {
-    crud: Crud.CREATE,
-  };
   setRouterParam(routerParamKey.PLAN, plan);
-  router.push({ name: PAGE.PLAN, query });
+  router.push({ name: PAGE.PLAN });
 };
 const goRecordEditPage = (record: GetRecordListItem) => {
   setIsPair(record.isPair);
@@ -612,7 +607,6 @@ const goRecordEditPage = (record: GetRecordListItem) => {
   setRouterParam(routerParamKey.RECORD, record);
   const query: RouterQueryCalendarToNote = {
     routerParamKey: routerParamKey.RECORD,
-    crud: Crud.UPDATE,
   };
   router.push({ name: PAGE.NOTE, query });
 };
@@ -633,10 +627,7 @@ const goPlanEditPage = () => {
   };
 
   setRouterParam(routerParamKey.PLAN, plan);
-  const query: RouterQueryCalendarToPlan = {
-    crud: Crud.UPDATE,
-  };
-  router.push({ name: PAGE.PLAN, query });
+  router.push({ name: PAGE.PLAN });
 };
 const getMemoList = async () => {
   const apiRes = await supabaseGetMemoList({
