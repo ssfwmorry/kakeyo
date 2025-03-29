@@ -283,18 +283,15 @@ import type { GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { GetTypeListOutput } from '@/api/supabase/type.interface';
 import { DUMMY, MAX_PRICE, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
+import { Crud, type DateString, type Id, type PickedDate } from '@/utils/types/common';
+import type { DayClassification } from '@/utils/types/model';
 import {
-  crud,
-  type Crud,
-  type DateString,
-  type Id,
-  type PickedDate,
+  routerParamKey,
+  type PlannedRecord,
   type Record_,
   type RouterQueryCalendarToNote,
   type RouterQueryNoteToCalendar,
-} from '@/utils/types/common';
-import type { DayClassification } from '@/utils/types/model';
-import { routerParamKey, type PlannedRecord } from '@/utils/types/page';
+} from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -439,7 +436,7 @@ const initSelectedDayId = () => {
 };
 const setPageRecord = (record: Record_, c: Crud) => {
   // 新規作成の場合
-  if (c === crud.CREATE) {
+  if (c === Crud.CREATE) {
     initSelectedMethodId();
     date.value = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
     return;
@@ -447,14 +444,14 @@ const setPageRecord = (record: Record_, c: Crud) => {
 
   // 編集の場合
   id.value = record.id;
-  isPay.value = record.is_pay;
+  isPay.value = record.isPay;
   date.value = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
   price.value = record.price;
-  memo.value = record.memo ?? null;
-  selectedMethodId.value = record.method_id;
-  isInstead.value = record.is_instead;
-  selectedTypeId.value = record.type_id;
-  selectedSubTypeId.value = record.sub_type_id;
+  memo.value = record.memo;
+  selectedMethodId.value = record.methodId;
+  isInstead.value = record.isInstead;
+  selectedTypeId.value = record.typeId;
+  selectedSubTypeId.value = record.subTypeId;
 };
 const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
   isPlannedRecord.value = true;
@@ -467,7 +464,7 @@ const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
   dayList.value = apiRes.data;
 
   // 新規作成の場合
-  if (c === crud.CREATE) {
+  if (c === Crud.CREATE) {
     initSelectedMethodId();
     initSelectedDayId();
     return;

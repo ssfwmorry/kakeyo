@@ -97,15 +97,13 @@ import type { GetSummarizedRecordItem } from '@/api/supabase/record.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
+import { Crud, type ColorString, type YearMonthObj } from '@/utils/types/common';
 import {
-  crud,
-  type ColorString,
-  type Record_,
+  routerParamKey,
+  type RecordsQueryParam,
   type RouterQueryCalendarToNote,
-  type YearMonthObj,
-} from '@/utils/types/common';
-import { routerParamKey, type RecordsQueryParam, type SummaryQueryParam } from '@/utils/types/page';
-import { decamelizeKeys } from 'humps';
+  type SummaryQueryParam,
+} from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, userStore] = [useLoginStore(), useUserStore()];
@@ -235,14 +233,10 @@ const goSummaryPage = () => {
 const goRecordEditPage = (record: GetSummarizedRecordItem) => {
   setIsPair(record.isPair);
 
-  // TODO
-  const tmpRecord: Record_ = {
-    ...decamelizeKeys<GetSummarizedRecordItem>(record),
-  };
-  setRouterParam(routerParamKey.RECORD, tmpRecord);
+  setRouterParam(routerParamKey.RECORD, record);
   const query: RouterQueryCalendarToNote = {
     routerParamKey: routerParamKey.RECORD,
-    crud: crud.UPDATE,
+    crud: Crud.UPDATE,
   };
   router.push({ name: PAGE.NOTE, query });
 };

@@ -127,14 +127,13 @@ import type { GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
+import { Crud, type Id } from '@/utils/types/common';
 import {
-  crud,
-  type Crud,
-  type Id,
+  routerParamKey,
+  type Plan,
   type RouterQueryCalendarToPlan,
   type RouterQueryPlanToCalendar,
-} from '@/utils/types/common';
-import { routerParamKey, type Plan } from '@/utils/types/page';
+} from '@/utils/types/page';
 import dayjs, { type Dayjs } from 'dayjs';
 
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -175,7 +174,7 @@ const selectedDateOrPeriod = computed(() => {
 });
 const setPagePlan = (plan: Plan, c: Crud) => {
   // 新規作成の場合
-  if (c === crud.CREATE) {
+  if (c === Crud.CREATE) {
     const list = planTypeList.value[isPair.value ? 'pair' : 'self'];
     if (list.length > 0) {
       selectedPlanTypeId.value = list[0].planTypeId;

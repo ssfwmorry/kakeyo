@@ -82,8 +82,12 @@ import type {
 } from '@/api/supabase/plannedRecord.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
-import { crud, type RouterQuerySettingToNote } from '@/utils/types/common';
-import { routerParamKey, type PlannedRecord } from '@/utils/types/page';
+import { Crud } from '@/utils/types/common';
+import {
+  routerParamKey,
+  type PlannedRecord,
+  type RouterQuerySettingToNote,
+} from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -117,7 +121,7 @@ const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListItem) => {
   setRouterParam(routerParamKey.PLANNED_RECORD, tmpPlannedRecord);
   const query: RouterQuerySettingToNote = {
     routerParamKey: routerParamKey.PLANNED_RECORD,
-    crud: crud.UPDATE,
+    crud: Crud.UPDATE,
   };
   router.push({ name: PAGE.NOTE, query });
 };
@@ -125,7 +129,7 @@ const goPlannedRecordCreatePage = () => {
   setRouterParam(routerParamKey.PLANNED_RECORD, null);
   const query: RouterQuerySettingToNote = {
     routerParamKey: routerParamKey.PLANNED_RECORD,
-    crud: crud.CREATE,
+    crud: Crud.CREATE,
   };
   router.push({ name: PAGE.NOTE, query });
 };

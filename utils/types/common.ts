@@ -1,27 +1,3 @@
-import type { routerParamKey } from './page';
-
-export const crud = {
-  CREATE: 'CREATE',
-  UPDATE: 'UPDATE',
-} as const;
-export type Crud = (typeof crud)[keyof typeof crud];
-
-export type RouterQueryCalendarToNote = {
-  routerParamKey: (typeof routerParamKey)[keyof typeof routerParamKey];
-  crud: Crud;
-};
-export type RouterQueryRecordsToNote = RouterQueryCalendarToNote;
-export type RouterQuerySettingToNote = RouterQueryCalendarToNote;
-export type RouterQueryNoteToCalendar = {
-  focus: DateString;
-};
-export type RouterQueryCalendarToPlan = {
-  crud: Crud;
-};
-export type RouterQueryPlanToCalendar = {
-  focus: DateString;
-};
-
 export type Id = number;
 export type ColorString = string; // TODO: あらかじめ決められた文字列のみを許可する
 /** YYYY */
@@ -41,11 +17,11 @@ export type DbDatetimeString = string;
 /** {year: YYYY, month: MM} */
 export type YearMonthObj = { year: YearString; month: MonthString };
 
-export const boolStr = {
+export const BoolString = {
   TRUE: 'true',
   FALSE: 'false',
 } as const;
-export type BoolString = (typeof boolStr)[keyof typeof boolStr];
+export type BoolString = (typeof BoolString)[keyof typeof BoolString];
 
 export type PickedDate = {
   $y: number;
@@ -53,35 +29,20 @@ export type PickedDate = {
   $D: number;
 };
 
-export const shareType = {
-  SELF: 'SELF',
-  PAIR: 'PAIR',
-  BOTH: 'BOTH',
-} as const;
-export type ShareType = (typeof shareType)[keyof typeof shareType];
-
 export type DateRange = {
   start: DateString;
   end: DateString;
 };
 
-export type Record_ = {
-  id: number;
-  datetime: DatetimeString;
-  is_instead: boolean | null;
-  is_pair: boolean;
-  is_pay: boolean;
-  is_self: boolean | null;
-  memo: string | null | undefined; // toto 精査
-  method_color_classification_name: string;
-  method_id: number;
-  method_name: string;
-  pair_user_name: string | null;
-  planned_record_id: number | null;
-  price: number;
-  sub_type_id: number | null;
-  sub_type_name: string | null;
-  type_color_classification_name: string;
-  type_id: number;
-  type_name: string;
-};
+export const Crud = {
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+} as const;
+export type Crud = (typeof Crud)[keyof typeof Crud];
+
+export const ShareType = {
+  SELF: 'SELF',
+  PAIR: 'PAIR',
+  BOTH: 'BOTH',
+} as const;
+export type ShareType = (typeof ShareType)[keyof typeof ShareType];

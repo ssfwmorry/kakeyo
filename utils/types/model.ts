@@ -1,4 +1,4 @@
-import type { DateString, DbDatetimeString, Id } from './common';
+import type { DateString, DatetimeString, DbDatetimeString, Id } from './common';
 
 export type ColorClassification = {
   id: Id;
@@ -33,7 +33,7 @@ export type PlannedRecord = {
 };
 
 export type Plan = {
-  id: number;
+  id: Id;
   userId: Id | null;
   pairId: Id | null;
   startDate: DateString;
@@ -41,4 +41,20 @@ export type Plan = {
   planTypeId: number;
   name: string;
   memo: string | null;
+};
+
+export type Record_ = {
+  id: Id;
+  userId: Id | null;
+  pairId: Id | null;
+  datetime: DatetimeString;
+  isPay: boolean;
+  methodId: Id;
+  typeId: Id;
+  subTypeId: Id | null;
+  price: number;
+  memo: string | null;
+  plannedRecordId: Id | null;
+  isInstead: boolean | null;
+  isSettled: boolean | null;
 };

@@ -1,5 +1,9 @@
-import type { ColorString, YearMonthObj } from './common';
-import type { Plan as PlanModel, PlannedRecord as PlannedRecordModel } from './model';
+import type { ColorString, Crud, DateString, YearMonthObj } from './common';
+import type {
+  Plan as PlanModel,
+  PlannedRecord as PlannedRecordModel,
+  Record_ as RecordModel,
+} from './model';
 
 export const routerParamKey = {
   PLANNED_RECORD: 'PLANNED_RECORD',
@@ -31,6 +35,22 @@ export type RecordsQueryParam = {
   pairUserName: string | null;
 };
 
+export type RouterQueryCalendarToNote = {
+  routerParamKey: (typeof routerParamKey)[keyof typeof routerParamKey];
+  crud: Crud;
+};
+export type RouterQueryRecordsToNote = RouterQueryCalendarToNote;
+export type RouterQuerySettingToNote = RouterQueryCalendarToNote;
+export type RouterQueryNoteToCalendar = {
+  focus: DateString;
+};
+export type RouterQueryCalendarToPlan = {
+  crud: Crud;
+};
+export type RouterQueryPlanToCalendar = {
+  focus: DateString;
+};
+
 export type PlannedRecord = Omit<PlannedRecordModel, 'userId' | 'pairId'> & {
   pairUserName: string | null;
 };
@@ -39,4 +59,8 @@ export type Plan = Omit<PlanModel, 'userId' | 'pairId'> & {
   isPair: boolean;
   planTypeName: string;
   planTypeColorClassificationName: string;
+};
+
+export type Record_ = Omit<RecordModel, 'userId' | 'pairId' | 'isSettled'> & {
+  isPair: boolean;
 };

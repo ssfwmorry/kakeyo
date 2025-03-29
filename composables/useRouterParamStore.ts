@@ -1,7 +1,7 @@
-import type { Record_ } from '@/utils/types/common';
 import type {
   Plan,
   PlannedRecord,
+  Record_,
   RecordsQueryParam,
   RouterParamKey,
   SummaryQueryParam,

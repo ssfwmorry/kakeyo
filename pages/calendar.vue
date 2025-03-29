@@ -175,30 +175,27 @@
 </template>
 
 <script setup lang="ts">
+import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
 import type { GetRecordListItem } from '@/api/supabase/record.interface';
 import { DUMMY, PAGE } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
+import { Crud, type DateString, type Id, type ShareType } from '@/utils/types/common';
 import {
-  crud,
-  type DateString,
-  type Id,
+  routerParamKey,
+  type Plan,
   type Record_,
   type RouterQueryCalendarToNote,
   type RouterQueryCalendarToPlan,
   type RouterQueryNoteToCalendar,
   type RouterQueryPlanToCalendar,
-  type ShareType,
-} from '@/utils/types/common';
-// https://fullcalendar.io/docs
-import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
-import { routerParamKey, type Plan } from '@/utils/types/page';
+} from '@/utils/types/page';
 import type { CalendarOptions, EventClickArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
+// https://fullcalendar.io/docs
 import FullCalendar from '@fullcalendar/vue3';
 import dayjs from 'dayjs';
-import { decamelizeKeys } from 'humps';
 
 const eventType = {
   PLAN: 'PLAN',
@@ -587,27 +584,20 @@ const goRecordCreatePage = () => {
   const record: Record_ = {
     id: DUMMY.NM,
     datetime: TimeUtility.ConvertDateStrToDatetime(tmpDate),
-    is_instead: null,
-    is_pair: DUMMY.BL,
-    is_pay: DUMMY.BL,
-    is_self: null,
+    isPair: DUMMY.BL,
+    isPay: DUMMY.BL,
+    isInstead: DUMMY.BL,
     memo: null,
-    method_color_classification_name: DUMMY.STR,
-    method_id: DUMMY.NM,
-    method_name: DUMMY.STR,
-    pair_user_name: null,
-    planned_record_id: null,
+    methodId: DUMMY.NM,
+    plannedRecordId: null,
     price: DUMMY.NM,
-    sub_type_id: null,
-    sub_type_name: null,
-    type_color_classification_name: DUMMY.STR,
-    type_id: DUMMY.NM,
-    type_name: DUMMY.STR,
+    typeId: DUMMY.NM,
+    subTypeId: null,
   };
   setRouterParam(routerParamKey.RECORD, record);
   const query: RouterQueryCalendarToNote = {
     routerParamKey: routerParamKey.RECORD,
-    crud: crud.CREATE,
+    crud: Crud.CREATE,
   };
   router.push({ name: PAGE.NOTE, query });
 };
@@ -625,7 +615,7 @@ const goPlanCreatePage = () => {
     planTypeColorClassificationName: DUMMY.STR,
   };
   const query: RouterQueryCalendarToPlan = {
-    crud: crud.CREATE,
+    crud: Crud.CREATE,
   };
   setRouterParam(routerParamKey.PLAN, plan);
   router.push({ name: PAGE.PLAN, query });
@@ -633,14 +623,10 @@ const goPlanCreatePage = () => {
 const goRecordEditPage = (record: GetRecordListItem) => {
   setIsPair(record.isPair);
 
-  // TODO
-  const tmpRecord: Record_ = {
-    ...decamelizeKeys<GetRecordListItem>(record),
-  };
-  setRouterParam(routerParamKey.RECORD, tmpRecord);
+  setRouterParam(routerParamKey.RECORD, record);
   const query: RouterQueryCalendarToNote = {
     routerParamKey: routerParamKey.RECORD,
-    crud: crud.UPDATE,
+    crud: Crud.UPDATE,
   };
   router.push({ name: PAGE.NOTE, query });
 };
@@ -662,7 +648,7 @@ const goPlanEditPage = () => {
 
   setRouterParam(routerParamKey.PLAN, plan);
   const query: RouterQueryCalendarToPlan = {
-    crud: crud.UPDATE,
+    crud: Crud.UPDATE,
   };
   router.push({ name: PAGE.PLAN, query });
 };
