@@ -50,10 +50,8 @@ const deleteUser = async () => {
 
   await signOut();
   const apiRes = await firebaseDeleteUser();
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${apiRes.error})`);
-    return;
-  }
+  assertApiResponse(apiRes);
+
   disableLoading();
   setToast('アカウントを削除しました');
   router.push({ name: PAGE.LOGIN });

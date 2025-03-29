@@ -98,6 +98,7 @@
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 import type { GetMethodListItem, GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
+import { assertApiResponse } from '@/utils/error';
 import type { Id } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -133,10 +134,8 @@ const updateShowData = async () => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
   });
-  if (apiRes.error != null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
+
   methodList.value = apiRes.data;
 };
 const openCreateDialog = () => {
@@ -180,10 +179,7 @@ const upsertApi = async () => {
     colorId: methodDialog.value.colorId,
   };
   const apiRes = await upsertMethod(auth, payload);
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   await updateShowData();
   disableLoading();
@@ -208,7 +204,7 @@ const deleteApi = async () => {
     if (apiRes.error.code === '23503') {
       setToast('紐づくデータがあるので削除できません', 'error');
     } else {
-      alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+      assertApiResponse(apiRes);
     }
     return;
   }
@@ -222,10 +218,7 @@ const swapSort = async (prevId: Id, nextId: Id) => {
   enableLoading();
   const payload = { prevId: prevId, nextId: nextId };
   const apiRes = await swapMethod({ isDemoLogin: isDemoLogin.value }, payload);
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   await updateShowData();
   disableLoading();

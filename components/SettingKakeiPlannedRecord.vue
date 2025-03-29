@@ -81,6 +81,7 @@ import type {
   GetPlannedRecordListOutput,
 } from '@/api/supabase/plannedRecord.interface';
 import { PAGE } from '@/utils/constants';
+import { assertApiResponse } from '@/utils/error';
 import StringUtility from '@/utils/string';
 import { type Id } from '@/utils/types/common';
 import { RouterParamKey, type PageQueryParameter, type PlannedRecord } from '@/utils/types/page';
@@ -102,10 +103,7 @@ const updateShowData = async () => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
   });
-  if (apiRes.error != null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
   plannedRecordList.value = apiRes.data;
 };
 const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListItem) => {
@@ -126,10 +124,7 @@ const swapSort = async (prevId: Id, nextId: Id) => {
   enableLoading();
   const payload = { prevId: prevId, nextId: nextId };
   const apiRes = await swapPlannedRecord({ isDemoLogin: isDemoLogin.value }, payload);
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   await updateShowData();
   disableLoading();

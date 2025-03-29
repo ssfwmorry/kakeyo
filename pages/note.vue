@@ -218,6 +218,7 @@
 import type { GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { GetTypeListOutput } from '@/api/supabase/type.interface';
 import { PAGE } from '@/utils/constants';
+import { assertApiResponse } from '@/utils/error';
 import TimeUtility from '@/utils/time';
 import { type DateString, type Id, type PickedDate } from '@/utils/types/common';
 import type { DayClassification } from '@/utils/types/model';
@@ -366,10 +367,7 @@ const setPagePlannedRecord = async (plannedRecord: PlannedRecord) => {
   isPlannedRecord.value = true;
 
   const apiRes = await getDayClassificationList({ isDemoLogin: isDemoLogin.value });
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
   dayList.value = apiRes.data;
 
   // 新規作成の場合
@@ -418,10 +416,7 @@ const upsertRecord = async () => {
     },
     payload
   );
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   setToast(id.value === null ? '登録しました' : '変更しました');
   const query: RouterQueryNoteToCalendar = { focus: date.value };
@@ -459,10 +454,7 @@ const upsertPlannedRecord = async () => {
     },
     payload
   );
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   setToast(id.value === null ? '登録しました' : '変更しました');
   router.push({ name: PAGE.SETTING });
@@ -480,10 +472,8 @@ const validateRecordAndShowErrorMsg = () => {
 const deleteRecord = async () => {
   if (id.value === null) throw new Error('deleteRecord');
   const apiRes = await supabaseDeleteRecord({ isDemoLogin: isDemoLogin.value }, { id: id.value });
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
+
   setToast('削除しました');
   const query: RouterQueryNoteToCalendar = { focus: date.value };
   router.push({ name: PAGE.CALENDAR, query });
@@ -501,7 +491,7 @@ const deletePlannedRecord = async () => {
     if (apiRes.error.code === '23503') {
       setToast('紐づくデータがあるので削除できません', 'error');
     } else {
-      alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+      assertApiResponse(apiRes);
     }
     return;
   }

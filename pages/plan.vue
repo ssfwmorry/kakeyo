@@ -125,6 +125,7 @@
 <script setup lang="ts">
 import type { GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
 import { PAGE } from '@/utils/constants';
+import { assertApiResponse } from '@/utils/error';
 import { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import type { Id } from '@/utils/types/common';
@@ -218,10 +219,7 @@ const upsertPlan = async () => {
     },
     payload
   );
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   setToast(id.value ? '変更しました' : '登録しました');
   const tmpDate = isPeriod.value ? dates.value[0] : date.value;
@@ -268,10 +266,8 @@ const deletePlan = async () => {
 
   const payload = { id: id.value };
   const apiRes = await supabaseDeletePlan({ isDemoLogin: isDemoLogin.value }, payload);
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
+
   setToast('削除しました');
   const tmpDate = isPeriod.value ? dates.value[0] : date.value;
   if (tmpDate === null) throw new Error('deletePlan');
@@ -302,7 +298,7 @@ watch(isPair, (newValue, oldValue) => {
     userUid: userUid.value,
   });
   if (apiRes.error != null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    assertApiResponse(apiRes);
     return;
   }
   planTypeList.value = apiRes.data;

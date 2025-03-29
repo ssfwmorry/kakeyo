@@ -166,6 +166,7 @@ import type {
   GetTypeListItemSubTypeListItem,
   GetTypeListOutput,
 } from '@/api/supabase/type.interface';
+import { assertApiResponse } from '@/utils/error';
 import type { Id } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -227,10 +228,7 @@ const updateShowData = async () => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
   });
-  if (apiRes.error != null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
   typeList.value = apiRes.data;
 };
 const openCreateTypeDialog = () => {
@@ -277,10 +275,7 @@ const upsertApi = async (inputMode: Mode) => {
       colorId: typeDialog.value.colorId,
     };
     const apiRes = await upsertType(auth, payload);
-    if (apiRes.error !== null) {
-      alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-      return;
-    }
+    assertApiResponse(apiRes);
     isCreated = !!typeDialog.value.id;
   } else if (inputMode === mode.SUB_TYPE) {
     if (!validateUpsertSubTypeApi(subTypeDialog.value)) {
@@ -294,10 +289,7 @@ const upsertApi = async (inputMode: Mode) => {
       name: subTypeDialog.value.name,
     };
     const apiRes = await upsertSubType(auth, payload);
-    if (apiRes.error !== null) {
-      alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-      return;
-    }
+    assertApiResponse(apiRes);
     isCreated = !!subTypeDialog.value.id;
   } else {
     alert('想定外');
@@ -347,7 +339,7 @@ const deleteApi = async (inputMode: Mode) => {
     if (apiRes.error.code === '23503') {
       setToast('紐づくデータがあるので削除できません', 'error');
     } else {
-      alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+      assertApiResponse(apiRes);
     }
     return;
   }
@@ -391,10 +383,7 @@ const swapSort = async (inputMode: Mode, prevId: Id, nextId: Id) => {
     alert('想定外');
     return;
   }
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   await updateShowData();
   disableLoading();

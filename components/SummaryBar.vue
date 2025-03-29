@@ -192,10 +192,7 @@ const updateChart = async () => {
     { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
     payload
   );
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${apiRes.error})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   const { ret1, ret2, ret3, ret4, ret5 } = convertShowData(apiRes.data);
   barDataPayAndIncome.value = ret1;

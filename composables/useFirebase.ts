@@ -86,7 +86,7 @@ export const useFirebase = () => {
     )
       .then(() => {
         if (!Auth.currentUser) throw new Error('no user');
-        return { data: Auth.currentUser, message: null, error: null };
+        return { data: Auth.currentUser, message: '', error: null };
       })
       .catch((err) => {
         return { data: null, message: 'デモ用ログイン失敗', error: err };

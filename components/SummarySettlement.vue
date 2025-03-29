@@ -187,6 +187,7 @@ import {
   RATE_LABEL_LIST,
   RATE_LIST,
 } from '@/utils/constants';
+import { assertApiResponse } from '@/utils/error';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type ColorString, type Id, type YearMonthObj } from '@/utils/types/common';
@@ -287,10 +288,7 @@ const updateChart = async () => {
     { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
     payload
   );
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   const {
     coupleSum: ret1,
@@ -388,7 +386,7 @@ const settleRecords = async () => {
       disableLoading();
       return;
     }
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
+    assertApiResponse(apiRes);
     return;
   }
 

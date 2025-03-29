@@ -390,33 +390,22 @@ const updateRange = async () => {
 
   // plannedRecord から、足りない record を登録
   const apiResPostRecords = await postRecords(authParam, payload1);
-  if (apiResPostRecords.error !== null) {
-    alert(apiResPostRecords.message + `(Error: ${JSON.stringify(apiResPostRecords.error)})`);
-    return;
-  }
+  assertApiResponse(apiResPostRecords);
 
   // 月の収支を取得
   const apiResMonthSum = await getMonthSum(authParam, payload1);
-  if (apiResMonthSum.error !== null) {
-    alert(apiResMonthSum.message + `(Error: ${JSON.stringify(apiResMonthSum.error)})`);
-    return;
-  }
+  assertApiResponse(apiResMonthSum);
 
   // record を追加
   const apiResGetRecords = await getRecordList(authParam, payload2);
-  if (apiResGetRecords.error !== null) {
-    alert(apiResGetRecords.message + `(Error: ${JSON.stringify(apiResGetRecords.error)})`);
-    return;
-  }
+  assertApiResponse(apiResGetRecords);
+
   const tmpDaySumList = getDaySumList(apiResGetRecords.data);
   updatePaddingRecords(tmpDaySumList); // 毎日の record 用 event を定義
 
   // plan を追加
   const apiResPlans = await getPlanList(authParam, payload2);
-  if (apiResPlans.error !== null) {
-    alert(apiResPlans.message + `(Error: ${JSON.stringify(apiResPlans.error)})`);
-    return;
-  }
+  assertApiResponse(apiResPlans);
 
   // plan 分を events に追加
   apiResPlans.data.forEach((plan) => {
@@ -630,10 +619,7 @@ const getMemoList = async () => {
     userUid: userUid.value,
     pairId: pairId.value,
   });
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   memoList.value = apiRes.data;
 };
@@ -659,10 +645,8 @@ const addMemo = async () => {
     },
     payload
   );
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
+
   setToast('登録しました');
   await getMemoList();
   resetMemoInput();
@@ -675,11 +659,7 @@ const resetMemoInput = () => {
 const deleteMemo = async (id: Id) => {
   enableLoading();
   const apiRes = await supabaseDeleteMemo({ isDemoLogin: isDemoLogin.value }, { id });
-
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   setToast('削除しました');
   await getMemoList();

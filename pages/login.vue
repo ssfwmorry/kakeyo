@@ -206,10 +206,7 @@ const userLogin = async () => {
   }
 
   const apiResPairId = await getPairId({ uid: apiRes.data.uid });
-  if (apiResPairId.error !== null) {
-    alert(apiResPairId.message + `(Error: ${JSON.stringify(apiResPairId.error)})`);
-    return;
-  }
+  assertApiResponse(apiResPairId);
 
   setUserLogin();
   setUserInfo(apiRes.data, apiResPairId.data);
@@ -218,10 +215,7 @@ const userLogin = async () => {
 
 const demoLogin = async () => {
   const apiRes = await signInByDemoLogin();
-  if (apiRes.error !== null) {
-    alert(apiRes.message + `(Error: ${apiRes.error})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   setDemoLogin();
   setUserInfo(apiRes.data, DEMO_USER_INFO(config).ID);
