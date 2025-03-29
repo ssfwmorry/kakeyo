@@ -1,3 +1,5 @@
+import type { Id } from '@/utils/types/common';
+
 export const RPC_GET_PLAN_TYPE_LIST = 'get_plan_type_list';
 
 interface GetPlanTypeListRpcRequest {
@@ -5,10 +7,10 @@ interface GetPlanTypeListRpcRequest {
 }
 
 export type GetPlanTypeListRpcRow = {
-  plan_type_id: number;
+  plan_type_id: Id;
   plan_type_name: string;
   sort: number;
-  color_classification_id: number;
+  color_classification_id: Id;
   color_classification_name: string;
   is_pair: boolean;
 };

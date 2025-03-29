@@ -1,5 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import type { Id } from '@/utils/types/common';
 import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
@@ -18,7 +19,7 @@ export const getMemoList = async ({
   isDemoLogin,
   userUid,
   pairId,
-}: SupabaseApiAuthGet & { pairId: number | null }): Promise<GetMemoListOutput> => {
+}: SupabaseApiAuthGet & { pairId: Id | null }): Promise<GetMemoListOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_MEMO_LIST;
 
   const wherePairId = pairId !== null ? `,pair_id.eq.${pairId}` : '';
@@ -35,7 +36,7 @@ export const getMemoList = async ({
 };
 
 export const insertMemo = async (
-  { isDemoLogin, userUid, pairId }: SupabaseApiAuthGet & { pairId: number | null },
+  { isDemoLogin, userUid, pairId }: SupabaseApiAuthGet & { pairId: Id | null },
   { memo, isPair }: InsertMemoInput
 ): Promise<InsertMemoOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;

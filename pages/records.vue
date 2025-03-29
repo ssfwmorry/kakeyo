@@ -97,7 +97,7 @@ import type { GetSummarizedRecordItem } from '@/api/supabase/record.interface';
 import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { Crud, type ColorString, type YearMonthObj } from '@/utils/types/common';
+import { Crud, type ColorString, type Id, type YearMonthObj } from '@/utils/types/common';
 import {
   routerParamKey,
   type RecordsQueryParam,
@@ -121,8 +121,8 @@ type ShowSetting = {
   isType: boolean;
   isPair: boolean;
   isIncludeInstead: boolean | null;
-  id: number | null;
-  subtypeId: number | null;
+  id: Id | null;
+  subtypeId: Id | null;
 };
 
 const focus = ref<YearMonthObj>(TimeUtility.GetNowYearMonthObj(isDemoLogin.value));

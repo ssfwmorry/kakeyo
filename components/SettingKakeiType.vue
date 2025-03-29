@@ -190,16 +190,16 @@ type Mode = (typeof mode)[keyof typeof mode];
 export type TypeDialog = {
   isShow: boolean;
   isWithColor: true;
-  id: number | null;
+  id: Id | null;
   name: string | null;
-  colorId: number | null;
+  colorId: Id | null;
 };
 export type SubTypeDialog = {
   isShow: boolean;
   isWithColor: false;
-  id: number | null;
+  id: Id | null;
   name: string | null;
-  parentId: number | null;
+  parentId: Id | null;
 };
 
 const isPay = ref<boolean>(true);
@@ -368,7 +368,7 @@ const openCreateSubTypeDialog = ({ typeId }: GetTypeListItem) => {
   };
 };
 const openEditSubTypeDialog = (
-  typeId: number,
+  typeId: Id,
   { subTypeId, subTypeName }: GetTypeListItemSubTypeListItem
 ) => {
   subTypeDialog.value = {
@@ -379,7 +379,7 @@ const openEditSubTypeDialog = (
     name: subTypeName,
   };
 };
-const swapSort = async (inputMode: Mode, prevId: number, nextId: number) => {
+const swapSort = async (inputMode: Mode, prevId: Id, nextId: Id) => {
   enableLoading();
   let apiRes;
   const payload = { prevId: prevId, nextId: nextId };

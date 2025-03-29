@@ -9,7 +9,7 @@ export type SupabaseApiAuthGet = {
 } & SupabaseApiAuth;
 export type SupabaseApiAuthUpsert = {
   isPair: boolean;
-  pairId: number | null;
+  pairId: Id | null;
 } & SupabaseApiAuthGet;
 
 export interface UpsertOutput {
@@ -28,8 +28,8 @@ export interface DeleteOutput {
 }
 
 export interface SwapInput {
-  prevId: number;
-  nextId: number;
+  prevId: Id;
+  nextId: Id;
 }
 export interface SwapOutput {
   data: null;

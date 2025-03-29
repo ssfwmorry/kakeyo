@@ -219,7 +219,7 @@ type ExternalEventPlan = {
   memo: string | null;
   planId: number; // id はライブラリの定義に string として既存
   isPair: boolean;
-  typeId: number;
+  typeId: Id;
   typeName: string;
 };
 type ExternalEventRecord = {

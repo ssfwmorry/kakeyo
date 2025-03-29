@@ -196,7 +196,7 @@ const deleteApi = async () => {
   setToast('削除しました');
   closeDialog();
 };
-const swapSort = async (prevId: number, nextId: number) => {
+const swapSort = async (prevId: Id, nextId: Id) => {
   enableLoading();
   const payload = { prevId: prevId, nextId: nextId };
   const apiRes = await swapPlanType({ isDemoLogin: isDemoLogin.value }, payload);

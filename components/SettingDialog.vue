@@ -63,6 +63,7 @@
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 import type { SubTypeDialog, TypeDialog } from '@/components/SettingKakeiType.vue';
+import type { Id } from '@/utils/types/common';
 
 type Props = {
   modelValue: TypeDialog | SubTypeDialog;
@@ -77,7 +78,7 @@ const loading = ref<boolean>(false);
 const closeDialog = () => {
   emits('closeDialog');
 };
-const updateSelectedColorId = (id: number) => {
+const updateSelectedColorId = (id: Id) => {
   (props.modelValue as TypeDialog).colorId = id;
 };
 const isDisableDialogPostBtn = () => {

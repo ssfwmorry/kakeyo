@@ -1,3 +1,4 @@
+import type { Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
 import type { GetMethodListRpcRow } from './rpc/getMethodList.interface';
@@ -20,8 +21,8 @@ export interface GetMethodListOutput {
 }
 
 export interface UpsertMethodInput {
-  id: number | null;
+  id: Id | null;
   name: string;
   isPay: boolean;
-  colorId: number;
+  colorId: Id;
 }

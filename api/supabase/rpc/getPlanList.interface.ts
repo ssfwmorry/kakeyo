@@ -1,3 +1,5 @@
+import type { Id } from '@/utils/types/common';
+
 export const RPC_GET_PLAN_LIST = 'get_plan_list';
 
 interface GetPlanListRpcRequest {
@@ -5,12 +7,12 @@ interface GetPlanListRpcRequest {
 }
 
 export type GetPlanListRpcRow = {
-  id: number;
+  id: Id;
   start_date: string;
   end_date: string;
   name: string;
   memo: string | null;
-  plan_type_id: number;
+  plan_type_id: Id;
   plan_type_name: string;
   plan_type_color_classification_name: string;
   is_pair: boolean;

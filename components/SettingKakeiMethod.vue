@@ -219,7 +219,7 @@ const deleteApi = async () => {
   setToast('削除しました');
   methodDialog.value.isShow = false;
 };
-const swapSort = async (prevId: number, nextId: number) => {
+const swapSort = async (prevId: Id, nextId: Id) => {
   enableLoading();
   const payload = { prevId: prevId, nextId: nextId };
   const apiRes = await swapMethod({ isDemoLogin: isDemoLogin.value }, payload);

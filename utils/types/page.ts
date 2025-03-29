@@ -1,4 +1,4 @@
-import type { ColorString, Crud, DateString, DatetimeString, YearMonthObj } from './common';
+import type { ColorString, Crud, DateString, DatetimeString, Id, YearMonthObj } from './common';
 import type {
   Plan as PlanModel,
   PlannedRecord as PlannedRecordModel,
@@ -22,8 +22,8 @@ export type SummaryQueryParam = {
 };
 
 export type RecordsQueryParam = {
-  id: number;
-  subtypeId: number | null;
+  id: Id;
+  subtypeId: Id | null;
   isPay: boolean;
   isMonth: boolean;
   isType: boolean;

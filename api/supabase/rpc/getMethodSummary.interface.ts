@@ -1,4 +1,4 @@
-import type { MonthString, YearString } from '@/utils/types/common';
+import type { Id, MonthString, YearString } from '@/utils/types/common';
 
 export const RPC_GET_METHOD_SUMMARY = 'get_method_summary';
 
@@ -13,7 +13,7 @@ interface GetMethodSummaryRpcRequest {
 
 export type GetMethodSummaryRpcRow = {
   method_name: string;
-  method_id: number;
+  method_id: Id;
   pair_user_name: string | null;
   color_name: string;
   is_pair: boolean;

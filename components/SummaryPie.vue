@@ -165,7 +165,7 @@ import type { GetMethodSummaryItem, GetTypeSummaryItem } from '@/api/supabase/re
 import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { type YearMonthObj } from '@/utils/types/common';
+import { type Id, type YearMonthObj } from '@/utils/types/common';
 import { routerParamKey, type RecordsQueryParam, type SummaryQueryParam } from '@/utils/types/page';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import { Pie } from 'vue-chartjs';
@@ -180,12 +180,12 @@ type PieData = {
     }
   ];
 };
-type TypeListSubs = { name: string | null; value: string; id: number };
+type TypeListSubs = { name: string | null; value: string; id: Id };
 type TypeOrMethod = {
   name: string;
   value: string;
   color: string;
-  id: number;
+  id: Id;
   isPair: boolean;
   pairUserName: string | null;
   subs: TypeListSubs[];

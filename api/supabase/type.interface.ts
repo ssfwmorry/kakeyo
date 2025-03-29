@@ -4,7 +4,7 @@ import type { Camelized } from 'humps';
 import type { GetTypeListRpcRow } from './rpc/getTypeList.interface';
 
 export type GetTypeListItemSubTypeListItem = {
-  subTypeId: number;
+  subTypeId: Id;
   subTypeName: string;
   subTypeSort: number;
 };

@@ -38,7 +38,7 @@ export type Plan = {
   pairId: Id | null;
   startDate: DateString;
   endDate: DateString;
-  planTypeId: number;
+  planTypeId: Id;
   name: string;
   memo: string | null;
 };

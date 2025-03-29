@@ -189,7 +189,7 @@ import {
 } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { type ColorString, type YearMonthObj } from '@/utils/types/common';
+import { type ColorString, type Id, type YearMonthObj } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, userStore] = [useLoginStore(), useUserStore()];
@@ -209,7 +209,7 @@ type RateList = {
   colorIndex: number;
   label: string;
   color: ColorString;
-  records: { id: number; price: number; isMe: boolean }[];
+  records: { id: Id; price: number; isMe: boolean }[];
 }[];
 type Record = {
   labelColor: string | null;
@@ -223,7 +223,7 @@ type RecordList = {
 };
 type Dialog = {
   isShow: boolean;
-  id: number | null;
+  id: Id | null;
   isMe: boolean | null;
 };
 

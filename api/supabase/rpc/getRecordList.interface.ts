@@ -1,4 +1,4 @@
-import type { DbDatetimeString } from '@/utils/types/common';
+import type { DbDatetimeString, Id } from '@/utils/types/common';
 
 export const RPC_GET_RECORD_LIST = 'get_record_list';
 
@@ -9,20 +9,20 @@ interface GetRecordListRpcRequest {
 }
 
 export type GetRecordListRpcRow = {
-  record_id: number;
+  record_id: Id;
   is_self: boolean;
   datetime: DbDatetimeString;
   is_pay: boolean;
   price: number;
   memo: string | null;
   is_instead: boolean | null;
-  planned_record_id: number | null;
-  method_id: number;
+  planned_record_id: Id | null;
+  method_id: Id;
   method_name: string;
   method_color_classification_name: string;
-  type_id: number;
+  type_id: Id;
   type_name: string;
-  sub_type_id: number | null;
+  sub_type_id: Id | null;
   sub_type_name: string | null;
   type_color_classification_name: string;
   is_pair: boolean;

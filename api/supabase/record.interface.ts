@@ -25,13 +25,13 @@ export interface GetRecordListOutput {
 }
 
 export interface UpsertRecordInput {
-  id: number | null;
+  id: Id | null;
   datetime: DatetimeString;
   isPay: boolean;
-  methodId: number;
+  methodId: Id;
   isInstead: boolean | null;
-  typeId: number;
-  subTypeId: number | null;
+  typeId: Id;
+  subTypeId: Id | null;
   price: number;
   memo: string | null;
 }
@@ -72,7 +72,7 @@ export interface GetTypeSummaryInput {
 }
 
 export type GetTypeSummaryItemSubTypeListItem = {
-  subTypeId: number;
+  subTypeId: Id;
   subTypeName: string;
   subTypeSum: number;
 };

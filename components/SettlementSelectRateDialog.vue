@@ -47,10 +47,11 @@
 
 <script setup lang="ts">
 import { RATE_COLOR_LIST as colorList, RATE_LABEL_LIST as rateList } from '@/utils/constants';
+import type { Id } from '@/utils/types/common';
 const emits = defineEmits();
 
 export type DialogInfo = {
-  id: number | null;
+  id: Id | null;
   isMe: boolean | null;
   colorIndex: number;
 };
@@ -58,7 +59,7 @@ export type DialogInfo = {
 type Props = {
   modelValue: {
     isShow: boolean;
-    id: number | null;
+    id: Id | null;
     isMe: boolean | null;
   };
 };

@@ -1,8 +1,10 @@
+import type { Id } from '@/utils/types/common';
+
 export const usePairStore = defineStore(
   'pairStore',
   () => {
     // state
-    const state = ref<{ pairId: number | null; isPair: boolean }>({ pairId: null, isPair: false });
+    const state = ref<{ pairId: Id | null; isPair: boolean }>({ pairId: null, isPair: false });
 
     // getters
     const pairId = computed(() => state.value.pairId);
@@ -10,7 +12,7 @@ export const usePairStore = defineStore(
     const isPair = computed(() => state.value.isPair);
 
     // setters
-    function setPairId(pairId: number | null) {
+    function setPairId(pairId: Id | null) {
       state.value.pairId = pairId;
     }
     function setIsPair(isPair: boolean) {

@@ -1,3 +1,4 @@
+import type { Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
 import type { GetPlanTypeListRpcRow } from './rpc/getPlanTypeList.interface';
@@ -14,7 +15,7 @@ export interface GetPlanTypeListOutput {
 }
 
 export interface UpsertPlanTypeInput {
-  id: number | null;
+  id: Id | null;
   name: string;
-  colorId: number;
+  colorId: Id;
 }

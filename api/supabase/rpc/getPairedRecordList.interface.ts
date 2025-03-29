@@ -1,4 +1,4 @@
-import type { YearMonthString } from '@/utils/types/common';
+import type { Id, YearMonthString } from '@/utils/types/common';
 
 export const RPC_GET_PAIRED_RECORD_LIST = 'get_paired_record_list';
 
@@ -8,7 +8,7 @@ interface GetPairedRecordListRpcRequest {
 }
 
 export type GetPairedRecordListRpcRow = {
-  id: number;
+  id: Id;
   is_self: boolean | null;
   is_pay: boolean;
   price: number;

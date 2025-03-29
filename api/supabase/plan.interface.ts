@@ -1,4 +1,4 @@
-import type { DateRange } from '@/utils/types/common';
+import type { DateRange, Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
 import type { GetPlanListRpcRow } from './rpc/getPlanList.interface';
@@ -12,10 +12,10 @@ export interface GetPlanListOutput {
 }
 
 export interface UpsertPlanInput {
-  id: number | null;
+  id: Id | null;
   startDate: string;
   endDate: string;
-  planTypeId: number;
+  planTypeId: Id;
   name: string;
   memo: string | null;
 }

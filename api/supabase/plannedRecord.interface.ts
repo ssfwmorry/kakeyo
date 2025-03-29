@@ -1,3 +1,4 @@
+import type { Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
 import type { GetPlannedRecordListRpcRow } from './rpc/getPlannedRecordList.interface';
@@ -13,13 +14,13 @@ export interface GetPlannedRecordListOutput {
 }
 
 export interface UpsertPlannedRecordInput {
-  id: number | null;
-  dayClassificationId: number;
+  id: Id | null;
+  dayClassificationId: Id;
   isPay: boolean;
-  methodId: number;
+  methodId: Id;
   isInstead: boolean | null;
-  typeId: number;
-  subTypeId: number | null;
+  typeId: Id;
+  subTypeId: Id | null;
   price: number;
   memo: string | null;
 }

@@ -82,7 +82,7 @@ import type {
 } from '@/api/supabase/plannedRecord.interface';
 import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
-import { Crud } from '@/utils/types/common';
+import { Crud, type Id } from '@/utils/types/common';
 import {
   routerParamKey,
   type PlannedRecord,
@@ -133,7 +133,7 @@ const goPlannedRecordCreatePage = () => {
   };
   router.push({ name: PAGE.NOTE, query });
 };
-const swapSort = async (prevId: number, nextId: number) => {
+const swapSort = async (prevId: Id, nextId: Id) => {
   enableLoading();
   const payload = { prevId: prevId, nextId: nextId };
   const apiRes = await swapPlannedRecord({ isDemoLogin: isDemoLogin.value }, payload);
