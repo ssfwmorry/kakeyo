@@ -175,65 +175,10 @@
           @click:append-inner="memo = null"
         />
       </v-row>
-      <v-row class="mb-2" no-gutters>
-        <v-spacer />
-        <!-- 値段表示 -->
-        <v-col cols="9">
-          <v-text-field
-            readonly
-            density="compact"
-            hide-details
-            suffix=" 円"
-            height="44"
-            variant="outlined"
-            :value="price.toLocaleString()"
-            class="text-field-price"
-            :class="{ 'text-field-price-padding': !isShowInitPrice }"
-            :append-inner-icon="price !== 0 ? $ICONS.CLOSE : ''"
-            @click:append-inner="price = 0"
-          ></v-text-field>
-        </v-col>
-      </v-row>
-      <v-row v-for="i of 3" :key="i" class="mb-1" no-gutters>
-        <!-- 電卓 -->
-        <v-col
-          v-for="j of 3"
-          :key="j"
-          cols="4"
-          :class="{ 'pl-0 pr-1': j === 1, 'pl-1 pr-0': j === 3 }"
-        >
-          <v-btn
-            size="x-large"
-            block
-            variant="flat"
-            color="blue-grey-lighten-4"
-            @click="pushPrice(3 * (3 - i) + j)"
-            >{{ 3 * (3 - i) + j }}</v-btn
-          >
-        </v-col>
-      </v-row>
+
+      <!-- 値段表示 -->
       <v-row class="mb-3" no-gutters>
-        <v-col cols="8" class="pl-0">
-          <v-btn
-            size="x-large"
-            block
-            variant="flat"
-            color="blue-grey-lighten-4"
-            @click="pushPrice(0)"
-            >0</v-btn
-          >
-        </v-col>
-        <v-col cols="4" class="pl-1 pr-0">
-          <v-btn
-            size="x-large"
-            block
-            variant="flat"
-            color="blue-grey-lighten-4"
-            @click="popPrice()"
-          >
-            <v-icon>{{ $ICONS.BACKSPACE }}</v-icon>
-          </v-btn>
-        </v-col>
+        <NotePrice v-model:price="price" :isShowInitPrice="isShowInitPrice" />
       </v-row>
 
       <v-row no-gutters>
@@ -281,7 +226,7 @@
 <script setup lang="ts">
 import type { GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { GetTypeListOutput } from '@/api/supabase/type.interface';
-import { MAX_PRICE, PAGE } from '@/utils/constants';
+import { PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
 import { type DateString, type Id, type PickedDate } from '@/utils/types/common';
 import type { DayClassification } from '@/utils/types/model';
@@ -313,13 +258,13 @@ const {
 } = useSupabase();
 const { setToast } = useToastStore();
 
-const isPlannedRecord = ref(false);
-const isEndInit = ref(false);
-const isContinue = ref(false);
+const isPlannedRecord = ref<boolean>(false);
+const isEndInit = ref<boolean>(false);
+const isContinue = ref<boolean>(false);
 
-const isShowDatePicker = ref(false);
+const isShowDatePicker = ref<boolean>(false);
 const id = ref<Id | null>(null);
-const isPay = ref(true);
+const isPay = ref<boolean>(true);
 const date = ref<DateString>(TimeUtility.GetNowDate(isDemoLogin.value));
 
 const receivedRecordDate = ref<string | null>(null);
@@ -329,8 +274,8 @@ const selectedSubTypeId = ref<Id | null>(null);
 const memo = ref<string | null>(null);
 const selectedMethodId = ref<Id | null>(null);
 const isInstead = ref<boolean | null>(true);
-const price = ref(0);
-const loading = ref(false);
+const price = ref<number>(0);
+const loading = ref<boolean>(false);
 const dayList = ref<DayClassification[]>([]);
 const typeList = ref<GetTypeListOutput['data']>({
   income: { self: [], pair: [] },
@@ -398,16 +343,6 @@ const setDate = (value: string) => {
   const day = ('0' + String(PickedDate.$D)).slice(-2);
   date.value = `${PickedDate.$y}-${month}-${day}`;
   isShowDatePicker.value = false;
-};
-const pushPrice = (num: number) => {
-  if (price.value === 0) {
-    price.value = num;
-  } else {
-    if (price.value * 10 + num < MAX_PRICE) price.value = price.value * 10 + num;
-  }
-};
-const popPrice = () => {
-  price.value = Math.floor(price.value / 10);
 };
 const initInputData = () => {
   id.value = null;
