@@ -2,6 +2,7 @@ import { DEMO_USER_INFO } from '@/utils/constants';
 import type {
   DateString,
   DatetimeString,
+  PickedDate,
   YearMonthObj,
   YearMonthString,
 } from '@/utils/types/common';
@@ -36,6 +37,12 @@ const TimeUtility = {
     const [year, month] = dateStr.split('-');
     return { year: year, month: month };
   },
+  // ex.. PARAM: {$y: 2022, $M: 0, $D:31}, RET: '2022-01-31'
+  GetPickedDateToDateStr: (d: PickedDate): DateString => {
+    const month = ('0' + String(d.$M + 1)).slice(-2);
+    const day = ('0' + String(d.$D)).slice(-2);
+    return `${d.$y}-${month}-${day}`;
+  },
   // ex.. PARAM: 2022, RET: 2021
   PrevYear: (year: number) => {
     if (year === 2000) {
@@ -60,10 +67,6 @@ const TimeUtility = {
   IsSameYearMonth: (dateStr1: string, dateStr2: string) => {
     if (!dateStr1 || !dateStr2) return false;
     return dateStr1.substring(0, 7) == dateStr2.substring(0, 7);
-  },
-  // ex.. PARAM: '2022-01-15', RET: '2022-01-01'
-  ConvertDateStrToMonthFirstDateStr: (dateStr: string) => {
-    return dateStr.substring(0, 7) + '-01';
   },
   // ex.. PARAM: '2022-01-01', RET: '2022-01-01 10:00:00'
   ConvertDateStrToDatetime: (dateStr: DateString): DatetimeString => {

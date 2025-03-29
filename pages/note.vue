@@ -326,23 +326,8 @@ const isEndSelectTypeAndSubType = () => {
   return false;
 };
 const setDate = (value: string) => {
-  const PickedDate = value as unknown as PickedDate;
-  // TODO ゼロ埋め処理をUtilsに移行
-  const month = ('0' + String(PickedDate.$M + 1)).slice(-2);
-  const day = ('0' + String(PickedDate.$D)).slice(-2);
-  date.value = `${PickedDate.$y}-${month}-${day}`;
+  date.value = TimeUtility.GetPickedDateToDateStr(value as unknown as PickedDate);
   isShowDatePicker.value = false;
-};
-const initInputData = () => {
-  id.value = null;
-  isPay.value = true;
-  date.value = TimeUtility.GetNowDate(isDemoLogin.value);
-  receivedRecordDate.value = null;
-  selectedTypeId.value = null;
-  selectedSubTypeId.value = null;
-  memo.value = null;
-  initSelectedMethodId();
-  price.value = 0;
 };
 const initSelectedMethodId = () => {
   const tmpMethodList =
