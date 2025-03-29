@@ -193,15 +193,6 @@
             <v-icon>{{ $ICONS.TRASH }}</v-icon>
           </v-btn>
         </v-col>
-        <v-col v-else-if="!isPlannedRecord">
-          <v-checkbox
-            v-model="isContinue"
-            density="compact"
-            hide-details
-            label="連続"
-            class="pt-0 mt-0"
-          ></v-checkbox>
-        </v-col>
         <v-spacer />
         <!-- 登録変更 -->
         <v-col cols="5">
@@ -260,7 +251,6 @@ const { setToast } = useToastStore();
 
 const isPlannedRecord = ref<boolean>(false);
 const isEndInit = ref<boolean>(false);
-const isContinue = ref<boolean>(false);
 
 const isShowDatePicker = ref<boolean>(false);
 const id = ref<Id | null>(null);
@@ -449,14 +439,9 @@ const upsertRecord = async () => {
     return;
   }
 
-  if (isContinue.value) {
-    setToast('登録しました');
-    initInputData();
-  } else {
-    setToast(id.value === null ? '登録しました' : '変更しました');
-    const query: RouterQueryNoteToCalendar = { focus: date.value };
-    router.push({ name: PAGE.CALENDAR, query });
-  }
+  setToast(id.value === null ? '登録しました' : '変更しました');
+  const query: RouterQueryNoteToCalendar = { focus: date.value };
+  router.push({ name: PAGE.CALENDAR, query });
   loading.value = false;
 };
 const upsertPlannedRecord = async () => {
