@@ -23,8 +23,8 @@
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const loginStore = useLoginStore();
-const { isDemoLogin } = storeToRefs(loginStore);
+const authStore = useAuthStore();
+const { isDemoLogin } = storeToRefs(authStore);
 const { getColorClassificationList } = useSupabase();
 
 const tab = {

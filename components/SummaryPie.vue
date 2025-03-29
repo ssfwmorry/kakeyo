@@ -201,10 +201,9 @@ type Props = {
 };
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
-const { isDemoLogin } = storeToRefs(loginStore);
-const { isExistPair, isPair } = storeToRefs(pairStore);
-const { userUid } = storeToRefs(userStore);
+const [authStore, pairStore] = [useAuthStore(), usePairStore()];
+const { isDemoLogin, isExistPair, userUid } = storeToRefs(authStore);
+const { isPair } = storeToRefs(pairStore);
 const { getMethodSummary, getTypeSummary } = useSupabase();
 const { setRouterParam } = useRouterParamStore();
 const router = useRouter();

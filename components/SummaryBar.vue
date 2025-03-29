@@ -149,10 +149,9 @@ const barOptions: ChartOptions = {
 } as const;
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
-const { isDemoLogin } = storeToRefs(loginStore);
-const { isExistPair, isPair } = storeToRefs(pairStore);
-const { userUid } = storeToRefs(userStore);
+const [authStore, pairStore] = [useAuthStore(), usePairStore()];
+const { isDemoLogin, isExistPair, userUid } = storeToRefs(authStore);
+const { isPair } = storeToRefs(pairStore);
 const { getPayAndIncomeList } = useSupabase();
 
 const year = ref(TimeUtility.GetNowYear(isDemoLogin.value));

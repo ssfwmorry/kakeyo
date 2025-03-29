@@ -106,9 +106,8 @@ import {
 } from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const [loginStore, userStore] = [useLoginStore(), useUserStore()];
-const { isDemoLogin } = storeToRefs(loginStore);
-const { userUid } = storeToRefs(userStore);
+const authStore = useAuthStore();
+const { isDemoLogin, userUid } = storeToRefs(authStore);
 const { setIsPair } = usePairStore();
 const { $ICONS } = useNuxtApp();
 const { routerParam, setRouterParam } = useRouterParamStore();

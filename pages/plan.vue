@@ -131,11 +131,9 @@ import type { Id } from '@/utils/types/common';
 import { RouterParamKey, type Plan, type RouterQueryPlanToCalendar } from '@/utils/types/page';
 import dayjs, { type Dayjs } from 'dayjs';
 
-const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
-const { isDemoLogin } = storeToRefs(loginStore);
-const { isPair, pairId } = storeToRefs(pairStore);
-const { userUid } = storeToRefs(userStore);
-const route = useRoute();
+const [authStore, pairStore] = [useAuthStore(), usePairStore()];
+const { isDemoLogin, pairId, userUid } = storeToRefs(authStore);
+const { isPair } = storeToRefs(pairStore);
 const router = useRouter();
 const {
   deletePlan: supabaseDeletePlan,

@@ -169,10 +169,9 @@ import type {
 import type { Id } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
-const { isDemoLogin } = storeToRefs(loginStore);
-const { isPair, pairId } = storeToRefs(pairStore);
-const { userUid } = storeToRefs(userStore);
+const [authStore, pairStore] = [useAuthStore(), usePairStore()];
+const { isDemoLogin, pairId, userUid } = storeToRefs(authStore);
+const { isPair } = storeToRefs(pairStore);
 const { $ICONS } = useNuxtApp();
 const { deleteType, deleteSubType, getTypeList, swapType, swapSubType, upsertType, upsertSubType } =
   useSupabase();

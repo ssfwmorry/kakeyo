@@ -230,10 +230,9 @@ import {
 } from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
-const { isDemoLogin } = storeToRefs(loginStore);
-const { isPair, pairId } = storeToRefs(pairStore);
-const { userUid } = storeToRefs(userStore);
+const [authStore, pairStore] = [useAuthStore(), usePairStore()];
+const { isDemoLogin, pairId, userUid } = storeToRefs(authStore);
+const { isPair } = storeToRefs(pairStore);
 const { routerParam } = useRouterParamStore();
 const { $ICONS } = useNuxtApp();
 const route = useRoute();

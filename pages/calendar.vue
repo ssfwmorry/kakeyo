@@ -260,10 +260,9 @@ type EventInputExpanded = EventInput & {
 } & ExternalEvent;
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
-const { isDemoLogin } = storeToRefs(loginStore);
-const { isExistPair, isPair, pairId } = storeToRefs(pairStore);
-const { userUid } = storeToRefs(userStore);
+const [authStore, pairStore] = [useAuthStore(), usePairStore()];
+const { isDemoLogin, isExistPair, pairId, userUid } = storeToRefs(authStore);
+const { isPair } = storeToRefs(pairStore);
 const { setIsPair } = usePairStore();
 const { $ICONS } = useNuxtApp();
 const { setRouterParam } = useRouterParamStore();

@@ -170,9 +170,7 @@ const {
   signUp: firebaseSignUp,
   sendPasswordResetEmail,
 } = useFirebase();
-const { setDemoLogin, setUserLogin } = useLoginStore();
-const { setUser } = useUserStore();
-const { setPairId } = usePairStore();
+const { setDemoLogin, setUserLogin, setUserInfo } = useAuthStore();
 const config = useRuntimeConfig();
 const router = useRouter();
 const { getPairId } = useSupabase();
@@ -214,8 +212,7 @@ const userLogin = async () => {
   }
 
   setUserLogin();
-  setUser(apiRes.data);
-  setPairId(apiResPairId.data);
+  setUserInfo(apiRes.data, apiResPairId.data);
   goCalendarPage();
 };
 
@@ -227,8 +224,7 @@ const demoLogin = async () => {
   }
 
   setDemoLogin();
-  setUser(apiRes.data);
-  setPairId(DEMO_USER_INFO(config).ID);
+  setUserInfo(apiRes.data, DEMO_USER_INFO(config).ID);
   goCalendarPage();
 };
 

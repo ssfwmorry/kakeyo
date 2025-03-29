@@ -38,9 +38,9 @@
 import TimeUtility from '@/utils/time';
 import { RouterParamKey, type SummaryQueryParam } from '@/utils/types/page';
 
-const [loginStore, pairStore] = [useLoginStore(), usePairStore()];
-const { isExistPair, isPair } = storeToRefs(pairStore);
-const { isDemoLogin } = storeToRefs(loginStore);
+const [authStore, pairStore] = [useAuthStore(), usePairStore()];
+const { isPair } = storeToRefs(pairStore);
+const { isDemoLogin, isExistPair } = storeToRefs(authStore);
 const { routerParam } = useRouterParamStore();
 
 // 1 から始まるnumberのみ許容される

@@ -192,9 +192,8 @@ import TimeUtility from '@/utils/time';
 import { type ColorString, type Id, type YearMonthObj } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const [loginStore, userStore] = [useLoginStore(), useUserStore()];
-const { isDemoLogin } = storeToRefs(loginStore);
-const { userUid } = storeToRefs(userStore);
+const authStore = useAuthStore();
+const { isDemoLogin, userUid } = storeToRefs(authStore);
 const { getPairedRecordList, settleRecords: supabaseSettleRecords } = useSupabase();
 const { setToast } = useToastStore();
 

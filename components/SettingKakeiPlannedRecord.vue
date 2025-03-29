@@ -86,10 +86,9 @@ import { type Id } from '@/utils/types/common';
 import { RouterParamKey, type PageQueryParameter, type PlannedRecord } from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
-const { isDemoLogin } = storeToRefs(loginStore);
+const [authStore, pairStore] = [useAuthStore(), usePairStore()];
+const { isDemoLogin, userUid } = storeToRefs(authStore);
 const { isPair } = storeToRefs(pairStore);
-const { userUid } = storeToRefs(userStore);
 const { $ICONS } = useNuxtApp();
 const { setRouterParam } = useRouterParamStore();
 const router = useRouter();

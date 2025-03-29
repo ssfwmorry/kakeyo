@@ -3,8 +3,8 @@ import { PAGE } from '@/utils/constants';
 const OKPageList = [PAGE.INQUIRY, PAGE.LOGIN] as string[];
 
 export default defineNuxtRouteMiddleware((to, from) => {
-  const loginStore = useLoginStore();
-  const { isLoggedIn } = storeToRefs(loginStore);
+  const authStore = useAuthStore();
+  const { isLoggedIn } = storeToRefs(authStore);
 
   if (isLoggedIn.value) {
     // ログイン画面を拒否
