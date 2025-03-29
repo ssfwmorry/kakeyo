@@ -94,7 +94,7 @@
 
 <script setup lang="ts">
 import type { GetSummarizedRecordItem } from '@/api/supabase/record.interface';
-import { DUMMY, PAGE } from '@/utils/constants';
+import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { Crud, type ColorString, type YearMonthObj } from '@/utils/types/common';
@@ -189,12 +189,16 @@ const setPageList = async (param: RecordsQueryParam) => {
 };
 const updateList = async () => {
   enableLoading();
+  if (showSetting.value.id === null) {
+    alert('予期せぬ状態: updateList');
+    return;
+  }
   const tmpPayload = {
     isPay: showSetting.value.isPay,
     isType: showSetting.value.isType,
     isPair: showSetting.value.isPair,
     isIncludeInstead: showSetting.value.isIncludeInstead ?? false,
-    id: showSetting.value.id ?? DUMMY.NM,
+    id: showSetting.value.id,
     subtypeId: showSetting.value.subtypeId,
   };
   const payload = {

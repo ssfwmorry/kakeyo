@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { APP_NAME, DEMO_USER_INFO, DUMMY, PAGE } from '@/utils/constants';
+import { APP_NAME, DEMO_USER_INFO, PAGE } from '@/utils/constants';
 
 const ContentList = [
   {
@@ -199,11 +199,11 @@ const userLogin = async () => {
   const apiRes = await signInByUserLogin(payload);
   if (apiRes.error === 'EmailVerifiedError') {
     // TODO 本人確認メールで認証が終わっていないので再送する
-    errorMsg.value = apiRes.message ?? DUMMY.STR;
+    errorMsg.value = apiRes.message;
     return;
   }
   if (apiRes.error !== null || apiRes.data == null) {
-    errorMsg.value = apiRes.message ?? DUMMY.STR;
+    errorMsg.value = apiRes.message;
     return;
   }
 

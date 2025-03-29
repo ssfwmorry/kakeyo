@@ -1,5 +1,10 @@
 import { DEMO_USER_INFO } from '@/utils/constants';
-import type { DateString, DatetimeString, YearMonthObj } from '@/utils/types/common';
+import type {
+  DateString,
+  DatetimeString,
+  YearMonthObj,
+  YearMonthString,
+} from '@/utils/types/common';
 import type { Dayjs } from 'dayjs';
 import JapaneseHolidays from 'japanese-holidays';
 
@@ -72,8 +77,11 @@ const TimeUtility = {
     return dBResDatetime.substring(0, 10);
   },
   // ex.. PARAM: '2022-01-01', RET: '2022-01'
-  ConvertDateStrToYearMonth: (dateStr: DateString) => {
-    if (!dateStr) return null;
+  ConvertDateStrToYearMonth: (dateStr: DateString): YearMonthString => {
+    if (!dateStr) {
+      alert('予期せぬエラー: ConvertDateStrToYearMonth');
+      throw new Error('ConvertDateStrToYearMonth');
+    }
     return dateStr.substring(0, 7);
   },
   // ex.. PARAM: '2022-01-01', RET: 2022年1月

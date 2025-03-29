@@ -166,7 +166,7 @@ import type {
   GetTypeListItemSubTypeListItem,
   GetTypeListOutput,
 } from '@/api/supabase/type.interface';
-import { DUMMY } from '@/utils/constants';
+import type { Id } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -267,11 +267,15 @@ const upsertApi = async (inputMode: Mode) => {
   };
 
   if (inputMode === mode.TYPE) {
+    if (!validateUpsertTypeApi(typeDialog.value)) {
+      alert('予期せぬ状態: typeDialog');
+      return;
+    }
     const payload = {
       id: typeDialog.value.id,
-      name: typeDialog.value.name ?? DUMMY.STR,
+      name: typeDialog.value.name,
       isPay: isPay.value,
-      colorId: typeDialog.value.colorId ?? DUMMY.NM,
+      colorId: typeDialog.value.colorId,
     };
     const apiRes = await upsertType(auth, payload);
     if (apiRes.error !== null) {
@@ -280,10 +284,15 @@ const upsertApi = async (inputMode: Mode) => {
     }
     isCreated = !!typeDialog.value.id;
   } else if (inputMode === mode.SUB_TYPE) {
+    if (!validateUpsertSubTypeApi(subTypeDialog.value)) {
+      alert('予期せぬ状態: subTypeDialog');
+      return;
+    }
+
     const payload = {
       id: subTypeDialog.value.id,
-      typeId: subTypeDialog.value.parentId ?? DUMMY.NM,
-      name: subTypeDialog.value.name ?? DUMMY.STR,
+      typeId: subTypeDialog.value.parentId,
+      name: subTypeDialog.value.name,
     };
     const apiRes = await upsertSubType(auth, payload);
     if (apiRes.error !== null) {
@@ -301,18 +310,35 @@ const upsertApi = async (inputMode: Mode) => {
   setToast(isCreated ? '変更しました' : '登録しました');
   closeDialog();
 };
+const validateUpsertTypeApi = (
+  dialog: TypeDialog
+): dialog is TypeDialog & { name: string; colorId: Id } => {
+  return dialog.name != null && dialog.colorId !== null;
+};
+const validateUpsertSubTypeApi = (
+  dialog: SubTypeDialog
+): dialog is SubTypeDialog & { parentId: Id; name: string } => {
+  return dialog.parentId != null && dialog.name !== null;
+};
 const deleteApi = async (inputMode: Mode) => {
   enableLoading();
   let apiRes;
   if (inputMode === mode.TYPE) {
-    apiRes = await deleteType(
-      { isDemoLogin: isDemoLogin.value },
-      { id: typeDialog.value.id ?? DUMMY.NM }
-    );
+    if (typeDialog.value.id === null) {
+      alert('予期せぬ状態: typeDialog');
+      return;
+    }
+
+    apiRes = await deleteType({ isDemoLogin: isDemoLogin.value }, { id: typeDialog.value.id });
   } else if (inputMode === mode.SUB_TYPE) {
+    if (subTypeDialog.value.id === null) {
+      alert('予期せぬ状態: subTypeDialog');
+      return;
+    }
+
     apiRes = await deleteSubType(
       { isDemoLogin: isDemoLogin.value },
-      { id: subTypeDialog.value.id ?? DUMMY.NM }
+      { id: subTypeDialog.value.id }
     );
   } else {
     alert('想定外');

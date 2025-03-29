@@ -61,7 +61,7 @@ export const useFirebase = () => {
             message: '本人確認メール記載の URL にて認証を行ってください',
             error: 'EmailVerifiedError',
           };
-        return { data: Auth.currentUser, message: null, error: null };
+        return { data: Auth.currentUser, message: '', error: null };
       })
       .catch((err) => {
         if (err.code === 'auth/invalid-email') {

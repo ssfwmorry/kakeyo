@@ -281,7 +281,7 @@
 <script setup lang="ts">
 import type { GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { GetTypeListOutput } from '@/api/supabase/type.interface';
-import { DUMMY, MAX_PRICE, PAGE } from '@/utils/constants';
+import { MAX_PRICE, PAGE } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
 import { Crud, type DateString, type Id, type PickedDate } from '@/utils/types/common';
 import type { DayClassification } from '@/utils/types/model';
@@ -436,7 +436,7 @@ const initSelectedDayId = () => {
 };
 const setPageRecord = (record: Record_, c: Crud) => {
   // 新規作成の場合
-  if (c === Crud.CREATE) {
+  if (record.id === null || c === Crud.CREATE) {
     initSelectedMethodId();
     date.value = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
     return;
@@ -482,6 +482,10 @@ const setPagePlannedRecord = async (plannedRecord: PlannedRecord, c: Crud) => {
   selectedSubTypeId.value = plannedRecord.subTypeId;
 };
 const upsertRecord = async () => {
+  if (selectedMethodId.value === null || selectedTypeId.value === null) {
+    alert('予期せぬ状態: upsertRecord');
+    return;
+  }
   if (!validateRecordAndShowErrorMsg()) return;
   loading.value = true;
 
@@ -489,9 +493,9 @@ const upsertRecord = async () => {
     id: id.value,
     datetime: TimeUtility.ConvertDateStrToDatetime(date.value),
     isPay: isPay.value,
-    methodId: selectedMethodId.value ?? DUMMY.NM,
+    methodId: selectedMethodId.value,
     isInstead: isInstead.value,
-    typeId: selectedTypeId.value ?? DUMMY.NM,
+    typeId: selectedTypeId.value,
     subTypeId: selectedSubTypeId.value,
     price: price.value,
     memo: memo.value,
@@ -501,7 +505,7 @@ const upsertRecord = async () => {
       isDemoLogin: isDemoLogin.value,
       userUid: userUid.value,
       isPair: isPair.value,
-      pairId: pairId.value ?? DUMMY.NM,
+      pairId: pairId.value,
     },
     payload
   );
@@ -521,15 +525,23 @@ const upsertRecord = async () => {
   loading.value = false;
 };
 const upsertPlannedRecord = async () => {
+  if (
+    selectedMethodId.value === null ||
+    selectedTypeId.value === null ||
+    selectedDayId.value === null
+  ) {
+    alert('予期せぬ状態: upsertPlannedRecord');
+    return;
+  }
   if (!validateRecordAndShowErrorMsg()) return;
 
   const payload = {
     id: id.value,
-    dayClassificationId: selectedDayId.value ?? DUMMY.NM,
+    dayClassificationId: selectedDayId.value,
     isPay: isPay.value,
-    methodId: selectedMethodId.value ?? DUMMY.NM,
+    methodId: selectedMethodId.value,
     isInstead: isInstead.value,
-    typeId: selectedTypeId.value ?? DUMMY.NM,
+    typeId: selectedTypeId.value,
     subTypeId: selectedSubTypeId.value,
     price: price.value,
     memo: memo.value,
@@ -539,7 +551,7 @@ const upsertPlannedRecord = async () => {
       isDemoLogin: isDemoLogin.value,
       userUid: userUid.value,
       isPair: isPair.value,
-      pairId: pairId.value ?? DUMMY.NM,
+      pairId: pairId.value,
     },
     payload
   );
@@ -552,10 +564,6 @@ const upsertPlannedRecord = async () => {
   router.push({ name: PAGE.SETTING });
 };
 const validateRecordAndShowErrorMsg = () => {
-  // ボタンが非活性なので以下は起こらない想定
-  if (!selectedMethodId.value || !selectedType.value) {
-    return false;
-  }
   if (
     !!receivedRecordDate.value &&
     !TimeUtility.IsSameYearMonth(receivedRecordDate.value, date.value)
@@ -577,7 +585,12 @@ const deleteRecord = async () => {
   router.push({ name: PAGE.CALENDAR, query });
 };
 const deletePlannedRecord = async () => {
-  const payload = { id: id.value ?? DUMMY.NM };
+  if (id.value === null) {
+    alert('予期せぬ状態: upsertPlannedRecord');
+    return;
+  }
+
+  const payload = { id: id.value };
   const apiRes = await supabaseDeletePlannedRecord({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
     // TODO 紐づく record が存在する時、全てを null に更新してからplanned_recordを削除する

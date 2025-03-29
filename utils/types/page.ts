@@ -1,4 +1,4 @@
-import type { ColorString, Crud, DateString, YearMonthObj } from './common';
+import type { ColorString, Crud, DateString, DatetimeString, YearMonthObj } from './common';
 import type {
   Plan as PlanModel,
   PlannedRecord as PlannedRecordModel,
@@ -55,12 +55,20 @@ export type PlannedRecord = Omit<PlannedRecordModel, 'userId' | 'pairId'> & {
   pairUserName: string | null;
 };
 
-export type Plan = Omit<PlanModel, 'userId' | 'pairId'> & {
-  isPair: boolean;
-  planTypeName: string;
-  planTypeColorClassificationName: string;
-};
+export type Plan =
+  /** Create */
+  | ({ id: null; isPair: boolean } & Pick<PlanModel, 'startDate' | 'endDate'>)
+  /** Select/ Update / Delete */
+  | (Omit<PlanModel, 'userId' | 'pairId'> & {
+      isPair: boolean;
+      planTypeName: string;
+      planTypeColorClassificationName: string;
+    });
 
-export type Record_ = Omit<RecordModel, 'userId' | 'pairId' | 'isSettled'> & {
-  isPair: boolean;
-};
+export type Record_ =
+  /** Create */
+  | { id: null; datetime: DatetimeString }
+  /** Select / Update / Delete */
+  | (Omit<RecordModel, 'userId' | 'pairId' | 'isSettled'> & {
+      isPair: boolean;
+    });

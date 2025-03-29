@@ -124,7 +124,7 @@
 
 <script setup lang="ts">
 import type { GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
-import { DUMMY, PAGE } from '@/utils/constants';
+import { PAGE } from '@/utils/constants';
 import { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { Crud, type Id } from '@/utils/types/common';
@@ -174,7 +174,7 @@ const selectedDateOrPeriod = computed(() => {
 });
 const setPagePlan = (plan: Plan, c: Crud) => {
   // 新規作成の場合
-  if (c === Crud.CREATE) {
+  if (plan.id == null || c === Crud.CREATE) {
     const list = planTypeList.value[isPair.value ? 'pair' : 'self'];
     if (list.length > 0) {
       selectedPlanTypeId.value = list[0].planTypeId;
@@ -200,6 +200,11 @@ const setPagePlan = (plan: Plan, c: Crud) => {
 };
 const upsertPlan = async () => {
   loading.value = true;
+  // ボタンが非活性なので以下は起こらない想定
+  if (name.value === '' || selectedPlanTypeId.value === null) {
+    alert('予期せぬ状態: upsertPlan');
+    return;
+  }
   if (!validatePlanAndShowErrorMsg()) return;
 
   const period = getPlanPeriod();
@@ -207,7 +212,7 @@ const upsertPlan = async () => {
     id: id.value,
     startDate: period.start,
     endDate: period.end,
-    planTypeId: selectedPlanTypeId.value ?? DUMMY.NM,
+    planTypeId: selectedPlanTypeId.value,
     name: name.value,
     memo: memo.value,
   };
@@ -216,7 +221,7 @@ const upsertPlan = async () => {
       isDemoLogin: isDemoLogin.value,
       userUid: userUid.value,
       isPair: isPair.value,
-      pairId: pairId.value ?? DUMMY.NM,
+      pairId: pairId.value,
     },
     payload
   );
@@ -235,10 +240,6 @@ const upsertPlan = async () => {
   loading.value = false;
 };
 const validatePlanAndShowErrorMsg = () => {
-  // ボタンが非活性なので以下は起こらない想定
-  if (name.value === '') return false;
-  if (!selectedPlanTypeId.value) return false;
-
   // 期間の確認
   if (isPeriod.value) {
     if (dates.value.length == 0) {

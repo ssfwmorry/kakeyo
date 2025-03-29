@@ -24,16 +24,6 @@ const DEMO_USER_INFO = (config: RuntimeConfig) => {
   };
 };
 
-const DUMMY = {
-  BL: false, // boolean
-  NM: -1, //number
-  STR: 'dummy',
-  DT: new Date(), // date
-  DT_STR: 'YYYY-MM-DD', // dateString
-  DTT_STR: 'YYYY-MM-DD HH:MM:SS', // datatimeString
-  YM_STR: 'YYYY-MM', // yearMonthString
-} as const;
-
 const PAGE = {
   BANK: 'bank',
   CALENDAR: 'calendar',
@@ -89,7 +79,6 @@ export {
   COLOR_LIST,
   DEMO_DATA,
   DEMO_USER_INFO,
-  DUMMY,
   EMAIL_WHITE_LIST,
   MAX_PRICE,
   PAGE,

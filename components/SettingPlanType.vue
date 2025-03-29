@@ -78,7 +78,7 @@
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 import type { GetPlanTypeListItem, GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
-import { DUMMY } from '@/utils/constants';
+import type { Id } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -142,6 +142,10 @@ const closeDialog = () => {
 };
 const upsertApi = async () => {
   enableLoading();
+  if (!validateUpsertApi(planTypeDialog.value)) {
+    alert('予期せぬ状態: typeDialog');
+    return;
+  }
   const auth = {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
@@ -150,8 +154,8 @@ const upsertApi = async () => {
   };
   const payload = {
     id: planTypeDialog.value.id,
-    name: planTypeDialog.value.name ?? DUMMY.STR,
-    colorId: planTypeDialog.value.colorId ?? DUMMY.NM,
+    name: planTypeDialog.value.name,
+    colorId: planTypeDialog.value.colorId,
   };
   const apiRes = await upsertPlanType(auth, payload);
   if (apiRes.error !== null) {
@@ -164,9 +168,19 @@ const upsertApi = async () => {
   setToast(planTypeDialog.value.id ? '変更しました' : '登録しました');
   closeDialog();
 };
+const validateUpsertApi = (
+  dialog: PlanTypeDialog
+): dialog is PlanTypeDialog & { name: string; colorId: Id } => {
+  return dialog.name != null && dialog.colorId !== null;
+};
+
 const deleteApi = async () => {
   enableLoading();
-  const payload = { id: planTypeDialog.value.id ?? DUMMY.NM };
+  if (planTypeDialog.value.id === null) {
+    alert('予期せぬ状態: planTypeDialog');
+    return;
+  }
+  const payload = { id: planTypeDialog.value.id };
   const apiRes = await deletePlanType({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
     if (apiRes.error.code === '23503') {

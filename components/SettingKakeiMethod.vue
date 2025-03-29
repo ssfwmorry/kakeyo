@@ -98,7 +98,7 @@
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 import type { GetMethodListItem, GetMethodListOutput } from '@/api/supabase/method.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
-import { DUMMY } from '@/utils/constants';
+import type { Id } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -163,6 +163,11 @@ const closeDialog = () => {
 };
 const upsertApi = async () => {
   enableLoading();
+  if (!validateUpsertApi(methodDialog.value)) {
+    alert('予期せぬ状態: methodDialog');
+    return;
+  }
+
   const auth = {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
@@ -171,9 +176,9 @@ const upsertApi = async () => {
   };
   const payload = {
     id: methodDialog.value.id,
-    name: methodDialog.value.name ?? DUMMY.STR,
+    name: methodDialog.value.name,
     isPay: isPay.value,
-    colorId: methodDialog.value.colorId ?? DUMMY.NM,
+    colorId: methodDialog.value.colorId,
   };
   const apiRes = await upsertMethod(auth, payload);
   if (apiRes.error !== null) {
@@ -186,9 +191,19 @@ const upsertApi = async () => {
   setToast(methodDialog.value.id ? '変更しました' : '登録しました');
   methodDialog.value.isShow = false;
 };
+const validateUpsertApi = (
+  dialog: MethodDialog
+): dialog is MethodDialog & { name: string; colorId: Id } => {
+  return dialog.name != null && dialog.colorId !== null;
+};
 const deleteApi = async () => {
   enableLoading();
-  const payload = { id: methodDialog.value.id ?? DUMMY.NM };
+  if (methodDialog.value.id === null) {
+    alert('予期せぬ状態: methodDialog');
+    return;
+  }
+
+  const payload = { id: methodDialog.value.id };
   const apiRes = await deleteMethod({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
     if (apiRes.error.code === '23503') {

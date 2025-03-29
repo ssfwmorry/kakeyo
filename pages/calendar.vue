@@ -177,7 +177,7 @@
 <script setup lang="ts">
 import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
 import type { GetRecordListItem } from '@/api/supabase/record.interface';
-import { DUMMY, PAGE } from '@/utils/constants';
+import { PAGE } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { Crud, type DateString, type Id, type ShareType } from '@/utils/types/common';
@@ -379,7 +379,7 @@ const updateRange = async () => {
 
   fullCalendar.value.getApi().gotoDate(focus.value);
   const payload1 = {
-    yearMonth: TimeUtility.ConvertDateStrToYearMonth(focus.value) ?? DUMMY.YM_STR,
+    yearMonth: TimeUtility.ConvertDateStrToYearMonth(focus.value),
   };
   const focusObj = TimeUtility.ConvertDateStrToYearMonthObj(focus.value);
   const prev = TimeUtility.PrevMonthInYearMonthObj(focusObj);
@@ -582,17 +582,8 @@ const showPlan = (plan: EventGetPlan) => {
 const goRecordCreatePage = () => {
   const tmpDate = selectedDate.value ?? TimeUtility.GetNowDate(isDemoLogin.value);
   const record: Record_ = {
-    id: DUMMY.NM,
+    id: null,
     datetime: TimeUtility.ConvertDateStrToDatetime(tmpDate),
-    isPair: DUMMY.BL,
-    isPay: DUMMY.BL,
-    isInstead: DUMMY.BL,
-    memo: null,
-    methodId: DUMMY.NM,
-    plannedRecordId: null,
-    price: DUMMY.NM,
-    typeId: DUMMY.NM,
-    subTypeId: null,
   };
   setRouterParam(routerParamKey.RECORD, record);
   const query: RouterQueryCalendarToNote = {
@@ -604,15 +595,10 @@ const goRecordCreatePage = () => {
 const goPlanCreatePage = () => {
   const tmpDate = selectedDate.value ?? TimeUtility.GetNowDate(isDemoLogin.value);
   const plan: Plan = {
-    id: DUMMY.NM,
+    id: null,
     startDate: tmpDate,
     endDate: tmpDate,
-    name: DUMMY.STR,
-    memo: null,
     isPair: isPair.value,
-    planTypeId: DUMMY.NM,
-    planTypeName: DUMMY.STR,
-    planTypeColorClassificationName: DUMMY.STR,
   };
   const query: RouterQueryCalendarToPlan = {
     crud: Crud.CREATE,
@@ -671,7 +657,10 @@ const addMemo = async () => {
     return;
   }
   enableLoading();
-
+  if (isPairMemo.value === true && pairId.value === null) {
+    alert('予期せぬ状態: addMemo');
+    return;
+  }
   const payload = {
     memo: memoText.value,
     isPair: isPairMemo.value,
@@ -680,7 +669,7 @@ const addMemo = async () => {
     {
       isDemoLogin: isDemoLogin.value,
       userUid: userUid.value,
-      pairId: pairId.value ?? DUMMY.NM,
+      pairId: pairId.value,
     },
     payload
   );
@@ -697,13 +686,9 @@ const resetMemoInput = () => {
   isShowMemoInput.value = false;
   memoText.value = null;
 };
-const deleteMemo = async (id: Id | null) => {
+const deleteMemo = async (id: Id) => {
   enableLoading();
-
-  const payload = {
-    id: id ?? DUMMY.NM,
-  };
-  const apiRes = await supabaseDeleteMemo({ isDemoLogin: isDemoLogin.value }, payload);
+  const apiRes = await supabaseDeleteMemo({ isDemoLogin: isDemoLogin.value }, { id });
 
   if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
