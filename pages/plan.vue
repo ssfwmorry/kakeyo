@@ -144,15 +144,15 @@ const { routerParam } = useRouterParamStore();
 const { setToast } = useToastStore();
 
 const id = ref<Id | null>(null);
-const name = ref<string>('');
-const isPeriod = ref<boolean>(false);
-const isOpenDatePicker = ref<boolean>(false);
+const name = ref('');
+const isPeriod = ref(false);
+const isOpenDatePicker = ref(false);
 const date = ref<Dayjs | null>(null);
 const dates = ref<Dayjs[]>([]);
 const selectedPlanTypeId = ref<number | null>(null);
 const memo = ref<string | null>(null);
 const planTypeList = ref<GetPlanTypeListOutput['data']>({ self: [], pair: [] });
-const loading = ref<boolean>(false);
+const loading = ref(false);
 
 const selectedDateOrPeriod = computed(() => {
   if (isPeriod.value) {

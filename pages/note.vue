@@ -248,12 +248,12 @@ const {
 } = useSupabase();
 const { setToast } = useToastStore();
 
-const isPlannedRecord = ref<boolean>(false);
-const isEndInit = ref<boolean>(false);
+const isPlannedRecord = ref(false);
+const isEndInit = ref(false);
 
-const isShowDatePicker = ref<boolean>(false);
+const isShowDatePicker = ref(false);
 const id = ref<Id | null>(null);
-const isPay = ref<boolean>(true);
+const isPay = ref(true);
 const date = ref<DateString>(TimeUtility.GetNowDate(isDemoLogin.value));
 
 const receivedRecordDate = ref<string | null>(null);
@@ -263,8 +263,8 @@ const selectedSubTypeId = ref<Id | null>(null);
 const memo = ref<string | null>(null);
 const selectedMethodId = ref<Id | null>(null);
 const isInstead = ref<boolean | null>(true);
-const price = ref<number>(0);
-const loading = ref<boolean>(false);
+const price = ref(0);
+const loading = ref(false);
 const dayList = ref<DayClassification[]>([]);
 const typeList = ref<GetTypeListOutput['data']>({
   income: { self: [], pair: [] },

@@ -229,8 +229,8 @@ type Dialog = {
 const focus = ref<YearMonthObj>(TimeUtility.GetNowYearMonthObj(isDemoLogin.value));
 const step = ref<StepStatus>(stepStatus.READY);
 const selectedRateList = ref<RateList>([]);
-const isExistUnsettledRecord = ref<boolean>(false);
-const coupleSum = ref<number>(0);
+const isExistUnsettledRecord = ref(false);
+const coupleSum = ref(0);
 const recordList = ref<RecordList>({ ME: [], PARTNER: [], COUPLE: [] });
 const dialog = ref<Dialog>({
   isShow: false,

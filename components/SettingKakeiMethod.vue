@@ -114,8 +114,8 @@ type Props = {
 const props = defineProps<Props>();
 
 type MethodDialog = TypeDialog;
-const isPay = ref<boolean>(true);
-const isEdit = ref<boolean>(true);
+const isPay = ref(true);
+const isEdit = ref(true);
 const methodList = ref<GetMethodListOutput['data']>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },

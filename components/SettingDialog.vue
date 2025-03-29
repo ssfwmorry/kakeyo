@@ -73,7 +73,7 @@ type Props = {
 const props = defineProps<Props>();
 const emits = defineEmits();
 
-const loading = ref<boolean>(false);
+const loading = ref(false);
 
 const closeDialog = () => {
   emits('closeDialog');

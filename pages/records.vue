@@ -125,10 +125,10 @@ type ShowSetting = {
 };
 
 const focus = ref<YearMonthObj>(TimeUtility.GetNowYearMonthObj(isDemoLogin.value));
-const name = ref<string>('');
+const name = ref('');
 const color = ref<ColorString>('black');
 const pairUserName = ref<string | null>(null);
-const sum = ref<string>('');
+const sum = ref('');
 const showSetting = ref<ShowSetting>({
   isPay: true,
   isMonth: true,

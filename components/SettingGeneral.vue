@@ -42,8 +42,8 @@ const { signOut, deleteUser: firebaseDeleteUser } = useFirebase();
 const router = useRouter();
 const { setToast } = useToastStore();
 
-const isShowReallyDelete = ref<boolean>(false);
-const isDeletable = ref<boolean>(false);
+const isShowReallyDelete = ref(false);
+const isDeletable = ref(false);
 
 const deleteUser = async () => {
   enableLoading();

@@ -201,8 +201,8 @@ export type SubTypeDialog = {
   parentId: Id | null;
 };
 
-const isPay = ref<boolean>(true);
-const isEdit = ref<boolean>(true);
+const isPay = ref(true);
+const isEdit = ref(true);
 const typeList = ref<GetTypeListOutput['data']>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },

@@ -2,7 +2,7 @@ export const usePairStore = defineStore(
   'pairStore',
   () => {
     // state
-    const state = ref<boolean>(false);
+    const state = ref(false);
 
     // getters
     const isPair = computed(() => state.value);
