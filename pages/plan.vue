@@ -128,7 +128,7 @@ import { PAGE } from '@/utils/constants';
 import { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import type { Id } from '@/utils/types/common';
-import { routerParamKey, type Plan, type RouterQueryPlanToCalendar } from '@/utils/types/page';
+import { RouterParamKey, type Plan, type RouterQueryPlanToCalendar } from '@/utils/types/page';
 import dayjs, { type Dayjs } from 'dayjs';
 
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -309,7 +309,7 @@ watch(isPair, (newValue, oldValue) => {
   }
   planTypeList.value = apiRes.data;
 
-  const plan = routerParam<Plan>(routerParamKey.PLAN);
+  const plan = routerParam<Plan>(RouterParamKey.PLAN);
   if (plan == null) throw new Error('created');
   setPagePlan(plan);
 })();

@@ -1,3 +1,4 @@
+import type { LocationQuery } from 'vue-router';
 import type { ColorString, DateString, DatetimeString, Id, YearMonthObj } from './common';
 import type {
   Plan as PlanModel,
@@ -5,14 +6,14 @@ import type {
   Record_ as RecordModel,
 } from './model';
 
-export const routerParamKey = {
+export const RouterParamKey = {
   PLANNED_RECORD: 'PLANNED_RECORD',
   RECORD: 'RECORD',
   PLAN: 'PLAN',
   RECORDS_QUERY_PARAM: 'RECORDS_QUERY_PARAM',
   SUMMARY_QUERY_PARAM: 'SUMMARY_QUERY_PARAM',
 } as const;
-export type RouterParamKey = (typeof routerParamKey)[keyof typeof routerParamKey];
+export type RouterParamKey = (typeof RouterParamKey)[keyof typeof RouterParamKey];
 
 export type SummaryQueryParam = {
   isPay: boolean;
@@ -35,11 +36,9 @@ export type RecordsQueryParam = {
   pairUserName: string | null;
 };
 
-export type RouterQueryCalendarToNote = {
-  routerParamKey: (typeof routerParamKey)[keyof typeof routerParamKey];
+export type PageQueryParameter = LocationQuery & {
+  key: RouterParamKey;
 };
-export type RouterQueryRecordsToNote = RouterQueryCalendarToNote;
-export type RouterQuerySettingToNote = RouterQueryCalendarToNote;
 export type RouterQueryNoteToCalendar = {
   focus: DateString;
 };

@@ -182,10 +182,10 @@ import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type DateString, type Id, type ShareType } from '@/utils/types/common';
 import {
-  routerParamKey,
+  RouterParamKey,
+  type PageQueryParameter,
   type Plan,
   type Record_,
-  type RouterQueryCalendarToNote,
   type RouterQueryNoteToCalendar,
   type RouterQueryPlanToCalendar,
 } from '@/utils/types/page';
@@ -584,10 +584,8 @@ const goRecordCreatePage = () => {
     id: null,
     datetime: TimeUtility.ConvertDateStrToDatetime(tmpDate),
   };
-  setRouterParam(routerParamKey.RECORD, record);
-  const query: RouterQueryCalendarToNote = {
-    routerParamKey: routerParamKey.RECORD,
-  };
+  setRouterParam(RouterParamKey.RECORD, record);
+  const query: PageQueryParameter = { key: RouterParamKey.RECORD };
   router.push({ name: PAGE.NOTE, query });
 };
 const goPlanCreatePage = () => {
@@ -598,16 +596,14 @@ const goPlanCreatePage = () => {
     endDate: tmpDate,
     isPair: isPair.value,
   };
-  setRouterParam(routerParamKey.PLAN, plan);
+  setRouterParam(RouterParamKey.PLAN, plan);
   router.push({ name: PAGE.PLAN });
 };
 const goRecordEditPage = (record: GetRecordListItem) => {
   setIsPair(record.isPair);
 
-  setRouterParam(routerParamKey.RECORD, record);
-  const query: RouterQueryCalendarToNote = {
-    routerParamKey: routerParamKey.RECORD,
-  };
+  setRouterParam(RouterParamKey.RECORD, record);
+  const query: PageQueryParameter = { key: RouterParamKey.RECORD };
   router.push({ name: PAGE.NOTE, query });
 };
 const goPlanEditPage = () => {
@@ -626,7 +622,7 @@ const goPlanEditPage = () => {
     planTypeColorClassificationName: selectedPlan.value.backgroundColor,
   };
 
-  setRouterParam(routerParamKey.PLAN, plan);
+  setRouterParam(RouterParamKey.PLAN, plan);
   router.push({ name: PAGE.PLAN });
 };
 const getMemoList = async () => {

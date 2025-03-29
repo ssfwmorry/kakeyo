@@ -99,9 +99,9 @@ import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import type { ColorString, Id, YearMonthObj } from '@/utils/types/common';
 import {
-  routerParamKey,
+  RouterParamKey,
+  type PageQueryParameter,
   type RecordsQueryParam,
-  type RouterQueryCalendarToNote,
   type SummaryQueryParam,
 } from '@/utils/types/page';
 
@@ -231,22 +231,20 @@ const goSummaryPage = () => {
     isMonth: showSetting.value.isMonth,
     focus: focus.value,
   };
-  setRouterParam(routerParamKey.SUMMARY_QUERY_PARAM, summaryQueryParam);
+  setRouterParam(RouterParamKey.SUMMARY_QUERY_PARAM, summaryQueryParam);
   router.push({ name: PAGE.SUMMARY });
 };
 const goRecordEditPage = (record: GetSummarizedRecordItem) => {
   setIsPair(record.isPair);
 
-  setRouterParam(routerParamKey.RECORD, record);
-  const query: RouterQueryCalendarToNote = {
-    routerParamKey: routerParamKey.RECORD,
-  };
+  setRouterParam(RouterParamKey.RECORD, record);
+  const query: PageQueryParameter = { key: RouterParamKey.RECORD };
   router.push({ name: PAGE.NOTE, query });
 };
 
 // created
 (async () => {
-  const recordsQuery = routerParam<RecordsQueryParam>(routerParamKey.RECORDS_QUERY_PARAM);
+  const recordsQuery = routerParam<RecordsQueryParam>(RouterParamKey.RECORDS_QUERY_PARAM);
   if (recordsQuery == null) {
     alert('不正な画面遷移です');
     router.push({ name: PAGE.SUMMARY });

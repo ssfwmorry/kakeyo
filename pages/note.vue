@@ -286,10 +286,10 @@ import TimeUtility from '@/utils/time';
 import { type DateString, type Id, type PickedDate } from '@/utils/types/common';
 import type { DayClassification } from '@/utils/types/model';
 import {
-  routerParamKey,
+  RouterParamKey,
+  type PageQueryParameter,
   type PlannedRecord,
   type Record_,
-  type RouterQueryCalendarToNote,
   type RouterQueryNoteToCalendar,
 } from '@/utils/types/page';
 
@@ -641,13 +641,13 @@ watch(isPair, (newValue, oldValue) => {
   typeList.value = apiResType.data;
   methodList.value = apiResMethod.data;
 
-  const routerQuery = route.query as RouterQueryCalendarToNote;
-  if (routerQuery.routerParamKey === routerParamKey.PLANNED_RECORD) {
-    const plannedRecord = routerParam<PlannedRecord>(routerParamKey.PLANNED_RECORD);
+  const routerQuery = route.query as PageQueryParameter;
+  if (routerQuery.key === RouterParamKey.PLANNED_RECORD) {
+    const plannedRecord = routerParam<PlannedRecord>(RouterParamKey.PLANNED_RECORD);
     if (plannedRecord !== null) await setPagePlannedRecord(plannedRecord);
     else initSelectedMethodId();
-  } else if (routerQuery.routerParamKey === routerParamKey.RECORD) {
-    const record = routerParam<Record_>(routerParamKey.RECORD);
+  } else if (routerQuery.key === RouterParamKey.RECORD) {
+    const record = routerParam<Record_>(RouterParamKey.RECORD);
     if (record !== null) setPageRecord(record);
     else initSelectedMethodId();
   } else {

@@ -166,7 +166,7 @@ import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type Id, type YearMonthObj } from '@/utils/types/common';
-import { routerParamKey, type RecordsQueryParam, type SummaryQueryParam } from '@/utils/types/page';
+import { RouterParamKey, type RecordsQueryParam, type SummaryQueryParam } from '@/utils/types/page';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import { Pie } from 'vue-chartjs';
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -356,7 +356,7 @@ const goRecordsShowPage = (typeOrMethod: TypeOrMethod, subType: TypeListSubs | n
     color: typeOrMethod.color,
     pairUserName: typeOrMethod.pairUserName,
   };
-  setRouterParam(routerParamKey.RECORDS_QUERY_PARAM, recordsQuery);
+  setRouterParam(RouterParamKey.RECORDS_QUERY_PARAM, recordsQuery);
   router.push({ name: PAGE.RECORDS });
 };
 

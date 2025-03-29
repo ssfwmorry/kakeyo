@@ -83,11 +83,7 @@ import type {
 import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import { type Id } from '@/utils/types/common';
-import {
-  routerParamKey,
-  type PlannedRecord,
-  type RouterQuerySettingToNote,
-} from '@/utils/types/page';
+import { RouterParamKey, type PageQueryParameter, type PlannedRecord } from '@/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [loginStore, pairStore, userStore] = [useLoginStore(), usePairStore(), useUserStore()];
@@ -118,17 +114,13 @@ const goPlannedRecordEditPage = (plannedRecord: GetPlannedRecordListItem) => {
     ...plannedRecord,
     id: plannedRecord.plannedRecordId,
   };
-  setRouterParam(routerParamKey.PLANNED_RECORD, tmpPlannedRecord);
-  const query: RouterQuerySettingToNote = {
-    routerParamKey: routerParamKey.PLANNED_RECORD,
-  };
+  setRouterParam(RouterParamKey.PLANNED_RECORD, tmpPlannedRecord);
+  const query: PageQueryParameter = { key: RouterParamKey.PLANNED_RECORD };
   router.push({ name: PAGE.NOTE, query });
 };
 const goPlannedRecordCreatePage = () => {
-  setRouterParam(routerParamKey.PLANNED_RECORD, null);
-  const query: RouterQuerySettingToNote = {
-    routerParamKey: routerParamKey.PLANNED_RECORD,
-  };
+  setRouterParam(RouterParamKey.PLANNED_RECORD, null);
+  const query: PageQueryParameter = { key: RouterParamKey.PLANNED_RECORD };
   router.push({ name: PAGE.NOTE, query });
 };
 const swapSort = async (prevId: Id, nextId: Id) => {
