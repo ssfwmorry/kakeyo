@@ -167,7 +167,7 @@ const upsertApi = async () => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
     isPair: isPair.value,
-    pairId: pairId.value ?? DUMMY.NM,
+    pairId: pairId.value,
   };
   const payload = {
     id: methodDialog.value.id,

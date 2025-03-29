@@ -9,7 +9,7 @@ export type SupabaseApiAuthGet = {
 } & SupabaseApiAuth;
 export type SupabaseApiAuthUpsert = {
   isPair: boolean;
-  pairId: number;
+  pairId: number | null;
 } & SupabaseApiAuthGet;
 
 export interface UpsertOutput {

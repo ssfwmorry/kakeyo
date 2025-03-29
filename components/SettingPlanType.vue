@@ -142,21 +142,18 @@ const closeDialog = () => {
 };
 const upsertApi = async () => {
   enableLoading();
+  const auth = {
+    isDemoLogin: isDemoLogin.value,
+    userUid: userUid.value,
+    isPair: isPair.value,
+    pairId: pairId.value,
+  };
   const payload = {
     id: planTypeDialog.value.id,
     name: planTypeDialog.value.name ?? DUMMY.STR,
     colorId: planTypeDialog.value.colorId ?? DUMMY.NM,
   };
-  const apiRes = await upsertPlanType(
-    {
-      isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value,
-      isPair: isPair.value,
-      pairId: pairId.value ?? DUMMY.NM,
-    },
-
-    payload
-  );
+  const apiRes = await upsertPlanType(auth, payload);
   if (apiRes.error !== null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
     return;

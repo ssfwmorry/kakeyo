@@ -263,7 +263,7 @@ const upsertApi = async (inputMode: Mode) => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
     isPair: isPair.value,
-    pairId: pairId.value ?? DUMMY.NM,
+    pairId: pairId.value,
   };
 
   if (inputMode === mode.TYPE) {
