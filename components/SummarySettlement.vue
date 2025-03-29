@@ -182,7 +182,6 @@
 import type { GetPairedRecordItem } from '@/api/supabase/record.interface';
 import type { DialogInfo } from '@/components/SettlementSelectRateDialog.vue';
 import {
-  DUMMY,
   RATE_BACKGROUND_COLOR_LIST,
   RATE_COLOR_LIST,
   RATE_LABEL_LIST,
@@ -286,7 +285,7 @@ const updateChart = async () => {
     yearMonth: TimeUtility.ConvertYearMonthObjToYearMonth(focus.value),
   };
   const apiRes = await getPairedRecordList(
-    { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
+    { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
     payload
   );
   if (apiRes.error !== null) {

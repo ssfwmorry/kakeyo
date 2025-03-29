@@ -80,7 +80,7 @@ import type {
   GetPlannedRecordListItem,
   GetPlannedRecordListOutput,
 } from '@/api/supabase/plannedRecord.interface';
-import { DUMMY, PAGE } from '@/utils/constants';
+import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import { Crud } from '@/utils/types/common';
 import {
@@ -105,7 +105,7 @@ const plannedRecordList = ref<GetPlannedRecordListOutput['data']>({ self: [], pa
 const updateShowData = async () => {
   const apiRes = await getPlannedRecordList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? DUMMY.STR,
+    userUid: userUid.value,
   });
   if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);

@@ -388,7 +388,7 @@ const updateRange = async () => {
     start: prev.year + '-' + prev.month + '-21' + ' 00:00:00', // 全月の21日
     end: next.year + '-' + next.month + '-09' + ' 23:59:59', // 翌月の9日
   };
-  const authParam = { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR };
+  const authParam = { isDemoLogin: isDemoLogin.value, userUid: userUid.value };
 
   // plannedRecord から、足りない record を登録
   const apiResPostRecords = await postRecords(authParam, payload1);
@@ -655,7 +655,7 @@ const goPlanEditPage = () => {
 const getMemoList = async () => {
   const apiRes = await supabaseGetMemoList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? DUMMY.STR,
+    userUid: userUid.value,
     pairId: pairId.value,
   });
   if (apiRes.error !== null) {
@@ -679,7 +679,7 @@ const addMemo = async () => {
   const apiRes = await supabaseInsertMemo(
     {
       isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value ?? DUMMY.STR,
+      userUid: userUid.value,
       pairId: pairId.value ?? DUMMY.NM,
     },
     payload

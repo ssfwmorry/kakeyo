@@ -499,7 +499,7 @@ const upsertRecord = async () => {
   const apiRes = await supabaseUpsertRecord(
     {
       isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value ?? DUMMY.STR,
+      userUid: userUid.value,
       isPair: isPair.value,
       pairId: pairId.value ?? DUMMY.NM,
     },
@@ -537,7 +537,7 @@ const upsertPlannedRecord = async () => {
   const apiRes = await supabaseUpsertPlannedRecord(
     {
       isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value ?? DUMMY.STR,
+      userUid: userUid.value,
       isPair: isPair.value,
       pairId: pairId.value ?? DUMMY.NM,
     },
@@ -611,7 +611,7 @@ watch(isPair, (newValue, oldValue) => {
 
   const apiResType = await getTypeList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? DUMMY.STR,
+    userUid: userUid.value,
   });
   if (apiResType.error != null) {
     alert(apiResType.message + `(Error: ${JSON.stringify(apiResType.error)})`);
@@ -619,7 +619,7 @@ watch(isPair, (newValue, oldValue) => {
   }
   const apiResMethod = await getMethodList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? DUMMY.STR,
+    userUid: userUid.value,
   });
   if (apiResMethod.error != null) {
     alert(apiResMethod.message + `(Error: ${JSON.stringify(apiResMethod.error)})`);

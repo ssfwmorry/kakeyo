@@ -162,7 +162,7 @@
 
 <script setup lang="ts">
 import type { GetMethodSummaryItem, GetTypeSummaryItem } from '@/api/supabase/record.interface';
-import { DUMMY, PAGE } from '@/utils/constants';
+import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type YearMonthObj } from '@/utils/types/common';
@@ -265,12 +265,12 @@ const updateChart = async () => {
   let sum: number = 0;
   if (isType.value) {
     apiRes = await getTypeSummary(
-      { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
+      { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
       payload
     );
   } else {
     apiRes = await getMethodSummary(
-      { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
+      { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
       payload
     );
   }

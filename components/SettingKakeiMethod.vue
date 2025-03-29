@@ -132,7 +132,7 @@ const methodDialog = ref<MethodDialog>({
 const updateShowData = async () => {
   const apiRes = await getMethodList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? DUMMY.STR,
+    userUid: userUid.value,
   });
   if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
@@ -165,7 +165,7 @@ const upsertApi = async () => {
   enableLoading();
   const auth = {
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? DUMMY.STR,
+    userUid: userUid.value,
     isPair: isPair.value,
     pairId: pairId.value ?? DUMMY.NM,
   };

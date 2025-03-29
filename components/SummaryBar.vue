@@ -99,7 +99,6 @@
 
 <script setup lang="ts">
 import type { GetPayAndIncomeItem } from '@/api/supabase/record.interface';
-import { DUMMY } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type YearMonthString } from '@/utils/types/common';
@@ -191,7 +190,7 @@ const updateChart = async () => {
     isIncludeInstead: isExistPair.value ? isIncludeInstead.value : false,
   };
   const apiRes = await getPayAndIncomeList(
-    { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
+    { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
     payload
   );
   if (apiRes.error !== null) {

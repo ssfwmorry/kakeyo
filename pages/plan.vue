@@ -214,7 +214,7 @@ const upsertPlan = async () => {
   const apiRes = await supabaseUpsertPlan(
     {
       isDemoLogin: isDemoLogin.value,
-      userUid: userUid.value ?? DUMMY.STR,
+      userUid: userUid.value,
       isPair: isPair.value,
       pairId: pairId.value ?? DUMMY.NM,
     },
@@ -305,7 +305,7 @@ watch(isPair, (newValue, oldValue) => {
 (async () => {
   const apiRes = await getPlanTypeList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? DUMMY.STR,
+    userUid: userUid.value,
   });
   if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);

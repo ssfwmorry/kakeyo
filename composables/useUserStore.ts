@@ -7,7 +7,10 @@ export const useUserStore = defineStore(
     const state = ref<{ userUid: string | null }>({ userUid: null });
 
     // getters
-    const userUid = computed(() => state.value.userUid);
+    const userUid = computed(() => {
+      if (state.value.userUid === null) throw new Error('unsigned user');
+      else return state.value.userUid;
+    });
 
     // setters
     function setUser(user: User | null) {

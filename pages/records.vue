@@ -203,7 +203,7 @@ const updateList = async () => {
   };
 
   const apiRes = await getSummarizedRecordList(
-    { isDemoLogin: isDemoLogin.value, userUid: userUid.value ?? DUMMY.STR },
+    { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
     payload
   );
   if (apiRes.error !== null || apiRes.data === null) {

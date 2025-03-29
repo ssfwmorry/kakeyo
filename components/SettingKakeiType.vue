@@ -226,7 +226,7 @@ const subTypeDialog = ref<SubTypeDialog>({
 const updateShowData = async () => {
   const apiRes = await getTypeList({
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? DUMMY.STR,
+    userUid: userUid.value,
   });
   if (apiRes.error != null) {
     alert(apiRes.message + `(Error: ${JSON.stringify(apiRes.error)})`);
@@ -261,7 +261,7 @@ const upsertApi = async (inputMode: Mode) => {
   let isCreated = false;
   const auth = {
     isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value ?? DUMMY.STR,
+    userUid: userUid.value,
     isPair: isPair.value,
     pairId: pairId.value ?? DUMMY.NM,
   };
