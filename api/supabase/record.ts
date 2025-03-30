@@ -1,13 +1,14 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
 import { camelizeKeys } from 'humps';
-import type {
-  DeleteInput,
-  DeleteOutput,
-  SupabaseApiAuth,
-  SupabaseApiAuthGet,
-  SupabaseApiAuthUpsert,
-  UpsertOutput,
+import {
+  buildNoDataApiOutput,
+  type DeleteInput,
+  type DeleteOutput,
+  type SupabaseApiAuth,
+  type SupabaseApiAuthGet,
+  type SupabaseApiAuthUpsert,
+  type UpsertOutput,
 } from './common.interface';
 import type {
   GetMethodSummaryInput,
@@ -113,7 +114,7 @@ export const upsertRecord = async (
         memo: memo,
       },
     ]);
-    return { data: error !== null ? undefined : null, error: error, message: 'record 挿入' };
+    return buildNoDataApiOutput(error, 'record 挿入');
   } else {
     // 更新
     const { data, error } = await supabase
@@ -132,7 +133,7 @@ export const upsertRecord = async (
         memo: memo,
       })
       .eq('id', id);
-    return { data: error !== null ? undefined : null, error: error, message: 'record 更新' };
+    return buildNoDataApiOutput(error, 'record 更新');
   }
 };
 
@@ -149,7 +150,7 @@ export const settleRecords = async (
       is_settled: true,
     })
     .in('id', ids);
-  return { data: error !== null ? undefined : null, error: error, message: 'is_settled 更新' };
+  return buildNoDataApiOutput(error, 'is_settled 更新');
 };
 
 export const postRecords = async (
@@ -177,7 +178,7 @@ export const deleteRecord = async (
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const { error } = await supabase.from('records').delete().eq('id', id);
-  return { data: error !== null ? undefined : null, error: error, message: 'record 削除' };
+  return buildNoDataApiOutput(error, 'record 削除');
 };
 
 export const getMonthSum = async (

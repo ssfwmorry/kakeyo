@@ -1,12 +1,13 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
-import type {
-  DeleteInput,
-  DeleteOutput,
-  SupabaseApiAuth,
-  SwapInput,
-  SwapOutput,
-  UpsertOutput,
+import {
+  buildNoDataApiOutput,
+  type DeleteInput,
+  type DeleteOutput,
+  type SupabaseApiAuth,
+  type SwapInput,
+  type SwapOutput,
+  type UpsertOutput,
 } from './common.interface';
 import { RPC_SWAP_SUB_TYPE, type SwapRpc } from './rpc/swap.interface';
 import type { UpsertSubTypeInput } from './subType.interface';
@@ -20,11 +21,11 @@ export const upsertSubType = async (
   if (id === null) {
     // 挿入
     const { error } = await supabase.from('sub_types').insert([{ type_id: typeId, name: name }]);
-    return { data: error !== null ? undefined : null, error: error, message: 'sub_type 挿入' };
+    return buildNoDataApiOutput(error, 'sub_type 挿入');
   } else {
     // 更新
     const { error } = await supabase.from('sub_types').update({ name: name }).eq('id', id);
-    return { data: error !== null ? undefined : null, error: error, message: 'sub_type 更新' };
+    return buildNoDataApiOutput(error, 'sub_type 更新');
   }
 };
 
@@ -35,7 +36,7 @@ export const deleteSubType = async (
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const { error } = await supabase.from('sub_types').delete().eq('id', id);
-  return { data: error !== null ? undefined : null, error: error, message: 'sub_type 削除' };
+  return buildNoDataApiOutput(error, 'sub_type 削除');
 };
 
 export const swapSubType = async (
@@ -48,5 +49,5 @@ export const swapSubType = async (
     id1: prevId,
     id2: nextId,
   });
-  return { data: error !== null ? undefined : null, error: error, message: 'sub_type 入替' };
+  return buildNoDataApiOutput(error, 'sub_type 入替');
 };

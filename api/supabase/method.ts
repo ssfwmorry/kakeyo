@@ -1,15 +1,16 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
 import { camelizeKeys } from 'humps';
-import type {
-  DeleteInput,
-  DeleteOutput,
-  SupabaseApiAuth,
-  SupabaseApiAuthGet,
-  SupabaseApiAuthUpsert,
-  SwapInput,
-  SwapOutput,
-  UpsertOutput,
+import {
+  buildNoDataApiOutput,
+  type DeleteInput,
+  type DeleteOutput,
+  type SupabaseApiAuth,
+  type SupabaseApiAuthGet,
+  type SupabaseApiAuthUpsert,
+  type SwapInput,
+  type SwapOutput,
+  type UpsertOutput,
 } from './common.interface';
 import type { GetMethodListOutput, UpsertMethodInput } from './method.interface';
 import {
@@ -72,7 +73,7 @@ export const upsertMethod = async (
         color_classification_id: colorId,
       },
     ]);
-    return { data: error !== null ? undefined : null, error: error, message: 'method 挿入' };
+    return buildNoDataApiOutput(error, 'method 挿入');
   } else {
     // 更新
     const { error } = await supabase
@@ -82,7 +83,7 @@ export const upsertMethod = async (
         color_classification_id: colorId,
       })
       .eq('id', id);
-    return { data: error !== null ? undefined : null, error: error, message: 'method 更新' };
+    return buildNoDataApiOutput(error, 'method 更新');
   }
 };
 
@@ -93,7 +94,7 @@ export const deleteMethod = async (
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const { error } = await supabase.from('methods').delete().eq('id', id);
-  return { data: error !== null ? undefined : null, error: error, message: 'method 削除' };
+  return buildNoDataApiOutput(error, 'method 削除');
 };
 
 export const swapMethod = async (
@@ -105,5 +106,5 @@ export const swapMethod = async (
     id1: prevId,
     id2: nextId,
   });
-  return { data: error !== null ? undefined : null, error: error, message: 'method 入替' };
+  return buildNoDataApiOutput(error, 'method 入替');
 };

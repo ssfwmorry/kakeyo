@@ -1,13 +1,14 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
 import { camelizeKeys } from 'humps';
-import type {
-  DeleteInput,
-  DeleteOutput,
-  SupabaseApiAuth,
-  SupabaseApiAuthGet,
-  SupabaseApiAuthUpsert,
-  UpsertOutput,
+import {
+  buildNoDataApiOutput,
+  type DeleteInput,
+  type DeleteOutput,
+  type SupabaseApiAuth,
+  type SupabaseApiAuthGet,
+  type SupabaseApiAuthUpsert,
+  type UpsertOutput,
 } from './common.interface';
 import type { GetPlanListInput, GetPlanListOutput, UpsertPlanInput } from './plan.interface';
 import {
@@ -58,7 +59,7 @@ export const upsertPlan = async (
         memo: memo,
       },
     ]);
-    return { data: error !== null ? undefined : null, error: error, message: 'plan 挿入' };
+    return buildNoDataApiOutput(error, 'plan 挿入');
   } else {
     // 更新
     const { error } = await supabase
@@ -73,7 +74,7 @@ export const upsertPlan = async (
         memo: memo,
       })
       .eq('id', id);
-    return { data: error !== null ? undefined : null, error: error, message: 'plan 更新' };
+    return buildNoDataApiOutput(error, 'plan 更新');
   }
 };
 
@@ -84,5 +85,5 @@ export const deletePlan = async (
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const { error } = await supabase.from('plans').delete().eq('id', id);
-  return { data: error !== null ? undefined : null, error: error, message: 'plan 削除' };
+  return buildNoDataApiOutput(error, 'plan 削除');
 };

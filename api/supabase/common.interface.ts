@@ -30,3 +30,7 @@ export interface SwapInput {
   nextId: Id;
 }
 export interface SwapOutput extends ApiOutput<null, PostgrestError> {}
+
+export function buildNoDataApiOutput<T>(error: T | null, message: string) {
+  return { data: error !== null ? undefined : null, error: error, message };
+}

@@ -2,11 +2,12 @@ import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
 import type { Id } from '@/utils/types/common';
 import { camelizeKeys } from 'humps';
-import type {
-  DeleteInput,
-  DeleteOutput,
-  SupabaseApiAuth,
-  SupabaseApiAuthGet,
+import {
+  buildNoDataApiOutput,
+  type DeleteInput,
+  type DeleteOutput,
+  type SupabaseApiAuth,
+  type SupabaseApiAuthGet,
 } from './common.interface';
 import type {
   DbMemo,
@@ -49,7 +50,7 @@ export const insertMemo = async (
       memo: memo,
     },
   ]);
-  return { data: error !== null ? undefined : null, error: error, message: 'memo 挿入' };
+  return buildNoDataApiOutput(error, 'memo 挿入');
 };
 
 export const deleteMemo = async (
@@ -59,5 +60,5 @@ export const deleteMemo = async (
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const { error } = await supabase.from('memos').delete().eq('id', id);
-  return { data: error !== null ? undefined : null, error: error, message: 'memo 削除' };
+  return buildNoDataApiOutput(error, 'memo 削除');
 };
