@@ -1,3 +1,5 @@
+type Color = 'error' | 'info';
+
 export const useToastStore = defineStore(
   'toastStore',
   () => {
@@ -13,9 +15,9 @@ export const useToastStore = defineStore(
     });
 
     // setters
-    function setToast(message: string, color?: string | undefined) {
+    function setToast(message: string, color?: Color | undefined) {
       state.value.message = message;
-      state.value.color = color || 'info';
+      state.value.color = color ?? 'info';
     }
 
     return { toast, setToast };

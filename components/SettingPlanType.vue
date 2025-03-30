@@ -76,6 +76,7 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
+import { PostgrestErrorCode } from '@/api/supabase/common.interface';
 import type {
   GetPlanTypeListItem,
   GetPlanTypeListOutputData,
@@ -180,7 +181,7 @@ const deleteApi = async () => {
   const payload = { id: planTypeDialog.value.id };
   const apiRes = await deletePlanType({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
-    if (apiRes.error.code === '23503') {
+    if (apiRes.error.code === PostgrestErrorCode.FOREIGN_KEY) {
       setToast('紐づくデータがあるので削除できません', 'error');
     } else {
       assertApiResponse(apiRes);

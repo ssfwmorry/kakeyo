@@ -96,6 +96,7 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
+import { PostgrestErrorCode } from '@/api/supabase/common.interface';
 import type { GetMethodListItem, GetMethodListOutputData } from '@/api/supabase/method.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
 import { assertApiResponse } from '@/utils/api';
@@ -201,7 +202,7 @@ const deleteApi = async () => {
   const payload = { id: methodDialog.value.id };
   const apiRes = await deleteMethod({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
-    if (apiRes.error.code === '23503') {
+    if (apiRes.error.code === PostgrestErrorCode.FOREIGN_KEY) {
       setToast('紐づくデータがあるので削除できません', 'error');
     } else {
       assertApiResponse(apiRes);

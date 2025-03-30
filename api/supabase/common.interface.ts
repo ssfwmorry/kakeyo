@@ -1,6 +1,8 @@
 import type { Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 
+export const PostgrestErrorCode = { FOREIGN_KEY: '23503' } as const;
+
 export type InvalidArgumentError = string;
 export type DatabaseError = string;
 export type ApiOutput<S, T> = { data?: S; error: T | null; message: string };

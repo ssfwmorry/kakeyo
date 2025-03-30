@@ -215,6 +215,7 @@
 </template>
 
 <script setup lang="ts">
+import { PostgrestErrorCode } from '@/api/supabase/common.interface';
 import type { GetMethodListOutputData } from '@/api/supabase/method.interface';
 import type { GetTypeListOutputData } from '@/api/supabase/type.interface';
 import { assertApiResponse } from '@/utils/api';
@@ -488,7 +489,7 @@ const deletePlannedRecord = async () => {
   const apiRes = await supabaseDeletePlannedRecord({ isDemoLogin: isDemoLogin.value }, payload);
   if (apiRes.error !== null) {
     // TODO 紐づく record が存在する時、全てを null に更新してからplanned_recordを削除する
-    if (apiRes.error.code === '23503') {
+    if (apiRes.error.code === PostgrestErrorCode.FOREIGN_KEY) {
       setToast('紐づくデータがあるので削除できません', 'error');
     } else {
       assertApiResponse(apiRes);

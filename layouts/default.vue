@@ -152,7 +152,6 @@ const tabItems = [
 ];
 
 const drawer = ref(false);
-const isCalendarPageMain = ref(true);
 
 // https://blog.cloud-acct.com/posts/u-nuxt-grobal-toaster
 const isShowToast = computed({
@@ -160,7 +159,7 @@ const isShowToast = computed({
     return !!toast.message;
   },
   set: (val) => {
-    setToast('', '');
+    setToast('');
     return val;
   },
 });
@@ -219,9 +218,6 @@ const logOut = async () => {
   });
   drawer.value = false;
 };
-
-// created
-(async () => {})();
 </script>
 
 <style lang="scss" scoped>
