@@ -162,8 +162,8 @@
 
 <script setup lang="ts">
 import type { GetMethodSummaryItem, GetTypeSummaryItem } from '@/api/supabase/record.interface';
+import { assertApiResponse } from '@/utils/api';
 import { PAGE } from '@/utils/constants';
-import { assertApiResponse } from '@/utils/error';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type Id, type YearMonthObj } from '@/utils/types/common';
@@ -262,19 +262,20 @@ const updateChart = async () => {
     month: focus.value.month,
   };
   let apiRes;
-  let sum: number = 0;
+  let sum = 0;
   if (isType.value) {
     apiRes = await getTypeSummary(
       { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
       payload
     );
+    assertApiResponse(apiRes);
   } else {
     apiRes = await getMethodSummary(
       { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
       payload
     );
+    assertApiResponse(apiRes);
   }
-  assertApiResponse(apiRes);
   sum = getTypeOrMethodSum(apiRes.data);
   monthListSum.value = StringUtility.ConvertIntToShowStrWithIsPay(sum, isPay.value);
   const { pie, list } = convertShowData(apiRes.data);

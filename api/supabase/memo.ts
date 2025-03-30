@@ -23,16 +23,17 @@ export const getMemoList = async ({
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_MEMO_LIST;
 
   const wherePairId = pairId !== null ? `,pair_id.eq.${pairId}` : '';
+  type PickedMemo = Pick<DbMemo, 'id' | 'memo' | 'pair_id'>;
   const { data, error } = await supabase
     .from('memos')
-    .select('id, memo, pair_id')
+    .select<'id, memo, pair_id', PickedMemo>('id, memo, pair_id')
     .or(`user_id.eq.${userUid}${wherePairId}`);
   if (error !== null || data === null) {
-    return { data: [], error: error, message: 'memos 取得' };
+    return { error, message: 'memos 取得' };
   }
 
-  const camelizedData = camelizeKeys<{ data: DbMemo[] }>({ data });
-  return { data: camelizedData.data, error: error, message: 'memos 取得' };
+  const camelizedData = camelizeKeys<{ data: PickedMemo[] }>({ data });
+  return { data: camelizedData.data, error: null, message: 'memos 取得' };
 };
 
 export const insertMemo = async (
@@ -41,14 +42,14 @@ export const insertMemo = async (
 ): Promise<InsertMemoOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.from('memos').insert([
+  const { error } = await supabase.from('memos').insert([
     {
       user_id: isPair ? null : userUid,
       pair_id: isPair ? pairId : null,
       memo: memo,
     },
   ]);
-  return { data: data, error: error, message: 'memo 挿入' };
+  return { data: error !== null ? undefined : null, error: error, message: 'memo 挿入' };
 };
 
 export const deleteMemo = async (
@@ -57,6 +58,6 @@ export const deleteMemo = async (
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.from('memos').delete().eq('id', id);
-  return { data: data, error: error, message: 'memo 削除' };
+  const { error } = await supabase.from('memos').delete().eq('id', id);
+  return { data: error !== null ? undefined : null, error: error, message: 'memo 削除' };
 };

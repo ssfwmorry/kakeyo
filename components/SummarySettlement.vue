@@ -181,13 +181,13 @@
 <script setup lang="ts">
 import type { GetPairedRecordItem } from '@/api/supabase/record.interface';
 import type { DialogInfo } from '@/components/SettlementSelectRateDialog.vue';
+import { assertApiResponse } from '@/utils/api';
 import {
   RATE_BACKGROUND_COLOR_LIST,
   RATE_COLOR_LIST,
   RATE_LABEL_LIST,
   RATE_LIST,
 } from '@/utils/constants';
-import { assertApiResponse } from '@/utils/error';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type ColorString, type Id, type YearMonthObj } from '@/utils/types/common';

@@ -78,10 +78,10 @@
 <script setup lang="ts">
 import type {
   GetPlannedRecordListItem,
-  GetPlannedRecordListOutput,
+  GetPlannedRecordListOutputData,
 } from '@/api/supabase/plannedRecord.interface';
+import { assertApiResponse } from '@/utils/api';
 import { PAGE } from '@/utils/constants';
-import { assertApiResponse } from '@/utils/error';
 import StringUtility from '@/utils/string';
 import { type Id } from '@/utils/types/common';
 import { RouterParamKey, type PageQueryParameter, type PlannedRecord } from '@/utils/types/page';
@@ -96,7 +96,7 @@ const router = useRouter();
 const { getPlannedRecordList, swapPlannedRecord } = useSupabase();
 const { setToast } = useToastStore();
 
-const plannedRecordList = ref<GetPlannedRecordListOutput['data']>({ self: [], pair: [] });
+const plannedRecordList = ref<GetPlannedRecordListOutputData>({ self: [], pair: [] });
 
 const updateShowData = async () => {
   const apiRes = await getPlannedRecordList({

@@ -1,6 +1,10 @@
 import type { Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 
+export type InvalidArgumentError = string;
+export type DatabaseError = string;
+export type ApiOutput<S, T> = { data?: S; error: T | null; message: string };
+
 export type SupabaseApiAuth = {
   isDemoLogin: boolean;
 };
@@ -12,27 +16,15 @@ export type SupabaseApiAuthUpsert = {
   pairId: Id | null;
 } & SupabaseApiAuthGet;
 
-export interface UpsertOutput {
-  data: null;
-  error: PostgrestError | string | null;
-  message: string;
-}
+export interface UpsertOutput extends ApiOutput<null, PostgrestError | InvalidArgumentError> {}
 
 export interface DeleteInput {
   id: Id;
 }
-export interface DeleteOutput {
-  data: null;
-  error: PostgrestError | null;
-  message: string;
-}
+export interface DeleteOutput extends ApiOutput<null, PostgrestError> {}
 
 export interface SwapInput {
   prevId: Id;
   nextId: Id;
 }
-export interface SwapOutput {
-  data: null;
-  error: PostgrestError | null;
-  message: string;
-}
+export interface SwapOutput extends ApiOutput<null, PostgrestError> {}

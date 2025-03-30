@@ -76,9 +76,12 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
-import type { GetPlanTypeListItem, GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
+import type {
+  GetPlanTypeListItem,
+  GetPlanTypeListOutputData,
+} from '@/api/supabase/planType.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
-import { assertApiResponse } from '@/utils/error';
+import { assertApiResponse } from '@/utils/api';
 import type { Id } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -95,7 +98,7 @@ type Props = {
 const props = defineProps<Props>();
 type PlanTypeDialog = TypeDialog;
 
-const planTypeList = ref<GetPlanTypeListOutput['data']>({ self: [], pair: [] });
+const planTypeList = ref<GetPlanTypeListOutputData>({ self: [], pair: [] });
 const planTypeDialog = ref<PlanTypeDialog>({
   isShow: false,
   isWithColor: true,

@@ -19,19 +19,12 @@ export const upsertSubType = async (
 
   if (id === null) {
     // 挿入
-    const { data, error } = await supabase.from('sub_types').insert([
-      {
-        type_id: typeId,
-        name: name,
-      },
-    ]);
-    return { data: data, error: error, message: 'sub_types 挿入' };
-  } else if (id) {
-    // 更新
-    const { data, error } = await supabase.from('sub_types').update({ name: name }).eq('id', id);
-    return { data: data, error: error, message: 'sub_types 更新' };
+    const { error } = await supabase.from('sub_types').insert([{ type_id: typeId, name: name }]);
+    return { data: error !== null ? undefined : null, error: error, message: 'sub_type 挿入' };
   } else {
-    return { data: null, error: '想定外', message: 'sub_types upsert 想定外の状況' };
+    // 更新
+    const { error } = await supabase.from('sub_types').update({ name: name }).eq('id', id);
+    return { data: error !== null ? undefined : null, error: error, message: 'sub_type 更新' };
   }
 };
 
@@ -41,8 +34,8 @@ export const deleteSubType = async (
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.from('sub_types').delete().eq('id', id);
-  return { data: data, error: error, message: 'sub_type 削除' };
+  const { error } = await supabase.from('sub_types').delete().eq('id', id);
+  return { data: error !== null ? undefined : null, error: error, message: 'sub_type 削除' };
 };
 
 export const swapSubType = async (
@@ -50,10 +43,10 @@ export const swapSubType = async (
   { prevId, nextId }: SwapInput
 ): Promise<SwapOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
-  const { data, error } = await supabase.rpc<typeof RPC_SWAP_SUB_TYPE, SwapRpc>(RPC_SWAP_SUB_TYPE, {
+
+  const { error } = await supabase.rpc<typeof RPC_SWAP_SUB_TYPE, SwapRpc>(RPC_SWAP_SUB_TYPE, {
     id1: prevId,
     id2: nextId,
   });
-
-  return { data: data, error: error, message: 'sub_type 入替' };
+  return { data: error !== null ? undefined : null, error: error, message: 'sub_type 入替' };
 };

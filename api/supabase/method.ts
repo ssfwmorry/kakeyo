@@ -31,11 +31,7 @@ export const getMethodList = async ({
     payload
   );
   if (error != null || data === null) {
-    return {
-      data: { pay: { self: [], pair: [] }, income: { self: [], pair: [] } },
-      error: error,
-      message: 'method 一覧',
-    };
+    return { error: error, message: 'method 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetMethodListRpcRow[] }>({ data });
@@ -50,7 +46,7 @@ export const getMethodList = async ({
         pair: camelizedData.data.filter((e) => e.isPair && e.isPay),
       },
     },
-    error: error,
+    error: null,
     message: 'method 一覧',
   };
 };
@@ -61,13 +57,13 @@ export const upsertMethod = async (
 ): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  if (id === null) {
-    if (isPair && pairId == null) {
-      return { data: null, error: 'isPair と pairID の関係性', message: 'method 挿入' };
-    }
+  if (isPair && pairId == null) {
+    return { error: 'isPair と pairID の関係性', message: 'method upsert' };
+  }
 
+  if (id === null) {
     // 挿入
-    const { data, error } = await supabase.from('methods').insert([
+    const { error } = await supabase.from('methods').insert([
       {
         name: name,
         user_id: isPair ? null : userUid,
@@ -76,19 +72,17 @@ export const upsertMethod = async (
         color_classification_id: colorId,
       },
     ]);
-    return { data: data, error: error, message: 'method 挿入' };
-  } else if (id) {
+    return { data: error !== null ? undefined : null, error: error, message: 'method 挿入' };
+  } else {
     // 更新
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('methods')
       .update({
         name: name,
         color_classification_id: colorId,
       })
       .eq('id', id);
-    return { data: data, error: error, message: 'method 更新' };
-  } else {
-    return { data: null, error: '想定外の状況', message: 'method upsert 想定外の状況' };
+    return { data: error !== null ? undefined : null, error: error, message: 'method 更新' };
   }
 };
 
@@ -98,8 +92,8 @@ export const deleteMethod = async (
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.from('methods').delete().eq('id', id);
-  return { data: data, error: error, message: 'method 削除' };
+  const { error } = await supabase.from('methods').delete().eq('id', id);
+  return { data: error !== null ? undefined : null, error: error, message: 'method 削除' };
 };
 
 export const swapMethod = async (
@@ -107,9 +101,9 @@ export const swapMethod = async (
   { prevId, nextId }: SwapInput
 ): Promise<SwapOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
-  const { data, error } = await supabase.rpc<typeof RPC_SWAP_METHOD, SwapRpc>(RPC_SWAP_METHOD, {
+  const { error } = await supabase.rpc<typeof RPC_SWAP_METHOD, SwapRpc>(RPC_SWAP_METHOD, {
     id1: prevId,
     id2: nextId,
   });
-  return { data: data, error: error, message: 'type 入替' };
+  return { data: error !== null ? undefined : null, error: error, message: 'method 入替' };
 };

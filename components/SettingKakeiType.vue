@@ -164,9 +164,9 @@ import type { GetColorClassificationListOutput } from '@/api/supabase/colorClass
 import type {
   GetTypeListItem,
   GetTypeListItemSubTypeListItem,
-  GetTypeListOutput,
+  GetTypeListOutputData,
 } from '@/api/supabase/type.interface';
-import { assertApiResponse } from '@/utils/error';
+import { assertApiResponse } from '@/utils/api';
 import type { Id } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -204,7 +204,7 @@ export type SubTypeDialog = {
 
 const isPay = ref(true);
 const isEdit = ref(true);
-const typeList = ref<GetTypeListOutput['data']>({
+const typeList = ref<GetTypeListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
 });

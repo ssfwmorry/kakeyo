@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
+import type { ColorClassification } from '@/utils/types/model';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const authStore = useAuthStore();
@@ -35,14 +35,14 @@ const tab = {
 type Tab = (typeof tab)[keyof typeof tab];
 
 const tabMode = ref<Tab>(tab.KAKEI);
-const colorList = ref<GetColorClassificationListOutput['data']>([]);
+const colorList = ref<ColorClassification[]>([]);
 
 // created
 (async () => {
   enableLoading();
 
   const apiRes = await getColorClassificationList({ isDemoLogin: isDemoLogin.value });
-  if (apiRes.data === null || apiRes.error !== null) return;
+  assertApiResponse(apiRes);
   colorList.value = apiRes.data;
 
   disableLoading();

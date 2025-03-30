@@ -1,16 +1,21 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
 import type { SupabaseApiAuth } from './common.interface';
-import type { GetDayClassificationListOutput } from './dayClassification.interface';
+import type {
+  DbDayClassification,
+  GetDayClassificationListOutput,
+} from './dayClassification.interface';
 
 export const getDayClassificationList = async ({
   isDemoLogin,
 }: SupabaseApiAuth): Promise<GetDayClassificationListOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_DAY_LIST;
 
-  const { data, error } = await supabase.from('day_classifications').select('id, name, value');
+  const { data, error } = await supabase
+    .from('day_classifications')
+    .select<'id, name, value', DbDayClassification>('id, name, value');
   if (error !== null || data === null) {
-    return { data: [], error, message: 'day_classifications 取得' };
+    return { error, message: 'day_classifications 取得' };
   }
-  return { data: data, error: error, message: 'day_classifications 取得' };
+  return { data: data, error: null, message: 'day_classifications 取得' };
 };

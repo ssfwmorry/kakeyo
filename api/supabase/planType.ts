@@ -31,7 +31,7 @@ export const getPlanTypeList = async ({
     payload
   );
   if (error != null || data === null) {
-    return { data: { self: [], pair: [] }, error: error, message: 'plan_type 一覧' };
+    return { error: error, message: 'plan_type 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetPlanTypeListRpcRow[] }>({ data });
@@ -40,7 +40,7 @@ export const getPlanTypeList = async ({
       self: camelizedData.data.filter((e) => !e.isPair),
       pair: camelizedData.data.filter((e) => e.isPair),
     },
-    error: error,
+    error: null,
     message: 'plan_type 取得',
   };
 };
@@ -51,13 +51,13 @@ export const upsertPlanType = async (
 ): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
+  if (isPair && pairId == null) {
+    return { data: null, error: 'isPair と pairID の関係性', message: 'plan_type 挿入' };
+  }
+
   if (id === null) {
-    // TODO よりよい状況バリデーションチェック
-    if (isPair && pairId == null) {
-      return { data: null, error: 'isPair と pairID の関係性', message: 'plan_type 挿入' };
-    }
     // 挿入
-    const { data, error } = await supabase.from('plan_types').insert([
+    const { error } = await supabase.from('plan_types').insert([
       {
         name: name,
         user_id: isPair ? null : userUid,
@@ -65,19 +65,17 @@ export const upsertPlanType = async (
         color_classification_id: colorId,
       },
     ]);
-    return { data: data, error: error, message: 'plan_type 挿入' };
-  } else if (id) {
+    return { data: error !== null ? undefined : null, error: error, message: 'plan_type 挿入' };
+  } else {
     // 更新
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('plan_types')
       .update({
         name: name,
         color_classification_id: colorId,
       })
       .eq('id', id);
-    return { data: data, error: error, message: 'plan_type 更新' };
-  } else {
-    return { data: null, error: '想定外', message: 'plan_type upsert 想定外の状況' };
+    return { data: error !== null ? undefined : null, error: error, message: 'plan_type 更新' };
   }
 };
 
@@ -87,8 +85,8 @@ export const deletePlanType = async (
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.from('plan_types').delete().eq('id', id);
-  return { data: data, error: error, message: 'plan_type 削除' };
+  const { error } = await supabase.from('plan_types').delete().eq('id', id);
+  return { data: error !== null ? undefined : null, error: error, message: 'plan_type 削除' };
 };
 
 export const swapPlanType = async (
@@ -96,9 +94,9 @@ export const swapPlanType = async (
   { prevId, nextId }: SwapInput
 ): Promise<SwapOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
-  const { data, error } = await supabase.rpc<typeof RPC_SWAP_PLAN_TYPE, SwapRpc>(
-    RPC_SWAP_PLAN_TYPE,
-    { id1: prevId, id2: nextId }
-  );
-  return { data: data, error: error, message: 'plan_type 入替' };
+  const { error } = await supabase.rpc<typeof RPC_SWAP_PLAN_TYPE, SwapRpc>(RPC_SWAP_PLAN_TYPE, {
+    id1: prevId,
+    id2: nextId,
+  });
+  return { data: error !== null ? undefined : null, error: error, message: 'plan_type 入替' };
 };

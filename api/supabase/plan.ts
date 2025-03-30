@@ -28,7 +28,7 @@ export const getPlanList = async (
     payload
   );
   if (error != null || data === null) {
-    return { data: [], error: error, message: 'plan 一覧' };
+    return { error: error, message: 'plan 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetPlanListRpcRow[] }>({ data });
@@ -41,13 +41,13 @@ export const upsertPlan = async (
 ): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  if (id === null) {
-    if (isPair && pairId == null) {
-      return { data: null, error: 'isPair と pairID の関係性', message: 'method 挿入' };
-    }
+  if (isPair && pairId == null) {
+    return { error: 'isPair と pairID の関係性', message: 'method 挿入' };
+  }
 
+  if (id === null) {
     // 挿入
-    const { data, error } = await supabase.from('plans').insert([
+    const { error } = await supabase.from('plans').insert([
       {
         user_id: isPair ? null : userUid,
         pair_id: isPair ? pairId : null,
@@ -58,10 +58,10 @@ export const upsertPlan = async (
         memo: memo,
       },
     ]);
-    return { data: data, error: error, message: 'plan 挿入' };
-  } else if (id) {
+    return { data: error !== null ? undefined : null, error: error, message: 'plan 挿入' };
+  } else {
     // 更新
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('plans')
       .update({
         user_id: isPair ? null : userUid,
@@ -73,9 +73,7 @@ export const upsertPlan = async (
         memo: memo,
       })
       .eq('id', id);
-    return { data: data, error: error, message: 'plan 更新' };
-  } else {
-    return { data: null, error: '想定外', message: 'plan upsert 想定外の状況' };
+    return { data: error !== null ? undefined : null, error: error, message: 'plan 更新' };
   }
 };
 
@@ -85,6 +83,6 @@ export const deletePlan = async (
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.from('plans').delete().eq('id', id);
-  return { data: data, error: error, message: 'plan 削除' };
+  const { error } = await supabase.from('plans').delete().eq('id', id);
+  return { data: error !== null ? undefined : null, error: error, message: 'plan 削除' };
 };

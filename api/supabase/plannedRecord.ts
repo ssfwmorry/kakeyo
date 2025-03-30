@@ -34,7 +34,7 @@ export const getPlannedRecordList = async ({
     GetPlannedRecordListRpc
   >(RPC_GET_PLANNED_RECORD_LIST, payload);
   if (error != null || data === null) {
-    return { data: { self: [], pair: [] }, error: error, message: 'planned_record 一覧' };
+    return { error: error, message: 'planned_record 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetPlannedRecordListRpcRow[] }>({ data });
@@ -43,7 +43,7 @@ export const getPlannedRecordList = async ({
       self: camelizedData.data.filter((e) => !e.isPair),
       pair: camelizedData.data.filter((e) => e.isPair),
     },
-    error: error,
+    error: null,
     message: 'planned_record 一覧',
   };
 };
@@ -64,13 +64,13 @@ export const upsertPlannedRecord = async (
 ): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  if (id === null) {
-    if (isPair && pairId == null) {
-      return { data: null, error: 'isPair と pairID の関係性', message: 'method 挿入' };
-    }
+  if (isPair && pairId == null) {
+    return { error: 'isPair と pairID の関係性', message: 'method 挿入' };
+  }
 
+  if (id === null) {
     // 挿入
-    const { data, error } = await supabase.from('planned_records').insert([
+    const { error } = await supabase.from('planned_records').insert([
       {
         user_id: isPair && !isInstead ? null : userUid,
         pair_id: isPair ? pairId : null,
@@ -83,10 +83,14 @@ export const upsertPlannedRecord = async (
         memo: memo,
       },
     ]);
-    return { data: data, error: error, message: 'planned_record 挿入' };
-  } else if (id) {
+    return {
+      data: error !== null ? undefined : null,
+      error: error,
+      message: 'planned_record 挿入',
+    };
+  } else {
     // 更新
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('planned_records')
       .update({
         user_id: isPair && !isInstead ? null : userUid,
@@ -100,9 +104,11 @@ export const upsertPlannedRecord = async (
         memo: memo,
       })
       .eq('id', id);
-    return { data: data, error: error, message: 'planned_record 更新' };
-  } else {
-    return { data: null, error: '想定外', message: 'planned_record upsert 想定外の状況' };
+    return {
+      data: error !== null ? undefined : null,
+      error: error,
+      message: 'planned_record 更新',
+    };
   }
 };
 
@@ -112,8 +118,12 @@ export const deletePlannedRecord = async (
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.from('planned_records').delete().eq('id', id);
-  return { data: data, error: error, message: 'planned_record 削除' };
+  const { error } = await supabase.from('planned_records').delete().eq('id', id);
+  return {
+    data: error !== null ? undefined : null,
+    error: error,
+    message: 'planned_record 削除',
+  };
 };
 
 export const swapPlannedRecord = async (
@@ -121,10 +131,13 @@ export const swapPlannedRecord = async (
   { prevId, nextId }: SwapInput
 ): Promise<SwapOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
-  const { data, error } = await supabase.rpc<typeof RPC_SWAP_PLANNED_RECORD, SwapRpc>(
+  const { error } = await supabase.rpc<typeof RPC_SWAP_PLANNED_RECORD, SwapRpc>(
     RPC_SWAP_PLANNED_RECORD,
     { id1: prevId, id2: nextId }
   );
-
-  return { data: data, error: error, message: 'planned_record 入替' };
+  return {
+    data: error !== null ? undefined : null,
+    error: error,
+    message: 'planned_record 入替',
+  };
 };

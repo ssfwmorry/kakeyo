@@ -8,6 +8,7 @@ import type {
 } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
+import type { ApiOutput, InvalidArgumentError } from './common.interface';
 import type { GetMethodSummaryRpcRow } from './rpc/getMethodSummary.interface';
 import type { GetPairedRecordListRpcRow } from './rpc/getPairedRecordList.interface';
 import type { GetPayAndIncomeListRpcRow } from './rpc/getPayAndIncomeList.interface';
@@ -18,11 +19,7 @@ import type { GetTypeSummaryRpcRow } from './rpc/getTypeSummary.interface';
 export interface GetRecordListInput extends DateRange {}
 
 export type GetRecordListItem = Camelized<Omit<GetRecordListRpcRow, 'record_id'>> & { id: Id };
-export interface GetRecordListOutput {
-  data: GetRecordListItem[];
-  error: PostgrestError | null;
-  message: string;
-}
+export interface GetRecordListOutput extends ApiOutput<GetRecordListItem[], PostgrestError> {}
 
 export interface UpsertRecordInput {
   id: Id | null;
@@ -39,29 +36,19 @@ export interface UpsertRecordInput {
 export interface SettleRecordsInput {
   ids: Id[];
 }
-export interface SettleRecordsOutput {
-  data: null;
-  error: PostgrestError | string | null;
-  message: string;
-}
+export interface SettleRecordsOutput
+  extends ApiOutput<null, PostgrestError | InvalidArgumentError> {}
 
 export interface PostRecordsInput {
   yearMonth: YearMonthString;
 }
-export interface PostRecordsOutput {
-  data: null;
-  error: PostgrestError | null;
-  message: string;
-}
+export interface PostRecordsOutput extends ApiOutput<null, PostgrestError> {}
 
 export interface GetMonthSumInput {
   yearMonth: YearMonthString;
 }
-export interface GetMonthSumOutput {
-  data: { SELF: number; PAIR: number; BOTH: number };
-  error: PostgrestError | null;
-  message: string;
-}
+type GetMonthSumOutputData = { SELF: number; PAIR: number; BOTH: number };
+export interface GetMonthSumOutput extends ApiOutput<GetMonthSumOutputData, PostgrestError> {}
 
 export interface GetTypeSummaryInput {
   isPay: boolean;
@@ -79,11 +66,7 @@ export type GetTypeSummaryItemSubTypeListItem = {
 export type GetTypeSummaryItem = Camelized<GetTypeSummaryRpcRow> & {
   subTypes: GetTypeSummaryItemSubTypeListItem[];
 };
-export interface GetTypeSummaryOutput {
-  data: GetTypeSummaryItem[];
-  error: PostgrestError | null;
-  message: string;
-}
+export interface GetTypeSummaryOutput extends ApiOutput<GetTypeSummaryItem[], PostgrestError> {}
 
 export interface GetMethodSummaryInput {
   isPay: boolean;
@@ -93,11 +76,7 @@ export interface GetMethodSummaryInput {
   month: MonthString;
 }
 export type GetMethodSummaryItem = Camelized<GetMethodSummaryRpcRow>;
-export interface GetMethodSummaryOutput {
-  data: GetMethodSummaryItem[];
-  error: PostgrestError | null;
-  message: string;
-}
+export interface GetMethodSummaryOutput extends ApiOutput<GetMethodSummaryItem[], PostgrestError> {}
 
 export interface GetSummarizedRecordListInput {
   isPay: boolean;
@@ -111,21 +90,15 @@ export interface GetSummarizedRecordListInput {
 export type GetSummarizedRecordItem = Camelized<
   Omit<GetSummarizedRecordListRpcRow, 'record_id'>
 > & { id: Id };
-export interface GetSummarizedRecordListOutput {
-  data: GetSummarizedRecordItem[];
-  error: PostgrestError | null;
-  message: string;
-}
+export interface GetSummarizedRecordListOutput
+  extends ApiOutput<GetSummarizedRecordItem[], PostgrestError> {}
 
 export interface GetPairedRecordListInput {
   yearMonth: YearMonthString;
 }
 export type GetPairedRecordItem = Camelized<GetPairedRecordListRpcRow>;
-export interface GetPairedRecordListOutput {
-  data: GetPairedRecordItem[];
-  error: PostgrestError | null;
-  message: string;
-}
+export interface GetPairedRecordListOutput
+  extends ApiOutput<GetPairedRecordItem[], PostgrestError> {}
 
 export interface GetPayAndIncomeListInput {
   year: YearString;
@@ -133,8 +106,5 @@ export interface GetPayAndIncomeListInput {
   isIncludeInstead: boolean;
 }
 export type GetPayAndIncomeItem = Camelized<GetPayAndIncomeListRpcRow>;
-export interface GetPayAndIncomeListOutput {
-  data: GetPayAndIncomeItem[];
-  error: PostgrestError | null;
-  message: string;
-}
+export interface GetPayAndIncomeListOutput
+  extends ApiOutput<GetPayAndIncomeItem[], PostgrestError> {}

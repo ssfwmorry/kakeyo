@@ -215,10 +215,10 @@
 </template>
 
 <script setup lang="ts">
-import type { GetMethodListOutput } from '@/api/supabase/method.interface';
-import type { GetTypeListOutput } from '@/api/supabase/type.interface';
+import type { GetMethodListOutputData } from '@/api/supabase/method.interface';
+import type { GetTypeListOutputData } from '@/api/supabase/type.interface';
+import { assertApiResponse } from '@/utils/api';
 import { PAGE } from '@/utils/constants';
-import { assertApiResponse } from '@/utils/error';
 import TimeUtility from '@/utils/time';
 import { type DateString, type Id, type PickedDate } from '@/utils/types/common';
 import type { DayClassification } from '@/utils/types/model';
@@ -267,11 +267,11 @@ const isInstead = ref<boolean | null>(true);
 const price = ref(0);
 const loading = ref(false);
 const dayList = ref<DayClassification[]>([]);
-const typeList = ref<GetTypeListOutput['data']>({
+const typeList = ref<GetTypeListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
 });
-const methodList = ref<GetMethodListOutput['data']>({
+const methodList = ref<GetMethodListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
 });
@@ -520,18 +520,14 @@ watch(isPair, (newValue, oldValue) => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
   });
-  if (apiResType.error != null) {
-    alert(apiResType.message + `(Error: ${JSON.stringify(apiResType.error)})`);
-    return;
-  }
+  assertApiResponse(apiResType);
+
   const apiResMethod = await getMethodList({
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
   });
-  if (apiResMethod.error != null) {
-    alert(apiResMethod.message + `(Error: ${JSON.stringify(apiResMethod.error)})`);
-    return;
-  }
+  assertApiResponse(apiResMethod);
+
   typeList.value = apiResType.data;
   methodList.value = apiResMethod.data;
 

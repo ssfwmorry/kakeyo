@@ -1,21 +1,14 @@
 import type { Memo } from '@/utils/types/model';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Decamelized } from 'humps';
+import type { ApiOutput } from './common.interface';
 
-export type DbMemo = Decamelized<Pick<Memo, 'id' | 'memo' | 'pairId'>>;
+export type DbMemo = Decamelized<Memo>; // Pick<Memo, 'id' | 'memo' | 'pairId'>>;
 type GetMemoListItem = Pick<Memo, 'id' | 'memo' | 'pairId'>;
-export interface GetMemoListOutput {
-  data: GetMemoListItem[];
-  error: PostgrestError | null;
-  message: string;
-}
+export interface GetMemoListOutput extends ApiOutput<GetMemoListItem[], PostgrestError> {}
 
 export interface InsertMemoInput {
   memo: string;
   isPair: boolean;
 }
-export interface InsertMemoOutput {
-  data: null;
-  error: PostgrestError | null;
-  message: string;
-}
+export interface InsertMemoOutput extends ApiOutput<null, PostgrestError> {}

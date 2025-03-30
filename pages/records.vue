@@ -209,10 +209,7 @@ const updateList = async () => {
     { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
     payload
   );
-  if (apiRes.error !== null || apiRes.data === null) {
-    alert(apiRes.message + `(Error: ${apiRes.error})`);
-    return;
-  }
+  assertApiResponse(apiRes);
 
   recordList.value = apiRes.data;
   disableLoading();

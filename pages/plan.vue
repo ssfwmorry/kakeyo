@@ -123,9 +123,9 @@
 </template>
 
 <script setup lang="ts">
-import type { GetPlanTypeListOutput } from '@/api/supabase/planType.interface';
+import type { GetPlanTypeListOutputData } from '@/api/supabase/planType.interface';
+import { assertApiResponse } from '@/utils/api';
 import { PAGE } from '@/utils/constants';
-import { assertApiResponse } from '@/utils/error';
 import { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import type { Id } from '@/utils/types/common';
@@ -152,7 +152,7 @@ const date = ref<Dayjs | null>(null);
 const dates = ref<Dayjs[]>([]);
 const selectedPlanTypeId = ref<number | null>(null);
 const memo = ref<string | null>(null);
-const planTypeList = ref<GetPlanTypeListOutput['data']>({ self: [], pair: [] });
+const planTypeList = ref<GetPlanTypeListOutputData>({ self: [], pair: [] });
 const loading = ref(false);
 
 const selectedDateOrPeriod = computed(() => {
@@ -297,10 +297,8 @@ watch(isPair, (newValue, oldValue) => {
     isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
   });
-  if (apiRes.error != null) {
-    assertApiResponse(apiRes);
-    return;
-  }
+  assertApiResponse(apiRes);
+
   planTypeList.value = apiRes.data;
 
   const plan = routerParam<Plan>(RouterParamKey.PLAN);

@@ -96,9 +96,9 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
-import type { GetMethodListItem, GetMethodListOutput } from '@/api/supabase/method.interface';
+import type { GetMethodListItem, GetMethodListOutputData } from '@/api/supabase/method.interface';
 import type { TypeDialog } from '@/components/SettingKakeiType.vue';
-import { assertApiResponse } from '@/utils/error';
+import { assertApiResponse } from '@/utils/api';
 import type { Id } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
@@ -117,7 +117,7 @@ const props = defineProps<Props>();
 type MethodDialog = TypeDialog;
 const isPay = ref(true);
 const isEdit = ref(true);
-const methodList = ref<GetMethodListOutput['data']>({
+const methodList = ref<GetMethodListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
 });

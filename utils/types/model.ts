@@ -11,6 +11,12 @@ export type DayClassification = {
   value: number;
 };
 
+export type Pair = {
+  id: Id;
+  user1Id: string;
+  user2Id: string;
+};
+
 export type Memo = {
   id: Id;
   userId: Id | null;

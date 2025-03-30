@@ -76,14 +76,14 @@ export const getRecordList = async (
     payload
   );
   if (error != null || data === null) {
-    return { data: [], error: error, message: 'record 一覧' };
+    return { error: error, message: 'record 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetRecordListRpcRow[] }>({ data });
   const outData = camelizedData.data.map((e) => {
     return { ...e, id: e.recordId };
   });
-  return { data: outData, error: error, message: 'record 一覧' };
+  return { data: outData, error: null, message: 'record 一覧' };
 };
 
 export const upsertRecord = async (
@@ -92,13 +92,13 @@ export const upsertRecord = async (
 ): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  if (id === null) {
-    if (isPair && pairId == null) {
-      return { data: null, error: 'isPair と pairID の関係性', message: 'method 挿入' };
-    }
+  if (isPair && pairId == null) {
+    return { error: 'isPair と pairID の関係性', message: 'method 挿入' };
+  }
 
+  if (id === null) {
     // 挿入
-    const { data, error } = await supabase.from('records').insert([
+    const { error } = await supabase.from('records').insert([
       {
         user_id: isPair && !isInstead ? null : userUid,
         pair_id: isPair ? pairId : null,
@@ -113,8 +113,8 @@ export const upsertRecord = async (
         memo: memo,
       },
     ]);
-    return { data: data, error: error, message: 'record 挿入' };
-  } else if (id) {
+    return { data: error !== null ? undefined : null, error: error, message: 'record 挿入' };
+  } else {
     // 更新
     const { data, error } = await supabase
       .from('records')
@@ -132,9 +132,7 @@ export const upsertRecord = async (
         memo: memo,
       })
       .eq('id', id);
-    return { data: data, error: error, message: 'record 更新' };
-  } else {
-    return { data: null, error: '想定外の状況', message: 'record upsert 想定外の状況' };
+    return { data: error !== null ? undefined : null, error: error, message: 'record 更新' };
   }
 };
 
@@ -143,15 +141,15 @@ export const settleRecords = async (
   { ids }: SettleRecordsInput
 ): Promise<SettleRecordsOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
-  if (ids.length === 0) return { data: null, error: 'no id', message: 'is_settled 更新' };
+  if (ids.length === 0) return { error: 'no id', message: 'is_settled 更新' };
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('records')
     .update({
       is_settled: true,
     })
     .in('id', ids);
-  return { data: data, error: error, message: 'is_settled 更新' };
+  return { data: error !== null ? undefined : null, error: error, message: 'is_settled 更新' };
 };
 
 export const postRecords = async (
@@ -161,11 +159,15 @@ export const postRecords = async (
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
   const payload = { input_user_id: userUid, input_year_month: yearMonth };
-  const { data, error } = await supabase.rpc<typeof RPC_POST_RECORDS, PostRecordsRpc>(
+  const { error } = await supabase.rpc<typeof RPC_POST_RECORDS, PostRecordsRpc>(
     RPC_POST_RECORDS,
     payload
   );
-  return { data: data, error: error, message: 'planned_record が未設定の record 登録' };
+  return {
+    data: error !== null ? undefined : null,
+    error: error,
+    message: 'planned_record が未設定の record 登録',
+  };
 };
 
 export const deleteRecord = async (
@@ -174,8 +176,8 @@ export const deleteRecord = async (
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  const { data, error } = await supabase.from('records').delete().eq('id', id);
-  return { data: data, error: error, message: 'record 削除' };
+  const { error } = await supabase.from('records').delete().eq('id', id);
+  return { data: error !== null ? undefined : null, error: error, message: 'record 削除' };
 };
 
 export const getMonthSum = async (
@@ -191,11 +193,7 @@ export const getMonthSum = async (
   );
 
   if (error !== null || !Array.isArray(data) || data === null || data.length != 1) {
-    return {
-      data: { ['SELF']: 0, ['PAIR']: 0, ['BOTH']: 0 },
-      error: error,
-      message: 'month_sum 取得',
-    };
+    return { error: error, message: 'month_sum 取得' };
   }
   return {
     data: {
@@ -203,7 +201,7 @@ export const getMonthSum = async (
       ['PAIR']: data[0].pair_sum,
       ['BOTH']: data[0].both_sum,
     },
-    error: error,
+    error: null,
     message: 'month_sum 取得',
   };
 };
@@ -235,7 +233,7 @@ export const getTypeSummary = async (
     payload
   );
   if (error !== null || data === null) {
-    return { data: [], error: error, message: 'type summary 一覧' };
+    return { error: error, message: 'type summary 一覧' };
   }
 
   const groupedData: GetTypeSummaryItem[] = [];
@@ -284,7 +282,7 @@ export const getMethodSummary = async (
     payload
   );
   if (error !== null || data === null) {
-    return { data: [], error: error, message: 'method summary 一覧' };
+    return { error: error, message: 'method summary 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetMethodSummaryRpcRow[] }>({ data });
@@ -332,8 +330,8 @@ export const getSummarizedRecordList = async (
     typeof RPC_GET_SUMMARIZED_RECORD_LIST,
     GetSummarizedRecordListRpc
   >(RPC_GET_SUMMARIZED_RECORD_LIST, payload);
-  if (error !== null || !Array.isArray(data)) {
-    return { data: [], error: error, message: 'summarized_record 一覧' };
+  if (error !== null || data === null) {
+    return { error: error, message: 'summarized_record 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetSummarizedRecordListRpcRow[] }>({ data });
@@ -342,7 +340,7 @@ export const getSummarizedRecordList = async (
     return { ...e, id: e.recordId };
   });
 
-  return { data: outData, error: error, message: 'summarized_record 一覧' };
+  return { data: outData, error: null, message: 'summarized_record 一覧' };
 };
 
 export const getPairedRecordList = async (
@@ -359,12 +357,12 @@ export const getPairedRecordList = async (
     typeof RPC_GET_PAIRED_RECORD_LIST,
     GetPairedRecordListRpc
   >(RPC_GET_PAIRED_RECORD_LIST, payload);
-  if (error !== null || !Array.isArray(data)) {
-    return { data: [], error: error, message: 'paired_record 一覧' };
+  if (error !== null || data === null) {
+    return { error: error, message: 'paired_record 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetPairedRecordListRpcRow[] }>({ data });
-  return { data: camelizedData.data, error: error, message: 'paired_record 一覧' };
+  return { data: camelizedData.data, error: null, message: 'paired_record 一覧' };
 };
 
 export const getPayAndIncomeList = async (
@@ -385,9 +383,9 @@ export const getPayAndIncomeList = async (
     GetPayAndIncomeListRpc
   >(RPC_GET_PAY_AND_INCOME_LIST, payload);
   if (error !== null || data === null) {
-    return { data: [], error: error, message: 'pay_and_income 一覧' };
+    return { error: error, message: 'pay_and_income 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetPayAndIncomeListRpcRow[] }>({ data });
-  return { data: camelizedData.data, error: error, message: 'pay_and_income 一覧' };
+  return { data: camelizedData.data, error: null, message: 'pay_and_income 一覧' };
 };

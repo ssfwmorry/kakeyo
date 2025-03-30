@@ -1,6 +1,7 @@
 import type { Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
+import type { ApiOutput } from './common.interface';
 import type { GetTypeListRpcRow } from './rpc/getTypeList.interface';
 
 export type GetTypeListItemSubTypeListItem = {
@@ -14,21 +15,18 @@ export type GetTypeListItem = Camelized<
   }
 >;
 
-export interface GetTypeListOutput {
+export type GetTypeListOutputData = {
   // TODO isPayとisPairが確定しているので型を調整する
-  data: {
-    income: {
-      self: GetTypeListItem[];
-      pair: GetTypeListItem[];
-    };
-    pay: {
-      self: GetTypeListItem[];
-      pair: GetTypeListItem[];
-    };
+  income: {
+    self: GetTypeListItem[];
+    pair: GetTypeListItem[];
   };
-  error: PostgrestError | null;
-  message: string;
-}
+  pay: {
+    self: GetTypeListItem[];
+    pair: GetTypeListItem[];
+  };
+};
+export interface GetTypeListOutput extends ApiOutput<GetTypeListOutputData, PostgrestError> {}
 
 export interface UpsertTypeInput {
   id: Id | null;

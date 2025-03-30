@@ -1,15 +1,12 @@
 import type { DateRange, Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
+import type { ApiOutput } from './common.interface';
 import type { GetPlanListRpcRow } from './rpc/getPlanList.interface';
 
 export interface GetPlanListInput extends DateRange {}
 export type GetPlanListItem = Camelized<GetPlanListRpcRow>;
-export interface GetPlanListOutput {
-  data: GetPlanListItem[];
-  error: PostgrestError | null;
-  message: string;
-}
+export interface GetPlanListOutput extends ApiOutput<GetPlanListItem[], PostgrestError> {}
 
 export interface UpsertPlanInput {
   id: Id | null;
