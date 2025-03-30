@@ -81,9 +81,9 @@ import type {
   GetPlanTypeListItem,
   GetPlanTypeListOutputData,
 } from '@/api/supabase/planType.interface';
-import type { TypeDialog } from '@/components/SettingKakeiType.vue';
 import { assertApiResponse } from '@/utils/api';
 import type { Id } from '@/utils/types/common';
+import type { NameAndColorDialog } from './SettingDialog.vue';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
@@ -97,7 +97,7 @@ type Props = {
   colorList: GetColorClassificationListOutput['data'];
 };
 const props = defineProps<Props>();
-type PlanTypeDialog = TypeDialog;
+type PlanTypeDialog = NameAndColorDialog;
 
 const planTypeList = ref<GetPlanTypeListOutputData>({ self: [], pair: [] });
 const planTypeDialog = ref<PlanTypeDialog>({
@@ -106,6 +106,7 @@ const planTypeDialog = ref<PlanTypeDialog>({
   id: null,
   name: null,
   colorId: null,
+  isHasColor: true,
 });
 
 const updateShowData = async () => {
@@ -123,6 +124,7 @@ const openCreateDialog = () => {
     id: null,
     name: null,
     colorId: null,
+    isHasColor: true,
   };
 };
 const openEditDialog = ({
@@ -136,6 +138,7 @@ const openEditDialog = ({
     id: planTypeId,
     name: planTypeName,
     colorId: colorClassificationId,
+    isHasColor: true,
   };
 };
 const closeDialog = () => {

@@ -169,6 +169,7 @@ import type {
 } from '@/api/supabase/type.interface';
 import { assertApiResponse } from '@/utils/api';
 import type { Id } from '@/utils/types/common';
+import type { NameAndColorDialog, NameDialog } from './SettingDialog.vue';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
@@ -188,20 +189,8 @@ const mode = {
   SUB_TYPE: 'SUB_TYPE',
 } as const;
 type Mode = (typeof mode)[keyof typeof mode];
-export type TypeDialog = {
-  isShow: boolean;
-  isWithColor: true;
-  id: Id | null;
-  name: string | null;
-  colorId: Id | null;
-};
-export type SubTypeDialog = {
-  isShow: boolean;
-  isWithColor: false;
-  id: Id | null;
-  name: string | null;
-  parentId: Id | null;
-};
+type TypeDialog = NameAndColorDialog;
+type SubTypeDialog = NameDialog;
 
 const isPay = ref(true);
 const isEdit = ref(true);
@@ -215,6 +204,7 @@ const typeDialog = ref<TypeDialog>({
   id: null,
   name: null,
   colorId: null,
+  isHasColor: true,
 });
 const subTypeDialog = ref<SubTypeDialog>({
   isShow: false,
@@ -222,6 +212,7 @@ const subTypeDialog = ref<SubTypeDialog>({
   id: null,
   name: null,
   parentId: null,
+  isHasColor: false,
 });
 
 const updateShowData = async () => {
@@ -239,6 +230,7 @@ const openCreateTypeDialog = () => {
     id: null,
     name: null,
     colorId: null,
+    isHasColor: true,
   };
 };
 const openEditTypeDialog = ({ typeId, typeName, colorClassificationId }: GetTypeListItem) => {
@@ -248,6 +240,7 @@ const openEditTypeDialog = ({ typeId, typeName, colorClassificationId }: GetType
     id: typeId,
     name: typeName,
     colorId: colorClassificationId,
+    isHasColor: true,
   };
 };
 const closeDialog = () => {
@@ -357,6 +350,7 @@ const openCreateSubTypeDialog = ({ typeId }: GetTypeListItem) => {
     id: null,
     parentId: typeId,
     name: null,
+    isHasColor: false,
   };
 };
 const openEditSubTypeDialog = (
@@ -369,6 +363,7 @@ const openEditSubTypeDialog = (
     id: subTypeId,
     parentId: typeId,
     name: subTypeName,
+    isHasColor: false,
   };
 };
 const swapSort = async (inputMode: Mode, prevId: Id, nextId: Id) => {

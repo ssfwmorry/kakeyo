@@ -62,11 +62,27 @@
 
 <script setup lang="ts">
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
-import type { SubTypeDialog, TypeDialog } from '@/components/SettingKakeiType.vue';
 import type { Id } from '@/utils/types/common';
 
+export type NameAndColorDialog = {
+  isShow: boolean;
+  isWithColor: true;
+  id: Id | null;
+  name: string | null;
+  colorId: Id | null;
+  isHasColor: true;
+};
+export type NameDialog = {
+  isShow: boolean;
+  isWithColor: false;
+  id: Id | null;
+  name: string | null;
+  parentId: Id | null;
+  isHasColor: false;
+};
+
 type Props = {
-  modelValue: TypeDialog | SubTypeDialog;
+  modelValue: NameAndColorDialog | NameDialog;
   title: string;
   colorList: GetColorClassificationListOutput['data'] | undefined;
 };
@@ -79,7 +95,9 @@ const closeDialog = () => {
   emits('closeDialog');
 };
 const updateSelectedColorId = (id: Id) => {
-  (props.modelValue as TypeDialog).colorId = id;
+  if (props.modelValue.isHasColor) {
+    props.modelValue.colorId = id;
+  }
 };
 const isDisableDialogPostBtn = () => {
   if (props.modelValue.isWithColor) {

@@ -98,9 +98,9 @@
 import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
 import { PostgrestErrorCode } from '@/api/supabase/common.interface';
 import type { GetMethodListItem, GetMethodListOutputData } from '@/api/supabase/method.interface';
-import type { TypeDialog } from '@/components/SettingKakeiType.vue';
 import { assertApiResponse } from '@/utils/api';
 import type { Id } from '@/utils/types/common';
+import type { NameAndColorDialog } from './SettingDialog.vue';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
@@ -115,7 +115,7 @@ type Props = {
 };
 const props = defineProps<Props>();
 
-type MethodDialog = TypeDialog;
+type MethodDialog = NameAndColorDialog;
 const isPay = ref(true);
 const isEdit = ref(true);
 const methodList = ref<GetMethodListOutputData>({
@@ -128,6 +128,7 @@ const methodDialog = ref<MethodDialog>({
   id: null,
   name: null,
   colorId: null,
+  isHasColor: true,
 });
 
 const updateShowData = async () => {
@@ -146,6 +147,7 @@ const openCreateDialog = () => {
     id: null,
     name: null,
     colorId: null,
+    isHasColor: true,
   };
 };
 const openEditDialog = ({ id, name, colorClassificationId }: GetMethodListItem) => {
@@ -155,6 +157,7 @@ const openEditDialog = ({ id, name, colorClassificationId }: GetMethodListItem) 
     id: id,
     name: name,
     colorId: colorClassificationId,
+    isHasColor: true,
   };
 };
 const closeDialog = () => {
