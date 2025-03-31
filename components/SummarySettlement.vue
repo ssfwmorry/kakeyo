@@ -354,8 +354,7 @@ const cancelClassification = () => {
   step.value = stepStatus.READY;
 
   // RecordCardHalf の表示
-  for (const el of ['ME', 'COUPLE', 'PARTNER']) {
-    const e = el as keyof RecordList;
+  for (const e of ['ME', 'COUPLE', 'PARTNER'] as (keyof RecordList)[]) {
     (recordList.value[e] ?? []).forEach((record, i) => {
       recordList.value[e][i].labelColor = null;
       recordList.value[e][i].backgroundColor = null;
@@ -424,8 +423,7 @@ const closeDialog = () => {
 const changeRate = (dialogInfo: DialogInfo) => {
   dialog.value.isShow = false;
 
-  for (const el of ['ME', 'COUPLE', 'PARTNER']) {
-    const e = el as keyof RecordList;
+  for (const e of ['ME', 'COUPLE', 'PARTNER'] as (keyof RecordList)[]) {
     const index = recordList.value[e].findIndex((record) => record.id === dialogInfo.id);
     if (index === -1) continue;
 

@@ -343,7 +343,7 @@ const initSelectedMethodId = () => {
   }
 };
 const initSelectedDayId = () => {
-  selectedDayId.value = (dayList.value[0] as any).id;
+  selectedDayId.value = dayList.value[0].id;
 };
 const setPageRecord = (record: Record_) => {
   // 新規作成の場合
