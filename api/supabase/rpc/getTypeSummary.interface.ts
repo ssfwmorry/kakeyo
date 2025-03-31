@@ -1,4 +1,4 @@
-import type { Id, MonthString, YearString } from '@/utils/types/common';
+import type { ColorString, Id, MonthString, YearString } from '@/utils/types/common';
 
 export const RPC_GET_TYPE_SUMMARY = 'get_type_summary';
 
@@ -17,7 +17,7 @@ export type GetTypeSummaryRpcRow = {
   is_pair: boolean;
   sub_type_name: string;
   sub_type_id: Id;
-  color_name: string;
+  color_name: ColorString;
   sub_type_sum: number;
   sum: number;
 };

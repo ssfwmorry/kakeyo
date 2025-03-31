@@ -1,5 +1,7 @@
+import type { ColorCode } from '../constants/color';
+
 export type Id = number;
-export type ColorString = string; // TODO: あらかじめ決められた文字列のみを許可する
+export type ColorString = ColorCode;
 /** YYYY */
 export type YearString = string;
 /** MM */

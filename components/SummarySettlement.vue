@@ -187,10 +187,11 @@ import {
   RATE_COLOR_LIST,
   RATE_LABEL_LIST,
   RATE_LIST,
-} from '@/utils/constants';
+  type RateColorString,
+} from '@/utils/constants/color';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { type ColorString, type Id, type YearMonthObj } from '@/utils/types/common';
+import { type Id, type YearMonthObj } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const authStore = useAuthStore();
@@ -208,7 +209,7 @@ type StepStatus = (typeof stepStatus)[keyof typeof stepStatus];
 type RateList = {
   colorIndex: number;
   label: string;
-  color: ColorString;
+  color: RateColorString;
   records: { id: Id; price: number; isMe: boolean }[];
 }[];
 type Record = {

@@ -164,9 +164,10 @@
 import type { GetMethodSummaryItem, GetTypeSummaryItem } from '@/api/supabase/record.interface';
 import { assertApiResponse } from '@/utils/api';
 import { PAGE } from '@/utils/constants';
+import { COLOR_CODE } from '@/utils/constants/color';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { type Id, type YearMonthObj } from '@/utils/types/common';
+import { type ColorString, type Id, type YearMonthObj } from '@/utils/types/common';
 import { RouterParamKey, type RecordsQueryParam, type SummaryQueryParam } from '@/utils/types/page';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import { Pie } from 'vue-chartjs';
@@ -185,7 +186,7 @@ type TypeListSubs = { name: string | null; value: string; id: Id };
 type TypeOrMethod = {
   name: string;
   value: string;
-  color: string;
+  color: ColorString;
   id: Id;
   isPair: boolean;
   pairUserName: string | null;
@@ -301,7 +302,7 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
     const name = isType.value
       ? (typeOrMethodSummary as GetTypeSummaryItem).typeName
       : (typeOrMethodSummary as GetMethodSummaryItem).methodName;
-    const color = typeOrMethodSummary.colorName;
+    const color = COLOR_CODE[typeOrMethodSummary.colorName];
     const isPair = typeOrMethodSummary.isPair;
     const pairUserName = isType.value
       ? ''
@@ -316,7 +317,7 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
     let typeOrMethod: TypeOrMethod = {
       name: name,
       value: StringUtility.ConvertIntToShowStr(sum),
-      color: color,
+      color: typeOrMethodSummary.colorName,
       id: id,
       isPair: isPair,
       pairUserName: pairUserName,

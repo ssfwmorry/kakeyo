@@ -37,32 +37,6 @@ const PAGE = {
   SETTING: 'setting',
 } as const;
 
-const COLOR_LIST = [
-  'red', // 0
-  'pink',
-  'purple',
-  'deep-purple',
-  'indigo',
-  'blue', // 5
-  'light-blue',
-  'cyan',
-  'teal',
-  'green',
-  'light-green', //10
-  'lime',
-  'amber',
-  'orange',
-  'brown',
-  'blue-grey', //15
-  'grey',
-  'black',
-];
-
-const RATE_LIST = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0];
-const RATE_LABEL_LIST = ['10：0', '9：1', '8：2','7：3', '6：4', '割り勘', '4：6', '3：7','2：8', '1：9', '0：10']; // prettier-ignore
-const RATE_COLOR_LIST = ['red-accent-4','red-accent-3','red-accent-2','red-accent-1','red-lighten-3','purple lighten-2','blue-lighten-3','blue-accent-1','blue-accent-2','blue-accent-3','blue-accent-4']; // prettier-ignore
-const RATE_BACKGROUND_COLOR_LIST = ['red-lighten-3','red-lighten-3','red-lighten-3','red-lighten-4','red-lighten-5','purple lighten-5','blue-lighten-5','blue-lighten-4','blue-lighten-3','blue-lighten-3','blue-lighten-3'] // prettier-ignore
-
 const EMAIL_WHITE_LIST = (config: RuntimeConfig) => {
   switch (config.public.supabaseSchema) {
     case DbSchema.develop:
@@ -74,16 +48,4 @@ const EMAIL_WHITE_LIST = (config: RuntimeConfig) => {
   }
 };
 
-export {
-  APP_NAME,
-  COLOR_LIST,
-  DEMO_DATA,
-  DEMO_USER_INFO,
-  EMAIL_WHITE_LIST,
-  MAX_PRICE,
-  PAGE,
-  RATE_BACKGROUND_COLOR_LIST,
-  RATE_COLOR_LIST,
-  RATE_LABEL_LIST,
-  RATE_LIST,
-};
+export { APP_NAME, DEMO_DATA, DEMO_USER_INFO, EMAIL_WHITE_LIST, MAX_PRICE, PAGE };
