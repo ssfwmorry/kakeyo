@@ -364,7 +364,7 @@ const setPageRecord = (record: Record_) => {
   selectedTypeId.value = record.typeId;
   selectedSubTypeId.value = record.subTypeId;
 };
-const setPagePlannedRecord = async (plannedRecord: PlannedRecord) => {
+const setPagePlannedRecord = async (plannedRecord: PlannedRecord | null) => {
   isPlannedRecord.value = true;
 
   const apiRes = await getDayClassificationList({ isDemoLogin: isDemoLogin.value });
@@ -372,7 +372,7 @@ const setPagePlannedRecord = async (plannedRecord: PlannedRecord) => {
   dayList.value = apiRes.data;
 
   // 新規作成の場合
-  if (plannedRecord.id === null) {
+  if (plannedRecord === null) {
     initSelectedMethodId();
     initSelectedDayId();
     return;
@@ -535,8 +535,7 @@ watch(isPair, (newValue, oldValue) => {
   const routerQuery = route.query as PageQueryParameter;
   if (routerQuery.key === RouterParamKey.PLANNED_RECORD) {
     const plannedRecord = routerParam<PlannedRecord>(RouterParamKey.PLANNED_RECORD);
-    if (plannedRecord !== null) await setPagePlannedRecord(plannedRecord);
-    else initSelectedMethodId();
+    await setPagePlannedRecord(plannedRecord);
   } else if (routerQuery.key === RouterParamKey.RECORD) {
     const record = routerParam<Record_>(RouterParamKey.RECORD);
     if (record !== null) setPageRecord(record);
@@ -552,7 +551,7 @@ watch(isPair, (newValue, oldValue) => {
 
 <style scoped lang="scss">
 :deep(.select-day-by) {
-  width: 140px;
+  width: 150px;
   .v-input__slot:before {
     border-width: 0 !important;
   }
