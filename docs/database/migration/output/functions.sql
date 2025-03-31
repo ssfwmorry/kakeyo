@@ -331,6 +331,7 @@ as $$
         )
         and summarized_records.planned_record_id is null -- planned_record_id が登録されていないものを抽出
         and cast(planned_records.updated_at as date) <=  cast((input_year_month || '-01') as date) -- planned_record が登録された後の期間でのみ、record 登録を行う
+        and cast(input_year_month || '-' || lpad(cast(day_classifications.value as character varying), 2, '0') as timestamp) > now() -- 登録される datetime が未来の場合のみrecord 登録を行う
     ;
 $$ language sql;
 
