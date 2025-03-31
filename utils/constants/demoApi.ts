@@ -1,5 +1,5 @@
 import type { GetPairedRecordItem, GetPayAndIncomeItem } from '@/api/supabase/record.interface';
-import type { Id, MonthString, YearMonthString, YearString } from '../types/common';
+import type { ColorString, Id, MonthString, YearMonthString, YearString } from '../types/common';
 
 const DEMO_DATA = {
   IS_RELEASE: true, // false: デモログインで動的レスポンス、true: デモログインで静的レスポンス
@@ -5049,7 +5049,7 @@ const DEMO_DATA = {
         { id: 16, name: 'blue-grey' },
         { id: 17, name: 'grey' },
         { id: 18, name: 'black' },
-      ],
+      ] as { id: number; name: ColorString }[],
       error: null,
       message: 'demo',
     },

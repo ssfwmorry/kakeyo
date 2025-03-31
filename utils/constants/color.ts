@@ -20,7 +20,7 @@ export const COLOR_CODE = {
 } as const;
 export type ColorCode = keyof typeof COLOR_CODE;
 
-export const COLOR_LIST = [
+export const COLOR_LIST: ColorCode[] = [
   'red', // 0
   'pink',
   'purple',

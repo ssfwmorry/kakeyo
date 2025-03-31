@@ -1,8 +1,8 @@
-import type { DateString, DatetimeString, DbDatetimeString, Id } from './common';
+import type { ColorString, DateString, DatetimeString, DbDatetimeString, Id } from './common';
 
 export type ColorClassification = {
   id: Id;
-  name: string;
+  name: ColorString;
 };
 
 export type DayClassification = {
