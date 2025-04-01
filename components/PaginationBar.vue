@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-const emits = defineEmits();
+const emits = defineEmits(['prev', 'next']);
 type Props = {
   title: string;
   subtitle: string;
