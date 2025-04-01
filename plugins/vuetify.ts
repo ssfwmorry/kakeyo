@@ -1,10 +1,11 @@
 import '@mdi/font/css/materialdesignicons.css';
 
-import 'vuetify/styles';
 import '@/assets/common.scss';
 import DayJsAdapter from '@date-io/dayjs';
+import ja from 'dayjs/locale/ja';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
+import 'vuetify/styles';
 import colors from 'vuetify/util/colors';
 
 export default defineNuxtPlugin((app) => {
@@ -18,6 +19,7 @@ export default defineNuxtPlugin((app) => {
     },
     date: {
       adapter: DayJsAdapter,
+      locale: { ja },
     },
     ssr: false,
     theme: {
