@@ -26,7 +26,7 @@
             <v-card v-if="menuMode == MenuMode.year" class="py-2">
               <v-date-picker-years
                 v-model="year"
-                min="2024-01-01"
+                min="2023-01-01"
                 hide-header
                 view-mode="months"
                 class="bg-white"
