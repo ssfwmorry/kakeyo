@@ -11,10 +11,12 @@
     class="pa-1 h-100 bg-white"
   >
     <PaginationBar
-      :title="calendarTitle"
+      mode="MONTH"
       :subtitle="isEndInit ? '収支：' + monthSumStr + ' 円' : '　'"
+      :focus="focusObj"
       @prev="movePrev"
       @next="moveNext"
+      @update="updateFocus"
     ></PaginationBar>
 
     <v-row no-gutters class="mb-3">
@@ -180,7 +182,12 @@ import type { GetRecordListItem } from '@/api/supabase/record.interface';
 import { PAGE } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { type DateString, type Id, type ShareType } from '@/utils/types/common';
+import {
+  type DateString,
+  type Id,
+  type ShareType,
+  type YearMonthNumObj,
+} from '@/utils/types/common';
 import {
   RouterParamKey,
   type PageQueryParameter,
@@ -320,6 +327,7 @@ const calendarOptions = ref<CalendarOptions>({
   initialView: 'dayGridMonth',
   contentHeight: 'auto',
   fixedWeekCount: false,
+  // locale: 'ja',
   selectable: false, // eventを選択すると背景色が白になるのでtrueにする場合には要調整
   eventOrder: '-type,start,-duration,allDay,title',
   events: [],
@@ -341,12 +349,13 @@ const isPairMemo = ref(false);
 const memoText = ref<string | null>(null);
 const isEndInit = ref(false);
 
-const calendarTitle = computed(() =>
-  focus.value === null ? '' : TimeUtility.ConvertDateStrToJPYearMonth(focus.value)
-);
 const monthSumStr = computed(() =>
   StringUtility.ConvertIntToShowPrefixStr(monthSum.value[showRecordMode.value])
 );
+const focusObj = computed(() => {
+  if (focus.value === null) return null;
+  return TimeUtility.ConvertDateStrToYearMonthNumObj(focus.value);
+});
 
 const movePrev = async () => {
   if (focus.value === null) throw new Error('movePrev');
@@ -362,6 +371,11 @@ const moveNext = async () => {
   const nextObj = TimeUtility.NextMonthInYearMonthObj(focusObj);
   const next = nextObj.year + '-' + nextObj.month + '-01';
   focus.value = next;
+  await updateRange();
+};
+const updateFocus = async (obj: YearMonthNumObj) => {
+  const strObj = TimeUtility.ConvertYearMonthNumObjToYearMonthObj(obj);
+  focus.value = `${strObj.year}-${strObj.month}-01`;
   await updateRange();
 };
 const setPageFocus = ({

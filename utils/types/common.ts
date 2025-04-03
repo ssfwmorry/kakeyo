@@ -18,6 +18,8 @@ export type DatetimeString = string;
 export type DbDatetimeString = string;
 /** {year: YYYY, month: MM} */
 export type YearMonthObj = { year: YearString; month: MonthString };
+/** {year: YYYY, month: MM} */
+export type YearMonthNumObj = { year: number; month: number };
 
 export const BoolString = {
   TRUE: 'true',

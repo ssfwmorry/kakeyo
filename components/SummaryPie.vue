@@ -7,10 +7,12 @@
     class="page-tab-item"
   >
     <PaginationBar
-      :title="focusPeriod"
+      mode="MONTH"
       :subtitle="monthListSum !== '' ? '合計: ' + monthListSum + ' 円' : ''"
+      :focus="focusObj"
       @prev="movePrev()"
       @next="moveNext()"
+      @update="updateFocus"
     ></PaginationBar>
     <v-row no-gutters class="mb-2">
       <!-- 収入支出 -->
@@ -167,7 +169,12 @@ import { PAGE } from '@/utils/constants';
 import { COLOR_CODE } from '@/utils/constants/color';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { type ColorString, type Id, type YearMonthObj } from '@/utils/types/common';
+import {
+  type ColorString,
+  type Id,
+  type YearMonthNumObj,
+  type YearMonthObj,
+} from '@/utils/types/common';
 import { RouterParamKey, type RecordsQueryParam, type SummaryQueryParam } from '@/utils/types/page';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import { Pie } from 'vue-chartjs';
@@ -230,13 +237,7 @@ const pieData = ref<PieData>({
 
 const props = defineProps<Props>();
 
-const focusPeriod = computed(() => {
-  if (isMonth.value) {
-    return TimeUtility.ConvertYearMonthObjToJPYearMonth(focus.value);
-  } else {
-    return TimeUtility.ConvertYearMonthObjToJPYear(focus.value);
-  }
-});
+const focusObj = computed(() => TimeUtility.ConvertYearMonthObjToYearMonthNumObj(focus.value));
 
 const updateShowSetting = (setting: SummaryQueryParam) => {
   isPay.value = setting.isPay;
@@ -250,6 +251,10 @@ const movePrev = async () => {
 };
 const moveNext = async () => {
   focus.value = TimeUtility.NextMonthInYearMonthObj(focus.value);
+  await updateChart();
+};
+const updateFocus = async (obj: YearMonthNumObj) => {
+  focus.value = TimeUtility.ConvertYearMonthNumObjToYearMonthObj(obj);
   await updateChart();
 };
 const updateChart = async () => {

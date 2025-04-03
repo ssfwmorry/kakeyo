@@ -8,10 +8,12 @@
   >
     <PaginationBar
       v-if="isMonth"
-      :title="year + '年'"
+      mode="YEAR"
       :subtitle="'合計: ' + (isPayAndIncome ? sumPayAndIncome : sumPay) + ' 円'"
+      :focus="focusObj"
       @prev="movePrev()"
       @next="moveNext()"
+      @update="updateFocus"
     ></PaginationBar>
     <div v-else class="mt-pagination-bar"></div>
     <v-row no-gutters class="mb-4">
@@ -101,7 +103,7 @@
 import type { GetPayAndIncomeItem } from '@/api/supabase/record.interface';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { type YearMonthString } from '@/utils/types/common';
+import { type YearMonthNumObj, type YearMonthString } from '@/utils/types/common';
 import {
   BarElement,
   CategoryScale,
@@ -159,6 +161,10 @@ const isPayAndIncome = ref(true);
 const isIncludeInstead = ref(true);
 const isMonth = ref(true);
 
+const focusObj = computed<YearMonthNumObj>(() => {
+  return { year: year.value, month: 0 };
+});
+
 const barDataPayAndIncome = ref<BarData>({
   labels: MonthLabels,
   datasets: [initialBarDataset],
@@ -177,6 +183,10 @@ const movePrev = async () => {
 };
 const moveNext = async () => {
   year.value = TimeUtility.NextYear(year.value);
+  await updateChart();
+};
+const updateFocus = async (obj: YearMonthNumObj) => {
+  year.value = obj.year;
   await updateChart();
 };
 

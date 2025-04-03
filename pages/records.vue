@@ -54,10 +54,12 @@
     </div>
     <div class="px-5 pt-2">
       <PaginationBar
-        :title="focusPeriod"
+        mode="MONTH"
         :subtitle="name !== '' ? '合計: ' + sum + ' 円' : ''"
+        :focus="focusObj"
         @prev="movePrev()"
         @next="moveNext()"
+        @update="updateFocus"
       ></PaginationBar>
 
       <div v-if="recordList" no-gutters>
@@ -97,7 +99,7 @@ import type { GetSummarizedRecordItem } from '@/api/supabase/record.interface';
 import { PAGE } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import type { ColorString, Id, YearMonthObj } from '@/utils/types/common';
+import type { ColorString, Id, YearMonthNumObj, YearMonthObj } from '@/utils/types/common';
 import {
   RouterParamKey,
   type PageQueryParameter,
@@ -140,13 +142,7 @@ const showSetting = ref<ShowSetting>({
 });
 const recordList = ref<GetSummarizedRecordItem[]>([]);
 
-const focusPeriod = computed(() => {
-  if (showSetting.value.isMonth) {
-    return TimeUtility.ConvertYearMonthObjToJPYearMonth(focus.value);
-  } else {
-    return TimeUtility.ConvertYearMonthObjToJPYear(focus.value);
-  }
-});
+const focusObj = computed(() => TimeUtility.ConvertYearMonthObjToYearMonthNumObj(focus.value));
 
 const movePrev = async () => {
   if (showSetting.value.isMonth) {
@@ -165,6 +161,11 @@ const moveNext = async () => {
     // focus.value = TimeUtility.NextYearInYearMonthObj(focus.value);
   }
 
+  await updateList();
+  updateSum();
+};
+const updateFocus = async (obj: YearMonthNumObj) => {
+  focus.value = TimeUtility.ConvertYearMonthNumObjToYearMonthObj(obj);
   await updateList();
   updateSum();
 };
