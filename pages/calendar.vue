@@ -402,15 +402,17 @@ const updateRange = async () => {
   };
   const authParam = { isDemoLogin: isDemoLogin.value, userUid: userUid.value };
 
-  // plannedRecord から、足りない record を登録
-  const apiResPostRecords = await postRecords(authParam, payload1);
-  assertApiResponse(apiResPostRecords);
+  // plannedRecord から、足りない record を登録(表示日付が、現在日付の6ヶ月後以前の場合, バッファで+1ヶ月)
+  if (dayjs(focus.value).isBefore(dayjs().add(7, 'M'))) {
+    const apiResPostRecords = await postRecords(authParam, payload1);
+    assertApiResponse(apiResPostRecords);
+  }
 
   // 月の収支を取得
   const apiResMonthSum = await getMonthSum(authParam, payload1);
   assertApiResponse(apiResMonthSum);
 
-  // record を追加
+  // record を取得
   const apiResGetRecords = await getRecordList(authParam, payload2);
   assertApiResponse(apiResGetRecords);
 
