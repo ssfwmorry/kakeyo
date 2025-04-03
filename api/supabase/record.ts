@@ -193,8 +193,19 @@ export const getMonthSum = async (
     payload
   );
 
-  if (error !== null || !Array.isArray(data) || data === null || data.length != 1) {
+  if (error !== null || !Array.isArray(data) || data === null) {
     return { error: error, message: 'month_sum 取得' };
+  }
+  if (data.length === 0) {
+    return {
+      data: {
+        ['SELF']: 0,
+        ['PAIR']: 0,
+        ['BOTH']: 0,
+      },
+      error: null,
+      message: 'month_sum 取得',
+    };
   }
   return {
     data: {
