@@ -5,6 +5,7 @@ import DayJsAdapter from '@date-io/dayjs';
 import ja from 'dayjs/locale/ja';
 import { createVuetify } from 'vuetify';
 import { aliases, mdi } from 'vuetify/iconsets/mdi-svg';
+import { ja as vuetifyJa } from 'vuetify/locale';
 import 'vuetify/styles';
 import colors from 'vuetify/util/colors';
 
@@ -20,6 +21,16 @@ export default defineNuxtPlugin((app) => {
     date: {
       adapter: DayJsAdapter,
       locale: { ja },
+    },
+    locale: {
+      fallback: 'en',
+      locale: 'ja',
+      messages: {
+        ja: {
+          ...vuetifyJa,
+          close: '閉じる', // v-chip の$vuetify.close
+        },
+      },
     },
     ssr: false,
     theme: {
