@@ -1,4 +1,4 @@
--- now: 2024-06-23 23:59
+-- now: 2025-04-05 16:20
 -- migration-sort: 1
 drop table if exists develop.day_classifications cascade;
 
@@ -238,15 +238,16 @@ create table develop.records (
     user_id           varchar(28)  not null,
     pair_id           integer,
     datetime          timestamptz  not null,
-    is_pay            boolean      not null,
+    is_pay            boolean,
     method_id         integer      not null,
-    type_id           integer      not null,
+    type_id           integer,
     sub_type_id       integer,
     price             integer      not null check (price <= 1000000),
     memo              text,
     planned_record_id integer,
     is_instead        boolean,
     is_settled        boolean,
+    record_type       smallint     not null default 0,
 
     foreign key (user_id) references develop.users (uid),
     foreign key (pair_id) references develop.pairs (id),
