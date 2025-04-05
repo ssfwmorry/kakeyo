@@ -1,10 +1,12 @@
 <template>
   <div class="page-tab-item">
     <PaginationBar
-      :title="focusPeriod"
+      mode="MONTH"
       :subtitle="''"
+      :focus="focusObj"
       @prev="movePrev()"
       @next="moveNext()"
+      @update="updateFocus"
     ></PaginationBar>
     <v-row no-gutters class="mb-4">
       <v-stepper v-model="step" :items="stepItems" alt-labels hide-actions class="w-100 fs-nml">
@@ -191,7 +193,7 @@ import {
 } from '@/utils/constants/color';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { type Id, type YearMonthObj } from '@/utils/types/common';
+import type { Id, YearMonthNumObj, YearMonthObj } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const authStore = useAuthStore();
@@ -240,9 +242,7 @@ const dialog = ref<Dialog>({
   isMe: null,
 });
 
-const focusPeriod = computed(() => {
-  return TimeUtility.ConvertYearMonthObjToJPYearMonth(focus.value);
-});
+const focusObj = computed(() => TimeUtility.ConvertYearMonthObjToYearMonthNumObj(focus.value));
 const reportedDataByRate = computed(() => {
   let ret = [];
 
@@ -277,6 +277,10 @@ const movePrev = async () => {
 };
 const moveNext = async () => {
   focus.value = TimeUtility.NextMonthInYearMonthObj(focus.value);
+  await updateChart();
+};
+const updateFocus = async (obj: YearMonthNumObj) => {
+  focus.value = TimeUtility.ConvertYearMonthNumObjToYearMonthObj(obj);
   await updateChart();
 };
 const updateChart = async () => {

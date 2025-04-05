@@ -12,7 +12,7 @@
           :class="{ 'btn-disabled': props.mode === 'YEAR' }"
         >
           <div>
-            <h4>{{ title }}</h4>
+            <h3>{{ title }}</h3>
             <h5>{{ props.subtitle }}</h5>
           </div>
           <v-menu
