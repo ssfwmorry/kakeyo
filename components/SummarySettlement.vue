@@ -408,8 +408,7 @@ const getRecordIdList = (selectedRateList: RateList) => {
   return ret;
 };
 const openDialog = (record: Record, isMe: boolean) => {
-  // TODO 一回設定した精算率を変更できないようにしているが、のちのち変更できるようにする
-  if (step.value !== stepStatus.GOING || !record.isNew || record.isSettled) return;
+  if (step.value !== stepStatus.GOING || record.isSettled) return;
 
   dialog.value = {
     isShow: true,
@@ -425,7 +424,14 @@ const closeDialog = () => {
   };
 };
 const changeRate = (dialogInfo: DialogInfo) => {
+  if (dialogInfo.id === null) {
+    alert('予期せぬ状態');
+    return;
+  }
   dialog.value.isShow = false;
+
+  // すでにselectedRateListに登録済みデータを削除する
+  deleteRecordInSelectedRateList(dialogInfo.id);
 
   for (const e of ['ME', 'COUPLE', 'PARTNER'] as (keyof RecordList)[]) {
     const index = recordList.value[e].findIndex((record) => record.id === dialogInfo.id);
@@ -458,6 +464,28 @@ const changeRate = (dialogInfo: DialogInfo) => {
       // すでにある場合
       selectedRateList.value[colorIndex].records.push(record);
     }
+  }
+};
+const deleteRecordInSelectedRateList = (id: Id) => {
+  let deleteColor: undefined | string;
+
+  for (let i = 0; i < selectedRateList.value.length; i++) {
+    const records = selectedRateList.value[i].records;
+    // 指定されたrecordを削除する
+    for (let j = 0; j < records.length; j++) {
+      const tmpArr = records.filter((e) => e.id !== id);
+      selectedRateList.value[i].records = tmpArr;
+      if (selectedRateList.value[i].records.length === 0) {
+        deleteColor = selectedRateList.value[i].color;
+      }
+      break;
+    }
+  }
+
+  // recordsが空になったら、selectedRateList.value[i]も削除する
+  if (deleteColor !== undefined) {
+    const tmpArr = selectedRateList.value.filter((e) => e.color !== deleteColor);
+    selectedRateList.value = tmpArr;
   }
 };
 
