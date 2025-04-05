@@ -115,9 +115,17 @@ create policy "develop.pairs all"
 | user_id                 | string  |   28   |    -     |       -        |        users.uid         | pair_id とどちらか必須                       |
 | pair_id                 |   int   |   -    |    -     |       -        |         pairs.id         | user_id とどちらか必須                       |
 | name                    | string  | max 10 |    v     |       -        |            -             | -                                            |
-| is_pay                  |  bool   |   -    |    v     |       -        |            -             | -                                            |
+| is_pay                  |  bool   |   -    |    -     |       -        |            -             | 送金方法の場合は NULL となる                 |
 | color_classification_id | tinyint |   -    |    v     |       -        | color_classifications.id | [定義](#color_classification)を参照          |
 | sort                    |   int   |   -    |    v     |       v        |            -             | クエリひとつでスワップするために UK としない |
+
+##### 起こり得る状況
+
+| user_id | pair_id |   is_pay   | 状況説明                                       |
+| :-----: | :-----: | :--------: | :--------------------------------------------- |
+|    Q    |    -    | true/false | records.record_type=0, 5 に紐づく支払/受取方法 |
+|    -    |    W    | true/false | records.record_type=10 に紐づく支払/受取方法   |
+|    -    |    W    |     -      | records.record_type=15 に紐づく送金方法        |
 
 #### migration
 
@@ -130,7 +138,7 @@ create table develop.methods (
     user_id                 varchar(28),
     pair_id                 integer,
     name                    varchar(10)  not null check (length(name) <= 10),
-    is_pay                  boolean      not null,
+    is_pay                  boolean,
     color_classification_id smallint     not null,
     sort                    serial       not null,
 

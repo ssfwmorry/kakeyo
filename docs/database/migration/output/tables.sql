@@ -1,4 +1,4 @@
--- now: 2025-04-05 17:08
+-- now: 2025-04-05 21:22
 -- migration-sort: 1
 drop table if exists develop.day_classifications cascade;
 
@@ -119,7 +119,7 @@ create table develop.methods (
     user_id                 varchar(28),
     pair_id                 integer,
     name                    varchar(10)  not null check (length(name) <= 10),
-    is_pay                  boolean      not null,
+    is_pay                  boolean,
     color_classification_id smallint     not null,
     sort                    serial       not null,
 

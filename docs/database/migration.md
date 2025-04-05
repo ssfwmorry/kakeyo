@@ -249,6 +249,8 @@ update develop.records set record_type = 10 where user_id is null and pair_id is
 
 ## 20250405\_開発と本番 DB の records のカラムを変更する対応
 
+以下を public も
+
 - `develop.get_method_summary`
 - `develop.get_type_summary`
 - `develop.get_pay_and_income_list`
@@ -258,5 +260,11 @@ update develop.records set record_type = 10 where user_id is null and pair_id is
 - `develop.get_paired_record_list`
 
 ```sql
-alter table develop.records drop column is_instead;
+alter table develop.records drop column is_instead; -- publicも適応
+```
+
+## 20250405\_開発と本番 DB の methods のカラムを変更する対応
+
+```sql
+alter table develop.methods alter column is_pay drop not null; -- publicも適応
 ```
