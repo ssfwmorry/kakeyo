@@ -97,6 +97,8 @@ export const upsertRecord = async (
     return { error: 'isPair と pairID の関係性', message: 'method 挿入' };
   }
 
+  const recordType = isPair === false ? 0 : isInstead ? 5 : 10;
+
   if (id === null) {
     // 挿入
     const { error } = await supabase.from('records').insert([
@@ -106,18 +108,18 @@ export const upsertRecord = async (
         datetime: datetime,
         is_pay: isPay,
         method_id: methodId,
-        is_instead: isPair ? isInstead : null,
         is_settled: isPair && isInstead ? false : null,
         type_id: typeId,
         sub_type_id: subTypeId,
         price: price,
         memo: memo,
+        record_type: recordType,
       },
     ]);
     return buildNoDataApiOutput(error, 'record 挿入');
   } else {
     // 更新
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('records')
       .update({
         user_id: isPair && !isInstead ? null : userUid,
@@ -125,12 +127,12 @@ export const upsertRecord = async (
         datetime: datetime,
         is_pay: isPay,
         method_id: methodId,
-        is_instead: isPair ? isInstead : null,
         is_settled: isPair && isInstead ? false : null,
         type_id: typeId,
         sub_type_id: subTypeId,
         price: price,
         memo: memo,
+        record_type: recordType,
       })
       .eq('id', id);
     return buildNoDataApiOutput(error, 'record 更新');

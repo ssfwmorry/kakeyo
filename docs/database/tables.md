@@ -265,34 +265,33 @@ create policy "develop.sub_types all"
 
 #### schema
 
-| name              |   type   | size | required | auto_increment |        key         | remarks                                                                                            |
-| :---------------- | :------: | :--: | :------: | :------------: | :----------------: | :------------------------------------------------------------------------------------------------- |
-| id                |   int    |  -   |    v     |       v        |         PK         | -                                                                                                  |
-| user_id           |  string  |  28  |    -     |       -        |     users.uid      | [起こり得る状況](#起こり得る状況) 参照                                                             |
-| pair_id           |   int    |  -   |    -     |       -        |      pairs.id      | -                                                                                                  |
-| datetime          | datetime |  -   |    v     |       -        |         UK         | -                                                                                                  |
-| is_pay            |   bool   |  -   |    -     |       -        |         -          | record_type=5 の時 true 固定                                                                       |
-| method_id         |   int    |  -   |    v     |       -        |     methods.id     | -                                                                                                  |
-| type_id           |   int    |  -   |    -     |       -        |      types.id      | -                                                                                                  |
-| sub_type_id       |   int    |  -   |    -     |       -        |    sub_types.id    | -                                                                                                  |
-| price             |   int    |  -   |    v     |       -        |         -          | -                                                                                                  |
-| memo              |  string  |  -   |    -     |       -        |         -          | -                                                                                                  |
-| planned_record_id |   int    |  -   |    -     |       -        | planned_records.id | 外部キーが削除されると、null となる                                                                |
-| is_instead        |   bool   |  -   |    -     |       -        |         -          | [起こり得る状況](#起こり得る状況) 参照 20250405 のマイグレーションにより、不要になる想定 TODO 削除 |
-| is_settled        |   bool   |  -   |    -     |       -        |         -          | is_instead が True の時に、精算済みかどうかを示す                                                  |
-| record_type       |   int    |  -   |    v     |       -        |         -          | 0: SELF, 5: INSTEAD, 10: PAIR, 15: SETTLEMENT                                                      |
+| name              |   type   | size | required | auto_increment |        key         | remarks                                       |
+| :---------------- | :------: | :--: | :------: | :------------: | :----------------: | :-------------------------------------------- |
+| id                |   int    |  -   |    v     |       v        |         PK         | -                                             |
+| user_id           |  string  |  28  |    -     |       -        |     users.uid      | [起こり得る状況](#起こり得る状況) 参照        |
+| pair_id           |   int    |  -   |    -     |       -        |      pairs.id      | -                                             |
+| datetime          | datetime |  -   |    v     |       -        |         UK         | -                                             |
+| is_pay            |   bool   |  -   |    -     |       -        |         -          | record_type=5 の時 true 固定                  |
+| method_id         |   int    |  -   |    v     |       -        |     methods.id     | -                                             |
+| type_id           |   int    |  -   |    -     |       -        |      types.id      | -                                             |
+| sub_type_id       |   int    |  -   |    -     |       -        |    sub_types.id    | -                                             |
+| price             |   int    |  -   |    v     |       -        |         -          | -                                             |
+| memo              |  string  |  -   |    -     |       -        |         -          | -                                             |
+| planned_record_id |   int    |  -   |    -     |       -        | planned_records.id | 外部キーが削除されると、null となる           |
+| is_settled        |   bool   |  -   |    -     |       -        |         -          | record_type=5 の時、精算済みかどうかを示す    |
+| record_type       |   int    |  -   |    v     |       -        |         -          | 0: SELF, 5: INSTEAD, 10: PAIR, 15: SETTLEMENT |
 
 ※ is_pay は、method_id からわかるので不要かも、あった方が便利そう  
 ※ pair_id, user_id からわかるので不要かも、あった方が便利そう
 
 ##### 起こり得る状況
 
-| user_id | pair_id |  record_type   |   is_pay    | type_id | method_id | is_settled | 状況説明                                                           |
-| :-----: | :-----: | :------------: | :---------: | :-----: | :-------: | :--------: | :----------------------------------------------------------------- |
-|    Q    |    -    |    0: SELF     | true/false  |    E    |     R     |     -      | Q さん個人の record                                                |
-|    Q    |    W    |   5: INSTEAD   | true(fixed) |    E    |     R     | true/false | Q さんが立替                                                       |
-|    -    |    W    |    10: PAIR    | true/false  |    D    |     F     |     -      | 二人の record, type_id に紐づく types.pair_id あり                 |
-|    Q    |    W    | 15: SETTLEMENT |      -      |    -    |     F     |     -      | Q さんが払った精算 record, method_id に紐づく methods.pair_id あり |
+| user_id | pair_id |  record_type   |   is_pay   | type_id | method_id | is_settled | 状況説明                                                           |
+| :-----: | :-----: | :------------: | :--------: | :-----: | :-------: | :--------: | :----------------------------------------------------------------- |
+|    Q    |    -    |    0: SELF     | true/false |    E    |     R     |     -      | Q さん個人の record                                                |
+|    Q    |    W    |   5: INSTEAD   |    true    |    E    |     R     | true/false | Q さんが立替, is_pay は true 固定                                  |
+|    -    |    W    |    10: PAIR    | true/false |    D    |     F     |     -      | 二人の record, type_id に紐づく types.pair_id あり                 |
+|    Q    |    W    | 15: SETTLEMENT |     -      |    -    |     F     |     -      | Q さんが払った精算 record, method_id に紐づく methods.pair_id あり |
 
 ※ アルファベットは固有の ID を示す
 
@@ -314,7 +313,6 @@ create table develop.records (
     price             integer      not null check (price <= 1000000),
     memo              text,
     planned_record_id integer,
-    is_instead        boolean,
     is_settled        boolean,
     record_type       smallint     not null default 0,
 
@@ -364,7 +362,7 @@ create policy "develop.records all"
 | sort                  |   int    |  -   |    v     |       v        |           -            | クエリひとつでスワップするために UK としない                                     |
 | updated_at            | datetime |  -   |    v     |       -        |           -            | supabase [固有の設定](https://zenn.dev/matken/articles/supabase-timestamp)が必要 |
 
-※ planned_record には is_instead は設けないものとする
+※ planned_record には 精算するという概念を設けないので record_type は設けないものとする
 
 #### migration
 

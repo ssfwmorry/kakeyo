@@ -240,9 +240,23 @@ create policy "develop.memos all"
 ## 20250405\_開発と本番 DB の records のカラムを変更する対応
 
 ```sql
-alter table develop.records alter column is_pay drop not null;
-alter table develop.records alter column type_id drop not null;
-alter table develop.records add column record_type smallint default 0 not null;
-update develop.records set record_type = 5 where is_instead = true;
-update develop.records set record_type = 10 where user_id is null and pair_id is not null;
+alter table develop.records alter column is_pay drop not null; -- publicも適応
+alter table develop.records alter column type_id drop not null; -- publicも適応
+alter table develop.records add column record_type smallint default 0 not null; -- publicも適応
+update develop.records set record_type = 5 where is_instead = true; -- publicも適応
+update develop.records set record_type = 10 where user_id is null and pair_id is not null; -- publicも適応
+```
+
+## 20250405\_開発と本番 DB の records のカラムを変更する対応
+
+- `develop.get_method_summary`
+- `develop.get_type_summary`
+- `develop.get_pay_and_income_list`
+- `develop.post_records`
+- `develop.get_record_list`
+- `develop.get_summarized_record_list`
+- `develop.get_paired_record_list`
+
+```sql
+alter table develop.records drop column is_instead;
 ```

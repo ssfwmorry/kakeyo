@@ -1,4 +1,4 @@
--- now: 2025-04-05 16:20
+-- now: 2025-04-05 17:08
 -- migration-sort: 1
 drop table if exists develop.day_classifications cascade;
 
@@ -245,7 +245,6 @@ create table develop.records (
     price             integer      not null check (price <= 1000000),
     memo              text,
     planned_record_id integer,
-    is_instead        boolean,
     is_settled        boolean,
     record_type       smallint     not null default 0,
 

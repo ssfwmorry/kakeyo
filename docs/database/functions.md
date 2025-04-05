@@ -233,7 +233,7 @@ as $$
             (case
                 -- TODO fix-bug これだと、全てのpairからrecordsをとってくるはず。pairsとJOINして絞り込む必要あり
                 when input_is_pair = true and input_is_include_instead = true then pair_id is not null
-                when input_is_pair = true and input_is_include_instead = false then (pair_id is not null and is_instead = false)
+                when input_is_pair = true and input_is_include_instead = false then (pair_id is not null and record_type in (10, 15))
                 when input_is_pair = false and input_is_include_instead = true then (user_id = cast(input_user_id as char(28)))
                 else (user_id = cast(input_user_id as char(28)) and pair_id is null)
             end)
@@ -323,7 +323,7 @@ as $$
             (case
                 -- TODO fix-bug これだと、全てのpairからrecordsをとってくるはず。pairsとJOINして絞り込む必要あり
                 when input_is_pair = true and input_is_include_instead = true then pair_id is not null
-                when input_is_pair = true and input_is_include_instead = false then (pair_id is not null and is_instead = false)
+                when input_is_pair = true and input_is_include_instead = false then (pair_id is not null and record_type in (10, 15))
                 when input_is_pair = false and input_is_include_instead = true then (user_id = cast(input_user_id as char(28)))
                 else (user_id = cast(input_user_id as char(28)) and pair_id is null)
             end)
@@ -403,7 +403,7 @@ as $$
         where
             (case
                 when input_is_pair = true and input_is_include_instead = true then (pairs.user1_id = input_user_id or pairs.user2_id = input_user_id)
-                when input_is_pair = true and input_is_include_instead = false then ((pairs.user1_id = input_user_id or pairs.user2_id = input_user_id) and records.is_instead = false)
+                when input_is_pair = true and input_is_include_instead = false then ((pairs.user1_id = input_user_id or pairs.user2_id = input_user_id) and records.record_type in (10, 15))
                 when input_is_pair = false and input_is_include_instead = true then records.user_id = input_user_id
                 else (records.user_id = input_user_id and records.pair_id is null)
             end)
@@ -466,8 +466,8 @@ as $$
         price,
         memo,
         planned_record_id,
-        is_instead,
-        is_settled
+        is_settled,
+        record_type
     )
     select
         planned_records.user_id,
@@ -481,14 +481,15 @@ as $$
         planned_records.memo,
         planned_records.id as planned_record_id,
         case
-            when planned_records.pair_id is null then null
-            when planned_records.user_id is null then false
-            else true
-        end as is_instead,
-        case
             when planned_records.pair_id is not null and planned_records.user_id is not null then false
             else null
-        end as is_settled
+        end as is_settled,
+        case
+            when planned_records.pair_id is null then 0
+            when planned_records.pair_id is not null and planned_records.user_id is not null then 5
+            when planned_records.pair_id is not null and planned_records.user_id is null then 10
+            else 15 -- 起こり得ない
+        end as record_type
     from develop.planned_records
     inner join develop.day_classifications on
         planned_records.day_classification_id = day_classifications.id
@@ -916,7 +917,11 @@ as $$
       records.is_pay,
       records.price,
       records.memo,
-      records.is_instead,
+      (case
+        when records.record_type = 5 then true
+        when records.record_type = 0 then null
+        else false
+      end) as is_instead,
       records.planned_record_id,
       methods.id as method_id,
       methods.name as method_name,
@@ -1011,7 +1016,11 @@ as $$
         records.is_pay,
         records.price,
         records.memo,
-        records.is_instead,
+        (case
+            when records.record_type = 5 then true
+            when records.record_typ = 0 then null
+            else false
+        end) as is_instead,
         records.planned_record_id,
         methods.id as method_id,
         methods.name as method_name,
@@ -1053,7 +1062,7 @@ as $$
         end)
         and (case
             when input_is_pair = true and input_is_include_instead = true then pairs.id is not null
-            when input_is_pair = true and input_is_include_instead = false then (pairs.id is not null and records.is_instead = false)
+            when input_is_pair = true and input_is_include_instead = false then (pairs.id is not null and records.record_type in (10, 15))
             when input_is_pair = false and input_is_include_instead = true then (records.user_id = cast(input_user_id as char(28)))
             else (records.user_id = cast(input_user_id as char(28)) and pairs.id is null)
         end)
@@ -1100,7 +1109,11 @@ as $$
         records.is_pay,
         records.price,
         records.memo,
-        records.is_instead,
+        (case
+            when records.record_type = 5 then true
+            when records.record_typ = 0 then null
+            else false
+        end) as is_instead,
         records.is_settled,
         records.planned_record_id is not null as is_planned_record,
         methods.name as method_name,
