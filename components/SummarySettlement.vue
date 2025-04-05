@@ -39,7 +39,7 @@
                   v-for="record of selectedRate.records"
                   :key="record.id"
                   small
-                  :outlined="record.isMe"
+                  :variant="record.isMe ? 'outlined' : 'tonal'"
                   class="mr-1 chip-hover"
                 >
                   {{ record.price }}</v-chip
