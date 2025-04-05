@@ -8,14 +8,24 @@
     <div class="py-2 pl-1 pr-2 w-100">
       <v-row no-gutters>
         <v-col class="d-flex justify-space-between">
-          <div class="d-flex flex-row align-center">
-            <div class="mr-2">
-              <v-avatar size="28" :color="props.typeColor" :icon="$ICONS.SHARE" class="text-white">
-              </v-avatar>
+          <div class="w-100 d-flex flex-row align-center justify-space-between">
+            <div class="me-auto d-flex flex-row align-center">
+              <div class="mr-2">
+                <v-avatar
+                  size="28"
+                  :color="props.typeColor"
+                  :icon="$ICONS.SHARE"
+                  class="text-white"
+                >
+                </v-avatar>
+              </div>
+              <div class="fs-nml">
+                {{ props.typeAndSubtype }}
+                <v-icon v-if="props.isShowPlannedIcon" small>{{ $ICONS.UPDATE }}</v-icon>
+              </div>
             </div>
-            <div class="fs-nml">
-              {{ props.typeAndSubtype }}
-              <v-icon v-if="props.isShowPlannedIcon" small>{{ $ICONS.UPDATE }}</v-icon>
+            <div class="d-flex justify-end">
+              {{ TimeUtility.ConvertDbDatetimeStringToJPDay(props.datetime) }}
             </div>
           </div>
         </v-col>
@@ -40,9 +50,13 @@
 </template>
 
 <script setup lang="ts">
+import TimeUtility from '@/utils/time';
+import type { DbDatetimeString } from '@/utils/types/common';
+
 const { $ICONS } = useNuxtApp();
 
 type Props = {
+  datetime: DbDatetimeString;
   labelColor: string | null;
   backgroundColor: string | null;
   typeColor: string;

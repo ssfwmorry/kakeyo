@@ -2,6 +2,7 @@ import { DEMO_USER_INFO } from '@/utils/constants';
 import type {
   DateString,
   DatetimeString,
+  DbDatetimeString,
   PickedDate,
   YearMonthNumObj,
   YearMonthObj,
@@ -87,6 +88,11 @@ const TimeUtility = {
       throw new Error('ConvertDateStrToYearMonth');
     }
     return dateStr.substring(0, 7);
+  },
+  // ex.. PARAM: '2022-01-03T10:10:10+09:00', RET: '3日'
+  ConvertDbDatetimeStringToJPDay: (d: DbDatetimeString): string => {
+    const day = d.substring(8, 10);
+    return `${Number(day)}日`;
   },
   // ex.. PARAM: '2022-01-01', RET: 2022年1月
   ConvertDateStrToJPYearMonth: (dateStr: DateString) => {

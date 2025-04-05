@@ -268,3 +268,8 @@ alter table develop.records drop column is_instead; -- publicも適応
 ```sql
 alter table develop.methods alter column is_pay drop not null; -- publicも適応
 ```
+
+## 20250405\_開発と本番 DB の 精算画面に日にちを表示する対応
+
+- `develop.get_paired_record_list`
+- `public.get_paired_record_list`

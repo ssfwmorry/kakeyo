@@ -1018,7 +1018,7 @@ as $$
         records.memo,
         (case
             when records.record_type = 5 then true
-            when records.record_typ = 0 then null
+            when records.record_type = 0 then null
             else false
         end) as is_instead,
         records.planned_record_id,
@@ -1089,6 +1089,7 @@ drop function if exists develop.get_paired_record_list(input_user_id varchar(30)
 create or replace function develop.get_paired_record_list(input_user_id varchar(30),input_year_month varchar(8))
 returns table (
     id integer,
+    datetime timestamptz,
     is_self boolean,
     is_pay boolean,
     price integer,
@@ -1105,13 +1106,14 @@ returns table (
 as $$
     select
         records.id,
+        records.datetime,
         records.user_id = input_user_id as is_self,
         records.is_pay,
         records.price,
         records.memo,
         (case
             when records.record_type = 5 then true
-            when records.record_typ = 0 then null
+            when records.record_type = 0 then null
             else false
         end) as is_instead,
         records.is_settled,

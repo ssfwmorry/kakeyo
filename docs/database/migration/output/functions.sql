@@ -1,4 +1,4 @@
--- now: 2025-04-05 17:08
+-- now: 2025-04-05 22:05
 -- migration-sort: 1
 drop function if exists develop.swap_method(id1 int, id2 int);
 
@@ -739,6 +739,7 @@ drop function if exists develop.get_paired_record_list(input_user_id varchar(30)
 create or replace function develop.get_paired_record_list(input_user_id varchar(30),input_year_month varchar(8))
 returns table (
     id integer,
+    datetime timestamptz,
     is_self boolean,
     is_pay boolean,
     price integer,
@@ -755,6 +756,7 @@ returns table (
 as $$
     select
         records.id,
+        records.datetime,
         records.user_id = input_user_id as is_self,
         records.is_pay,
         records.price,

@@ -122,6 +122,7 @@
               class="w-100"
             >
               <RecordCardHalf
+                :datetime="record.datetime"
                 :labelColor="record.labelColor"
                 :backgroundColor="record.backgroundColor"
                 :typeColor="record.typeColorClassificationName"
@@ -154,6 +155,7 @@
               class="w-100"
             >
               <RecordCardHalf
+                :datetime="record.datetime"
                 :labelColor="record.labelColor"
                 :backgroundColor="record.backgroundColor"
                 :typeColor="record.typeColorClassificationName"
