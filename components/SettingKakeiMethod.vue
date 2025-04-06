@@ -7,7 +7,7 @@
           <v-btn-toggle v-model="payMode" density="compact" variant="outlined" mandatory>
             <v-btn :value="PayMode.pay" width="70" class="px-0">支払</v-btn>
             <v-btn :value="PayMode.income" min-width="70" class="px-0">受取</v-btn>
-            <v-btn v-if="isPair" :value="PayMode.both" min-width="70" class="px-0">共有</v-btn>
+            <v-btn v-if="isPair" :value="PayMode.both" min-width="70" class="px-0">精算</v-btn>
           </v-btn-toggle>
           <div class="ml-4 d-flex align-center">
             <v-btn
