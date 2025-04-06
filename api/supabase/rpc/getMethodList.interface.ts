@@ -9,7 +9,7 @@ interface GetMethodListRpcRequest {
 export type GetMethodListRpcRow = {
   id: Id;
   name: string;
-  is_pay: boolean;
+  is_pay: boolean | null;
   sort: number;
   color_classification_id: Id;
   color_classification_name: string;

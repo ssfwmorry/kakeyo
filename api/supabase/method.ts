@@ -39,12 +39,16 @@ export const getMethodList = async ({
   return {
     data: {
       income: {
-        self: camelizedData.data.filter((e) => !e.isPair && !e.isPay),
-        pair: camelizedData.data.filter((e) => e.isPair && !e.isPay),
+        self: camelizedData.data.filter((e) => !e.isPair && !e.isPay === false),
+        pair: camelizedData.data.filter((e) => e.isPair && e.isPay === false),
       },
       pay: {
-        self: camelizedData.data.filter((e) => !e.isPair && e.isPay),
-        pair: camelizedData.data.filter((e) => e.isPair && e.isPay),
+        self: camelizedData.data.filter((e) => !e.isPair && e.isPay === true),
+        pair: camelizedData.data.filter((e) => e.isPair && e.isPay === true),
+      },
+      both: {
+        self: [], // 固定値
+        pair: camelizedData.data.filter((e) => e.isPay === null),
       },
     },
     error: null,

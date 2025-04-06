@@ -275,6 +275,7 @@ const typeList = ref<GetTypeListOutputData>({
 const methodList = ref<GetMethodListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
+  both: { self: [], pair: [] },
 });
 
 const isShowInitPrice = computed(() => price.value !== 0);

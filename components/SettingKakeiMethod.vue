@@ -4,9 +4,10 @@
     <div class="px-3 mb-4">
       <v-row no-gutters class="mb-3">
         <v-col class="d-flex flex-row">
-          <v-btn-toggle v-model="isPay" density="compact" variant="outlined" mandatory>
-            <v-btn :value="true" width="70" class="px-0">支払</v-btn>
-            <v-btn :value="false" min-width="70" class="px-0">受取</v-btn>
+          <v-btn-toggle v-model="payMode" density="compact" variant="outlined" mandatory>
+            <v-btn :value="PayMode.pay" width="70" class="px-0">支払</v-btn>
+            <v-btn :value="PayMode.income" min-width="70" class="px-0">受取</v-btn>
+            <v-btn v-if="isPair" :value="PayMode.both" min-width="70" class="px-0">共有</v-btn>
           </v-btn-toggle>
           <div class="ml-4 d-flex align-center">
             <v-btn
@@ -20,9 +21,7 @@
       </v-row>
       <v-row class="mb-3" no-gutters>
         <v-col
-          v-for="(method, methodIndex) of methodList[isPay ? 'pay' : 'income'][
-            isPair ? 'pair' : 'self'
-          ]"
+          v-for="(method, methodIndex) of methodList[payMode][isPair ? 'pair' : 'self']"
           :key="method.id"
           cols="6"
           class="mb-2 col-method"
@@ -47,8 +46,7 @@
                 <v-btn
                   v-else-if="
                     !isEdit &&
-                    methodIndex <
-                      methodList[isPay ? 'pay' : 'income'][isPair ? 'pair' : 'self'].length - 1
+                    methodIndex < methodList[payMode][isPair ? 'pair' : 'self'].length - 1
                   "
                   density="compact"
                   variant="flat"
@@ -56,9 +54,7 @@
                   @click.stop="
                     swapSort(
                       method.id,
-                      methodList[isPay ? 'pay' : 'income'][isPair ? 'pair' : 'self'][
-                        methodIndex + 1
-                      ].id
+                      methodList[payMode][isPair ? 'pair' : 'self'][methodIndex + 1].id
                     )
                   "
                 ></v-btn>
@@ -76,6 +72,7 @@
             color="primary"
             height="32"
             width="70"
+            :disabled="payMode === PayMode.both && !isPair"
             @click="openCreateDialog()"
             >＋</v-btn
           >
@@ -115,12 +112,23 @@ type Props = {
 };
 const props = defineProps<Props>();
 
+const PayMode = {
+  pay: 'pay',
+  income: 'income',
+  both: 'both',
+} as const;
+type PayMode = (typeof PayMode)[keyof typeof PayMode];
+
 type MethodDialog = NameAndColorDialog;
-const isPay = ref(true);
+const payMode = ref<PayMode>(PayMode.pay);
+const isPay = computed<boolean | null>(() =>
+  payMode.value === PayMode.both ? null : payMode.value === PayMode.pay
+);
 const isEdit = ref(true);
 const methodList = ref<GetMethodListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
+  both: { self: [], pair: [] },
 });
 const methodDialog = ref<MethodDialog>({
   isShow: false,
@@ -137,6 +145,7 @@ const updateShowData = async () => {
     userUid: userUid.value,
   });
   assertApiResponse(apiRes);
+  console.log(apiRes.data);
 
   methodList.value = apiRes.data;
 };

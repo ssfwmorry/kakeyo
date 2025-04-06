@@ -236,6 +236,7 @@ const DEMO_DATA = {
             },
           ],
         },
+        both: { self: [] as [], pair: [] },
       },
       error: null,
       message: 'demo',

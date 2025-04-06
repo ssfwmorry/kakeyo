@@ -49,6 +49,16 @@ export type Plan = {
   memo: string | null;
 };
 
+export type Method = {
+  id: Id;
+  userId: Id | null;
+  pairId: Id | null;
+  name: string;
+  isPay: boolean | null;
+  colorClassificationId: Id;
+  sort: number;
+};
+
 export type Record_ = {
   id: Id;
   userId: Id | null;
@@ -61,6 +71,7 @@ export type Record_ = {
   price: number;
   memo: string | null;
   plannedRecordId: Id | null;
-  isInstead: boolean | null;
+  isInstead: boolean | null; // TODO
   isSettled: boolean | null;
+  // recordType: number; // TODO
 };
