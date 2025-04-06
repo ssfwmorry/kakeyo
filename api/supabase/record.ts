@@ -1,6 +1,7 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
 import { camelizeKeys } from 'humps';
+import type { Id } from '~/utils/types/common';
 import {
   buildNoDataApiOutput,
   type DeleteInput,
@@ -11,6 +12,7 @@ import {
   type UpsertOutput,
 } from './common.interface';
 import type {
+  DbPair,
   GetMethodSummaryInput,
   GetMethodSummaryOutput,
   GetMonthSumInput,
@@ -26,6 +28,7 @@ import type {
   GetTypeSummaryInput,
   GetTypeSummaryItem,
   GetTypeSummaryOutput,
+  InsertSettlementRecordInput,
   PostRecordsInput,
   PostRecordsOutput,
   SettleRecordsInput,
@@ -85,6 +88,48 @@ export const getRecordList = async (
     return { ...e, id: e.recordId };
   });
   return { data: outData, error: null, message: 'record 一覧' };
+};
+
+export const createSettlementRecord = async (
+  {
+    isDemoLogin,
+    pairId,
+    userUid,
+  }: Omit<SupabaseApiAuthUpsert, 'isPair' | 'pairId'> & { pairId: Id }, // TODO 型再利用性検討
+  { datetime, isPay, methodId, price }: InsertSettlementRecordInput
+): Promise<UpsertOutput> => {
+  if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
+
+  let targetUserId = userUid;
+  if (!isPay) {
+    const { data, error } = await supabase
+      .from('pairs')
+      .select<'id, user1_id, user2_id', DbPair>('id, user1_id, user2_id')
+      .eq('id', pairId);
+    if (error !== null || data === null || data.length !== 1) {
+      return { error, message: 'settlement record 挿入 - pairs 取得' };
+    }
+    // 相手のuserIdをtargetUserIdに格納する
+    if (userUid === data[0].user1_id) targetUserId = data[0].user2_id;
+    else targetUserId = data[0].user1_id;
+  }
+
+  const { error } = await supabase.from('records').insert([
+    {
+      user_id: targetUserId,
+      pair_id: pairId,
+      datetime: datetime,
+      is_pay: true,
+      method_id: methodId,
+      is_settled: null,
+      type_id: null,
+      sub_type_id: null,
+      price: price,
+      memo: null,
+      record_type: 15,
+    },
+  ]);
+  return buildNoDataApiOutput(error, 'settlement record 挿入');
 };
 
 export const upsertRecord = async (

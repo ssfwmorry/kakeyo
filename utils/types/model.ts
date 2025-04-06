@@ -13,6 +13,7 @@ export type DayClassification = {
 
 export type Pair = {
   id: Id;
+  // MEMO: Decamelized<> によりスネークケースにすると user_1_id になるので手動で定義必要
   user1Id: string;
   user2Id: string;
 };

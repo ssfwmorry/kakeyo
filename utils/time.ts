@@ -9,6 +9,7 @@ import type {
   YearMonthString,
 } from '@/utils/types/common';
 import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import JapaneseHolidays from 'japanese-holidays';
 
 const config = useRuntimeConfig();
@@ -178,6 +179,13 @@ const TimeUtility = {
   // ex.. PARAM: {year: '2022', month: '01'}, RET: '2022-01'
   ConvertYearMonthObjToYearMonth: (yearMonthObj: YearMonthObj) => {
     return yearMonthObj.year + '-' + yearMonthObj.month;
+  },
+  // ex.. PARAM: {year: '2022', month: '01'}, RET: '2022-01-31 10:00:00'
+  ConvertYearMonthObjToEndOfMonthDatetime: (o: YearMonthObj): DatetimeString => {
+    const startOfMonthStr = `${o.year}-${o.month}-01`;
+    const endOfMonth = dayjs(startOfMonthStr).endOf('month');
+    const now = NowDateJst();
+    return endOfMonth.format(format.Date) + now.toISOString().substring(10, 19);
   },
   // ex.. PARAM: {year: '2022', month: '01'}, RET: {year: 2022, month: 0},
   ConvertYearMonthObjToYearMonthNumObj: (obj: YearMonthObj): YearMonthNumObj => {

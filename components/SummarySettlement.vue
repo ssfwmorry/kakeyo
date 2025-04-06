@@ -74,10 +74,46 @@
           </v-row>
         </template>
         <template v-slot:item.3>
+          <!-- TODO: v-if条件をリファクタ -->
           <div v-if="isExistUnsettledRecord" class="mb-2 text-center">
             結果： {{ settlementResult }}
           </div>
-          <v-row v-if="isExistUnsettledRecord" no-gutters class="d-flex justify-center">
+          <v-row v-if="isExistUnsettledRecord" no-gutters class="mb-3">
+            <v-spacer />
+            <v-col cols="6">
+              <v-select
+                v-model="selectedMethodId"
+                :items="methodList"
+                item-title="name"
+                item-value="id"
+                variant="underlined"
+                density="compact"
+                :menu-props="{ maxHeight: 400 }"
+                hide-details
+                disable-lookup
+                :prepend-inner-icon="$ICONS.CREDIT_CARD"
+                single-line
+              ></v-select>
+            </v-col>
+            <v-spacer />
+          </v-row>
+          <v-row v-if="isExistUnsettledRecord" no-gutters class="mb-4">
+            <v-spacer />
+            <v-col cols="6">
+              <v-number-input
+                v-model="price"
+                control-variant="hidden"
+                inset
+                variant="outlined"
+              ></v-number-input>
+            </v-col>
+            <v-spacer />
+          </v-row>
+          <v-row
+            v-if="isExistUnsettledRecord && selectedMethodId !== null"
+            no-gutters
+            class="d-flex justify-center"
+          >
             <v-btn variant="flat" color="primary" class="text-white mr-4" @click="endSettlement()">
               完了
             </v-btn>
@@ -183,7 +219,13 @@
 </template>
 
 <script setup lang="ts">
-import type { GetPairedRecordItem } from '@/api/supabase/record.interface';
+import { getMethodList } from '@/api/supabase/method';
+import type { GetMethodListItem } from '@/api/supabase/method.interface';
+import { createSettlementRecord } from '@/api/supabase/record';
+import type {
+  GetPairedRecordItem,
+  InsertSettlementRecordInput,
+} from '@/api/supabase/record.interface';
 import type { DialogInfo } from '@/components/SettlementSelectRateDialog.vue';
 import { assertApiResponse } from '@/utils/api';
 import {
@@ -199,7 +241,7 @@ import type { Id, YearMonthNumObj, YearMonthObj } from '@/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const authStore = useAuthStore();
-const { isDemoLogin, userUid } = storeToRefs(authStore);
+const { isDemoLogin, pairId, userUid } = storeToRefs(authStore);
 const { getPairedRecordList, settleRecords: supabaseSettleRecords } = useSupabase();
 const { setToast } = useToastStore();
 
@@ -238,6 +280,9 @@ const selectedRateList = ref<RateList>([]);
 const isExistUnsettledRecord = ref(false);
 const coupleSum = ref(0);
 const recordList = ref<RecordList>({ ME: [], PARTNER: [], COUPLE: [] });
+const methodList = ref<GetMethodListItem[]>([]);
+const selectedMethodId = ref<number | null>(null);
+const price = ref(0);
 const dialog = ref<Dialog>({
   isShow: false,
   id: null,
@@ -291,19 +336,26 @@ const updateChart = async () => {
   const payload = {
     yearMonth: TimeUtility.ConvertYearMonthObjToYearMonth(focus.value),
   };
-  const apiRes = await getPairedRecordList(
+  const apiResRecord = await getPairedRecordList(
     { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
     payload
   );
-  assertApiResponse(apiRes);
+  assertApiResponse(apiResRecord);
+
+  const apiResMethod = await getMethodList({
+    isDemoLogin: isDemoLogin.value,
+    userUid: userUid.value,
+  });
+  assertApiResponse(apiResMethod);
 
   const {
     coupleSum: ret1,
     recordList: ret2,
     isExistUnsettledRecord: ret3,
-  } = convertShowData(apiRes.data);
+  } = convertShowData(apiResRecord.data);
   coupleSum.value = ret1;
   recordList.value = ret2;
+  methodList.value = apiResMethod.data.both.pair;
   isExistUnsettledRecord.value = ret3;
   selectedRateList.value = [];
 
@@ -375,10 +427,40 @@ const determineClassification = () => {
 };
 const cancelSettlement = () => {
   step.value = stepStatus.GOING;
+  selectedMethodId.value = null;
 };
 const endSettlement = async () => {
+  enableLoading();
+  if (selectedMethodId.value === null || pairId.value === null || price.value < 0) {
+    alert('予期せぬ状態');
+    return;
+  }
+
+  // 精算用のrecordを作成
+  const ret = reportedDataByRate.value.reduce((sum, info) => sum + info.diff, 0);
+  if (ret !== 0) {
+    const payload: InsertSettlementRecordInput = {
+      datetime: TimeUtility.ConvertYearMonthObjToEndOfMonthDatetime(focus.value),
+      methodId: selectedMethodId.value,
+      price: price.value,
+      isPay: ret > 0,
+    };
+    await createSettlementRecord(
+      {
+        isDemoLogin: isDemoLogin.value,
+        userUid: userUid.value,
+        pairId: pairId.value,
+      },
+      payload
+    );
+  }
+
+  // 精算済みとして複数のrecordを更新
   await settleRecords();
-  step.value = stepStatus.READY;
+
+  // MEMO: 二重にローディングしている
+  await updateChart();
+  setToast('変更しました');
 };
 const settleRecords = async () => {
   enableLoading();
@@ -395,10 +477,6 @@ const settleRecords = async () => {
     assertApiResponse(apiRes);
     return;
   }
-
-  // MEMO: 二重にローディングしている
-  await updateChart();
-  setToast('変更しました');
 };
 const getRecordIdList = (selectedRateList: RateList) => {
   let ret = [];

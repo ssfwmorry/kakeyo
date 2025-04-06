@@ -6,6 +6,7 @@ import type {
   YearMonthString,
   YearString,
 } from '@/utils/types/common';
+import type { Pair } from '@/utils/types/model';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
 import type { ApiOutput, InvalidArgumentError } from './common.interface';
@@ -20,6 +21,13 @@ export interface GetRecordListInput extends DateRange {}
 
 export type GetRecordListItem = Camelized<Omit<GetRecordListRpcRow, 'record_id'>> & { id: Id };
 export interface GetRecordListOutput extends ApiOutput<GetRecordListItem[], PostgrestError> {}
+
+export type DbPair = Pick<Pair, 'id'> & {
+  user1_id: string;
+  user2_id: string;
+};
+export interface InsertSettlementRecordInput
+  extends Pick<UpsertRecordInput, 'datetime' | 'isPay' | 'methodId' | 'price'> {}
 
 export interface UpsertRecordInput {
   id: Id | null;
