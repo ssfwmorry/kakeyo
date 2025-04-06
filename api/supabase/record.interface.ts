@@ -60,7 +60,7 @@ export interface PostRecordsOutput extends ApiOutput<null, PostgrestError> {}
 export interface GetMonthSumInput {
   yearMonth: YearMonthString;
 }
-type GetMonthSumOutputData = { SELF: number; PAIR: number; BOTH: number };
+type GetMonthSumOutputData = number;
 export interface GetMonthSumOutput extends ApiOutput<GetMonthSumOutputData, PostgrestError> {}
 
 export interface GetTypeSummaryInput {
@@ -101,8 +101,8 @@ export interface GetSummarizedRecordListInput {
   subtypeId: Id | null;
 }
 export type GetSummarizedRecordItem = Camelized<
-  Omit<GetSummarizedRecordListRpcRow, 'record_id'>
-> & { id: Id };
+  Omit<GetSummarizedRecordListRpcRow, 'record_id' | 'type_name'>
+> & { id: Id; typeName: string; isInstead: boolean | null; isSettlement: boolean | null };
 export interface GetSummarizedRecordListOutput
   extends ApiOutput<GetSummarizedRecordItem[], PostgrestError> {}
 

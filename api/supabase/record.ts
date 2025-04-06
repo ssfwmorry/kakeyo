@@ -252,21 +252,13 @@ export const getMonthSum = async (
   }
   if (data.length === 0) {
     return {
-      data: {
-        ['SELF']: 0,
-        ['PAIR']: 0,
-        ['BOTH']: 0,
-      },
+      data: 0,
       error: null,
       message: 'month_sum 取得',
     };
   }
   return {
-    data: {
-      ['SELF']: data[0].self_sum,
-      ['PAIR']: data[0].pair_sum,
-      ['BOTH']: data[0].both_sum,
-    },
+    data: data[0].self_sum,
     error: null,
     message: 'month_sum 取得',
   };
@@ -403,7 +395,13 @@ export const getSummarizedRecordList = async (
   const camelizedData = camelizeKeys<{ data: GetSummarizedRecordListRpcRow[] }>({ data });
   const outData = camelizedData.data.map((e) => {
     // TODO 不要なrecord_idも渡してしまう
-    return { ...e, id: e.recordId };
+    return {
+      ...e,
+      id: e.recordId,
+      typeName: e.typeName === null || e.recordType === RecordType.settlement ? '精算' : e.typeName,
+      isInstead: e.isPair === false ? null : e.recordType === RecordType.instead,
+      isSettlement: e.isPair === false ? null : e.recordType === RecordType.settlement,
+    };
   });
 
   return { data: outData, error: null, message: 'summarized_record 一覧' };

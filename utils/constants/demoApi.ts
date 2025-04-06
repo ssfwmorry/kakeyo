@@ -4180,13 +4180,13 @@ const DEMO_DATA = {
     GET_MONTH_SUM: (yearMonth: YearMonthString) => {
       if (yearMonth !== '2022-01') {
         return {
-          data: { ['SELF']: 0, ['PAIR']: 0, ['BOTH']: 0 },
+          data: 0,
           error: null,
           message: 'demo',
         };
       }
       return {
-        data: { ['SELF']: -94810, ['PAIR']: 127018, ['BOTH']: 17023 },
+        data: -94810,
         error: null,
         message: 'demo',
       };

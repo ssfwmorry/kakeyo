@@ -151,6 +151,7 @@
       <v-col>
         <v-row v-for="record in selectedDayRecords" :key="record.id" no-gutters class="mb-1">
           <v-col>
+            <!-- TODO 相手からの精算は自分のプラスに表示する -->
             <RecordCard
               :isDisable="showRecordMode === 'BOTH' && !record.isSelf"
               :isPairType="record.isPair ?? false"
@@ -344,16 +345,13 @@ const selectedDayForShow = ref<string | null>(null);
 const selectedDate = ref<DateString | null>(null);
 const selectedDayRecords = ref<GetRecordListItem[]>([]);
 const selectedPlan = ref<EventGetPlan | null>(null);
-const monthSum = ref({ ['SELF']: 0, ['PAIR']: 0, ['BOTH']: 0 });
+const monthSumStr = ref('');
 const showRecordMode = ref<ShareType>('BOTH');
 const isShowMemoInput = ref(false);
 const isPairMemo = ref(false);
 const memoText = ref<string | null>(null);
 const isEndInit = ref(false);
 
-const monthSumStr = computed(() =>
-  StringUtility.ConvertIntToShowPrefixStr(monthSum.value[showRecordMode.value])
-);
 const focusObj = computed(() => {
   if (focus.value === null) return null;
   return TimeUtility.ConvertDateStrToYearMonthNumObj(focus.value);
@@ -481,7 +479,7 @@ const updateRange = async () => {
 
   // レンダリングされるタイミングを揃えるため、全て取得してから、data を更新する
   daySumList.value = tmpDaySumList;
-  monthSum.value = apiResMonthSum.data;
+  monthSumStr.value = StringUtility.ConvertIntToShowPrefixStr(apiResMonthSum.data);
   calendarOptions.value.events = events;
   isEndInit.value = true; // fullCalendar 描画に必要な data 更新後に isEndInit を TRUE にして、 updateRange() を呼ぶ
   disableLoading();

@@ -113,8 +113,6 @@ $$ language sql;
       - 例: 9000
       - 型: int
       - 備考: 正の値は、収支がマイナスを意味する
-    - pair_sum
-    - both_sum
 
 ```sql
 -- migration-sort: 6
@@ -123,54 +121,40 @@ drop function if exists develop.get_month_sum(input_user_id varchar(30), input_y
 create or replace function develop.get_month_sum(input_user_id varchar(30), input_year_month varchar(7))
 returns table (
     year_month varchar(7),
-    self_sum int,
-    pair_sum int,
-    both_sum int
+    self_sum int
 )
 as $$
     with converted_price as (
-        select
+      select
+        to_char(cast(datetime as date),'YYYY-MM') as year_month,
+        case
+          when records.record_type = 0 and records.user_id = input_user_id then
             case
-                when records.pair_id is null and records.user_id = input_user_id then
-                    case
-                        when is_pay = false then price * (-1)
-                        else price
-                    end
-                else 0
-            end as self_price,
-            case
-                when records.pair_id is not null then
-                    case
-                        when is_pay = false then price * (-1)
-                        else price
-                    end
-                else 0
-            end as pair_price,
-            case
-                when records.user_id = input_user_id then
-                    case
-                        when is_pay = false then price * (-1)
-                        else price
-                    end
-                else 0
-            end as both_price,
-            to_char(cast(datetime as date),'YYYY-MM') as year_month
-        from develop.records
-        left join develop.pairs on
-            records.pair_id = pairs.id
-        where
-            (
-                records.user_id = input_user_id
-                or pairs.user1_id = input_user_id
-                or pairs.user2_id = input_user_id
-            )
-            and to_char(cast(datetime as date),'YYYY-MM') = input_year_month
+              when is_pay = false then price * (-1)
+              else price
+            end
+          -- when records.record_type = 0 and records.user_id <> input_user_id は相手の支払なのでノーカウント
+          when records.record_type = 5 and records.user_id = input_user_id then price -- 立替は必ず支払
+          -- when records.record_type = 5 and records.user_id <> input_user_id は相手の立替なのでノーカウント
+          -- when records.record_type = 10 はノーカウント
+          when records.record_type = 15 and records.user_id = input_user_id then price -- 精算による支払
+          when records.record_type = 15 and records.user_id <> input_user_id then price * (-1) -- 精算による受取
+          else 0
+        end as self_price
+      from develop.records
+      left join develop.pairs on
+        records.pair_id = pairs.id
+      where
+        (
+          records.user_id = input_user_id
+          or pairs.user1_id = input_user_id
+          or pairs.user2_id = input_user_id
+        )
+        and to_char(cast(datetime as date),'YYYY-MM') = input_year_month
     )
     select
-        year_month,
-        sum(self_price) as self_sum,
-        sum(pair_price) as pair_sum,
-        sum(both_price) as both_sum
+      year_month,
+      sum(self_price) as self_sum
     from converted_price
     group by year_month;
 $$ language sql;
@@ -984,7 +968,7 @@ returns table (
     is_pay boolean,
     price integer,
     memo text,
-    is_instead boolean,
+    record_type smallint, -- not null
     planned_record_id integer,
     method_id integer,
     method_name varchar(10),
@@ -1005,11 +989,7 @@ as $$
         records.is_pay,
         records.price,
         records.memo,
-        (case
-            when records.record_type = 5 then true
-            when records.record_type = 0 then null
-            else false
-        end) as is_instead,
+        records.record_type,
         records.planned_record_id,
         methods.id as method_id,
         methods.name as method_name,
