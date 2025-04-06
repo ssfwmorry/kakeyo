@@ -19,7 +19,12 @@ import type { GetTypeSummaryRpcRow } from './rpc/getTypeSummary.interface';
 
 export interface GetRecordListInput extends DateRange {}
 
-export type GetRecordListItem = Camelized<Omit<GetRecordListRpcRow, 'record_id'>> & { id: Id };
+export type GetRecordListItem = Camelized<Omit<GetRecordListRpcRow, 'record_id' | 'type_name'>> & {
+  id: Id;
+  typeName: string;
+  isInstead: boolean | null;
+  isSettlement: boolean | null;
+};
 export interface GetRecordListOutput extends ApiOutput<GetRecordListItem[], PostgrestError> {}
 
 export type DbPair = Pick<Pair, 'id'> & {

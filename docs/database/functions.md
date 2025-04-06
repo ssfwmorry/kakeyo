@@ -869,7 +869,7 @@ $$ language sql;
   - is_pay
   - price
   - memo
-  - is_instead
+  - record_type
   - planned_record_id
   - method_id
   - method_name
@@ -896,7 +896,7 @@ returns table (
   is_pay boolean,
   price integer,
   memo text,
-  is_instead boolean,
+  record_type smallint, -- not null
   planned_record_id integer,
   method_id integer,
   method_name varchar(10),
@@ -917,11 +917,7 @@ as $$
       records.is_pay,
       records.price,
       records.memo,
-      (case
-        when records.record_type = 5 then true
-        when records.record_type = 0 then null
-        else false
-      end) as is_instead,
+      records.record_type,
       records.planned_record_id,
       methods.id as method_id,
       methods.name as method_name,
@@ -936,11 +932,11 @@ as $$
     from develop.records
     inner join develop.methods on
         records.method_id = methods.id
-    inner join develop.types on
+    left join develop.types on
         records.type_id = types.id
     left join develop.sub_types on
         records.sub_type_id = sub_types.id
-    inner join develop.color_classifications as tc on
+    left join develop.color_classifications as tc on
         types.color_classification_id = tc.id
     inner join develop.color_classifications as mc on
         methods.color_classification_id = mc.id
@@ -949,13 +945,6 @@ as $$
     left join develop.users on
         records.user_id = users.uid
         and records.pair_id is not null
-    /*  レコードを作った方じゃない pair_id を取得するとき
-      left join develop.users on
-        (case
-          when pairs.user1_id = records.user_id then pairs.user2_id
-          else pairs.user1_id
-        end)
-        = users.uid */
     where
         (
           records.user_id = input_user_id

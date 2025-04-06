@@ -154,11 +154,12 @@
             <RecordCard
               :isDisable="showRecordMode === 'BOTH' && !record.isSelf"
               :isPairType="record.isPair ?? false"
-              :typeColor="record.typeColorClassificationName"
+              :typeColor="record.typeColorClassificationName ?? ''"
               :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
               :isShowPlannedIcon="!!record.plannedRecordId"
               :isEnableEdit="
-                (record.isSelf ?? false) || ((record.isPair ?? false) && !record.isInstead)
+                record.isSettlement !== true &&
+                ((record.isSelf ?? false) || ((record.isPair ?? false) && !record.isInstead))
               "
               :isPairMethod="(record.isPair ?? false) && !(record.isInstead ?? false)"
               :userName="record.pairUserName ?? ''"
@@ -166,6 +167,7 @@
               :methodName="record.methodName"
               :memo="record.memo ?? ''"
               :isShowBlueColorPrice="!record.isPay"
+              :isSettlement="record.isSettlement ?? false"
               :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
               @edit="goRecordEditPage(record)"
             ></RecordCard>

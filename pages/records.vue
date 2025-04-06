@@ -69,6 +69,7 @@
           </v-row>
           <v-row no-gutters>
             <v-col>
+              <!-- TODO: isSettlementとisEnableEditを判断 -->
               <RecordCard
                 :isDisable="false"
                 :isPairType="record.isPair"
@@ -82,6 +83,7 @@
                 :methodName="record.methodName"
                 :memo="record.memo ?? ''"
                 :isShowBlueColorPrice="!record.isPay"
+                :isSettlement="false"
                 :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
                 @edit="goRecordEditPage(record)"
               ></RecordCard>

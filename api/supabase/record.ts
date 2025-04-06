@@ -1,5 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import { RecordType } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
 import type { Id } from '~/utils/types/common';
 import {
@@ -72,7 +73,7 @@ export const getRecordList = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
   { start, end }: GetRecordListInput
 ): Promise<GetRecordListOutput> => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_RECORD_LIST;
+  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_RECORD_LIST as any; // TODO 調整
 
   const payload = { input_user_id: userUid, input_start_datetime: start, input_end_datetime: end };
   const { data, error } = await supabase.rpc<typeof RPC_GET_RECORD_LIST, GetRecordListRpc>(
@@ -85,7 +86,13 @@ export const getRecordList = async (
 
   const camelizedData = camelizeKeys<{ data: GetRecordListRpcRow[] }>({ data });
   const outData = camelizedData.data.map((e) => {
-    return { ...e, id: e.recordId };
+    return {
+      ...e,
+      id: e.recordId,
+      typeName: e.typeName === null || e.recordType === RecordType.settlement ? '精算' : e.typeName,
+      isInstead: e.isPair === false ? null : e.recordType === RecordType.instead,
+      isSettlement: e.isPair === false ? null : e.recordType === RecordType.settlement,
+    };
   });
   return { data: outData, error: null, message: 'record 一覧' };
 };

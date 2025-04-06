@@ -129,6 +129,7 @@
     </h4>
     <v-row v-for="(record, index) in recordList['COUPLE']" :key="index" no-gutters class="mb-2">
       <v-col>
+        <!-- TODO: isSettlement は false固定ではないかも -->
         <RecordCard
           :isDisable="false"
           :isPairType="true"
@@ -142,6 +143,7 @@
           :methodName="record.methodName"
           :memo="record.memo ?? ''"
           :isShowBlueColorPrice="!record.isPay"
+          :isSettlement="false"
           :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
         ></RecordCard>
       </v-col>

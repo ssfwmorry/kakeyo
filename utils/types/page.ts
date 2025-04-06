@@ -64,6 +64,8 @@ export type Record_ =
   /** Create */
   | { id: null; datetime: DatetimeString }
   /** Select / Update / Delete */
-  | (Omit<RecordModel, 'userId' | 'pairId' | 'isSettled'> & {
+  | (Omit<RecordModel, 'userId' | 'isPay' | 'pairId' | 'isSettled'> & {
+      isPay: boolean;
       isPair: boolean;
+      isInstead: boolean | null;
     });
