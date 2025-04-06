@@ -150,7 +150,7 @@
         <!-- 立替切り替え -->
         <v-spacer />
         <v-col cols="3" class="d-flex align-center">
-          <div v-if="isPair">
+          <div v-if="isPair && isPay">
             <v-checkbox
               v-model="isInstead"
               density="compact"
@@ -301,6 +301,10 @@ const selectedSubType = computed(() => {
 const resetInput = () => {
   selectedTypeId.value = null;
   selectedSubTypeId.value = null;
+  if (isPair.value) {
+    if (!isPay.value) isInstead.value = null;
+    else isInstead.value = true;
+  }
   initSelectedMethodId();
 };
 const isEndSelectType = () => {
@@ -509,9 +513,7 @@ watch(isPair, (newValue, oldValue) => {
     setToast('共有の変更はできません', 'error');
     return;
   }
-  selectedTypeId.value = null;
-  selectedSubTypeId.value = null;
-  selectedMethodId.value = null;
+  resetInput();
 });
 
 // created

@@ -145,7 +145,6 @@ const updateShowData = async () => {
     userUid: userUid.value,
   });
   assertApiResponse(apiRes);
-  console.log(apiRes.data);
 
   methodList.value = apiRes.data;
 };
