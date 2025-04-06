@@ -39,7 +39,7 @@ export const getMethodList = async ({
   return {
     data: {
       income: {
-        self: camelizedData.data.filter((e) => !e.isPair && !e.isPay === false),
+        self: camelizedData.data.filter((e) => !e.isPair && e.isPay === false),
         pair: camelizedData.data.filter((e) => e.isPair && e.isPay === false),
       },
       pay: {
