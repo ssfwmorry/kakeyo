@@ -193,12 +193,7 @@ import type { GetRecordListItem } from '@/api/supabase/record.interface';
 import { PAGE } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import {
-  type DateString,
-  type Id,
-  type ShareType,
-  type YearMonthNumObj,
-} from '@/utils/types/common';
+import { type DateString, type Id, type YearMonthNumObj } from '@/utils/types/common';
 import {
   RouterParamKey,
   type PageQueryParameter,
@@ -221,7 +216,8 @@ const eventType = {
 } as const;
 
 type DateRecordList = Record<
-  ShareType,
+  // TODO: BOTH定義を削除
+  'BOTH',
   {
     sum: number;
     records: GetRecordListItem[];
@@ -471,7 +467,7 @@ const updateRange = async () => {
       });
     }
     events.push({
-      title: daySum(tmpDaySumList, dateStr, 'BOTH'),
+      title: daySum(tmpDaySumList, dateStr),
       start: dayjs(dateStr).toDate(),
       end: dayjs(dateStr).toDate(),
       allDay: true,
@@ -492,9 +488,9 @@ const updateRange = async () => {
   disableLoading();
 };
 
-const daySum = (calendarList: CalendarList, date: DateString, mode: ShareType) => {
-  const sum = calendarList[date][mode].sum;
-  if (sum !== null && calendarList[date][mode].records.length > 0) {
+const daySum = (calendarList: CalendarList, date: DateString) => {
+  const sum = calendarList[date]['BOTH'].sum;
+  if (sum !== null && calendarList[date]['BOTH'].records.length > 0) {
     return StringUtility.ConvertIntToShowStr(sum);
   } else {
     return '　'; // なんらかの文字列を表示させる必要がある、recordがない場合にeventの描画がずれるため
@@ -505,36 +501,20 @@ const getDaySumList = (recordList: GetRecordListItem[]): CalendarList => {
   let daySums: CalendarList = {};
   recordList.forEach((record) => {
     const dateStr = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
-    const recordPrice = record.price === 0 || record.isPay ? record.price : record.price * -1;
+    const tmpIsPay = record.isSettlement === true ? record.isSelf : record.isPay;
+    const recordPrice = record.price === 0 || tmpIsPay ? record.price : record.price * -1;
     if (!(dateStr in daySums)) {
       daySums[dateStr] = {
-        ['SELF']: { sum: 0, records: [] },
-        ['PAIR']: { sum: 0, records: [] },
         ['BOTH']: { sum: 0, records: [] },
         isHoliday: false,
         holidayStr: null,
       };
     }
-    // SELF
-    if (!record.isPair && record.isSelf) {
-      daySums[dateStr]['SELF'].records.push(record);
-      daySums[dateStr]['SELF'] = {
-        sum: daySums[dateStr]['SELF'].sum + recordPrice,
-        records: daySums[dateStr]['SELF'].records,
-      };
-    }
-    // PAIR
-    if (record.isPair) {
-      daySums[dateStr]['PAIR'].records.push(record);
-      daySums[dateStr]['PAIR'] = {
-        sum: daySums[dateStr]['PAIR'].sum + recordPrice,
-        records: daySums[dateStr]['PAIR'].records,
-      };
-    }
-    // BOTH
     daySums[dateStr]['BOTH'].records.push(record);
     daySums[dateStr]['BOTH'] = {
-      sum: daySums[dateStr]['BOTH'].sum + (record.isSelf ? recordPrice : 0),
+      sum:
+        daySums[dateStr]['BOTH'].sum +
+        (record.isSelf || record.isSettlement === true ? recordPrice : 0),
       records: daySums[dateStr]['BOTH'].records,
     };
   });
@@ -554,8 +534,6 @@ const updatePaddingRecords = (calendarList: CalendarList) => {
     if (!(dateStr in calendarList)) {
       const empty = { sum: 0, records: [] };
       calendarList[dateStr] = {
-        SELF: empty,
-        PAIR: empty,
         BOTH: empty,
         isHoliday: false,
         holidayStr: null,

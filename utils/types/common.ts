@@ -37,10 +37,3 @@ export type DateRange = {
   start: DateString;
   end: DateString;
 };
-
-export const ShareType = {
-  SELF: 'SELF',
-  PAIR: 'PAIR',
-  BOTH: 'BOTH',
-} as const;
-export type ShareType = (typeof ShareType)[keyof typeof ShareType];
