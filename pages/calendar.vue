@@ -151,10 +151,9 @@
       <v-col>
         <v-row v-for="record in selectedDayRecords" :key="record.id" no-gutters class="mb-1">
           <v-col>
-            <!-- TODO 相手からの精算は自分のプラスに表示する -->
             <RecordCard
-              :isDisable="showRecordMode === 'BOTH' && !record.isSelf"
-              :isPairType="record.isPair ?? false"
+              :isDisable="!record.isSelf"
+              :isPairType="record.isPair"
               :typeColor="record.typeColorClassificationName ?? ''"
               :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
               :isShowPlannedIcon="!!record.plannedRecordId"
@@ -167,9 +166,18 @@
               :methodColor="record.methodColorClassificationName"
               :methodName="record.methodName"
               :memo="record.memo ?? ''"
-              :isShowBlueColorPrice="!record.isPay"
+              :isShowBlueColorPrice="
+                !record.isPay || (record.isSettlement === true && !record.isSelf)
+              "
               :isSettlement="record.isSettlement ?? false"
-              :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
+              :price="
+                StringUtility.ConvertIntToShowStrWithIsPay(
+                  record.price,
+                  record.isSettlement === true || record.isPay === null
+                    ? record.isSelf
+                    : record.isPay
+                )
+              "
               @edit="goRecordEditPage(record)"
             ></RecordCard>
           </v-col>
@@ -346,7 +354,6 @@ const selectedDate = ref<DateString | null>(null);
 const selectedDayRecords = ref<GetRecordListItem[]>([]);
 const selectedPlan = ref<EventGetPlan | null>(null);
 const monthSumStr = ref('');
-const showRecordMode = ref<ShareType>('BOTH');
 const isShowMemoInput = ref(false);
 const isPairMemo = ref(false);
 const memoText = ref<string | null>(null);
@@ -464,7 +471,7 @@ const updateRange = async () => {
       });
     }
     events.push({
-      title: daySum(tmpDaySumList, dateStr, showRecordMode.value),
+      title: daySum(tmpDaySumList, dateStr, 'BOTH'),
       start: dayjs(dateStr).toDate(),
       end: dayjs(dateStr).toDate(),
       allDay: true,
@@ -574,7 +581,7 @@ const showDayRecords = (dateStr: DateString) => {
 
   selectedDate.value = dateStr;
 
-  selectedDayRecords.value = daySumList.value[dateStr][showRecordMode.value].records;
+  selectedDayRecords.value = daySumList.value[dateStr]['BOTH'].records;
 };
 const showPlan = (plan: EventGetPlan) => {
   selectedDayRecords.value = [];
@@ -604,9 +611,13 @@ const goPlanCreatePage = () => {
   router.push({ name: PAGE.PLAN });
 };
 const goRecordEditPage = (record: GetRecordListItem) => {
+  if (record.isPay === null) {
+    alert('予期せぬ状況');
+    return;
+  }
   setIsPair(record.isPair);
 
-  setRouterParam(RouterParamKey.RECORD, record);
+  setRouterParam(RouterParamKey.RECORD, { ...record, isPay: record.isPay });
   const query: PageQueryParameter = { key: RouterParamKey.RECORD };
   router.push({ name: PAGE.NOTE, query });
 };

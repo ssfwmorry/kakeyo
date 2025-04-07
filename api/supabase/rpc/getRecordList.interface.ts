@@ -13,7 +13,7 @@ export type GetRecordListRpcRow = {
   record_id: Id;
   is_self: boolean;
   datetime: DbDatetimeString;
-  is_pay: boolean;
+  is_pay: boolean | null;
   price: number;
   memo: string | null;
   record_type: RecordType;
