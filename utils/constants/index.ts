@@ -48,4 +48,9 @@ const EMAIL_WHITE_LIST = (config: RuntimeConfig) => {
   }
 };
 
+export const SettlementRecord = {
+  name: '精算',
+  color: 'white',
+} as const;
+
 export { APP_NAME, DEMO_DATA, DEMO_USER_INFO, EMAIL_WHITE_LIST, MAX_PRICE, PAGE };

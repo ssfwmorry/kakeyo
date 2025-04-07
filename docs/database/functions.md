@@ -290,51 +290,58 @@ returns table (
     type_name varchar(10),
     type_id int,
     is_pair boolean,
-    sub_type_name varchar(10),
     sub_type_id int,
+    sub_type_name varchar(10),
     color_name varchar(20),
     sub_type_sum int,
-    sum int
+    sum int -- not null
 )
 as $$
     with summarized_records as (
-        select distinct
-            records.type_id,
-            records.sub_type_id,
-            sum(records.price) as sum
-        from develop.records
-        where
-            (case
-                -- TODO fix-bug これだと、全てのpairからrecordsをとってくるはず。pairsとJOINして絞り込む必要あり
-                when input_is_pair = true and input_is_include_instead = true then pair_id is not null
-                when input_is_pair = true and input_is_include_instead = false then (pair_id is not null and record_type in (10, 15))
-                when input_is_pair = false and input_is_include_instead = true then (user_id = cast(input_user_id as char(28)))
-                else (user_id = cast(input_user_id as char(28)) and pair_id is null)
-            end)
-            and is_pay = input_is_pay
-            and to_char(cast(datetime as date),'YYYY-MM') = input_year || '-' || input_month
-        group by type_id, sub_type_id
-        order by type_id
+      select distinct
+        records.type_id,
+        records.sub_type_id,
+        sum(records.price) as sum
+      from develop.records
+      left join develop.pairs on
+        records.pair_id = pairs.id
+      where
+        ( records.user_id = input_user_id
+          or pairs.user1_id = input_user_id
+          or pairs.user2_id = input_user_id
+        )
+        and (case
+          -- TODO: 表示させたい内容を精査する
+          when input_is_pair = true and input_is_include_instead = true then record_type in (5, 10, 15)
+          when input_is_pair = true and input_is_include_instead = false then record_type in (10, 15)
+          when input_is_pair = false and input_is_include_instead = true then record_type in (0, 5, 15)
+          else record_type = 0
+        end)
+        and (case
+          when record_type = 15 and input_is_pay = true then (user_id = cast(input_user_id as char(28)))
+          when record_type = 15 and input_is_pay = false then (user_id <> cast(input_user_id as char(28)))
+          else is_pay = input_is_pay
+        end)
+        and to_char(cast(datetime as date),'YYYY-MM') = input_year || '-' || input_month
+      group by type_id, sub_type_id
+      order by type_id
     )
     select
-        types.name as type_name,
-        types.id as type_id,
-        types.pair_id is not null as is_pair,
-        case
-            when sub_types.name is null then ''
-            else sub_types.name
-        end as sub_type_name,
-        sub_types.id as sub_type_id,
-        color_classifications.name as color_name,
-        summarized_records.sum as sub_type_sum,
-        cast( sum(summarized_records.sum) over (partition by types.id) as integer) as sum -- なぜか sum() が文字列になるので cast
+      types.name as type_name,
+      types.id as type_id,
+      types.pair_id is not null as is_pair, -- MEMO: 精算の場合もis_pair=falseになってしまうので修正する
+      sub_types.id as sub_type_id,
+      sub_types.name as sub_type_name,
+      color_classifications.name as color_name,
+      summarized_records.sum as sub_type_sum,
+      cast( sum(summarized_records.sum) over (partition by types.id) as integer) as sum -- なぜか sum() が文字列になるので cast
     from summarized_records
-    inner join develop.types on
-        summarized_records.type_id = types.id
-    inner join develop.color_classifications on
-        types.color_classification_id = color_classifications.id
+    left join develop.types on
+      summarized_records.type_id = types.id
+    left join develop.color_classifications on
+      types.color_classification_id = color_classifications.id
     left join develop.sub_types on
-        summarized_records.sub_type_id = sub_types.id
+      summarized_records.sub_type_id = sub_types.id
     order by sum desc
 $$ language sql;
 ```

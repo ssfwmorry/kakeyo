@@ -79,7 +79,7 @@
     <div>
       <v-row
         v-for="typeOrMethod of typeOrMethodList"
-        :key="typeOrMethod.id"
+        :key="typeOrMethod.id ?? ''"
         class="mb-2"
         no-gutters
       >
@@ -121,6 +121,7 @@
               </v-col>
               <v-col cols="1" class="pa-0 d-flex align-center justify-end">
                 <v-btn
+                  v-if="typeOrMethod.id !== null"
                   icon
                   block
                   size="small"
@@ -165,7 +166,7 @@
 <script setup lang="ts">
 import type { GetMethodSummaryItem, GetTypeSummaryItem } from '@/api/supabase/record.interface';
 import { assertApiResponse } from '@/utils/api';
-import { PAGE } from '@/utils/constants';
+import { PAGE, SettlementRecord } from '@/utils/constants';
 import { COLOR_CODE } from '@/utils/constants/color';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
@@ -193,8 +194,8 @@ type TypeListSubs = { name: string | null; value: string; id: Id };
 type TypeOrMethod = {
   name: string;
   value: string;
-  color: ColorString;
-  id: Id;
+  color: ColorString | typeof SettlementRecord.color;
+  id: Id | null;
   isPair: boolean;
   pairUserName: string | null;
   subs: TypeListSubs[];
@@ -304,10 +305,15 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
     const id = isType.value
       ? (typeOrMethodSummary as GetTypeSummaryItem).typeId
       : (typeOrMethodSummary as GetMethodSummaryItem).methodId;
+    // TODO: 文字列リファクタ
     const name = isType.value
-      ? (typeOrMethodSummary as GetTypeSummaryItem).typeName
+      ? (typeOrMethodSummary as GetTypeSummaryItem).typeName ?? SettlementRecord.name
       : (typeOrMethodSummary as GetMethodSummaryItem).methodName;
-    const color = COLOR_CODE[typeOrMethodSummary.colorName];
+    // MEMO: 精算recordは白色にする。TODO: 要件整理
+    const color =
+      typeOrMethodSummary.colorName !== null
+        ? COLOR_CODE[typeOrMethodSummary.colorName]
+        : SettlementRecord.color;
     const isPair = typeOrMethodSummary.isPair;
     const pairUserName = isType.value
       ? ''
@@ -322,7 +328,7 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
     let typeOrMethod: TypeOrMethod = {
       name: name,
       value: StringUtility.ConvertIntToShowStr(sum),
-      color: typeOrMethodSummary.colorName,
+      color: typeOrMethodSummary.colorName ?? SettlementRecord.color,
       id: id,
       isPair: isPair,
       pairUserName: pairUserName,
@@ -346,6 +352,10 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
   return { pie: pieData, list: typeOrMethodList };
 };
 const goRecordsShowPage = (typeOrMethod: TypeOrMethod, subType: TypeListSubs | null) => {
+  if (typeOrMethod.id === null || typeOrMethod.color === SettlementRecord.color) {
+    alert('予期せぬ状況');
+    return;
+  }
   const tmpSubTypeName = subType === null || subType.name === null ? '' : ` - ${subType.name}`;
   const recordsQuery: RecordsQueryParam = {
     id: typeOrMethod.id,

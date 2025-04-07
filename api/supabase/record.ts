@@ -299,11 +299,13 @@ export const getTypeSummary = async (
     if (i == 0 || groupedData[groupedData.length - 1].typeId != row.type_id) {
       groupedData.push({ ...camelizeKeys<GetTypeSummaryRpcRow>(row), subTypes: [] });
     }
-    groupedData[groupedData.length - 1].subTypes.push({
-      subTypeId: row.sub_type_id,
-      subTypeName: row.sub_type_name,
-      subTypeSum: row.sub_type_sum,
-    });
+    if (row.sub_type_id && row.sub_type_name && row.sub_type_sum) {
+      groupedData[groupedData.length - 1].subTypes.push({
+        subTypeId: row.sub_type_id,
+        subTypeName: row.sub_type_name,
+        subTypeSum: row.sub_type_sum,
+      });
+    }
   });
 
   return {

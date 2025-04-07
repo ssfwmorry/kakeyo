@@ -11,16 +11,29 @@ interface GetTypeSummaryRpcRequest {
   input_month: MonthString;
 }
 
-export type GetTypeSummaryRpcRow = {
-  type_name: string;
-  type_id: Id;
-  is_pair: boolean;
-  sub_type_name: string;
-  sub_type_id: Id;
-  color_name: ColorString;
-  sub_type_sum: number;
-  sum: number;
-};
+export type GetTypeSummaryRpcRow =
+  /** 通常 record */
+  | {
+      type_name: string;
+      type_id: Id;
+      is_pair: boolean;
+      sub_type_name: string | null;
+      sub_type_id: Id | null;
+      color_name: ColorString;
+      sub_type_sum: number | null;
+      sum: number;
+    }
+  /** 精算 record */
+  | {
+      type_name: null;
+      type_id: null;
+      is_pair: true;
+      sub_type_name: null;
+      sub_type_id: null;
+      color_name: null;
+      sub_type_sum: null;
+      sum: number;
+    };
 // TODO: interfaceに置き換える
 type GetTypeSummaryRpcResponse = GetTypeSummaryRpcRow[] | null;
 
