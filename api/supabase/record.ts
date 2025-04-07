@@ -398,9 +398,7 @@ export const getSummarizedRecordList = async (
     return {
       ...e,
       id: e.recordId,
-      typeName: e.typeName === null || e.recordType === RecordType.settlement ? '精算' : e.typeName,
       isInstead: e.isPair === false ? null : e.recordType === RecordType.instead,
-      isSettlement: e.isPair === false ? null : e.recordType === RecordType.settlement,
     };
   });
 

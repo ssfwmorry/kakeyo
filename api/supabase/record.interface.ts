@@ -101,8 +101,8 @@ export interface GetSummarizedRecordListInput {
   subtypeId: Id | null;
 }
 export type GetSummarizedRecordItem = Camelized<
-  Omit<GetSummarizedRecordListRpcRow, 'record_id' | 'type_name'>
-> & { id: Id; typeName: string; isInstead: boolean | null; isSettlement: boolean | null };
+  Omit<GetSummarizedRecordListRpcRow, 'record_id'>
+> & { id: Id; isInstead: boolean | null };
 export interface GetSummarizedRecordListOutput
   extends ApiOutput<GetSummarizedRecordItem[], PostgrestError> {}
 

@@ -18,7 +18,7 @@ export type GetSummarizedRecordListRpcRow = {
   record_id: Id;
   is_self: boolean;
   datetime: DatetimeString;
-  is_pay: boolean | null;
+  is_pay: boolean;
   price: number;
   memo: string | null;
   record_type: RecordType;
@@ -26,11 +26,11 @@ export type GetSummarizedRecordListRpcRow = {
   method_id: Id;
   method_name: string;
   method_color_classification_name: string;
-  type_id: Id | null;
-  type_name: string | null;
+  type_id: Id;
+  type_name: string;
   sub_type_id: Id | null;
-  sub_type_name: string | null;
-  type_color_classification_name: string | null;
+  sub_type_name: string;
+  type_color_classification_name: string;
   is_pair: boolean;
   pair_user_name: string | null;
 };

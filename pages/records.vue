@@ -69,11 +69,10 @@
           </v-row>
           <v-row no-gutters>
             <v-col>
-              <!-- TODO: isSettlementとisEnableEditを判断 -->
               <RecordCard
                 :isDisable="false"
                 :isPairType="record.isPair"
-                :typeColor="record.typeColorClassificationName ?? ''"
+                :typeColor="record.typeColorClassificationName"
                 :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
                 :isShowPlannedIcon="!!record.plannedRecordId"
                 :isEnableEdit="record.isSelf || (record.isPair && !record.isInstead)"
@@ -84,9 +83,7 @@
                 :memo="record.memo ?? ''"
                 :isShowBlueColorPrice="!record.isPay"
                 :isSettlement="false"
-                :price="
-                  StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay ?? false)
-                "
+                :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
                 @edit="goRecordEditPage(record)"
               ></RecordCard>
             </v-col>
@@ -236,14 +233,7 @@ const goSummaryPage = () => {
   router.push({ name: PAGE.SUMMARY });
 };
 const goRecordEditPage = (record: GetSummarizedRecordItem) => {
-  if (record.isPay === null) {
-    alert('予期せぬ状態');
-    return;
-  }
-  setIsPair(record.isPair);
-
-  const tmpRecord = { ...record, isPay: record.isPay }; // MEMO: 型推論が効かないのでtmpRecordを宣言
-  setRouterParam(RouterParamKey.RECORD, tmpRecord);
+  setRouterParam(RouterParamKey.RECORD, record);
   const query: PageQueryParameter = { key: RouterParamKey.RECORD };
   router.push({ name: PAGE.NOTE, query });
 };

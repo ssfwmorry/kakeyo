@@ -944,6 +944,7 @@ $$ language sql;
 
 - 概要
   - records 画面用に検索された records を複数取得する
+  - record_type=15 のものは取得されない
 - 入力
   - input_user_id
   - input_is_pay
