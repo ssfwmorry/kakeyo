@@ -200,47 +200,62 @@ drop function if exists develop.get_method_summary(input_user_id varchar(30), in
 
 create or replace function develop.get_method_summary(input_user_id varchar(30), input_is_pay boolean, input_is_pair boolean, input_is_include_instead boolean, input_year varchar(5), input_month varchar(4))
 returns table (
-    method_name varchar(10),
-    method_id int,
+    method_name varchar(10), -- not null
+    method_id int, -- not null
     pair_user_name varchar(10),
-    color_name varchar(20),
-    is_pair boolean,
-    sum int
+    color_name varchar(20), -- not null
+    is_pair boolean, -- not null
+    sum int -- not null
 )
 as $$
     with summarized_records as (
-        select distinct
-            records.method_id,
-            sum(records.price) as sum
-        from develop.records
-        where
-            (case
-                -- TODO fix-bug これだと、全てのpairからrecordsをとってくるはず。pairsとJOINして絞り込む必要あり
-                when input_is_pair = true and input_is_include_instead = true then pair_id is not null
-                when input_is_pair = true and input_is_include_instead = false then (pair_id is not null and record_type in (10, 15))
-                when input_is_pair = false and input_is_include_instead = true then (user_id = cast(input_user_id as char(28)))
-                else (user_id = cast(input_user_id as char(28)) and pair_id is null)
-            end)
-            and is_pay = input_is_pay
-            and to_char(cast(datetime as date),'YYYY-MM') = input_year || '-' || input_month
-        group by method_id
+      select distinct
+        records.method_id,
+        sum(records.price) as sum
+      from develop.records
+      left join develop.pairs on
+        records.pair_id = pairs.id
+      where
+        --  自分, 自分の立替, 相手の立替, 共有, 精算 を取得
+        ( records.user_id = input_user_id
+          or pairs.user1_id = input_user_id
+          or pairs.user2_id = input_user_id
+        )
+        and (case
+          -- 二人の家計に関わる、立替/共有
+          when input_is_pair = true then record_type in (5, 10)
+          -- 自分の家計に関わる、自分/(自分のみの)立替/精算
+          when input_is_pair = false and input_is_include_instead = true
+            then (record_type in (0, 15) or ( record_type = 5 and (user_id = cast(input_user_id as char(28))) ))
+          -- 相手を除く自分の家計に関わる、自分
+          when input_is_pair = false and input_is_include_instead = false then record_type in (0)
+          -- 起こり得ない
+          else true
+        end)
+        and (case
+          when record_type = 15 and input_is_pay = true then (user_id = cast(input_user_id as char(28)))
+          when record_type = 15 and input_is_pay = false then (user_id <> cast(input_user_id as char(28)))
+          else is_pay = input_is_pay
+        end)
+        and to_char(cast(datetime as date),'YYYY-MM') = input_year || '-' || input_month
+      group by method_id
     )
     select
-        methods.name as method_name,
-        methods.id as method_id,
-        users.name as pair_user_name,
-        color_classifications.name as color_name,
-        methods.pair_id is not null as is_pair,
-        summarized_records.sum
+      methods.name as method_name,
+      methods.id as method_id,
+      users.name as pair_user_name,
+      color_classifications.name as color_name,
+      methods.pair_id is not null as is_pair,
+      summarized_records.sum
     from summarized_records
     inner join develop.methods on
-        summarized_records.method_id = methods.id
+      summarized_records.method_id = methods.id
     inner join develop.color_classifications on
-        methods.color_classification_id = color_classifications.id
+      methods.color_classification_id = color_classifications.id
     left join develop.pairs on
-        methods.pair_id = pairs.id
+      methods.pair_id = pairs.id
     left join develop.users on
-        methods.user_id = users.uid
+      methods.user_id = users.uid
     order by summarized_records.sum desc;
 $$ language sql;
 ```
