@@ -288,3 +288,4 @@ alter table develop.methods alter column is_pay drop not null; -- publicも適�
 
 - `develop.get_method_summary`
 - `develop.get_type_summary`
+- `develop.get_paired_record_list`

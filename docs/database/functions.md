@@ -1085,59 +1085,55 @@ drop function if exists develop.get_paired_record_list(input_user_id varchar(30)
 
 create or replace function develop.get_paired_record_list(input_user_id varchar(30),input_year_month varchar(8))
 returns table (
-    id integer,
-    datetime timestamptz,
+    id integer, -- not null
+    datetime timestamptz, -- not null
     is_self boolean,
     is_pay boolean,
-    price integer,
+    price integer, -- not null
     memo text,
-    is_instead boolean,
+    record_type smallint, -- not null
     is_settled boolean,
-    is_planned_record boolean,
-    method_name varchar(10),
-    method_color_classification_name varchar(10),
+    is_planned_record boolean, -- not null
+    method_name varchar(10), -- not null
+    method_color_classification_name varchar(10), -- not null
     type_name varchar(10),
     sub_type_name varchar(10),
     type_color_classification_name varchar(10)
 )
 as $$
     select
-        records.id,
-        records.datetime,
-        records.user_id = input_user_id as is_self,
-        records.is_pay,
-        records.price,
-        records.memo,
-        (case
-            when records.record_type = 5 then true
-            when records.record_type = 0 then null
-            else false
-        end) as is_instead,
-        records.is_settled,
-        records.planned_record_id is not null as is_planned_record,
-        methods.name as method_name,
-        mc.name as method_color_classification_name,
-        types.name as type_name,
-        sub_types.name as sub_type_name,
-        tc.name as type_color_classification_name
+      records.id,
+      records.datetime,
+      records.user_id = input_user_id as is_self,
+      records.is_pay,
+      records.price,
+      records.memo,
+      records.record_type,
+      records.is_settled,
+      records.planned_record_id is not null as is_planned_record,
+      methods.name as method_name,
+      mc.name as method_color_classification_name,
+      types.name as type_name,
+      sub_types.name as sub_type_name,
+      tc.name as type_color_classification_name
     from develop.records
     inner join develop.methods on
-        records.method_id = methods.id
-    inner join develop.types on
-        records.type_id = types.id
-    left join develop.sub_types on
-        records.sub_type_id = sub_types.id
-    inner join develop.color_classifications as tc on
-        types.color_classification_id = tc.id
+      records.method_id = methods.id
     inner join develop.color_classifications as mc on
-        methods.color_classification_id = mc.id
+      methods.color_classification_id = mc.id
     inner join develop.pairs on
-        records.pair_id = pairs.id
+      -- pairs.idがあるもののみ絞り込む
+      records.pair_id = pairs.id
     left join develop.users on
-        records.user_id = users.uid
-        and records.pair_id is not null
+      records.user_id = users.uid
+    left join develop.types on
+      records.type_id = types.id
+    left join develop.sub_types on
+      records.sub_type_id = sub_types.id
+    left join develop.color_classifications as tc on
+      types.color_classification_id = tc.id
     where
-        to_char(cast(datetime as date),'YYYY-MM') = input_year_month
+      to_char(cast(datetime as date),'YYYY-MM') = input_year_month
     order by records.datetime desc
     ;
 $$ language sql;

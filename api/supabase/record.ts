@@ -1,5 +1,5 @@
 import supabase from '@/composables/supabase';
-import { DEMO_DATA } from '@/utils/constants';
+import { DEMO_DATA, SettlementRecord } from '@/utils/constants';
 import { RecordType } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
 import type { Id } from '~/utils/types/common';
@@ -426,7 +426,17 @@ export const getPairedRecordList = async (
   }
 
   const camelizedData = camelizeKeys<{ data: GetPairedRecordListRpcRow[] }>({ data });
-  return { data: camelizedData.data, error: null, message: 'paired_record 一覧' };
+  const outData = camelizedData.data.map((e) => {
+    return {
+      ...e,
+      typeName: e.typeName ?? SettlementRecord.name,
+      isInstead: e.recordType === RecordType.instead,
+      isSettlement: e.recordType === RecordType.settlement,
+      typeColorClassificationName: e.typeColorClassificationName ?? SettlementRecord.color,
+    };
+  });
+
+  return { data: outData, error: null, message: 'paired_record 一覧' };
 };
 
 export const getPayAndIncomeList = async (

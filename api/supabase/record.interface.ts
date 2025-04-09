@@ -109,7 +109,15 @@ export interface GetSummarizedRecordListOutput
 export interface GetPairedRecordListInput {
   yearMonth: YearMonthString;
 }
-export type GetPairedRecordItem = Camelized<GetPairedRecordListRpcRow>;
+export type GetPairedRecordItem = Camelized<
+  Omit<GetPairedRecordListRpcRow, 'record_type' | 'type_name' | 'type_color_classification_name'>
+> & {
+  typeName: string;
+  isInstead: boolean | null;
+  isSettlement: boolean;
+  typeColorClassificationName: string;
+};
+
 export interface GetPairedRecordListOutput
   extends ApiOutput<GetPairedRecordItem[], PostgrestError> {}
 
