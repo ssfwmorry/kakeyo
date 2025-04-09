@@ -1,8 +1,8 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA, SettlementRecord } from '@/utils/constants';
+import type { Id } from '@/utils/types/common';
 import { RecordType } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
-import type { Id } from '~/utils/types/common';
 import {
   buildNoDataApiOutput,
   type DeleteInput,
@@ -133,7 +133,7 @@ export const createSettlementRecord = async (
       sub_type_id: null,
       price: price,
       memo: null,
-      record_type: 15,
+      record_type: RecordType.settlement,
     },
   ]);
   return buildNoDataApiOutput(error, 'settlement record 挿入');
@@ -149,7 +149,8 @@ export const upsertRecord = async (
     return { error: 'isPair と pairID の関係性', message: 'method 挿入' };
   }
 
-  const recordType = isPair === false ? 0 : isInstead ? 5 : 10;
+  const recordType =
+    isPair === false ? RecordType.self : isInstead ? RecordType.instead : RecordType.pair;
 
   if (id === null) {
     // 挿入
