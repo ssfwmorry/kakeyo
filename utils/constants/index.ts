@@ -50,7 +50,8 @@ const EMAIL_WHITE_LIST = (config: RuntimeConfig) => {
 
 export const SettlementRecord = {
   name: '精算',
-  color: 'white',
+  /** 'yellow'は、SummaryPieでのグラフと、VuetifyのColorのどちらも同じ文字列で対応できている */
+  color: 'yellow',
 } as const;
 
 export { APP_NAME, DEMO_DATA, DEMO_USER_INFO, EMAIL_WHITE_LIST, MAX_PRICE, PAGE };

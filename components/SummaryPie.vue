@@ -41,8 +41,8 @@
           <v-btn :value="false" min-width="64" class="px-0">方法</v-btn>
         </v-btn-toggle>
       </v-col>
-      <!-- 立替 -->
-      <v-col v-if="isExistPair" class="mb-2 d-flex justify-center">
+      <!-- 立替精算 -->
+      <v-col v-if="isExistPair && !isPair" class="mb-2 d-flex justify-center">
         <v-btn-toggle
           v-model="isIncludeInstead"
           variant="outlined"
@@ -50,8 +50,8 @@
           mandatory
           @update:model-value="updateChart"
         >
-          <v-btn :value="true" min-width="64" class="px-0">立替込み</v-btn>
-          <v-btn :value="false" min-width="64" class="px-0">除く</v-btn>
+          <v-btn :value="true" min-width="64" class="px-0">立替精算</v-btn>
+          <v-btn :value="false" min-width="64" class="px-0">自分のみ</v-btn>
         </v-btn-toggle>
       </v-col>
 
@@ -90,12 +90,19 @@
                 <!-- TODO records と 共通化 -->
                 <div v-if="isType" class="py-0 pl-2">
                   <v-avatar
+                    v-if="typeOrMethod.id !== null"
                     size="25"
                     :color="typeOrMethod.color"
                     :icon="typeOrMethod.isPair ? $ICONS.SHARE : ''"
                     class="text-white"
-                  >
-                  </v-avatar>
+                  />
+                  <v-avatar
+                    v-else
+                    size="28"
+                    :color="typeOrMethod.color"
+                    variant="outlined"
+                    :icon="$ICONS.SHARE"
+                  />
                   {{ typeOrMethod.name }}
                 </div>
                 <div v-else class="py-0 pl-2">
@@ -258,6 +265,15 @@ const updateFocus = async (obj: YearMonthNumObj) => {
   focus.value = TimeUtility.ConvertYearMonthNumObjToYearMonthObj(obj);
   await updateChart();
 };
+/**
+ * @description
+ * - isPair=true: 二人の家計分析が目的
+ *   - 立替したかどうかは重要ではないので切り替えずに表示する
+ *   - 精算はノイズなので含めない
+ * - isPair=false: 個人の家計分析が目的
+ *   - 立替精算を含む)を含めないと、個人的な支払/受取がわかる
+ *   - 立替精算を含めると、相手を考慮した自分の支払/受取がわかる
+ */
 const updateChart = async () => {
   enableLoading();
 

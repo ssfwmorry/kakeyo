@@ -154,7 +154,7 @@
             <RecordCard
               :isDisable="!record.isSelf"
               :isPairType="record.isPair"
-              :typeColor="record.typeColorClassificationName ?? ''"
+              :typeColor="record.typeColorClassificationName ?? SettlementRecord.color"
               :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
               :isShowPlannedIcon="!!record.plannedRecordId"
               :isEnableEdit="
@@ -190,7 +190,7 @@
 <script setup lang="ts">
 import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
 import type { GetRecordListItem } from '@/api/supabase/record.interface';
-import { PAGE } from '@/utils/constants';
+import { PAGE, SettlementRecord } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type DateString, type Id, type YearMonthNumObj } from '@/utils/types/common';

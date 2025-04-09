@@ -216,7 +216,7 @@ as $$
       left join develop.pairs on
         records.pair_id = pairs.id
       where
-        --  自分, 自分の立替, 相手の立替, 共有, 精算 を取得
+        -- 自分, 自分の立替, 相手の立替, 共有, 精算 を取得
         ( records.user_id = input_user_id
           or pairs.user1_id = input_user_id
           or pairs.user2_id = input_user_id
@@ -228,11 +228,12 @@ as $$
           when input_is_pair = false and input_is_include_instead = true
             then (record_type in (0, 15) or ( record_type = 5 and (user_id = cast(input_user_id as char(28))) ))
           -- 相手を除く自分の家計に関わる、自分
-          when input_is_pair = false and input_is_include_instead = false then record_type in (0)
+          when input_is_pair = false and input_is_include_instead = false then record_type = 0
           -- 起こり得ない
           else true
         end)
         and (case
+          -- 精算recordの場合はis_payがnullなので、user_idをもとに支払/受取の判断をする
           when record_type = 15 and input_is_pay = true then (user_id = cast(input_user_id as char(28)))
           when record_type = 15 and input_is_pay = false then (user_id <> cast(input_user_id as char(28)))
           else is_pay = input_is_pay
@@ -321,16 +322,17 @@ as $$
       left join develop.pairs on
         records.pair_id = pairs.id
       where
+        -- where 条件はget_method_summary と同様
         ( records.user_id = input_user_id
           or pairs.user1_id = input_user_id
           or pairs.user2_id = input_user_id
         )
         and (case
-          -- TODO: 表示させたい内容を精査する
-          when input_is_pair = true and input_is_include_instead = true then record_type in (5, 10, 15)
-          when input_is_pair = true and input_is_include_instead = false then record_type in (10, 15)
-          when input_is_pair = false and input_is_include_instead = true then record_type in (0, 5, 15)
-          else record_type = 0
+          when input_is_pair = true then record_type in (5, 10)
+          when input_is_pair = false and input_is_include_instead = true
+            then (record_type in (0, 15) or ( record_type = 5 and (user_id = cast(input_user_id as char(28))) ))
+          when input_is_pair = false and input_is_include_instead = false then record_type = 0
+          else true
         end)
         and (case
           when record_type = 15 and input_is_pay = true then (user_id = cast(input_user_id as char(28)))
@@ -344,7 +346,10 @@ as $$
     select
       types.name as type_name,
       types.id as type_id,
-      types.pair_id is not null as is_pair, -- MEMO: 精算の場合もis_pair=falseになってしまうので修正する
+      case
+        when types.id is null then true -- 精算recordはis_pair=true
+        else types.pair_id is not null -- それ以外はtypes.pair_idで判断
+      end as is_pair,
       sub_types.id as sub_type_id,
       sub_types.name as sub_type_name,
       color_classifications.name as color_name,

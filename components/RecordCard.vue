@@ -15,7 +15,13 @@
               :icon="props.isPairType ? $ICONS.SHARE : ''"
               class="text-white"
             ></v-avatar>
-            <v-avatar v-else size="28" variant="outlined" :icon="$ICONS.SHARE"></v-avatar>
+            <v-avatar
+              v-else
+              size="28"
+              :color="props.typeColor"
+              variant="outlined"
+              :icon="$ICONS.SHARE"
+            ></v-avatar>
           </div>
           <div class="fs-nml">
             {{ props.typeAndSubtype }}
