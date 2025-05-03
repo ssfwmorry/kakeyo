@@ -74,55 +74,64 @@
           </v-row>
         </template>
         <template v-slot:item.3>
-          <!-- TODO: v-if条件をリファクタ -->
-          <div v-if="isExistUnsettledRecord" class="mb-2 text-center">
-            結果： {{ settlementResult }}
+          <div v-if="isExistUnsettledRecord">
+            <v-row no-gutters class="mb-3">
+              <v-col cols="4"> 分類結果： </v-col>
+              <v-col cols="7"> {{ settlementResult }} </v-col>
+              <v-spacer />
+            </v-row>
+            <v-row no-gutters class="mb-3">
+              <v-col cols="4" class="d-flex align-center">
+                <span>精算方法：</span>
+              </v-col>
+              <v-col cols="7">
+                <v-select
+                  v-model="selectedMethodId"
+                  :items="methodList"
+                  item-title="name"
+                  item-value="id"
+                  variant="underlined"
+                  density="compact"
+                  :menu-props="{ maxHeight: 400 }"
+                  hide-details
+                  disable-lookup
+                  :prepend-inner-icon="$ICONS.CREDIT_CARD"
+                  single-line
+                ></v-select>
+              </v-col>
+              <v-spacer />
+            </v-row>
+            <v-row no-gutters class="mb-4">
+              <v-col cols="4" class="d-flex align-center">
+                <span>精算金額：</span>
+              </v-col>
+              <v-col cols="7">
+                <v-number-input
+                  v-model="price"
+                  inset
+                  hide-details
+                  suffix=" 円"
+                  density="compact"
+                  control-variant="hidden"
+                  variant="outlined"
+                ></v-number-input>
+              </v-col>
+              <v-spacer />
+            </v-row>
+            <v-row no-gutters class="d-flex justify-center">
+              <v-btn
+                variant="flat"
+                color="primary"
+                class="text-white mr-4"
+                :disabled="selectedMethodId === null || price === null || price <= 0"
+                @click="endSettlement()"
+              >
+                完了
+              </v-btn>
+              <!-- MEMO: キャンセルはIFによらずに表示する -->
+              <v-btn variant="text" width="80" @click="cancelSettlement()"> キャンセル </v-btn>
+            </v-row>
           </div>
-          <v-row v-if="isExistUnsettledRecord" no-gutters class="mb-3">
-            <v-spacer />
-            <v-col cols="6">
-              <v-select
-                v-model="selectedMethodId"
-                :items="methodList"
-                item-title="name"
-                item-value="id"
-                variant="underlined"
-                density="compact"
-                :menu-props="{ maxHeight: 400 }"
-                hide-details
-                disable-lookup
-                :prepend-inner-icon="$ICONS.CREDIT_CARD"
-                single-line
-              ></v-select>
-            </v-col>
-            <v-spacer />
-          </v-row>
-          <v-row v-if="isExistUnsettledRecord" no-gutters class="mb-4">
-            <v-spacer />
-            <v-col cols="6">
-              <v-number-input
-                v-model="price"
-                inset
-                density="compact"
-                control-variant="hidden"
-                variant="outlined"
-              ></v-number-input>
-            </v-col>
-            <v-spacer />
-          </v-row>
-          <v-row v-if="isExistUnsettledRecord" no-gutters class="d-flex justify-center">
-            <v-btn
-              variant="flat"
-              color="primary"
-              class="text-white mr-4"
-              :disabled="selectedMethodId === null || price <= 0"
-              @click="endSettlement()"
-            >
-              完了
-            </v-btn>
-            <!-- MEMO: キャンセルはIFによらずに表示する -->
-            <v-btn variant="text" width="80" @click="cancelSettlement()"> キャンセル </v-btn>
-          </v-row>
         </template>
       </v-stepper>
     </v-row>
@@ -294,7 +303,7 @@ const isExistUnsettledRecord = ref(false);
 const recordList = ref<RecordList>({ ME: [], PARTNER: [], COUPLE: [] });
 const methodList = ref<GetMethodListItem[]>([]);
 const selectedMethodId = ref<number | null>(null);
-const price = ref(0);
+const price = ref<number | null>(null);
 const dialog = ref<Dialog>({
   isShow: false,
   id: null,
@@ -436,7 +445,12 @@ const cancelSettlement = () => {
 };
 const endSettlement = async () => {
   enableLoading();
-  if (selectedMethodId.value === null || pairId.value === null || price.value < 0) {
+  if (
+    selectedMethodId.value === null ||
+    pairId.value === null ||
+    price.value === null ||
+    price.value < 0
+  ) {
     alert('予期せぬ状態');
     return;
   }
