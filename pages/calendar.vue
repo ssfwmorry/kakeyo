@@ -152,21 +152,32 @@
         <v-row v-for="record in selectedDayRecords" :key="record.id" no-gutters class="mb-1">
           <v-col>
             <RecordCard
-              :isDisable="showRecordMode === 'BOTH' && !record.isSelf"
-              :isPairType="record.isPair ?? false"
-              :typeColor="record.typeColorClassificationName"
+              :isDisable="!record.isSelf"
+              :isPairType="record.isPair"
+              :typeColor="record.typeColorClassificationName ?? SettlementRecord.color"
               :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
               :isShowPlannedIcon="!!record.plannedRecordId"
               :isEnableEdit="
-                (record.isSelf ?? false) || ((record.isPair ?? false) && !record.isInstead)
+                record.isSettlement !== true &&
+                ((record.isSelf ?? false) || ((record.isPair ?? false) && !record.isInstead))
               "
               :isPairMethod="(record.isPair ?? false) && !(record.isInstead ?? false)"
               :userName="record.pairUserName ?? ''"
               :methodColor="record.methodColorClassificationName"
               :methodName="record.methodName"
               :memo="record.memo ?? ''"
-              :isShowBlueColorPrice="!record.isPay"
-              :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
+              :isShowBlueColorPrice="
+                !record.isPay || (record.isSettlement === true && !record.isSelf)
+              "
+              :isSettlement="record.isSettlement ?? false"
+              :price="
+                StringUtility.ConvertIntToShowStrWithIsPay(
+                  record.price,
+                  record.isSettlement === true || record.isPay === null
+                    ? record.isSelf
+                    : record.isPay
+                )
+              "
               @edit="goRecordEditPage(record)"
             ></RecordCard>
           </v-col>
@@ -179,15 +190,10 @@
 <script setup lang="ts">
 import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
 import type { GetRecordListItem } from '@/api/supabase/record.interface';
-import { PAGE } from '@/utils/constants';
+import { PAGE, SettlementRecord } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import {
-  type DateString,
-  type Id,
-  type ShareType,
-  type YearMonthNumObj,
-} from '@/utils/types/common';
+import { type DateString, type Id, type YearMonthNumObj } from '@/utils/types/common';
 import {
   RouterParamKey,
   type PageQueryParameter,
@@ -210,7 +216,8 @@ const eventType = {
 } as const;
 
 type DateRecordList = Record<
-  ShareType,
+  // TODO: BOTH定義を削除
+  'BOTH',
   {
     sum: number;
     records: GetRecordListItem[];
@@ -342,16 +349,12 @@ const selectedDayForShow = ref<string | null>(null);
 const selectedDate = ref<DateString | null>(null);
 const selectedDayRecords = ref<GetRecordListItem[]>([]);
 const selectedPlan = ref<EventGetPlan | null>(null);
-const monthSum = ref({ ['SELF']: 0, ['PAIR']: 0, ['BOTH']: 0 });
-const showRecordMode = ref<ShareType>('BOTH');
+const monthSumStr = ref('');
 const isShowMemoInput = ref(false);
 const isPairMemo = ref(false);
 const memoText = ref<string | null>(null);
 const isEndInit = ref(false);
 
-const monthSumStr = computed(() =>
-  StringUtility.ConvertIntToShowPrefixStr(monthSum.value[showRecordMode.value])
-);
 const focusObj = computed(() => {
   if (focus.value === null) return null;
   return TimeUtility.ConvertDateStrToYearMonthNumObj(focus.value);
@@ -464,7 +467,7 @@ const updateRange = async () => {
       });
     }
     events.push({
-      title: daySum(tmpDaySumList, dateStr, showRecordMode.value),
+      title: daySum(tmpDaySumList, dateStr),
       start: dayjs(dateStr).toDate(),
       end: dayjs(dateStr).toDate(),
       allDay: true,
@@ -479,15 +482,15 @@ const updateRange = async () => {
 
   // レンダリングされるタイミングを揃えるため、全て取得してから、data を更新する
   daySumList.value = tmpDaySumList;
-  monthSum.value = apiResMonthSum.data;
+  monthSumStr.value = StringUtility.ConvertIntToShowPrefixStr(apiResMonthSum.data);
   calendarOptions.value.events = events;
   isEndInit.value = true; // fullCalendar 描画に必要な data 更新後に isEndInit を TRUE にして、 updateRange() を呼ぶ
   disableLoading();
 };
 
-const daySum = (calendarList: CalendarList, date: DateString, mode: ShareType) => {
-  const sum = calendarList[date][mode].sum;
-  if (sum !== null && calendarList[date][mode].records.length > 0) {
+const daySum = (calendarList: CalendarList, date: DateString) => {
+  const sum = calendarList[date]['BOTH'].sum;
+  if (sum !== null && calendarList[date]['BOTH'].records.length > 0) {
     return StringUtility.ConvertIntToShowStr(sum);
   } else {
     return '　'; // なんらかの文字列を表示させる必要がある、recordがない場合にeventの描画がずれるため
@@ -498,36 +501,20 @@ const getDaySumList = (recordList: GetRecordListItem[]): CalendarList => {
   let daySums: CalendarList = {};
   recordList.forEach((record) => {
     const dateStr = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
-    const recordPrice = record.price === 0 || record.isPay ? record.price : record.price * -1;
+    const tmpIsPay = record.isSettlement === true ? record.isSelf : record.isPay;
+    const recordPrice = record.price === 0 || tmpIsPay ? record.price : record.price * -1;
     if (!(dateStr in daySums)) {
       daySums[dateStr] = {
-        ['SELF']: { sum: 0, records: [] },
-        ['PAIR']: { sum: 0, records: [] },
         ['BOTH']: { sum: 0, records: [] },
         isHoliday: false,
         holidayStr: null,
       };
     }
-    // SELF
-    if (!record.isPair && record.isSelf) {
-      daySums[dateStr]['SELF'].records.push(record);
-      daySums[dateStr]['SELF'] = {
-        sum: daySums[dateStr]['SELF'].sum + recordPrice,
-        records: daySums[dateStr]['SELF'].records,
-      };
-    }
-    // PAIR
-    if (record.isPair) {
-      daySums[dateStr]['PAIR'].records.push(record);
-      daySums[dateStr]['PAIR'] = {
-        sum: daySums[dateStr]['PAIR'].sum + recordPrice,
-        records: daySums[dateStr]['PAIR'].records,
-      };
-    }
-    // BOTH
     daySums[dateStr]['BOTH'].records.push(record);
     daySums[dateStr]['BOTH'] = {
-      sum: daySums[dateStr]['BOTH'].sum + (record.isSelf ? recordPrice : 0),
+      sum:
+        daySums[dateStr]['BOTH'].sum +
+        (record.isSelf || record.isSettlement === true ? recordPrice : 0),
       records: daySums[dateStr]['BOTH'].records,
     };
   });
@@ -547,8 +534,6 @@ const updatePaddingRecords = (calendarList: CalendarList) => {
     if (!(dateStr in calendarList)) {
       const empty = { sum: 0, records: [] };
       calendarList[dateStr] = {
-        SELF: empty,
-        PAIR: empty,
         BOTH: empty,
         isHoliday: false,
         holidayStr: null,
@@ -574,7 +559,7 @@ const showDayRecords = (dateStr: DateString) => {
 
   selectedDate.value = dateStr;
 
-  selectedDayRecords.value = daySumList.value[dateStr][showRecordMode.value].records;
+  selectedDayRecords.value = daySumList.value[dateStr]['BOTH'].records;
 };
 const showPlan = (plan: EventGetPlan) => {
   selectedDayRecords.value = [];
@@ -604,9 +589,13 @@ const goPlanCreatePage = () => {
   router.push({ name: PAGE.PLAN });
 };
 const goRecordEditPage = (record: GetRecordListItem) => {
+  if (record.isPay === null) {
+    alert('予期せぬ状況');
+    return;
+  }
   setIsPair(record.isPair);
 
-  setRouterParam(RouterParamKey.RECORD, record);
+  setRouterParam(RouterParamKey.RECORD, { ...record, isPay: record.isPay });
   const query: PageQueryParameter = { key: RouterParamKey.RECORD };
   router.push({ name: PAGE.NOTE, query });
 };

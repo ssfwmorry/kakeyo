@@ -9,10 +9,18 @@
         <div class="d-flex flex-row align-center">
           <div class="mr-2">
             <v-avatar
+              v-if="!props.isSettlement"
               size="28"
               :color="props.typeColor"
               :icon="props.isPairType ? $ICONS.SHARE : ''"
               class="text-white"
+            ></v-avatar>
+            <v-avatar
+              v-else
+              size="28"
+              :color="props.typeColor"
+              variant="outlined"
+              :icon="$ICONS.SHARE"
             ></v-avatar>
           </div>
           <div class="fs-nml">
@@ -73,6 +81,7 @@ type Props = {
   isShowPlannedIcon: boolean;
   isEnableEdit: boolean;
   isShowBlueColorPrice: boolean;
+  isSettlement: boolean;
   typeColor: string;
   methodColor: string;
   methodName: string;

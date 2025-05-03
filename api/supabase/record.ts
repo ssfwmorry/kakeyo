@@ -1,7 +1,8 @@
 import supabase from '@/composables/supabase';
-import { DEMO_DATA } from '@/utils/constants';
+import { DEMO_DATA, SettlementRecord } from '@/utils/constants';
+import type { Id } from '@/utils/types/common';
+import { RecordType } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
-import type { Id } from '~/utils/types/common';
 import {
   buildNoDataApiOutput,
   type DeleteInput,
@@ -72,7 +73,7 @@ export const getRecordList = async (
   { isDemoLogin, userUid }: SupabaseApiAuthGet,
   { start, end }: GetRecordListInput
 ): Promise<GetRecordListOutput> => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_RECORD_LIST;
+  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_RECORD_LIST as any; // TODO 調整
 
   const payload = { input_user_id: userUid, input_start_datetime: start, input_end_datetime: end };
   const { data, error } = await supabase.rpc<typeof RPC_GET_RECORD_LIST, GetRecordListRpc>(
@@ -85,7 +86,13 @@ export const getRecordList = async (
 
   const camelizedData = camelizeKeys<{ data: GetRecordListRpcRow[] }>({ data });
   const outData = camelizedData.data.map((e) => {
-    return { ...e, id: e.recordId };
+    return {
+      ...e,
+      id: e.recordId,
+      typeName: e.typeName === null || e.recordType === RecordType.settlement ? '精算' : e.typeName,
+      isInstead: e.isPair === false ? null : e.recordType === RecordType.instead,
+      isSettlement: e.isPair === false ? null : e.recordType === RecordType.settlement,
+    };
   });
   return { data: outData, error: null, message: 'record 一覧' };
 };
@@ -126,7 +133,7 @@ export const createSettlementRecord = async (
       sub_type_id: null,
       price: price,
       memo: null,
-      record_type: 15,
+      record_type: RecordType.settlement,
     },
   ]);
   return buildNoDataApiOutput(error, 'settlement record 挿入');
@@ -142,7 +149,8 @@ export const upsertRecord = async (
     return { error: 'isPair と pairID の関係性', message: 'method 挿入' };
   }
 
-  const recordType = isPair === false ? 0 : isInstead ? 5 : 10;
+  const recordType =
+    isPair === false ? RecordType.self : isInstead ? RecordType.instead : RecordType.pair;
 
   if (id === null) {
     // 挿入
@@ -245,21 +253,13 @@ export const getMonthSum = async (
   }
   if (data.length === 0) {
     return {
-      data: {
-        ['SELF']: 0,
-        ['PAIR']: 0,
-        ['BOTH']: 0,
-      },
+      data: 0,
       error: null,
       message: 'month_sum 取得',
     };
   }
   return {
-    data: {
-      ['SELF']: data[0].self_sum,
-      ['PAIR']: data[0].pair_sum,
-      ['BOTH']: data[0].both_sum,
-    },
+    data: data[0].self_sum,
     error: null,
     message: 'month_sum 取得',
   };
@@ -300,11 +300,13 @@ export const getTypeSummary = async (
     if (i == 0 || groupedData[groupedData.length - 1].typeId != row.type_id) {
       groupedData.push({ ...camelizeKeys<GetTypeSummaryRpcRow>(row), subTypes: [] });
     }
-    groupedData[groupedData.length - 1].subTypes.push({
-      subTypeId: row.sub_type_id,
-      subTypeName: row.sub_type_name,
-      subTypeSum: row.sub_type_sum,
-    });
+    if (row.sub_type_id && row.sub_type_name && row.sub_type_sum) {
+      groupedData[groupedData.length - 1].subTypes.push({
+        subTypeId: row.sub_type_id,
+        subTypeName: row.sub_type_name,
+        subTypeSum: row.sub_type_sum,
+      });
+    }
   });
 
   return {
@@ -396,7 +398,11 @@ export const getSummarizedRecordList = async (
   const camelizedData = camelizeKeys<{ data: GetSummarizedRecordListRpcRow[] }>({ data });
   const outData = camelizedData.data.map((e) => {
     // TODO 不要なrecord_idも渡してしまう
-    return { ...e, id: e.recordId };
+    return {
+      ...e,
+      id: e.recordId,
+      isInstead: e.isPair === false ? null : e.recordType === RecordType.instead,
+    };
   });
 
   return { data: outData, error: null, message: 'summarized_record 一覧' };
@@ -421,7 +427,17 @@ export const getPairedRecordList = async (
   }
 
   const camelizedData = camelizeKeys<{ data: GetPairedRecordListRpcRow[] }>({ data });
-  return { data: camelizedData.data, error: null, message: 'paired_record 一覧' };
+  const outData = camelizedData.data.map((e) => {
+    return {
+      ...e,
+      typeName: e.typeName ?? SettlementRecord.name,
+      isInstead: e.recordType === RecordType.instead,
+      isSettlement: e.recordType === RecordType.settlement,
+      typeColorClassificationName: e.typeColorClassificationName ?? SettlementRecord.color,
+    };
+  });
+
+  return { data: outData, error: null, message: 'paired_record 一覧' };
 };
 
 export const getPayAndIncomeList = async (

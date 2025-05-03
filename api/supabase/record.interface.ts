@@ -19,7 +19,12 @@ import type { GetTypeSummaryRpcRow } from './rpc/getTypeSummary.interface';
 
 export interface GetRecordListInput extends DateRange {}
 
-export type GetRecordListItem = Camelized<Omit<GetRecordListRpcRow, 'record_id'>> & { id: Id };
+export type GetRecordListItem = Camelized<Omit<GetRecordListRpcRow, 'record_id' | 'type_name'>> & {
+  id: Id;
+  typeName: string;
+  isInstead: boolean | null;
+  isSettlement: boolean | null;
+};
 export interface GetRecordListOutput extends ApiOutput<GetRecordListItem[], PostgrestError> {}
 
 export type DbPair = Pick<Pair, 'id'> & {
@@ -55,7 +60,7 @@ export interface PostRecordsOutput extends ApiOutput<null, PostgrestError> {}
 export interface GetMonthSumInput {
   yearMonth: YearMonthString;
 }
-type GetMonthSumOutputData = { SELF: number; PAIR: number; BOTH: number };
+type GetMonthSumOutputData = number;
 export interface GetMonthSumOutput extends ApiOutput<GetMonthSumOutputData, PostgrestError> {}
 
 export interface GetTypeSummaryInput {
@@ -97,14 +102,22 @@ export interface GetSummarizedRecordListInput {
 }
 export type GetSummarizedRecordItem = Camelized<
   Omit<GetSummarizedRecordListRpcRow, 'record_id'>
-> & { id: Id };
+> & { id: Id; isInstead: boolean | null };
 export interface GetSummarizedRecordListOutput
   extends ApiOutput<GetSummarizedRecordItem[], PostgrestError> {}
 
 export interface GetPairedRecordListInput {
   yearMonth: YearMonthString;
 }
-export type GetPairedRecordItem = Camelized<GetPairedRecordListRpcRow>;
+export type GetPairedRecordItem = Camelized<
+  Omit<GetPairedRecordListRpcRow, 'record_type' | 'type_name' | 'type_color_classification_name'>
+> & {
+  typeName: string;
+  isInstead: boolean | null;
+  isSettlement: boolean;
+  typeColorClassificationName: string;
+};
+
 export interface GetPairedRecordListOutput
   extends ApiOutput<GetPairedRecordItem[], PostgrestError> {}
 

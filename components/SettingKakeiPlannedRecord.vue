@@ -51,6 +51,7 @@
             :methodName="plannedRecord.methodName"
             :memo="plannedRecord.memo ?? ''"
             :isShowBlueColorPrice="!plannedRecord.isPay"
+            :isSettlement="false"
             :price="
               StringUtility.ConvertIntToShowStrWithIsPay(plannedRecord.price, plannedRecord.isPay)
             "

@@ -24,8 +24,8 @@
           <v-btn :value="false" min-width="65" class="px-0">支出のみ</v-btn>
         </v-btn-toggle>
       </v-col>
-      <!-- 立替 -->
-      <v-col v-if="isExistPair" class="mb-2 d-flex justify-center">
+      <!-- 立替精算 -->
+      <v-col v-if="isExistPair && !isPair" class="mb-2 d-flex justify-center">
         <v-btn-toggle
           v-model="isIncludeInstead"
           variant="outlined"
@@ -33,8 +33,8 @@
           mandatory
           @update:model-value="updateChart()"
         >
-          <v-btn :value="true" min-width="64" class="px-0">立替込み</v-btn>
-          <v-btn :value="false" min-width="64" class="px-0">除く</v-btn>
+          <v-btn :value="true" min-width="64" class="px-0">立替精算</v-btn>
+          <v-btn :value="false" min-width="64" class="px-0">自分のみ</v-btn>
         </v-btn-toggle>
       </v-col>
 

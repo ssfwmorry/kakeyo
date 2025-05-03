@@ -1,5 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
+import { RecordType } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
@@ -68,6 +69,9 @@ export const upsertPlannedRecord = async (
     return { error: 'isPair と pairID の関係性', message: 'method 挿入' };
   }
 
+  const recordType =
+    isPair === false ? RecordType.self : isInstead ? RecordType.instead : RecordType.pair;
+
   if (id === null) {
     // 挿入
     const { error } = await supabase.from('planned_records').insert([
@@ -81,6 +85,7 @@ export const upsertPlannedRecord = async (
         sub_type_id: subTypeId,
         price: price,
         memo: memo,
+        record_type: recordType,
       },
     ]);
     return {
@@ -102,6 +107,7 @@ export const upsertPlannedRecord = async (
         sub_type_id: subTypeId,
         price: price,
         memo: memo,
+        record_type: recordType,
       })
       .eq('id', id);
     return {

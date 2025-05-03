@@ -10,8 +10,6 @@ interface GetMonthSumRpcRequest {
 export type GetMonthSumRpcRow = {
   year_month: YearMonthString;
   self_sum: number;
-  pair_sum: number;
-  both_sum: number;
 };
 // TODO: interfaceに置き換える
 type GetMonthSumRpcResponse = GetMonthSumRpcRow[] | null;

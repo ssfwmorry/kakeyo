@@ -82,6 +82,7 @@
                 :methodName="record.methodName"
                 :memo="record.memo ?? ''"
                 :isShowBlueColorPrice="!record.isPay"
+                :isSettlement="false"
                 :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
                 @edit="goRecordEditPage(record)"
               ></RecordCard>
@@ -232,8 +233,6 @@ const goSummaryPage = () => {
   router.push({ name: PAGE.SUMMARY });
 };
 const goRecordEditPage = (record: GetSummarizedRecordItem) => {
-  setIsPair(record.isPair);
-
   setRouterParam(RouterParamKey.RECORD, record);
   const query: PageQueryParameter = { key: RouterParamKey.RECORD };
   router.push({ name: PAGE.NOTE, query });

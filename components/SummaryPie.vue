@@ -41,8 +41,8 @@
           <v-btn :value="false" min-width="64" class="px-0">方法</v-btn>
         </v-btn-toggle>
       </v-col>
-      <!-- 立替 -->
-      <v-col v-if="isExistPair" class="mb-2 d-flex justify-center">
+      <!-- 立替精算 -->
+      <v-col v-if="isExistPair && !isPair" class="mb-2 d-flex justify-center">
         <v-btn-toggle
           v-model="isIncludeInstead"
           variant="outlined"
@@ -50,8 +50,8 @@
           mandatory
           @update:model-value="updateChart"
         >
-          <v-btn :value="true" min-width="64" class="px-0">立替込み</v-btn>
-          <v-btn :value="false" min-width="64" class="px-0">除く</v-btn>
+          <v-btn :value="true" min-width="64" class="px-0">立替精算</v-btn>
+          <v-btn :value="false" min-width="64" class="px-0">自分のみ</v-btn>
         </v-btn-toggle>
       </v-col>
 
@@ -79,7 +79,7 @@
     <div>
       <v-row
         v-for="typeOrMethod of typeOrMethodList"
-        :key="typeOrMethod.id"
+        :key="typeOrMethod.id ?? ''"
         class="mb-2"
         no-gutters
       >
@@ -90,12 +90,19 @@
                 <!-- TODO records と 共通化 -->
                 <div v-if="isType" class="py-0 pl-2">
                   <v-avatar
+                    v-if="typeOrMethod.id !== null"
                     size="25"
                     :color="typeOrMethod.color"
                     :icon="typeOrMethod.isPair ? $ICONS.SHARE : ''"
                     class="text-white"
-                  >
-                  </v-avatar>
+                  />
+                  <v-avatar
+                    v-else
+                    size="28"
+                    :color="typeOrMethod.color"
+                    variant="outlined"
+                    :icon="$ICONS.SHARE"
+                  />
                   {{ typeOrMethod.name }}
                 </div>
                 <div v-else class="py-0 pl-2">
@@ -121,6 +128,7 @@
               </v-col>
               <v-col cols="1" class="pa-0 d-flex align-center justify-end">
                 <v-btn
+                  v-if="typeOrMethod.id !== null"
                   icon
                   block
                   size="small"
@@ -165,7 +173,7 @@
 <script setup lang="ts">
 import type { GetMethodSummaryItem, GetTypeSummaryItem } from '@/api/supabase/record.interface';
 import { assertApiResponse } from '@/utils/api';
-import { PAGE } from '@/utils/constants';
+import { PAGE, SettlementRecord } from '@/utils/constants';
 import { COLOR_CODE } from '@/utils/constants/color';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
@@ -193,8 +201,8 @@ type TypeListSubs = { name: string | null; value: string; id: Id };
 type TypeOrMethod = {
   name: string;
   value: string;
-  color: ColorString;
-  id: Id;
+  color: ColorString | typeof SettlementRecord.color;
+  id: Id | null;
   isPair: boolean;
   pairUserName: string | null;
   subs: TypeListSubs[];
@@ -257,6 +265,15 @@ const updateFocus = async (obj: YearMonthNumObj) => {
   focus.value = TimeUtility.ConvertYearMonthNumObjToYearMonthObj(obj);
   await updateChart();
 };
+/**
+ * @description
+ * - isPair=true: 二人の家計分析が目的
+ *   - 立替したかどうかは重要ではないので切り替えずに表示する
+ *   - 精算はノイズなので含めない
+ * - isPair=false: 個人の家計分析が目的
+ *   - 立替精算を含む)を含めないと、個人的な支払/受取がわかる
+ *   - 立替精算を含めると、相手を考慮した自分の支払/受取がわかる
+ */
 const updateChart = async () => {
   enableLoading();
 
@@ -304,10 +321,15 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
     const id = isType.value
       ? (typeOrMethodSummary as GetTypeSummaryItem).typeId
       : (typeOrMethodSummary as GetMethodSummaryItem).methodId;
+    // TODO: 文字列リファクタ
     const name = isType.value
-      ? (typeOrMethodSummary as GetTypeSummaryItem).typeName
+      ? (typeOrMethodSummary as GetTypeSummaryItem).typeName ?? SettlementRecord.name
       : (typeOrMethodSummary as GetMethodSummaryItem).methodName;
-    const color = COLOR_CODE[typeOrMethodSummary.colorName];
+    // MEMO: 精算recordは白色にする。TODO: 要件整理
+    const color =
+      typeOrMethodSummary.colorName !== null
+        ? COLOR_CODE[typeOrMethodSummary.colorName]
+        : SettlementRecord.color;
     const isPair = typeOrMethodSummary.isPair;
     const pairUserName = isType.value
       ? ''
@@ -322,7 +344,7 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
     let typeOrMethod: TypeOrMethod = {
       name: name,
       value: StringUtility.ConvertIntToShowStr(sum),
-      color: typeOrMethodSummary.colorName,
+      color: typeOrMethodSummary.colorName ?? SettlementRecord.color,
       id: id,
       isPair: isPair,
       pairUserName: pairUserName,
@@ -346,6 +368,10 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
   return { pie: pieData, list: typeOrMethodList };
 };
 const goRecordsShowPage = (typeOrMethod: TypeOrMethod, subType: TypeListSubs | null) => {
+  if (typeOrMethod.id === null || typeOrMethod.color === SettlementRecord.color) {
+    alert('予期せぬ状況');
+    return;
+  }
   const tmpSubTypeName = subType === null || subType.name === null ? '' : ` - ${subType.name}`;
   const recordsQuery: RecordsQueryParam = {
     id: typeOrMethod.id,

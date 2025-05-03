@@ -1,4 +1,4 @@
--- now: 2025-04-05 22:05
+-- now: 2025-05-03 22:54
 -- migration-sort: 1
 drop function if exists develop.swap_method(id1 int, id2 int);
 
@@ -60,54 +60,40 @@ drop function if exists develop.get_month_sum(input_user_id varchar(30), input_y
 create or replace function develop.get_month_sum(input_user_id varchar(30), input_year_month varchar(7))
 returns table (
     year_month varchar(7),
-    self_sum int,
-    pair_sum int,
-    both_sum int
+    self_sum int
 )
 as $$
     with converted_price as (
-        select
+      select
+        to_char(cast(datetime as date),'YYYY-MM') as year_month,
+        case
+          when records.record_type = 0 and records.user_id = input_user_id then
             case
-                when records.pair_id is null and records.user_id = input_user_id then
-                    case
-                        when is_pay = false then price * (-1)
-                        else price
-                    end
-                else 0
-            end as self_price,
-            case
-                when records.pair_id is not null then
-                    case
-                        when is_pay = false then price * (-1)
-                        else price
-                    end
-                else 0
-            end as pair_price,
-            case
-                when records.user_id = input_user_id then
-                    case
-                        when is_pay = false then price * (-1)
-                        else price
-                    end
-                else 0
-            end as both_price,
-            to_char(cast(datetime as date),'YYYY-MM') as year_month
-        from develop.records
-        left join develop.pairs on
-            records.pair_id = pairs.id
-        where
-            (
-                records.user_id = input_user_id
-                or pairs.user1_id = input_user_id
-                or pairs.user2_id = input_user_id
-            )
-            and to_char(cast(datetime as date),'YYYY-MM') = input_year_month
+              when is_pay = false then price * (-1)
+              else price
+            end
+          -- when records.record_type = 0 and records.user_id <> input_user_id は相手の支払なのでノーカウント
+          when records.record_type = 5 and records.user_id = input_user_id then price -- 立替は必ず支払
+          -- when records.record_type = 5 and records.user_id <> input_user_id は相手の立替なのでノーカウント
+          -- when records.record_type = 10 はノーカウント
+          when records.record_type = 15 and records.user_id = input_user_id then price -- 精算による支払
+          when records.record_type = 15 and records.user_id <> input_user_id then price * (-1) -- 精算による受取
+          else 0
+        end as self_price
+      from develop.records
+      left join develop.pairs on
+        records.pair_id = pairs.id
+      where
+        (
+          records.user_id = input_user_id
+          or pairs.user1_id = input_user_id
+          or pairs.user2_id = input_user_id
+        )
+        and to_char(cast(datetime as date),'YYYY-MM') = input_year_month
     )
     select
-        year_month,
-        sum(self_price) as self_sum,
-        sum(pair_price) as pair_sum,
-        sum(both_price) as both_sum
+      year_month,
+      sum(self_price) as self_sum
     from converted_price
     group by year_month;
 $$ language sql;
@@ -117,47 +103,63 @@ drop function if exists develop.get_method_summary(input_user_id varchar(30), in
 
 create or replace function develop.get_method_summary(input_user_id varchar(30), input_is_pay boolean, input_is_pair boolean, input_is_include_instead boolean, input_year varchar(5), input_month varchar(4))
 returns table (
-    method_name varchar(10),
-    method_id int,
+    method_name varchar(10), -- not null
+    method_id int, -- not null
     pair_user_name varchar(10),
-    color_name varchar(20),
-    is_pair boolean,
-    sum int
+    color_name varchar(20), -- not null
+    is_pair boolean, -- not null
+    sum int -- not null
 )
 as $$
     with summarized_records as (
-        select distinct
-            records.method_id,
-            sum(records.price) as sum
-        from develop.records
-        where
-            (case
-                -- TODO fix-bug これだと、全てのpairからrecordsをとってくるはず。pairsとJOINして絞り込む必要あり
-                when input_is_pair = true and input_is_include_instead = true then pair_id is not null
-                when input_is_pair = true and input_is_include_instead = false then (pair_id is not null and record_type in (10, 15))
-                when input_is_pair = false and input_is_include_instead = true then (user_id = cast(input_user_id as char(28)))
-                else (user_id = cast(input_user_id as char(28)) and pair_id is null)
-            end)
-            and is_pay = input_is_pay
-            and to_char(cast(datetime as date),'YYYY-MM') = input_year || '-' || input_month
-        group by method_id
+      select distinct
+        records.method_id,
+        sum(records.price) as sum
+      from develop.records
+      left join develop.pairs on
+        records.pair_id = pairs.id
+      where
+        -- 自分, 自分の立替, 相手の立替, 共有, 精算 を取得
+        ( records.user_id = input_user_id
+          or pairs.user1_id = input_user_id
+          or pairs.user2_id = input_user_id
+        )
+        and (case
+          -- 二人の家計に関わる、立替/共有
+          when input_is_pair = true then record_type in (5, 10)
+          -- 自分の家計に関わる、自分/(自分のみの)立替/精算
+          when input_is_pair = false and input_is_include_instead = true
+            then (record_type in (0, 15) or ( record_type = 5 and (user_id = cast(input_user_id as char(28))) ))
+          -- 相手を除く自分の家計に関わる、自分
+          when input_is_pair = false and input_is_include_instead = false then record_type = 0
+          -- 起こり得ない
+          else true
+        end)
+        and (case
+          -- 精算recordの場合はis_payがnullなので、user_idをもとに支払/受取の判断をする
+          when record_type = 15 and input_is_pay = true then (user_id = cast(input_user_id as char(28)))
+          when record_type = 15 and input_is_pay = false then (user_id <> cast(input_user_id as char(28)))
+          else is_pay = input_is_pay
+        end)
+        and to_char(cast(datetime as date),'YYYY-MM') = input_year || '-' || input_month
+      group by method_id
     )
     select
-        methods.name as method_name,
-        methods.id as method_id,
-        users.name as pair_user_name,
-        color_classifications.name as color_name,
-        methods.pair_id is not null as is_pair,
-        summarized_records.sum
+      methods.name as method_name,
+      methods.id as method_id,
+      users.name as pair_user_name,
+      color_classifications.name as color_name,
+      methods.pair_id is not null as is_pair,
+      summarized_records.sum
     from summarized_records
     inner join develop.methods on
-        summarized_records.method_id = methods.id
+      summarized_records.method_id = methods.id
     inner join develop.color_classifications on
-        methods.color_classification_id = color_classifications.id
+      methods.color_classification_id = color_classifications.id
     left join develop.pairs on
-        methods.pair_id = pairs.id
+      methods.pair_id = pairs.id
     left join develop.users on
-        methods.user_id = users.uid
+      methods.user_id = users.uid
     order by summarized_records.sum desc;
 $$ language sql;
 
@@ -169,51 +171,62 @@ returns table (
     type_name varchar(10),
     type_id int,
     is_pair boolean,
-    sub_type_name varchar(10),
     sub_type_id int,
+    sub_type_name varchar(10),
     color_name varchar(20),
     sub_type_sum int,
-    sum int
+    sum int -- not null
 )
 as $$
     with summarized_records as (
-        select distinct
-            records.type_id,
-            records.sub_type_id,
-            sum(records.price) as sum
-        from develop.records
-        where
-            (case
-                -- TODO fix-bug これだと、全てのpairからrecordsをとってくるはず。pairsとJOINして絞り込む必要あり
-                when input_is_pair = true and input_is_include_instead = true then pair_id is not null
-                when input_is_pair = true and input_is_include_instead = false then (pair_id is not null and record_type in (10, 15))
-                when input_is_pair = false and input_is_include_instead = true then (user_id = cast(input_user_id as char(28)))
-                else (user_id = cast(input_user_id as char(28)) and pair_id is null)
-            end)
-            and is_pay = input_is_pay
-            and to_char(cast(datetime as date),'YYYY-MM') = input_year || '-' || input_month
-        group by type_id, sub_type_id
-        order by type_id
+      select distinct
+        records.type_id,
+        records.sub_type_id,
+        sum(records.price) as sum
+      from develop.records
+      left join develop.pairs on
+        records.pair_id = pairs.id
+      where
+        -- where 条件はget_method_summary と同様
+        ( records.user_id = input_user_id
+          or pairs.user1_id = input_user_id
+          or pairs.user2_id = input_user_id
+        )
+        and (case
+          when input_is_pair = true then record_type in (5, 10)
+          when input_is_pair = false and input_is_include_instead = true
+            then (record_type in (0, 15) or ( record_type = 5 and (user_id = cast(input_user_id as char(28))) ))
+          when input_is_pair = false and input_is_include_instead = false then record_type = 0
+          else true
+        end)
+        and (case
+          when record_type = 15 and input_is_pay = true then (user_id = cast(input_user_id as char(28)))
+          when record_type = 15 and input_is_pay = false then (user_id <> cast(input_user_id as char(28)))
+          else is_pay = input_is_pay
+        end)
+        and to_char(cast(datetime as date),'YYYY-MM') = input_year || '-' || input_month
+      group by type_id, sub_type_id
+      order by type_id
     )
     select
-        types.name as type_name,
-        types.id as type_id,
-        types.pair_id is not null as is_pair,
-        case
-            when sub_types.name is null then ''
-            else sub_types.name
-        end as sub_type_name,
-        sub_types.id as sub_type_id,
-        color_classifications.name as color_name,
-        summarized_records.sum as sub_type_sum,
-        cast( sum(summarized_records.sum) over (partition by types.id) as integer) as sum -- なぜか sum() が文字列になるので cast
+      types.name as type_name,
+      types.id as type_id,
+      case
+        when types.id is null then true -- 精算recordはis_pair=true
+        else types.pair_id is not null -- それ以外はtypes.pair_idで判断
+      end as is_pair,
+      sub_types.id as sub_type_id,
+      sub_types.name as sub_type_name,
+      color_classifications.name as color_name,
+      summarized_records.sum as sub_type_sum,
+      cast( sum(summarized_records.sum) over (partition by types.id) as integer) as sum -- なぜか sum() が文字列になるので cast
     from summarized_records
-    inner join develop.types on
-        summarized_records.type_id = types.id
-    inner join develop.color_classifications on
-        types.color_classification_id = color_classifications.id
+    left join develop.types on
+      summarized_records.type_id = types.id
+    left join develop.color_classifications on
+      types.color_classification_id = color_classifications.id
     left join develop.sub_types on
-        summarized_records.sub_type_id = sub_types.id
+      summarized_records.sub_type_id = sub_types.id
     order by sum desc
 $$ language sql;
 
@@ -222,38 +235,54 @@ drop function if exists develop.get_pay_and_income_list(input_user_id varchar(30
 
 create or replace function develop.get_pay_and_income_list(input_user_id varchar(30), input_year varchar(5), input_is_pair boolean, input_is_include_instead boolean)
 returns table (
-    year_month varchar(7),
-    pay_sum int,
-    income_sum int
+    year_month varchar(7), -- not null
+    pay_sum int, -- not null
+    income_sum int -- not null
 )
 as $$
     with converted_price as (
-        select
-            case
-                when is_pay = true then price
-                else 0
-            end as pay_price,
-            case
-                when is_pay = false then price
-                else 0
-            end as income_price,
-            to_char(cast(datetime as date),'YYYY-MM') as year_month
-        from develop.records
-        left join develop.pairs on
-            records.pair_id = pairs.id
-        where
-            (case
-                when input_is_pair = true and input_is_include_instead = true then (pairs.user1_id = input_user_id or pairs.user2_id = input_user_id)
-                when input_is_pair = true and input_is_include_instead = false then ((pairs.user1_id = input_user_id or pairs.user2_id = input_user_id) and records.record_type in (10, 15))
-                when input_is_pair = false and input_is_include_instead = true then records.user_id = input_user_id
-                else (records.user_id = input_user_id and records.pair_id is null)
-            end)
-            and to_char(cast(datetime as date), 'YYYY') = input_year
+      select
+        case
+          -- 精算の場合、user_idをもとに支払/受取を判断する
+          when record_type = 15 and user_id = input_user_id then price
+          when record_type = 15 and user_id <> input_user_id then 0
+          -- 精算ではない場合、is_payをもとに判断する
+          when is_pay = true then price
+          else 0
+        end as pay_price,
+        case
+          when record_type = 15 and user_id = input_user_id then 0
+          when record_type = 15 and user_id <> input_user_id then price
+          when is_pay = false then price
+          else 0
+        end as income_price,
+        to_char(cast(datetime as date),'YYYY-MM') as year_month
+      from develop.records
+      left join develop.pairs on
+        records.pair_id = pairs.id
+      where
+        -- 自分, 自分の立替, 相手の立替, 共有, 精算 を取得
+        ( records.user_id = input_user_id
+          or pairs.user1_id = input_user_id
+          or pairs.user2_id = input_user_id
+        )
+        and (case
+          -- 二人の家計に関わる、立替/共有
+          when input_is_pair = true then record_type in (5, 10)
+          -- 自分の家計に関わる、自分/(自分のみの)立替/精算
+          when input_is_pair = false and input_is_include_instead = true
+            then (record_type in (0, 15) or ( record_type = 5 and user_id = input_user_id ))
+          -- 相手を除く自分の家計に関わる、自分
+          when input_is_pair = false and input_is_include_instead = false then record_type = 0
+          -- 起こり得ない
+          else true
+        end)
+        and to_char(cast(datetime as date), 'YYYY') = input_year
     )
     select
-        year_month,
-        sum(pay_price) as pay_sum,
-        sum(income_price) as income_sum
+      year_month,
+      sum(pay_price) as pay_sum,
+      sum(income_price) as income_sum
     from converted_price
     group by year_month
     order by year_month;
@@ -577,7 +606,7 @@ returns table (
   is_pay boolean,
   price integer,
   memo text,
-  is_instead boolean,
+  record_type smallint, -- not null
   planned_record_id integer,
   method_id integer,
   method_name varchar(10),
@@ -598,11 +627,7 @@ as $$
       records.is_pay,
       records.price,
       records.memo,
-      (case
-        when records.record_type = 5 then true
-        when records.record_type = 0 then null
-        else false
-      end) as is_instead,
+      records.record_type,
       records.planned_record_id,
       methods.id as method_id,
       methods.name as method_name,
@@ -617,11 +642,11 @@ as $$
     from develop.records
     inner join develop.methods on
         records.method_id = methods.id
-    inner join develop.types on
+    left join develop.types on
         records.type_id = types.id
     left join develop.sub_types on
         records.sub_type_id = sub_types.id
-    inner join develop.color_classifications as tc on
+    left join develop.color_classifications as tc on
         types.color_classification_id = tc.id
     inner join develop.color_classifications as mc on
         methods.color_classification_id = mc.id
@@ -630,13 +655,6 @@ as $$
     left join develop.users on
         records.user_id = users.uid
         and records.pair_id is not null
-    /*  レコードを作った方じゃない pair_id を取得するとき
-      left join develop.users on
-        (case
-          when pairs.user1_id = records.user_id then pairs.user2_id
-          else pairs.user1_id
-        end)
-        = users.uid */
     where
         (
           records.user_id = input_user_id
@@ -658,7 +676,7 @@ returns table (
     is_pay boolean,
     price integer,
     memo text,
-    is_instead boolean,
+    record_type smallint, -- not null
     planned_record_id integer,
     method_id integer,
     method_name varchar(10),
@@ -679,11 +697,7 @@ as $$
         records.is_pay,
         records.price,
         records.memo,
-        (case
-            when records.record_type = 5 then true
-            when records.record_type = 0 then null
-            else false
-        end) as is_instead,
+        records.record_type,
         records.planned_record_id,
         methods.id as method_id,
         methods.name as method_name,
@@ -738,59 +752,55 @@ drop function if exists develop.get_paired_record_list(input_user_id varchar(30)
 
 create or replace function develop.get_paired_record_list(input_user_id varchar(30),input_year_month varchar(8))
 returns table (
-    id integer,
-    datetime timestamptz,
+    id integer, -- not null
+    datetime timestamptz, -- not null
     is_self boolean,
     is_pay boolean,
-    price integer,
+    price integer, -- not null
     memo text,
-    is_instead boolean,
+    record_type smallint, -- not null
     is_settled boolean,
-    is_planned_record boolean,
-    method_name varchar(10),
-    method_color_classification_name varchar(10),
+    is_planned_record boolean, -- not null
+    method_name varchar(10), -- not null
+    method_color_classification_name varchar(10), -- not null
     type_name varchar(10),
     sub_type_name varchar(10),
     type_color_classification_name varchar(10)
 )
 as $$
     select
-        records.id,
-        records.datetime,
-        records.user_id = input_user_id as is_self,
-        records.is_pay,
-        records.price,
-        records.memo,
-        (case
-            when records.record_type = 5 then true
-            when records.record_type = 0 then null
-            else false
-        end) as is_instead,
-        records.is_settled,
-        records.planned_record_id is not null as is_planned_record,
-        methods.name as method_name,
-        mc.name as method_color_classification_name,
-        types.name as type_name,
-        sub_types.name as sub_type_name,
-        tc.name as type_color_classification_name
+      records.id,
+      records.datetime,
+      records.user_id = input_user_id as is_self,
+      records.is_pay,
+      records.price,
+      records.memo,
+      records.record_type,
+      records.is_settled,
+      records.planned_record_id is not null as is_planned_record,
+      methods.name as method_name,
+      mc.name as method_color_classification_name,
+      types.name as type_name,
+      sub_types.name as sub_type_name,
+      tc.name as type_color_classification_name
     from develop.records
     inner join develop.methods on
-        records.method_id = methods.id
-    inner join develop.types on
-        records.type_id = types.id
-    left join develop.sub_types on
-        records.sub_type_id = sub_types.id
-    inner join develop.color_classifications as tc on
-        types.color_classification_id = tc.id
+      records.method_id = methods.id
     inner join develop.color_classifications as mc on
-        methods.color_classification_id = mc.id
+      methods.color_classification_id = mc.id
     inner join develop.pairs on
-        records.pair_id = pairs.id
+      -- pairs.idがあるもののみ絞り込む
+      records.pair_id = pairs.id
     left join develop.users on
-        records.user_id = users.uid
-        and records.pair_id is not null
+      records.user_id = users.uid
+    left join develop.types on
+      records.type_id = types.id
+    left join develop.sub_types on
+      records.sub_type_id = sub_types.id
+    left join develop.color_classifications as tc on
+      types.color_classification_id = tc.id
     where
-        to_char(cast(datetime as date),'YYYY-MM') = input_year_month
+      to_char(cast(datetime as date),'YYYY-MM') = input_year_month
     order by records.datetime desc
     ;
 $$ language sql;

@@ -273,3 +273,35 @@ alter table develop.methods alter column is_pay drop not null; -- publicも適�
 
 - `develop.get_paired_record_list`
 - `public.get_paired_record_list`
+
+## 20250405\_開発 DB の RPC に精算用 record 対応する
+
+- `develop.get_record_list`
+- `develop.get_month_sum`
+- `develop.get_summarized_record_list`
+
+## 20250406\_開発 DB の RPC に精算用 record 対応する
+
+- `develop.get_type_summary`
+
+## 20250409\_開発 DB の RPC に精算用 record 対応する
+
+- `develop.get_method_summary`
+- `develop.get_type_summary`
+- `develop.get_paired_record_list`
+
+## 20250429\_開発 DB の RPC に精算用 record 対応する
+
+- `develop.get_pay_and_income_list`
+- `develop.post_records`
+
+## 20250503\_本番 DB の RPC に精算用 record 対応する
+
+- `public.get_month_sum`
+- `public.get_method_summary`
+- `public.get_type_summary`
+- `public.get_pay_and_income_list`
+- `public.post_records`
+- `public.get_record_list`
+- `public.get_summarized_record_list`
+- `public.get_paired_record_list`

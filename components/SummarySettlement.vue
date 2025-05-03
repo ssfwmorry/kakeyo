@@ -102,33 +102,36 @@
             <v-col cols="6">
               <v-number-input
                 v-model="price"
-                control-variant="hidden"
                 inset
+                density="compact"
+                control-variant="hidden"
                 variant="outlined"
               ></v-number-input>
             </v-col>
             <v-spacer />
           </v-row>
-          <v-row
-            v-if="isExistUnsettledRecord && selectedMethodId !== null"
-            no-gutters
-            class="d-flex justify-center"
-          >
-            <v-btn variant="flat" color="primary" class="text-white mr-4" @click="endSettlement()">
+          <v-row v-if="isExistUnsettledRecord" no-gutters class="d-flex justify-center">
+            <v-btn
+              variant="flat"
+              color="primary"
+              class="text-white mr-4"
+              :disabled="selectedMethodId === null || price <= 0"
+              @click="endSettlement()"
+            >
               完了
             </v-btn>
+            <!-- MEMO: キャンセルはIFによらずに表示する -->
             <v-btn variant="text" width="80" @click="cancelSettlement()"> キャンセル </v-btn>
           </v-row>
         </template>
       </v-stepper>
     </v-row>
 
-    <!-- TODO おそらくここは固定費なのでアコーディオンにする -->
-    <h4 v-if="recordList['COUPLE'].length !== 0">
-      ２人：{{ StringUtility.ConvertIntToShowStr(coupleSum) + ' 円' }}
-    </h4>
+    <h4 v-if="recordList['COUPLE'].length !== 0">２人</h4>
     <v-row v-for="(record, index) in recordList['COUPLE']" :key="index" no-gutters class="mb-2">
       <v-col>
+        <!-- TODO: isSettlement は false固定ではないかも -->
+        <!-- MEMO: 精算recordはプラスでもマイナスでもない -->
         <RecordCard
           :isDisable="false"
           :isPairType="true"
@@ -141,8 +144,14 @@
           :methodColor="record.methodColorClassificationName"
           :methodName="record.methodName"
           :memo="record.memo ?? ''"
-          :isShowBlueColorPrice="!record.isPay"
-          :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
+          :isShowBlueColorPrice="!record.isPay || (record.isSettlement === true && !record.isSelf)"
+          :isSettlement="record.isSettlement"
+          :price="
+            StringUtility.ConvertIntToShowStrWithIsPay(
+              record.price,
+              record.isSettlement === true || record.isPay === null ? true : record.isPay
+            )
+          "
         ></RecordCard>
       </v-col>
     </v-row>
@@ -167,7 +176,9 @@
                 :isSettled="record.isSettled ?? false"
                 :memo="record.memo ?? ''"
                 :isShowBlueColorPrice="!record.isPay"
-                :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
+                :price="
+                  StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay ?? true)
+                "
                 @click.native="openDialog(record, true)"
                 class="w-100"
               ></RecordCardHalf>
@@ -200,7 +211,9 @@
                 :isSettled="record.isSettled ?? false"
                 :memo="record.memo ?? ''"
                 :isShowBlueColorPrice="!record.isPay"
-                :price="StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay)"
+                :price="
+                  StringUtility.ConvertIntToShowStrWithIsPay(record.price, record.isPay ?? true)
+                "
                 @click.native="openDialog(record, false)"
                 class="w-100"
               ></RecordCardHalf>
@@ -278,7 +291,6 @@ const focus = ref<YearMonthObj>(TimeUtility.GetNowYearMonthObj(isDemoLogin.value
 const step = ref<StepStatus>(stepStatus.READY);
 const selectedRateList = ref<RateList>([]);
 const isExistUnsettledRecord = ref(false);
-const coupleSum = ref(0);
 const recordList = ref<RecordList>({ ME: [], PARTNER: [], COUPLE: [] });
 const methodList = ref<GetMethodListItem[]>([]);
 const selectedMethodId = ref<number | null>(null);
@@ -348,12 +360,7 @@ const updateChart = async () => {
   });
   assertApiResponse(apiResMethod);
 
-  const {
-    coupleSum: ret1,
-    recordList: ret2,
-    isExistUnsettledRecord: ret3,
-  } = convertShowData(apiResRecord.data);
-  coupleSum.value = ret1;
+  const { recordList: ret2, isExistUnsettledRecord: ret3 } = convertShowData(apiResRecord.data);
   recordList.value = ret2;
   methodList.value = apiResMethod.data.both.pair;
   isExistUnsettledRecord.value = ret3;
@@ -363,7 +370,6 @@ const updateChart = async () => {
   disableLoading();
 };
 const convertShowData = (records: GetPairedRecordItem[]) => {
-  let coupleSum = 0;
   let recordList: RecordList = {
     ['ME']: [],
     ['PARTNER']: [],
@@ -396,14 +402,13 @@ const convertShowData = (records: GetPairedRecordItem[]) => {
     } else if (!record.isInstead) {
       // COUPLE
       recordList['COUPLE'].push(record);
-      coupleSum += recordPrice;
     } else {
       // PARTNER
       recordList['PARTNER'].push(record);
     }
   });
 
-  return { coupleSum, recordList, isExistUnsettledRecord };
+  return { recordList, isExistUnsettledRecord };
 };
 const startSettlement = () => {
   step.value = stepStatus.GOING;

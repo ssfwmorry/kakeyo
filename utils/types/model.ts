@@ -60,19 +60,26 @@ export type Method = {
   sort: number;
 };
 
+export const RecordType = {
+  self: 0,
+  instead: 5,
+  pair: 10,
+  settlement: 15,
+} as const;
+export type RecordType = (typeof RecordType)[keyof typeof RecordType];
+
 export type Record_ = {
   id: Id;
   userId: Id | null;
   pairId: Id | null;
   datetime: DatetimeString;
-  isPay: boolean;
+  isPay: boolean | null;
   methodId: Id;
-  typeId: Id;
+  typeId: Id | null;
   subTypeId: Id | null;
   price: number;
   memo: string | null;
   plannedRecordId: Id | null;
-  isInstead: boolean | null; // TODO
   isSettled: boolean | null;
-  // recordType: number; // TODO
+  recordType: RecordType;
 };
