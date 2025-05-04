@@ -113,7 +113,7 @@ export type GetPairedRecordItem = Camelized<
   Omit<GetPairedRecordListRpcRow, 'record_type' | 'type_name' | 'type_color_classification_name'>
 > & {
   typeName: string;
-  isInstead: boolean | null;
+  isInstead: boolean;
   isSettlement: boolean;
   typeColorClassificationName: string;
 };

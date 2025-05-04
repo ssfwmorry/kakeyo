@@ -380,12 +380,11 @@ const updateChart = async () => {
 };
 const convertShowData = (records: GetPairedRecordItem[]) => {
   let recordList: RecordList = {
-    ['ME']: [],
-    ['PARTNER']: [],
-    ['COUPLE']: [],
+    ME: [],
+    PARTNER: [],
+    COUPLE: [],
   };
 
-  let isExistUnsettledRecord = false;
   records.forEach((tmpRecord) => {
     const record: Record = {
       ...tmpRecord,
@@ -394,30 +393,19 @@ const convertShowData = (records: GetPairedRecordItem[]) => {
       isNew: true,
     };
 
-    if (record.isSettled === false) isExistUnsettledRecord = true;
-
-    let recordPrice;
-    if (record.isSettled || record.price === 0) {
-      recordPrice = 0;
-    } else if (record.isPay) {
-      recordPrice = record.price;
+    if (record.isSettlement || !record.isInstead) {
+      recordList.COUPLE.push(record);
+    } else if (record.isSelf) {
+      recordList.ME.push(record);
     } else {
-      recordPrice = record.price * -1;
-    }
-
-    if (record.isSelf) {
-      // ME
-      recordList['ME'].push(record);
-    } else if (!record.isInstead) {
-      // COUPLE
-      recordList['COUPLE'].push(record);
-    } else {
-      // PARTNER
-      recordList['PARTNER'].push(record);
+      recordList.PARTNER.push(record);
     }
   });
 
-  return { recordList, isExistUnsettledRecord };
+  return {
+    recordList,
+    isExistUnsettledRecord: records.some((record) => record.isSettled === false),
+  };
 };
 const startSettlement = () => {
   step.value = stepStatus.GOING;
