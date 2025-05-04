@@ -126,7 +126,7 @@ export const createSettlementRecord = async (
       user_id: targetUserId,
       pair_id: pairId,
       datetime: datetime,
-      is_pay: true,
+      is_pay: null,
       method_id: methodId,
       is_settled: null,
       type_id: null,
