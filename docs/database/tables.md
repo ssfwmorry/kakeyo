@@ -6,18 +6,18 @@
 
 ## 順番
 
-- 1: day_classifications
-- 5: color_classifications
-- 11: users
-- 15: pairs(users の後)
-- 20: methods
-- 30: types
-- 35: sub_types(types の後)
-- 40: planned_records
-- 45: records(planned_records の後)
-- 50: plan_types
-- 55: plans(plan_types の後)
-- 60: memos
+- 1: [day_classifications](#day_classifications)
+- 5: [color_classifications](#color_classifications)
+- 11: [users](#users)
+- 15: [pairs(users の後)](#pairs)
+- 20: [methods](#methods)
+- 30: [types](#types)
+- 35: [sub_types(types の後)](#sub_types)
+- 40: [planned_records](#planned_records)
+- 45: [records(planned_records の後)](#records)
+- 50: [plan_types](#plan_types)
+- 55: [plans(plan_types の後)](#plans)
+- 60: [memos](#memos)
 
 ## transaction tables
 
