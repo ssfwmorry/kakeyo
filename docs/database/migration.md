@@ -305,3 +305,11 @@ alter table develop.methods alter column is_pay drop not null; -- publicも適�
 - `public.get_record_list`
 - `public.get_summarized_record_list`
 - `public.get_paired_record_list`
+
+## 20250518\_開発と本番 DB の planned_records のカラムを変更する対応
+
+- 一旦、カラムの値は後回しとする
+
+```sql
+alter table develop.records add column record_type smallint default 0 not null; -- publicも適応
+```
