@@ -90,7 +90,18 @@ $ firebase use <project-id>
 
 ### デモ
 
-- デモログインでは、常に静的な正常系 API レスポンスが返ってくる
+| 環境変数 (NUXT_PUBLIC\_\*) | DB             | SKIP | 備考                             |
+| -------------------------- | -------------- | ---- | -------------------------------- |
+| DEMO_USER_EMAIL            | develop/public | F    | デモログインユーザ               |
+| DEMO_USER_PASSWORD         | develop/public | -    | デモログインユーザ               |
+| DEMO_USER_UID              | develop/public | -    | デモログインユーザ               |
+| DEMO_USER_PAIR_EMAIL       | develop/public | T    | デモログインユーザの共有相手     |
+| DEMO_USER_PAIR_PASSWORD    | develop/public | -    | デモログインユーザの共有相手     |
+| DEMO_USER_PAIR_UID         | develop/public | -    | デモログインユーザの共有相手     |
+| TEST_USER_PUB1             | public         | F    | テストユーザ                     |
+| TEST_USER_DEV1             | develop        | T    | テストユーザ 1                   |
+| TEST_USER_DEV2             | develop        | T    | テストユーザ 1 の共有相手        |
+| TEST_USER_DEV3             | develop        | T    | 共有設定をしていないテストユーザ |
 
 ### ブラウザ内ストレージ
 

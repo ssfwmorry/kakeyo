@@ -187,7 +187,8 @@ const isReset = ref(false);
 const userLogin = async () => {
   if (
     email.value === DEMO_USER_INFO(config).EMAIL &&
-    password.value === DEMO_USER_INFO(config).PASSWORD
+    // MEMO: 数字のみの場合はNumberとなるのでキャストする
+    String(password.value) == DEMO_USER_INFO(config).PASSWORD
   ) {
     await demoLogin();
     return;

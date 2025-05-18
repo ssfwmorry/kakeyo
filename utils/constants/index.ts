@@ -42,7 +42,7 @@ const EMAIL_WHITE_LIST = (config: RuntimeConfig) => {
     case DbSchema.develop:
       return [config.public.testUserDev1, config.public.testUserDev2, config.public.testUserDev3];
     case DbSchema.public:
-      return [config.public.testUserPub1];
+      return [config.public.demoUserPairEmail, config.public.testUserPub1];
     default:
       return [];
   }
