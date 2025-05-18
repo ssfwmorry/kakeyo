@@ -369,8 +369,9 @@ create policy "develop.records all"
 | memo                  |  string  |  -   |    -     |       -        |           -            | -                                                                                |
 | sort                  |   int    |  -   |    v     |       v        |           -            | クエリひとつでスワップするために UK としない                                     |
 | updated_at            | datetime |  -   |    v     |       -        |           -            | supabase [固有の設定](https://zenn.dev/matken/articles/supabase-timestamp)が必要 |
+| record_type           |   int    |  -   |    v     |       -        |           -            | records テーブルと同様                                                           |
 
-※ planned_record には 精算するという概念を設けないので record_type は設けないものとする
+※ planned_records は record_type=15 となることがないので、is_pay と type_id は NotNull である
 
 #### migration
 
@@ -391,6 +392,7 @@ create table develop.planned_records (
     memo                  text,
     sort                  serial       not null,
     updated_at            timestamptz  not null default now(),
+    record_type           smallint     not null default 0,
 
     foreign key (user_id) references develop.users (uid),
     foreign key (pair_id) references develop.pairs (id),

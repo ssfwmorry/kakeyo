@@ -243,7 +243,7 @@ create policy "develop.memos all"
 alter table develop.records alter column is_pay drop not null; -- publicも適応
 alter table develop.records alter column type_id drop not null; -- publicも適応
 alter table develop.records add column record_type smallint default 0 not null; -- publicも適応
-update develop.records set record_type = 5 where is_instead = true; -- publicも適応
+update develop.records set record_type = 5 where user_id is not null and pair_id is not null; -- publicも適応
 update develop.records set record_type = 10 where user_id is null and pair_id is not null; -- publicも適応
 ```
 
@@ -308,8 +308,8 @@ alter table develop.methods alter column is_pay drop not null; -- publicも適�
 
 ## 20250518\_開発と本番 DB の planned_records のカラムを変更する対応
 
-- 一旦、カラムの値は後回しとする
-
 ```sql
-alter table develop.records add column record_type smallint default 0 not null; -- publicも適応
+alter table develop.planned_records add column record_type smallint default 0 not null; -- publicも適応
+update develop.planned_records set record_type = 5 where user_id is not null and pair_id is not null; -- publicも適応
+update develop.planned_records set record_type = 10 where user_id is null and pair_id is not null; -- publicも適応
 ```
