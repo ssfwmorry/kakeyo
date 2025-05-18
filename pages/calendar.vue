@@ -620,7 +620,6 @@ const goPlanEditPage = () => {
 };
 const getMemoList = async () => {
   const apiRes = await supabaseGetMemoList({
-    isDemoLogin: isDemoLogin.value,
     userUid: userUid.value,
     pairId: pairId.value,
   });

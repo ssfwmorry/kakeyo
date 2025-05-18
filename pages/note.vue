@@ -372,7 +372,7 @@ const setPageRecord = (record: Record_) => {
 const setPagePlannedRecord = async (plannedRecord: PlannedRecord | null) => {
   isPlannedRecord.value = true;
 
-  const apiRes = await getDayClassificationList({ isDemoLogin: isDemoLogin.value });
+  const apiRes = await getDayClassificationList();
   assertApiResponse(apiRes);
   dayList.value = apiRes.data;
 
@@ -520,16 +520,10 @@ watch(isPair, (newValue, oldValue) => {
 (async () => {
   enableLoading();
 
-  const apiResType = await getTypeList({
-    isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value,
-  });
+  const apiResType = await getTypeList({ userUid: userUid.value });
   assertApiResponse(apiResType);
 
-  const apiResMethod = await getMethodList({
-    isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value,
-  });
+  const apiResMethod = await getMethodList({ userUid: userUid.value });
   assertApiResponse(apiResMethod);
 
   typeList.value = apiResType.data;

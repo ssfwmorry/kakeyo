@@ -9,6 +9,7 @@ import {
   type DeleteOutput,
   type SupabaseApiAuth,
   type SupabaseApiAuthGet,
+  type SupabaseApiAuthList,
   type SupabaseApiAuthUpsert,
   type UpsertOutput,
 } from './common.interface';
@@ -70,11 +71,9 @@ import {
 import { RPC_POST_RECORDS, type PostRecordsRpc } from './rpc/postRecords.interface';
 
 export const getRecordList = async (
-  { isDemoLogin, userUid }: SupabaseApiAuthGet,
+  { userUid }: SupabaseApiAuthList,
   { start, end }: GetRecordListInput
 ): Promise<GetRecordListOutput> => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_RECORD_LIST as any; // TODO 調整
-
   const payload = { input_user_id: userUid, input_start_datetime: start, input_end_datetime: end };
   const { data, error } = await supabase.rpc<typeof RPC_GET_RECORD_LIST, GetRecordListRpc>(
     RPC_GET_RECORD_LIST,
@@ -237,11 +236,9 @@ export const deleteRecord = async (
 };
 
 export const getMonthSum = async (
-  { isDemoLogin, userUid }: SupabaseApiAuthGet,
+  { userUid }: SupabaseApiAuthList,
   { yearMonth }: GetMonthSumInput
 ): Promise<GetMonthSumOutput> => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_MONTH_SUM(yearMonth);
-
   const payload = { input_user_id: userUid, input_year_month: yearMonth };
   const { data, error } = await supabase.rpc<typeof RPC_GET_MONTH_SUM, GetMonthSumRpc>(
     RPC_GET_MONTH_SUM,
@@ -266,19 +263,9 @@ export const getMonthSum = async (
 };
 
 export const getTypeSummary = async (
-  { isDemoLogin, userUid }: SupabaseApiAuthGet,
+  { userUid }: SupabaseApiAuthList,
   { isPay, isPair, isIncludeInstead, year, month }: GetTypeSummaryInput
 ): Promise<GetTypeSummaryOutput> => {
-  if (isDemoLogin)
-    return DEMO_DATA.SUPABASE.GET_TYPE_OR_METHOD_SUMMARY(
-      isPay,
-      true,
-      isPair,
-      isIncludeInstead,
-      year,
-      month
-    );
-
   const payload = {
     input_user_id: userUid,
     input_is_pay: isPay,
@@ -317,19 +304,9 @@ export const getTypeSummary = async (
 };
 
 export const getMethodSummary = async (
-  { isDemoLogin, userUid }: SupabaseApiAuthGet,
+  { userUid }: SupabaseApiAuthList,
   { isPay, isPair, isIncludeInstead, year, month }: GetMethodSummaryInput
 ): Promise<GetMethodSummaryOutput> => {
-  if (isDemoLogin)
-    return DEMO_DATA.SUPABASE.GET_TYPE_OR_METHOD_SUMMARY(
-      isPay,
-      false,
-      isPair,
-      isIncludeInstead,
-      year,
-      month
-    );
-
   const payload = {
     input_user_id: userUid,
     input_is_pay: isPay,
@@ -355,7 +332,7 @@ export const getMethodSummary = async (
 };
 
 export const getSummarizedRecordList = async (
-  { isDemoLogin, userUid }: SupabaseApiAuthGet,
+  { userUid }: SupabaseApiAuthList,
   {
     isPay,
     isType,
@@ -366,17 +343,6 @@ export const getSummarizedRecordList = async (
     subtypeId,
   }: GetSummarizedRecordListInput
 ): Promise<GetSummarizedRecordListOutput> => {
-  if (isDemoLogin)
-    return DEMO_DATA.SUPABASE.GET_SUMMARIZED_RECORD_LIST(
-      isPay,
-      isType,
-      isPair,
-      isIncludeInstead,
-      yearMonth,
-      id,
-      subtypeId
-    );
-
   const payload = {
     input_user_id: userUid,
     input_is_pay: isPay,
@@ -409,11 +375,9 @@ export const getSummarizedRecordList = async (
 };
 
 export const getPairedRecordList = async (
-  { isDemoLogin, userUid }: SupabaseApiAuthGet,
+  { userUid }: SupabaseApiAuthList,
   { yearMonth }: GetPairedRecordListInput
 ): Promise<GetPairedRecordListOutput> => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PAIRED_RECORD_LIST(yearMonth);
-
   const payload = {
     input_user_id: userUid,
     input_year_month: yearMonth,
@@ -441,12 +405,9 @@ export const getPairedRecordList = async (
 };
 
 export const getPayAndIncomeList = async (
-  { isDemoLogin, userUid }: SupabaseApiAuthGet,
+  { userUid }: SupabaseApiAuthList,
   { year, isPair, isIncludeInstead }: GetPayAndIncomeListInput
 ): Promise<GetPayAndIncomeListOutput> => {
-  if (isDemoLogin)
-    return DEMO_DATA.SUPABASE.GET_PAY_AND_INCOME_LIST(year, isPair, isIncludeInstead);
-
   const payload = {
     input_user_id: userUid,
     input_year: year,

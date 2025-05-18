@@ -287,16 +287,10 @@ const updateChart = async () => {
   let apiRes;
   let sum = 0;
   if (isType.value) {
-    apiRes = await getTypeSummary(
-      { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
-      payload
-    );
+    apiRes = await getTypeSummary({ userUid: userUid.value }, payload);
     assertApiResponse(apiRes);
   } else {
-    apiRes = await getMethodSummary(
-      { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
-      payload
-    );
+    apiRes = await getMethodSummary({ userUid: userUid.value }, payload);
     assertApiResponse(apiRes);
   }
   sum = getTypeOrMethodSum(apiRes.data);

@@ -216,10 +216,7 @@ const subTypeDialog = ref<SubTypeDialog>({
 });
 
 const updateShowData = async () => {
-  const apiRes = await getTypeList({
-    isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value,
-  });
+  const apiRes = await getTypeList({ userUid: userUid.value });
   assertApiResponse(apiRes);
   typeList.value = apiRes.data;
 };

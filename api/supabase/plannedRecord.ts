@@ -6,7 +6,7 @@ import type {
   DeleteInput,
   DeleteOutput,
   SupabaseApiAuth,
-  SupabaseApiAuthGet,
+  SupabaseApiAuthList,
   SupabaseApiAuthUpsert,
   SwapInput,
   SwapOutput,
@@ -24,11 +24,8 @@ import {
 import { RPC_SWAP_PLANNED_RECORD, type SwapRpc } from './rpc/swap.interface';
 
 export const getPlannedRecordList = async ({
-  isDemoLogin,
   userUid,
-}: SupabaseApiAuthGet): Promise<GetPlannedRecordListOutput> => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PLANNED_RECORD_LIST;
-
+}: SupabaseApiAuthList): Promise<GetPlannedRecordListOutput> => {
   const payload = { input_user_id: userUid };
   const { data, error } = await supabase.rpc<
     typeof RPC_GET_PLANNED_RECORD_LIST,

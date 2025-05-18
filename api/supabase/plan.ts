@@ -6,7 +6,7 @@ import {
   type DeleteInput,
   type DeleteOutput,
   type SupabaseApiAuth,
-  type SupabaseApiAuthGet,
+  type SupabaseApiAuthList,
   type SupabaseApiAuthUpsert,
   type UpsertOutput,
 } from './common.interface';
@@ -18,11 +18,9 @@ import {
 } from './rpc/getPlanList.interface';
 
 export const getPlanList = async (
-  { isDemoLogin, userUid }: SupabaseApiAuthGet,
+  { userUid }: SupabaseApiAuthList,
   { start, end }: GetPlanListInput
 ): Promise<GetPlanListOutput> => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PLAN_LIST;
-
   const payload = { input_user_id: userUid, input_start_date: start, input_end_date: end };
   const { data, error } = await supabase.rpc<typeof RPC_GET_PLAN_LIST, GetPlanListRpc>(
     RPC_GET_PLAN_LIST,

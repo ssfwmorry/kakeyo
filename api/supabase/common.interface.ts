@@ -7,8 +7,12 @@ export type InvalidArgumentError = string;
 export type DatabaseError = string;
 export type ApiOutput<S, T> = { data?: S; error: T | null; message: string };
 
+// TODO: 型を整理する
 export type SupabaseApiAuth = {
   isDemoLogin: boolean;
+};
+export type SupabaseApiAuthList = {
+  userUid: string;
 };
 export type SupabaseApiAuthGet = {
   userUid: string;

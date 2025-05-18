@@ -6,7 +6,7 @@ import {
   type DeleteInput,
   type DeleteOutput,
   type SupabaseApiAuth,
-  type SupabaseApiAuthGet,
+  type SupabaseApiAuthList,
   type SupabaseApiAuthUpsert,
   type SwapInput,
   type SwapOutput,
@@ -21,11 +21,8 @@ import {
 import { RPC_SWAP_PLAN_TYPE, type SwapRpc } from './rpc/swap.interface';
 
 export const getPlanTypeList = async ({
-  isDemoLogin,
   userUid,
-}: SupabaseApiAuthGet): Promise<GetPlanTypeListOutput> => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_PLAN_TYPE_LIST;
-
+}: SupabaseApiAuthList): Promise<GetPlanTypeListOutput> => {
   const payload = { input_user_id: userUid };
   const { data, error } = await supabase.rpc<typeof RPC_GET_PLAN_TYPE_LIST, GetPlanTypeListRpc>(
     RPC_GET_PLAN_TYPE_LIST,

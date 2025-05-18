@@ -110,10 +110,7 @@ const planTypeDialog = ref<PlanTypeDialog>({
 });
 
 const updateShowData = async () => {
-  const apiRes = await getPlanTypeList({
-    isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value,
-  });
+  const apiRes = await getPlanTypeList({ userUid: userUid.value });
   assertApiResponse(apiRes);
   planTypeList.value = apiRes.data;
 };

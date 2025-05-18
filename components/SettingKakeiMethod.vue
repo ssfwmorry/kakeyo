@@ -140,10 +140,7 @@ const methodDialog = ref<MethodDialog>({
 });
 
 const updateShowData = async () => {
-  const apiRes = await getMethodList({
-    isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value,
-  });
+  const apiRes = await getMethodList({ userUid: userUid.value });
   assertApiResponse(apiRes);
 
   methodList.value = apiRes.data;

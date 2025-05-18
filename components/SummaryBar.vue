@@ -198,10 +198,7 @@ const updateChart = async () => {
     isPair: isPair.value,
     isIncludeInstead: isExistPair.value ? isIncludeInstead.value : false,
   };
-  const apiRes = await getPayAndIncomeList(
-    { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
-    payload
-  );
+  const apiRes = await getPayAndIncomeList({ userUid: userUid.value }, payload);
   assertApiResponse(apiRes);
 
   const { ret1, ret2, ret3, ret4, ret5 } = convertShowData(apiRes.data);

@@ -23,8 +23,6 @@
 import type { ColorClassification } from '@/utils/types/model';
 
 const { enableLoading, disableLoading } = useLoadingStore();
-const authStore = useAuthStore();
-const { isDemoLogin } = storeToRefs(authStore);
 const { getColorClassificationList } = useSupabase();
 
 const tab = {
@@ -41,7 +39,7 @@ const colorList = ref<ColorClassification[]>([]);
 (async () => {
   enableLoading();
 
-  const apiRes = await getColorClassificationList({ isDemoLogin: isDemoLogin.value });
+  const apiRes = await getColorClassificationList();
   assertApiResponse(apiRes);
   colorList.value = apiRes.data;
 

@@ -17,7 +17,7 @@ const DEMO_USER_INFO = (config: RuntimeConfig) => {
   return {
     EMAIL: config.public.demoUserEmail,
     PASSWORD: config.public.demoUserPassword,
-    ID: -1,
+    PAIR_ID: 2, // TODO: publicのDBデータに依存しないように
     NOW_DATE: '2022-01-13',
     NOW_YEAR: 2022,
     UID: config.public.demoUserUid,

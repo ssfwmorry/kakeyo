@@ -218,7 +218,7 @@ const demoLogin = async () => {
   assertApiResponse(apiRes);
 
   setDemoLogin();
-  setUserInfo(apiRes.data, DEMO_USER_INFO(config).ID);
+  setUserInfo(apiRes.data, DEMO_USER_INFO(config).PAIR_ID);
   goCalendarPage();
 };
 

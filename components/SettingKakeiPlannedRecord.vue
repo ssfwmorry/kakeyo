@@ -100,10 +100,7 @@ const { setToast } = useToastStore();
 const plannedRecordList = ref<GetPlannedRecordListOutputData>({ self: [], pair: [] });
 
 const updateShowData = async () => {
-  const apiRes = await getPlannedRecordList({
-    isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value,
-  });
+  const apiRes = await getPlannedRecordList({ userUid: userUid.value });
   assertApiResponse(apiRes);
   plannedRecordList.value = apiRes.data;
 };

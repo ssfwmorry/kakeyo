@@ -207,10 +207,7 @@ const updateList = async () => {
     yearMonth: TimeUtility.ConvertYearMonthObjToYearMonth(focus.value),
   };
 
-  const apiRes = await getSummarizedRecordList(
-    { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
-    payload
-  );
+  const apiRes = await getSummarizedRecordList({ userUid: userUid.value }, payload);
   assertApiResponse(apiRes);
 
   recordList.value = apiRes.data;

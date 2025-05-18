@@ -8,6 +8,7 @@ import {
   type DeleteOutput,
   type SupabaseApiAuth,
   type SupabaseApiAuthGet,
+  type SupabaseApiAuthList,
 } from './common.interface';
 import type {
   DbMemo,
@@ -17,12 +18,9 @@ import type {
 } from './memo.interface';
 
 export const getMemoList = async ({
-  isDemoLogin,
   userUid,
   pairId,
-}: SupabaseApiAuthGet & { pairId: Id | null }): Promise<GetMemoListOutput> => {
-  if (isDemoLogin) return DEMO_DATA.SUPABASE.GET_MEMO_LIST;
-
+}: SupabaseApiAuthList & { pairId: Id | null }): Promise<GetMemoListOutput> => {
   const wherePairId = pairId !== null ? `,pair_id.eq.${pairId}` : '';
   type PickedMemo = Pick<DbMemo, 'id' | 'memo' | 'pair_id'>;
   const { data, error } = await supabase

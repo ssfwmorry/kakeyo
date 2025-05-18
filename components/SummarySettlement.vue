@@ -357,16 +357,10 @@ const updateChart = async () => {
   const payload = {
     yearMonth: TimeUtility.ConvertYearMonthObjToYearMonth(focus.value),
   };
-  const apiResRecord = await getPairedRecordList(
-    { isDemoLogin: isDemoLogin.value, userUid: userUid.value },
-    payload
-  );
+  const apiResRecord = await getPairedRecordList({ userUid: userUid.value }, payload);
   assertApiResponse(apiResRecord);
 
-  const apiResMethod = await getMethodList({
-    isDemoLogin: isDemoLogin.value,
-    userUid: userUid.value,
-  });
+  const apiResMethod = await getMethodList({ userUid: userUid.value });
   assertApiResponse(apiResMethod);
 
   const { recordList: ret2, isExistUnsettledRecord: ret3 } = convertShowData(apiResRecord.data);
