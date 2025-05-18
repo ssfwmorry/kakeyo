@@ -1,14 +1,13 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA } from '@/utils/constants';
-import type { Id } from '@/utils/types/common';
 import { camelizeKeys } from 'humps';
 import {
   buildNoDataApiOutput,
   type DeleteInput,
   type DeleteOutput,
-  type SupabaseApiAuth,
-  type SupabaseApiAuthGet,
-  type SupabaseApiAuthList,
+  type SupabaseApiDemo,
+  type SupabaseApiDemoAndUserAndPair,
+  type SupabaseApiUserAndPair,
 } from './common.interface';
 import type {
   DbMemo,
@@ -20,7 +19,7 @@ import type {
 export const getMemoList = async ({
   userUid,
   pairId,
-}: SupabaseApiAuthList & { pairId: Id | null }): Promise<GetMemoListOutput> => {
+}: SupabaseApiUserAndPair): Promise<GetMemoListOutput> => {
   const wherePairId = pairId !== null ? `,pair_id.eq.${pairId}` : '';
   type PickedMemo = Pick<DbMemo, 'id' | 'memo' | 'pair_id'>;
   const { data, error } = await supabase
@@ -36,7 +35,7 @@ export const getMemoList = async ({
 };
 
 export const insertMemo = async (
-  { isDemoLogin, userUid, pairId }: SupabaseApiAuthGet & { pairId: Id | null },
+  { isDemoLogin, userUid, pairId }: SupabaseApiDemoAndUserAndPair,
   { memo, isPair }: InsertMemoInput
 ): Promise<InsertMemoOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
@@ -52,7 +51,7 @@ export const insertMemo = async (
 };
 
 export const deleteMemo = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { id }: DeleteInput
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;

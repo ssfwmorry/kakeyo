@@ -5,9 +5,9 @@ import { camelizeKeys } from 'humps';
 import type {
   DeleteInput,
   DeleteOutput,
-  SupabaseApiAuth,
-  SupabaseApiAuthList,
   SupabaseApiAuthUpsert,
+  SupabaseApiDemo,
+  SupabaseApiUser,
   SwapInput,
   SwapOutput,
   UpsertOutput,
@@ -25,7 +25,7 @@ import { RPC_SWAP_PLANNED_RECORD, type SwapRpc } from './rpc/swap.interface';
 
 export const getPlannedRecordList = async ({
   userUid,
-}: SupabaseApiAuthList): Promise<GetPlannedRecordListOutput> => {
+}: SupabaseApiUser): Promise<GetPlannedRecordListOutput> => {
   const payload = { input_user_id: userUid };
   const { data, error } = await supabase.rpc<
     typeof RPC_GET_PLANNED_RECORD_LIST,
@@ -116,7 +116,7 @@ export const upsertPlannedRecord = async (
 };
 
 export const deletePlannedRecord = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { id }: DeleteInput
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
@@ -130,7 +130,7 @@ export const deletePlannedRecord = async (
 };
 
 export const swapPlannedRecord = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { prevId, nextId }: SwapInput
 ): Promise<SwapOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;

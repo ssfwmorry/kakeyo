@@ -4,7 +4,7 @@ import {
   buildNoDataApiOutput,
   type DeleteInput,
   type DeleteOutput,
-  type SupabaseApiAuth,
+  type SupabaseApiDemo,
   type SwapInput,
   type SwapOutput,
   type UpsertOutput,
@@ -13,7 +13,7 @@ import { RPC_SWAP_SUB_TYPE, type SwapRpc } from './rpc/swap.interface';
 import type { UpsertSubTypeInput } from './subType.interface';
 
 export const upsertSubType = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { id, typeId, name }: UpsertSubTypeInput
 ): Promise<UpsertOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
@@ -30,7 +30,7 @@ export const upsertSubType = async (
 };
 
 export const deleteSubType = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { id }: DeleteInput
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
@@ -40,7 +40,7 @@ export const deleteSubType = async (
 };
 
 export const swapSubType = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { prevId, nextId }: SwapInput
 ): Promise<SwapOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;

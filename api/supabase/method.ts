@@ -5,9 +5,9 @@ import {
   buildNoDataApiOutput,
   type DeleteInput,
   type DeleteOutput,
-  type SupabaseApiAuth,
-  type SupabaseApiAuthList,
   type SupabaseApiAuthUpsert,
+  type SupabaseApiDemo,
+  type SupabaseApiUser,
   type SwapInput,
   type SwapOutput,
   type UpsertOutput,
@@ -20,9 +20,7 @@ import {
 } from './rpc/getMethodList.interface';
 import { RPC_SWAP_METHOD, type SwapRpc } from './rpc/swap.interface';
 
-export const getMethodList = async ({
-  userUid,
-}: SupabaseApiAuthList): Promise<GetMethodListOutput> => {
+export const getMethodList = async ({ userUid }: SupabaseApiUser): Promise<GetMethodListOutput> => {
   const payload = { input_user_id: userUid };
   const { data, error } = await supabase.rpc<typeof RPC_GET_METHOD_LIST, GetMethodListRpc>(
     RPC_GET_METHOD_LIST,
@@ -89,7 +87,7 @@ export const upsertMethod = async (
 };
 
 export const deleteMethod = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { id }: DeleteInput
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
@@ -99,7 +97,7 @@ export const deleteMethod = async (
 };
 
 export const swapMethod = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { prevId, nextId }: SwapInput
 ): Promise<SwapOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;

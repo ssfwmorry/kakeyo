@@ -7,10 +7,10 @@ import {
   buildNoDataApiOutput,
   type DeleteInput,
   type DeleteOutput,
-  type SupabaseApiAuth,
-  type SupabaseApiAuthGet,
-  type SupabaseApiAuthList,
   type SupabaseApiAuthUpsert,
+  type SupabaseApiDemo,
+  type SupabaseApiDemoAndUser,
+  type SupabaseApiUser,
   type UpsertOutput,
 } from './common.interface';
 import type {
@@ -71,7 +71,7 @@ import {
 import { RPC_POST_RECORDS, type PostRecordsRpc } from './rpc/postRecords.interface';
 
 export const getRecordList = async (
-  { userUid }: SupabaseApiAuthList,
+  { userUid }: SupabaseApiUser,
   { start, end }: GetRecordListInput
 ): Promise<GetRecordListOutput> => {
   const payload = { input_user_id: userUid, input_start_datetime: start, input_end_datetime: end };
@@ -192,7 +192,7 @@ export const upsertRecord = async (
 };
 
 export const settleRecords = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { ids }: SettleRecordsInput
 ): Promise<SettleRecordsOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
@@ -208,7 +208,7 @@ export const settleRecords = async (
 };
 
 export const postRecords = async (
-  { isDemoLogin, userUid }: SupabaseApiAuthGet,
+  { isDemoLogin, userUid }: SupabaseApiDemoAndUser,
   { yearMonth }: PostRecordsInput
 ): Promise<PostRecordsOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
@@ -226,7 +226,7 @@ export const postRecords = async (
 };
 
 export const deleteRecord = async (
-  { isDemoLogin }: SupabaseApiAuth,
+  { isDemoLogin }: SupabaseApiDemo,
   { id }: DeleteInput
 ): Promise<DeleteOutput> => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
@@ -236,7 +236,7 @@ export const deleteRecord = async (
 };
 
 export const getMonthSum = async (
-  { userUid }: SupabaseApiAuthList,
+  { userUid }: SupabaseApiUser,
   { yearMonth }: GetMonthSumInput
 ): Promise<GetMonthSumOutput> => {
   const payload = { input_user_id: userUid, input_year_month: yearMonth };
@@ -263,7 +263,7 @@ export const getMonthSum = async (
 };
 
 export const getTypeSummary = async (
-  { userUid }: SupabaseApiAuthList,
+  { userUid }: SupabaseApiUser,
   { isPay, isPair, isIncludeInstead, year, month }: GetTypeSummaryInput
 ): Promise<GetTypeSummaryOutput> => {
   const payload = {
@@ -304,7 +304,7 @@ export const getTypeSummary = async (
 };
 
 export const getMethodSummary = async (
-  { userUid }: SupabaseApiAuthList,
+  { userUid }: SupabaseApiUser,
   { isPay, isPair, isIncludeInstead, year, month }: GetMethodSummaryInput
 ): Promise<GetMethodSummaryOutput> => {
   const payload = {
@@ -332,7 +332,7 @@ export const getMethodSummary = async (
 };
 
 export const getSummarizedRecordList = async (
-  { userUid }: SupabaseApiAuthList,
+  { userUid }: SupabaseApiUser,
   {
     isPay,
     isType,
@@ -375,7 +375,7 @@ export const getSummarizedRecordList = async (
 };
 
 export const getPairedRecordList = async (
-  { userUid }: SupabaseApiAuthList,
+  { userUid }: SupabaseApiUser,
   { yearMonth }: GetPairedRecordListInput
 ): Promise<GetPairedRecordListOutput> => {
   const payload = {
@@ -405,7 +405,7 @@ export const getPairedRecordList = async (
 };
 
 export const getPayAndIncomeList = async (
-  { userUid }: SupabaseApiAuthList,
+  { userUid }: SupabaseApiUser,
   { year, isPair, isIncludeInstead }: GetPayAndIncomeListInput
 ): Promise<GetPayAndIncomeListOutput> => {
   const payload = {

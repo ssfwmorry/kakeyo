@@ -7,20 +7,15 @@ export type InvalidArgumentError = string;
 export type DatabaseError = string;
 export type ApiOutput<S, T> = { data?: S; error: T | null; message: string };
 
-// TODO: 型を整理する
-export type SupabaseApiAuth = {
-  isDemoLogin: boolean;
-};
-export type SupabaseApiAuthList = {
-  userUid: string;
-};
-export type SupabaseApiAuthGet = {
-  userUid: string;
-} & SupabaseApiAuth;
+export type SupabaseApiDemo = { isDemoLogin: boolean };
+export type SupabaseApiUser = { userUid: string };
+type SupabaseApiPair = { pairId: Id | null };
+export type SupabaseApiDemoAndUser = SupabaseApiUser & SupabaseApiDemo;
+export type SupabaseApiUserAndPair = SupabaseApiUser & SupabaseApiPair;
+export type SupabaseApiDemoAndUserAndPair = SupabaseApiPair & SupabaseApiDemoAndUser;
 export type SupabaseApiAuthUpsert = {
   isPair: boolean;
-  pairId: Id | null;
-} & SupabaseApiAuthGet;
+} & SupabaseApiDemoAndUserAndPair;
 
 export interface UpsertOutput extends ApiOutput<null, PostgrestError | InvalidArgumentError> {}
 
