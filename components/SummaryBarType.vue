@@ -115,6 +115,7 @@ const updateChart = async () => {
 
 // created
 (async () => {
+  // TODO: 「すべて」を追加する。この場合は、カテゴリが積み上げられた、月々の支払/受取の合計を表示する。
   const apiRes = await getTypeList({ userUid: userUid.value });
   assertApiResponse(apiRes);
   typeList.value = apiRes.data;
@@ -126,4 +127,23 @@ const updateChart = async () => {
 defineExpose({
   resetTypeList,
 });
+/*
+サブカテゴリの積み上げ棒グラフ
+input:
+    - 何年か、どのカテゴリが
+output:
+    - いつのデータか2022-01
+    - subTypeId
+    - sum
+*/
+
+/*
+カテゴリごとのの積み上げグラフ
+input:
+    - 何年か
+output
+    - いつのデータか2022-01（月単位
+    - typeId
+    - sum
+*/
 </script>

@@ -30,10 +30,10 @@
           @update:model-value="changeTab"
         >
           <v-tab :value="tabBar.PAY_AND_INCOME">
-            <v-icon class="mr-2">{{ $ICONS.SWAP_VERTICAL_BOLD }}</v-icon> 収支
+            <v-icon class="mr-2">{{ $ICONS.SWAP_VERTICAL_BOLD }}</v-icon> 全体
           </v-tab>
           <v-tab :value="tabBar.TYPE">
-            <v-icon class="mr-2">{{ $ICONS.SHAPE }}</v-icon> カテゴリ
+            <v-icon class="mr-2">{{ $ICONS.SHAPE }}</v-icon> カテゴリ別
           </v-tab>
         </v-tabs>
         <v-tabs-window v-model="tabModeBar" :touchless="true">
