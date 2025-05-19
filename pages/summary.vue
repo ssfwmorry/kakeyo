@@ -41,7 +41,7 @@
             <SummaryBar ref="summaryBar" />
           </v-tabs-window-item>
           <v-tabs-window-item :value="tabBar.TYPE" class="pt-2 px-2">
-            <SummaryBarType />
+            <SummaryBarType ref="summaryBarType" />
           </v-tabs-window-item>
         </v-tabs-window>
       </v-tabs-window-item>
@@ -82,6 +82,7 @@ const pieShowSetting = ref<SummaryQueryParam>({
   focus: TimeUtility.GetNowYearMonthObj(isDemoLogin.value),
 });
 const summaryBar = ref();
+const summaryBarType = ref();
 const summaryPie = ref();
 const summarySettlement = ref();
 
@@ -96,8 +97,17 @@ const updateChart = async (isEnableSettlementUpdate: boolean) => {
       await summaryPie.value?.updateChart();
       break;
     case tab.BAR:
-      // TODO: tabModeBar のグラフのみ更新する
-      await summaryBar.value?.updateChart();
+      switch (tabModeBar.value) {
+        case tabBar.PAY_AND_INCOME:
+          await summaryBar.value?.updateChart();
+          break;
+        case tabBar.TYPE:
+          await summaryBarType.value?.resetTypeList();
+          break;
+        default:
+          alert('呼ばれないはず');
+          break;
+      }
       break;
     case tab.SETTLEMENT:
       if (isEnableSettlementUpdate) await summarySettlement.value?.updateChart();

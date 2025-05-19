@@ -48,10 +48,22 @@ const EMAIL_WHITE_LIST = (config: RuntimeConfig) => {
   }
 };
 
+const MONTH_LABELS: string[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12(月)'] as const; // prettier-ignore
+const MONTH_KEYS: string[] = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'] as const; // prettier-ignore
+
 export const SettlementRecord = {
   name: '精算',
   /** 'yellow'は、SummaryPieでのグラフと、VuetifyのColorのどちらも同じ文字列で対応できている */
   color: 'yellow',
 } as const;
 
-export { APP_NAME, DEMO_DATA, DEMO_USER_INFO, EMAIL_WHITE_LIST, MAX_PRICE, PAGE };
+export {
+  APP_NAME,
+  DEMO_DATA,
+  DEMO_USER_INFO,
+  EMAIL_WHITE_LIST,
+  MAX_PRICE,
+  MONTH_KEYS,
+  MONTH_LABELS,
+  PAGE,
+};
