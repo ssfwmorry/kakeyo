@@ -23,7 +23,7 @@
             <v-btn :value="false" min-width="60" class="px-0">収入</v-btn>
           </v-btn-toggle>
         </div>
-        <div class="d-flex flex-grow-1 align-center mx-2">
+        <div class="d-flex flex-grow-1 align-center overflow-x-auto ml-2">
           <v-chip-group
             v-model="selectedTypeIndex"
             mandatory
