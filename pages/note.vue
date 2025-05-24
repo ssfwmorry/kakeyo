@@ -131,7 +131,7 @@
     </v-row>
     <div v-if="isEndSelectTypeAndSubType()">
       <v-row class="mb-4" no-gutters>
-        <!-- 手段 -->
+        <!-- 方法 -->
         <v-col cols="6">
           <v-select
             v-model="selectedMethodId"

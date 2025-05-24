@@ -1,6 +1,8 @@
 <template>
   <div>
-    <h4 class="mb-2">方法</h4>
+    <h4 class="mb-2">
+      <v-icon size="small">{{ $ICONS.CREDIT_CARD }}</v-icon> 方法
+    </h4>
     <div class="px-3 mb-4">
       <v-row no-gutters class="mb-3">
         <v-col class="d-flex flex-row">
