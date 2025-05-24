@@ -316,4 +316,4 @@ update develop.planned_records set record_type = 10 where user_id is null and pa
 
 ## 20250524\_開発と DB に RPC を適応する
 
-- `develop.get_type_summarized_record_list`
+- `develop.get_sub_type_summary`

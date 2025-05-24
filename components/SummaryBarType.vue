@@ -45,16 +45,22 @@
       </v-col>
     </v-row>
     <v-row no-gutters>
-      <Bar :data="tmpData" :options="(barOptions as any)"></Bar>
+      <div v-if="selectedTypeIndex !== null" class="w-100">
+        <Bar :data="barData" :options="(barOptions as any)" />
+      </div>
+      <div v-else class="mt-30px w-100 text-center">
+        カテゴリを選択してください
+        <Bar :data="tmpData" :options="(barOptions as any)" />
+      </div>
     </v-row>
   </div>
 </template>
 
 <script setup lang="ts">
-import { getTypeSummarizedRecordList } from '@/api/supabase/record';
+import { getSubTypeSummary } from '@/api/supabase/record';
 import { getTypeList } from '@/api/supabase/type';
 import type { GetTypeListOutputData } from '@/api/supabase/type.interface';
-import { MONTH_LABELS } from '@/utils/constants';
+import { INITIAL_BAR_DATA, MONTH_LABELS } from '@/utils/constants';
 import TimeUtility from '@/utils/time';
 import type { YearMonthNumObj } from '@/utils/types/common';
 import {
@@ -69,21 +75,49 @@ import {
 import { Bar } from 'vue-chartjs';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
+type BarData = {
+  labels: string[];
+  datasets: {
+    label: '';
+    data: number[];
+    backgroundColor: string;
+  }[];
+};
+
 const tmpData = {
   labels: MONTH_LABELS,
   datasets: [
     {
-      label: '系列Ａ',
-      data: [10, 20, 5, 15, 10],
-      backgroundColor: 'red',
+      label: 'サブカテゴリ１',
+      data: [10, 20, 0, 15, 10],
+      backgroundColor: 'gold',
     },
     {
-      label: '系列Ｂ',
+      label: 'サブカテゴリ２',
       data: [5, 10, 10, 5, 8],
-      backgroundColor: 'blue',
+      backgroundColor: 'mediumseagreen',
+    },
+    {
+      label: 'サブカテゴリ3',
+      data: [5, 10, 10, 0, 8],
+      backgroundColor: 'blueviolet',
+    },
+    {
+      label: 'サブカテゴリ4',
+      data: [5, 10, 10, 5, 8],
+      backgroundColor: 'lightpink',
+    },
+    {
+      label: 'サブカテゴリ5',
+      data: [5, 10, 10, 5, 8],
+      backgroundColor: 'royalblue',
     },
   ],
 };
+const barData = ref<BarData>({
+  labels: MONTH_LABELS,
+  datasets: [INITIAL_BAR_DATA],
+});
 
 const barOptions: ChartOptions = {
   responsive: true,
@@ -141,9 +175,10 @@ const updateChart = async () => {
     ].typeId;
 
   const payload = { year: String(year.value), typeId };
-  const apiRes = await getTypeSummarizedRecordList(payload);
+  const apiRes = await getSubTypeSummary(payload);
   console.log(apiRes);
   assertApiResponse(apiRes);
+
   disableLoading();
 };
 

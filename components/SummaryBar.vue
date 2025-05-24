@@ -101,7 +101,7 @@
 
 <script setup lang="ts">
 import type { GetPayAndIncomeItem } from '@/api/supabase/record.interface';
-import { MONTH_KEYS, MONTH_LABELS } from '@/utils/constants';
+import { INITIAL_BAR_DATA, MONTH_KEYS, MONTH_LABELS } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type YearMonthNumObj, type YearMonthString } from '@/utils/types/common';
@@ -134,11 +134,6 @@ type TableData = {
   income: number;
   payAndIncome: number;
 };
-const initialBarDataset = {
-  label: '' as '',
-  data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  backgroundColor: 'rgb(0,0,0)',
-};
 
 const barOptions: ChartOptions = {
   responsive: true,
@@ -166,12 +161,12 @@ const focusObj = computed<YearMonthNumObj>(() => {
 
 const barDataPayAndIncome = ref<BarData>({
   labels: MONTH_LABELS,
-  datasets: [initialBarDataset],
+  datasets: [INITIAL_BAR_DATA],
 });
 const sumPayAndIncome = ref('0');
 const barDataPay = ref<BarData>({
   labels: MONTH_LABELS,
-  datasets: [initialBarDataset],
+  datasets: [INITIAL_BAR_DATA],
 });
 const sumPay = ref('0');
 const tableData = ref<TableData[]>([]);
@@ -261,7 +256,7 @@ const convertShowData = (
   if (tmpSumPayAndIncome === 0 && tmpSumPay === 0) {
     const noneBarData: BarData = {
       labels: MONTH_LABELS,
-      datasets: [initialBarDataset],
+      datasets: [INITIAL_BAR_DATA],
     };
     return {
       ret1: noneBarData,

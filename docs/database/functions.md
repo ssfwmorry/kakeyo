@@ -1084,7 +1084,7 @@ as $$
 $$ language sql;
 ```
 
-## func_get_type_summarized_record_list
+## func_get_sub_type_summary
 
 - 概要
   - summary_bar_type 画面用に検索された records を複数取得する
@@ -1102,9 +1102,9 @@ $$ language sql;
 
 ```sql
 -- migration-sort: 18
-drop function if exists develop.get_type_summarized_record_list(input_year varchar(5), input_type_id int);
+drop function if exists develop.get_sub_type_summary(input_year varchar(5), input_type_id int);
 
-create or replace function develop.get_type_summarized_record_list(input_year varchar(5), input_type_id int)
+create or replace function develop.get_sub_type_summary(input_year varchar(5), input_type_id int)
 returns table (
     year_month varchar(7), -- not null
     type_id int, -- not null

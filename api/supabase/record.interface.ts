@@ -14,8 +14,8 @@ import type { GetMethodSummaryRpcRow } from './rpc/getMethodSummary.interface';
 import type { GetPairedRecordListRpcRow } from './rpc/getPairedRecordList.interface';
 import type { GetPayAndIncomeListRpcRow } from './rpc/getPayAndIncomeList.interface';
 import type { GetRecordListRpcRow } from './rpc/getRecordList.interface';
+import type { GetSubTypeSummaryRpcRow } from './rpc/getSubTypeSummary.interface';
 import type { GetSummarizedRecordListRpcRow } from './rpc/getSummarizedRecordList.interface';
-import type { GetTypeSummarizedRecordListRpcRow } from './rpc/getTypeSummarizedRecordList';
 import type { GetTypeSummaryRpcRow } from './rpc/getTypeSummary.interface';
 
 export interface GetRecordListInput extends DateRange {}
@@ -107,12 +107,12 @@ export type GetSummarizedRecordItem = Camelized<
 export interface GetSummarizedRecordListOutput
   extends ApiOutput<GetSummarizedRecordItem[], PostgrestError> {}
 
-export interface GetTypeSummarizedRecordListInput {
+export interface GetSubTypeSummaryInput {
   year: YearString;
   typeId: Id;
 }
-export type GetTypeSummarizedRecordItem = Camelized<GetTypeSummarizedRecordListRpcRow>;
-export interface GetTypeSummarizedRecordListOutput
+export type GetTypeSummarizedRecordItem = Camelized<GetSubTypeSummaryRpcRow>;
+export interface GetSubTypeSummaryOutput
   extends ApiOutput<GetTypeSummarizedRecordItem[], PostgrestError> {}
 
 export interface GetPairedRecordListInput {

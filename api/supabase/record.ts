@@ -25,10 +25,10 @@ import type {
   GetPayAndIncomeListOutput,
   GetRecordListInput,
   GetRecordListOutput,
+  GetSubTypeSummaryInput,
+  GetSubTypeSummaryOutput,
   GetSummarizedRecordListInput,
   GetSummarizedRecordListOutput,
-  GetTypeSummarizedRecordListInput,
-  GetTypeSummarizedRecordListOutput,
   GetTypeSummaryInput,
   GetTypeSummaryItem,
   GetTypeSummaryOutput,
@@ -61,15 +61,15 @@ import {
   type GetRecordListRpcRow,
 } from './rpc/getRecordList.interface';
 import {
+  RPC_GET_SUB_TYPE_SUMMARY,
+  type GetSubTypeSummaryRpc,
+  type GetSubTypeSummaryRpcRow,
+} from './rpc/getSubTypeSummary.interface';
+import {
   RPC_GET_SUMMARIZED_RECORD_LIST,
   type GetSummarizedRecordListRpc,
   type GetSummarizedRecordListRpcRow,
 } from './rpc/getSummarizedRecordList.interface';
-import {
-  RPC_GET_TYPE_SUMMARIZED_RECORD_LIST,
-  type GetTypeSummarizedRecordListRpc,
-  type GetTypeSummarizedRecordListRpcRow,
-} from './rpc/getTypeSummarizedRecordList';
 import {
   RPC_GET_TYPE_SUMMARY,
   type GetTypeSummaryRpc,
@@ -381,23 +381,23 @@ export const getSummarizedRecordList = async (
   return { data: outData, error: null, message: 'summarized_record 一覧' };
 };
 
-export const getTypeSummarizedRecordList = async ({
+export const getSubTypeSummary = async ({
   year,
   typeId,
-}: GetTypeSummarizedRecordListInput): Promise<GetTypeSummarizedRecordListOutput> => {
+}: GetSubTypeSummaryInput): Promise<GetSubTypeSummaryOutput> => {
   const payload = {
     input_year: year,
     input_type_id: typeId,
   };
-  const { data, error } = await supabase.rpc<
-    typeof RPC_GET_TYPE_SUMMARIZED_RECORD_LIST,
-    GetTypeSummarizedRecordListRpc
-  >(RPC_GET_TYPE_SUMMARIZED_RECORD_LIST, payload);
+  const { data, error } = await supabase.rpc<typeof RPC_GET_SUB_TYPE_SUMMARY, GetSubTypeSummaryRpc>(
+    RPC_GET_SUB_TYPE_SUMMARY,
+    payload
+  );
   if (error !== null || data === null) {
     return { error: error, message: 'type_summarized_record 一覧' };
   }
 
-  const camelizedData = camelizeKeys<{ data: GetTypeSummarizedRecordListRpcRow[] }>({ data });
+  const camelizedData = camelizeKeys<{ data: GetSubTypeSummaryRpcRow[] }>({ data });
   return { data: camelizedData.data, error: null, message: 'type_summarized_record 一覧' };
 };
 
