@@ -15,6 +15,7 @@ import type { GetPairedRecordListRpcRow } from './rpc/getPairedRecordList.interf
 import type { GetPayAndIncomeListRpcRow } from './rpc/getPayAndIncomeList.interface';
 import type { GetRecordListRpcRow } from './rpc/getRecordList.interface';
 import type { GetSummarizedRecordListRpcRow } from './rpc/getSummarizedRecordList.interface';
+import type { GetTypeSummarizedRecordListRpcRow } from './rpc/getTypeSummarizedRecordList';
 import type { GetTypeSummaryRpcRow } from './rpc/getTypeSummary.interface';
 
 export interface GetRecordListInput extends DateRange {}
@@ -105,6 +106,14 @@ export type GetSummarizedRecordItem = Camelized<
 > & { id: Id; isInstead: boolean | null };
 export interface GetSummarizedRecordListOutput
   extends ApiOutput<GetSummarizedRecordItem[], PostgrestError> {}
+
+export interface GetTypeSummarizedRecordListInput {
+  year: YearString;
+  typeId: Id;
+}
+export type GetTypeSummarizedRecordItem = Camelized<GetTypeSummarizedRecordListRpcRow>;
+export interface GetTypeSummarizedRecordListOutput
+  extends ApiOutput<GetTypeSummarizedRecordItem[], PostgrestError> {}
 
 export interface GetPairedRecordListInput {
   yearMonth: YearMonthString;

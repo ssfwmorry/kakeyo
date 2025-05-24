@@ -27,6 +27,8 @@ import type {
   GetRecordListOutput,
   GetSummarizedRecordListInput,
   GetSummarizedRecordListOutput,
+  GetTypeSummarizedRecordListInput,
+  GetTypeSummarizedRecordListOutput,
   GetTypeSummaryInput,
   GetTypeSummaryItem,
   GetTypeSummaryOutput,
@@ -63,6 +65,11 @@ import {
   type GetSummarizedRecordListRpc,
   type GetSummarizedRecordListRpcRow,
 } from './rpc/getSummarizedRecordList.interface';
+import {
+  RPC_GET_TYPE_SUMMARIZED_RECORD_LIST,
+  type GetTypeSummarizedRecordListRpc,
+  type GetTypeSummarizedRecordListRpcRow,
+} from './rpc/getTypeSummarizedRecordList';
 import {
   RPC_GET_TYPE_SUMMARY,
   type GetTypeSummaryRpc,
@@ -372,6 +379,26 @@ export const getSummarizedRecordList = async (
   });
 
   return { data: outData, error: null, message: 'summarized_record 一覧' };
+};
+
+export const getTypeSummarizedRecordList = async ({
+  year,
+  typeId,
+}: GetTypeSummarizedRecordListInput): Promise<GetTypeSummarizedRecordListOutput> => {
+  const payload = {
+    input_year: year,
+    input_type_id: typeId,
+  };
+  const { data, error } = await supabase.rpc<
+    typeof RPC_GET_TYPE_SUMMARIZED_RECORD_LIST,
+    GetTypeSummarizedRecordListRpc
+  >(RPC_GET_TYPE_SUMMARIZED_RECORD_LIST, payload);
+  if (error !== null || data === null) {
+    return { error: error, message: 'type_summarized_record 一覧' };
+  }
+
+  const camelizedData = camelizeKeys<{ data: GetTypeSummarizedRecordListRpcRow[] }>({ data });
+  return { data: camelizedData.data, error: null, message: 'type_summarized_record 一覧' };
 };
 
 export const getPairedRecordList = async (

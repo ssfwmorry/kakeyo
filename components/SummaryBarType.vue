@@ -1,5 +1,14 @@
 <template>
   <div>
+    <PaginationBar
+      mode="YEAR"
+      :subtitle="''"
+      :focus="focusObj"
+      @prev="movePrev()"
+      @next="moveNext()"
+      @update="updateFocus"
+    ></PaginationBar>
+
     <v-row class="mb-3" no-gutters>
       <v-col class="d-flex flex-row align-center">
         <div class="d-flex align-center">
@@ -41,9 +50,12 @@
 </template>
 
 <script setup lang="ts">
+import { getTypeSummarizedRecordList } from '@/api/supabase/record';
 import { getTypeList } from '@/api/supabase/type';
 import type { GetTypeListOutputData } from '@/api/supabase/type.interface';
 import { MONTH_LABELS } from '@/utils/constants';
+import TimeUtility from '@/utils/time';
+import type { YearMonthNumObj } from '@/utils/types/common';
 import {
   BarElement,
   CategoryScale,
@@ -86,15 +98,33 @@ const barOptions: ChartOptions = {
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
-const { isDemoLogin, pairId, userUid } = storeToRefs(authStore);
+const { isDemoLogin, userUid } = storeToRefs(authStore);
 const { isPair } = storeToRefs(pairStore);
 
+const year = ref(TimeUtility.GetNowYear(isDemoLogin.value));
 const isPay = ref<boolean>(true);
-const selectedTypeIndex = ref<number | null>(0); // TODO: これでいいのか確認する
+const selectedTypeIndex = ref<number | null>(null);
 const typeList = ref<GetTypeListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
 });
+
+const focusObj = computed<YearMonthNumObj>(() => {
+  return { year: year.value, month: 0 };
+});
+
+const movePrev = async () => {
+  year.value = TimeUtility.PrevYear(year.value);
+  await updateChart();
+};
+const moveNext = async () => {
+  year.value = TimeUtility.NextYear(year.value);
+  await updateChart();
+};
+const updateFocus = async (obj: YearMonthNumObj) => {
+  year.value = obj.year;
+  await updateChart();
+};
 
 const resetTypeList = async () => {
   selectedTypeIndex.value = null;
@@ -110,6 +140,9 @@ const updateChart = async () => {
     ].typeId;
 
   console.log(typeId);
+  const payload = { year: String(year.value), typeId };
+  const apiRes = await getTypeSummarizedRecordList(payload);
+  assertApiResponse(apiRes);
   disableLoading();
 };
 
@@ -119,7 +152,6 @@ const updateChart = async () => {
   const apiRes = await getTypeList({ userUid: userUid.value });
   assertApiResponse(apiRes);
   typeList.value = apiRes.data;
-  console.log('typeList', typeList.value);
 
   await updateChart();
 })();
@@ -127,23 +159,4 @@ const updateChart = async () => {
 defineExpose({
   resetTypeList,
 });
-/*
-サブカテゴリの積み上げ棒グラフ
-input:
-    - 何年か、どのカテゴリが
-output:
-    - いつのデータか2022-01
-    - subTypeId
-    - sum
-*/
-
-/*
-カテゴリごとのの積み上げグラフ
-input:
-    - 何年か
-output
-    - いつのデータか2022-01（月単位
-    - typeId
-    - sum
-*/
 </script>
