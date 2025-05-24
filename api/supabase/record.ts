@@ -1,6 +1,6 @@
 import supabase from '@/composables/supabase';
-import { DEMO_DATA, SettlementRecord } from '@/utils/constants';
-import type { Id } from '@/utils/types/common';
+import { DEMO_DATA, MONTH_KEYS, SettlementRecord } from '@/utils/constants';
+import type { Id, YearMonthString } from '@/utils/types/common';
 import { RecordType } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
 import {
@@ -26,6 +26,7 @@ import type {
   GetRecordListInput,
   GetRecordListOutput,
   GetSubTypeSummaryInput,
+  GetSubTypeSummaryItem,
   GetSubTypeSummaryOutput,
   GetSummarizedRecordListInput,
   GetSummarizedRecordListOutput,
@@ -410,9 +411,37 @@ export const getSubTypeSummary = async ({
   }
 
   const camelizedData = camelizeKeys<{ data: GetSubTypeSummaryRpcRow[] }>({ data });
+  type YearMonthSubTypeId = string; // `${year}-${month}_${subTypeId}` の形式. subTypeIdがnullの場合は`${subTypeId}`の部分は空文字列になる
+  const uniqueKeySumMap = new Map<string, number>();
+  camelizedData.data.forEach((row) => {
+    const yearMonthSubTypeId: YearMonthSubTypeId = `${row.yearMonth}_${row.subTypeId ?? ''}`;
+    uniqueKeySumMap.set(yearMonthSubTypeId, row.sum);
+  });
 
-  // TODO: Outoutに合わせて整形する
-  return { data: camelizedData.data, error: null, message: 'type_summarized_record 一覧' };
+  const outData: GetSubTypeSummaryItem[] = [];
+  MONTH_KEYS.forEach((monthKey) => {
+    const yearMonth: YearMonthString = `${year}-${monthKey}`;
+    const subTypes: GetSubTypeSummaryItem['subTypes'] = [];
+    subTypesData.forEach((subType) => {
+      const yearMonthSubTypeId: YearMonthSubTypeId = `${yearMonth}_${subType.id}`;
+      subTypes.push({
+        subTypeId: subType.id,
+        subTypeName: subType.name,
+        sum: uniqueKeySumMap.get(yearMonthSubTypeId) ?? 0,
+      });
+    });
+    outData.push({
+      yearMonth,
+      subTypes,
+      sum: uniqueKeySumMap.get(yearMonth + '_') ?? 0,
+    });
+  });
+
+  return {
+    data: { summaries: outData, subTypes: subTypesData },
+    error: null,
+    message: 'type_summarized_record 一覧',
+  };
 };
 
 export const getPairedRecordList = async (

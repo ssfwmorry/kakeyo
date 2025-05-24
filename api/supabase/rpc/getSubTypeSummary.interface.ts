@@ -12,8 +12,8 @@ export type GetSubTypeSummaryRpcRow = {
   type_id: Id;
   type_name: string;
   type_color_classification_name: string;
-  subtype_id: Id | null;
-  subtype_name: string | null;
+  sub_type_id: Id | null;
+  sub_type_name: string | null;
   sum: number;
 };
 // TODO: interfaceに置き換える

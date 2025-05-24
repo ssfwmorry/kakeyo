@@ -48,16 +48,14 @@
       <div v-if="selectedTypeIndex !== null" class="w-100">
         <Bar :data="barData" :options="(barOptions as any)" />
       </div>
-      <div v-else class="mt-30px w-100 text-center">
-        カテゴリを選択してください
-        <Bar :data="tmpData" :options="(barOptions as any)" />
-      </div>
+      <div v-else class="mt-30px w-100 text-center">カテゴリを選択してください</div>
     </v-row>
   </div>
 </template>
 
 <script setup lang="ts">
 import { getSubTypeSummary } from '@/api/supabase/record';
+import type { GetSubTypeSummaryOutput } from '@/api/supabase/record.interface';
 import { getTypeList } from '@/api/supabase/type';
 import type { GetTypeListOutputData } from '@/api/supabase/type.interface';
 import { INITIAL_BAR_DATA, MONTH_LABELS } from '@/utils/constants';
@@ -75,50 +73,8 @@ import {
 import { Bar } from 'vue-chartjs';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
-type BarData = {
-  labels: string[];
-  datasets: {
-    label: '';
-    data: number[];
-    backgroundColor: string;
-  }[];
-};
-
-const tmpData = {
-  labels: MONTH_LABELS,
-  datasets: [
-    {
-      label: 'サブカテゴリ１',
-      data: [10, 20, 0, 15, 10],
-      backgroundColor: 'gold',
-    },
-    {
-      label: 'サブカテゴリ２',
-      data: [5, 10, 10, 5, 8],
-      backgroundColor: 'mediumseagreen',
-    },
-    {
-      label: 'サブカテゴリ3',
-      data: [5, 10, 10, 0, 8],
-      backgroundColor: 'blueviolet',
-    },
-    {
-      label: 'サブカテゴリ4',
-      data: [5, 10, 10, 5, 8],
-      backgroundColor: 'lightpink',
-    },
-    {
-      label: 'サブカテゴリ5',
-      data: [5, 10, 10, 5, 8],
-      backgroundColor: 'royalblue',
-    },
-  ],
-};
-const barData = ref<BarData>({
-  labels: MONTH_LABELS,
-  datasets: [INITIAL_BAR_DATA],
-});
-
+const subTypeColors = ['gold', 'mediumseagreen', 'blueviolet', 'lightpink', 'royalblue'] as const;
+const colorGrey = 'grey' as const;
 const barOptions: ChartOptions = {
   responsive: true,
   // maintainAspectRatio: false,
@@ -131,6 +87,20 @@ const barOptions: ChartOptions = {
   },
 } as const;
 
+type BarData = {
+  // 月ごとのラベル
+  labels: string[];
+  // 配列の大きさ: サブカテゴリの数+1(サブカテゴリなし)
+  datasets: {
+    /** subTypeName */
+    label: string | '';
+    /** 月ごとの金額 */
+    data: number[];
+    /** 棒の色 */
+    backgroundColor: (typeof subTypeColors)[number] | typeof colorGrey | string; // TODO: ColorString に準拠
+  }[];
+};
+
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
 const { isDemoLogin, userUid } = storeToRefs(authStore);
@@ -142,6 +112,10 @@ const selectedTypeIndex = ref<number | null>(null);
 const typeList = ref<GetTypeListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
+});
+const barData = ref<BarData>({
+  labels: MONTH_LABELS,
+  datasets: [INITIAL_BAR_DATA],
 });
 
 const focusObj = computed<YearMonthNumObj>(() => {
@@ -183,24 +157,29 @@ const updateChart = async () => {
   disableLoading();
 };
 
-// TODO
-const convertShowData = (data: any) => {
-  console.log(data);
-  const buildBarData = (data: any): BarData => {
-    return {
-      labels: MONTH_LABELS,
-      datasets: [
-        {
-          label: '',
-          data,
-          backgroundColor: 'rgb(0,0,255)',
-        },
-      ],
-    };
-  };
+const convertShowData = (summary: Exclude<GetSubTypeSummaryOutput['data'], undefined>) => {
+  const datasets: BarData['datasets'] = [];
+  // subTypeがない分のデータを作成
+  datasets.push({
+    label: 'サブカテゴリなし',
+    data: summary.summaries.map((item) => item.sum ?? 0),
+    backgroundColor: colorGrey,
+  });
 
-  // return buildBarData(data);
-  return tmpData as any;
+  // subType分のデータを作成
+  summary.subTypes.forEach((subType, index) => {
+    const datasetsData: number[] = [];
+    summary.summaries.forEach((summariesItem) => {
+      datasetsData.push(summariesItem.subTypes[index].sum ?? 0);
+    });
+    datasets.push({
+      label: subType.name,
+      data: datasetsData,
+      backgroundColor: subTypeColors[index % subTypeColors.length],
+    });
+  });
+
+  return { labels: MONTH_LABELS, datasets };
 };
 
 // created

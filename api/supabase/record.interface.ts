@@ -110,7 +110,7 @@ export interface GetSubTypeSummaryInput {
   year: YearString;
   typeId: Id;
 }
-export type GetTypeSummarizedRecordItem = {
+export type GetSubTypeSummaryItem = {
   yearMonth: YearMonthString;
   subTypes: {
     subTypeId: Id;
@@ -121,7 +121,16 @@ export type GetTypeSummarizedRecordItem = {
   sum: number;
 };
 export interface GetSubTypeSummaryOutput
-  extends ApiOutput<GetTypeSummarizedRecordItem[], PostgrestError> {}
+  extends ApiOutput<
+    {
+      summaries: GetSubTypeSummaryItem[];
+      subTypes: {
+        id: Id;
+        name: string;
+      }[];
+    },
+    PostgrestError
+  > {}
 
 export interface GetPairedRecordListInput {
   yearMonth: YearMonthString;
