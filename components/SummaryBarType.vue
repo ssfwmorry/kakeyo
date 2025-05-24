@@ -23,7 +23,7 @@
             <v-btn :value="false" min-width="60" class="px-0">収入</v-btn>
           </v-btn-toggle>
         </div>
-        <div class="d-flex align-center ml-2">
+        <div class="d-flex flex-grow-1 align-center mx-2">
           <v-chip-group
             v-model="selectedTypeIndex"
             mandatory
@@ -35,6 +35,7 @@
               v-for="(type, typeIndex) of typeList[isPay ? 'pay' : 'income'][
                 isPair ? 'pair' : 'self'
               ]"
+              filter
               :key="typeIndex"
               :text="type.typeName"
               size="small"
@@ -139,9 +140,9 @@ const updateChart = async () => {
       selectedTypeIndex.value
     ].typeId;
 
-  console.log(typeId);
   const payload = { year: String(year.value), typeId };
   const apiRes = await getTypeSummarizedRecordList(payload);
+  console.log(apiRes);
   assertApiResponse(apiRes);
   disableLoading();
 };
