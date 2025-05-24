@@ -1112,7 +1112,7 @@ returns table (
     type_color_classification_name varchar(10), -- not null
     sub_type_id int,
     sub_type_name varchar(10),
-    sum int
+    sum int -- not null
 )
 as $$
     with converted_records as (
