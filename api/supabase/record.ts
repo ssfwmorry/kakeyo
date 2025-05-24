@@ -76,6 +76,7 @@ import {
   type GetTypeSummaryRpcRow,
 } from './rpc/getTypeSummary.interface';
 import { RPC_POST_RECORDS, type PostRecordsRpc } from './rpc/postRecords.interface';
+import type { DbSubType } from './subType.interface';
 
 export const getRecordList = async (
   { userUid }: SupabaseApiUser,
@@ -385,19 +386,32 @@ export const getSubTypeSummary = async ({
   year,
   typeId,
 }: GetSubTypeSummaryInput): Promise<GetSubTypeSummaryOutput> => {
+  // typeに紐づく、sub_typeの一覧取得
+  type PickedSubType = Pick<DbSubType, 'id' | 'name'>;
+  const { data: subTypesData, error: error1 } = await supabase
+    .from('sub_types')
+    .select<'id, name', PickedSubType>('id, name')
+    .eq('type_id', typeId);
+  if (error1 !== null || subTypesData === null) {
+    return { error: error1, message: 'sub_types 取得' };
+  }
+
+  // sub_typeごとの集計結果を取得
   const payload = {
     input_year: year,
     input_type_id: typeId,
   };
-  const { data, error } = await supabase.rpc<typeof RPC_GET_SUB_TYPE_SUMMARY, GetSubTypeSummaryRpc>(
-    RPC_GET_SUB_TYPE_SUMMARY,
-    payload
-  );
-  if (error !== null || data === null) {
-    return { error: error, message: 'type_summarized_record 一覧' };
+  const { data, error: error2 } = await supabase.rpc<
+    typeof RPC_GET_SUB_TYPE_SUMMARY,
+    GetSubTypeSummaryRpc
+  >(RPC_GET_SUB_TYPE_SUMMARY, payload);
+  if (error2 !== null || data === null) {
+    return { error: error2, message: 'type_summarized_record 一覧' };
   }
 
   const camelizedData = camelizeKeys<{ data: GetSubTypeSummaryRpcRow[] }>({ data });
+
+  // TODO: Outoutに合わせて整形する
   return { data: camelizedData.data, error: null, message: 'type_summarized_record 一覧' };
 };
 

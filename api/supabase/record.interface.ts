@@ -14,7 +14,6 @@ import type { GetMethodSummaryRpcRow } from './rpc/getMethodSummary.interface';
 import type { GetPairedRecordListRpcRow } from './rpc/getPairedRecordList.interface';
 import type { GetPayAndIncomeListRpcRow } from './rpc/getPayAndIncomeList.interface';
 import type { GetRecordListRpcRow } from './rpc/getRecordList.interface';
-import type { GetSubTypeSummaryRpcRow } from './rpc/getSubTypeSummary.interface';
 import type { GetSummarizedRecordListRpcRow } from './rpc/getSummarizedRecordList.interface';
 import type { GetTypeSummaryRpcRow } from './rpc/getTypeSummary.interface';
 
@@ -111,7 +110,16 @@ export interface GetSubTypeSummaryInput {
   year: YearString;
   typeId: Id;
 }
-export type GetTypeSummarizedRecordItem = Camelized<GetSubTypeSummaryRpcRow>;
+export type GetTypeSummarizedRecordItem = {
+  yearMonth: YearMonthString;
+  subTypes: {
+    subTypeId: Id;
+    subTypeName: string;
+    sum: number;
+  }[];
+  /** subTypeId が null の場合の値 (subTypes.[].sumの合計値ではない) */
+  sum: number;
+};
 export interface GetSubTypeSummaryOutput
   extends ApiOutput<GetTypeSummarizedRecordItem[], PostgrestError> {}
 

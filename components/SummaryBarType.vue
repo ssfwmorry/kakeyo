@@ -176,10 +176,31 @@ const updateChart = async () => {
 
   const payload = { year: String(year.value), typeId };
   const apiRes = await getSubTypeSummary(payload);
-  console.log(apiRes);
   assertApiResponse(apiRes);
 
+  barData.value = convertShowData(apiRes.data);
+
   disableLoading();
+};
+
+// TODO
+const convertShowData = (data: any) => {
+  console.log(data);
+  const buildBarData = (data: any): BarData => {
+    return {
+      labels: MONTH_LABELS,
+      datasets: [
+        {
+          label: '',
+          data,
+          backgroundColor: 'rgb(0,0,255)',
+        },
+      ],
+    };
+  };
+
+  // return buildBarData(data);
+  return tmpData as any;
 };
 
 // created

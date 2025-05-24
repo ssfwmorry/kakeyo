@@ -60,6 +60,13 @@ export type Method = {
   sort: number;
 };
 
+export type SubType = {
+  id: Id;
+  typeId: Id;
+  name: string;
+  sort: number;
+};
+
 export const RecordType = {
   self: 0,
   instead: 5,
