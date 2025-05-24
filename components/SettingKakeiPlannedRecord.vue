@@ -1,7 +1,8 @@
 <template>
   <div>
-    <h4 class="mb-2">定期的な収入・支出</h4>
-
+    <h4 class="mb-2">
+      <v-icon size="small">{{ $ICONS.UPDATE }}</v-icon> 定期的な収入・支出
+    </h4>
     <div class="px-3 mb-4">
       <v-row
         v-for="(plannedRecord, plannedRecordIndex) of plannedRecordList[isPair ? 'pair' : 'self']"

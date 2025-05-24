@@ -106,6 +106,32 @@ export type GetSummarizedRecordItem = Camelized<
 export interface GetSummarizedRecordListOutput
   extends ApiOutput<GetSummarizedRecordItem[], PostgrestError> {}
 
+export interface GetSubTypeSummaryInput {
+  year: YearString;
+  typeId: Id;
+}
+export type GetSubTypeSummaryItem = {
+  yearMonth: YearMonthString;
+  subTypes: {
+    subTypeId: Id;
+    subTypeName: string;
+    sum: number;
+  }[];
+  /** subTypeId が null の場合の値 (subTypes.[].sumの合計値ではない) */
+  sum: number;
+};
+export interface GetSubTypeSummaryOutput
+  extends ApiOutput<
+    {
+      summaries: GetSubTypeSummaryItem[];
+      subTypes: {
+        id: Id;
+        name: string;
+      }[];
+    },
+    PostgrestError
+  > {}
+
 export interface GetPairedRecordListInput {
   yearMonth: YearMonthString;
 }

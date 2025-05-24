@@ -1,4 +1,4 @@
--- now: 2025-04-05 21:22
+-- now: 2025-05-24 13:29
 -- migration-sort: 1
 drop table if exists develop.day_classifications cascade;
 
@@ -205,6 +205,7 @@ create table develop.planned_records (
     memo                  text,
     sort                  serial       not null,
     updated_at            timestamptz  not null default now(),
+    record_type           smallint     not null default 0,
 
     foreign key (user_id) references develop.users (uid),
     foreign key (pair_id) references develop.pairs (id),

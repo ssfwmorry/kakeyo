@@ -1,4 +1,4 @@
--- now: 2025-05-03 22:54
+-- now: 2025-05-24 22:37
 -- migration-sort: 1
 drop function if exists develop.swap_method(id1 int, id2 int);
 
@@ -748,6 +748,50 @@ as $$
 $$ language sql;
 
 -- migration-sort: 18
+drop function if exists develop.get_sub_type_summary(input_year varchar(5), input_type_id int);
+
+create or replace function develop.get_sub_type_summary(input_year varchar(5), input_type_id int)
+returns table (
+    year_month varchar(7), -- not null
+    type_id int, -- not null
+    type_name varchar(10), -- not null
+    type_color_classification_name varchar(10), -- not null
+    sub_type_id int,
+    sub_type_name varchar(10),
+    sum int -- not null
+)
+as $$
+    with converted_records as (
+      select
+        to_char(cast(datetime as date),'YYYY-MM') as year_month,
+        type_id,
+        sub_type_id,
+        sum(price) as sum
+      from develop.records
+      where
+        type_id = input_type_id
+        and to_char(cast(datetime as date),'YYYY') = input_year
+      group by year_month, type_id, sub_type_id
+    )
+    select
+      year_month,
+      converted_records.type_id,
+      types.name as type_name,
+      color_classifications.name as type_color_classification_name,
+      converted_records.sub_type_id,
+      sub_types.name as sub_type_name,
+      converted_records.sum
+    from converted_records
+    inner join develop.types on
+      converted_records.type_id = types.id
+    left join develop.sub_types on
+      converted_records.sub_type_id = sub_types.id
+    left join develop.color_classifications on
+      types.color_classification_id = color_classifications.id
+    order by converted_records.year_month, converted_records.type_id, converted_records.sub_type_id
+$$ language sql;
+
+-- migration-sort: 19
 drop function if exists develop.get_paired_record_list(input_user_id varchar(30), input_year_month varchar(8));
 
 create or replace function develop.get_paired_record_list(input_user_id varchar(30),input_year_month varchar(8))

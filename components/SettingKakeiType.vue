@@ -1,6 +1,8 @@
 <template>
   <div>
-    <h4 class="mb-2">カテゴリ</h4>
+    <h4 class="mb-2">
+      <v-icon size="small">{{ $ICONS.SHAPE }}</v-icon> カテゴリ
+    </h4>
 
     <div class="px-3 mb-4">
       <v-row class="mb-3" no-gutters>

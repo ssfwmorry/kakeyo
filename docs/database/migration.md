@@ -313,3 +313,8 @@ alter table develop.planned_records add column record_type smallint default 0 no
 update develop.planned_records set record_type = 5 where user_id is not null and pair_id is not null; -- publicも適応
 update develop.planned_records set record_type = 10 where user_id is null and pair_id is not null; -- publicも適応
 ```
+
+## 20250524\_開発と 本番 DB に RPC を適応する
+
+- `develop.get_sub_type_summary`
+- `public.get_sub_type_summary`

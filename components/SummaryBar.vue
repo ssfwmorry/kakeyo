@@ -101,6 +101,7 @@
 
 <script setup lang="ts">
 import type { GetPayAndIncomeItem } from '@/api/supabase/record.interface';
+import { INITIAL_BAR_DATA, MONTH_KEYS, MONTH_LABELS } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import { type YearMonthNumObj, type YearMonthString } from '@/utils/types/common';
@@ -133,13 +134,6 @@ type TableData = {
   income: number;
   payAndIncome: number;
 };
-const initialBarDataset = {
-  label: '' as '',
-  data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  backgroundColor: 'rgb(0,0,0)',
-};
-const MonthLabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12(月)'];
-const MonthKeys = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 
 const barOptions: ChartOptions = {
   responsive: true,
@@ -166,13 +160,13 @@ const focusObj = computed<YearMonthNumObj>(() => {
 });
 
 const barDataPayAndIncome = ref<BarData>({
-  labels: MonthLabels,
-  datasets: [initialBarDataset],
+  labels: MONTH_LABELS,
+  datasets: [INITIAL_BAR_DATA],
 });
 const sumPayAndIncome = ref('0');
 const barDataPay = ref<BarData>({
-  labels: MonthLabels,
-  datasets: [initialBarDataset],
+  labels: MONTH_LABELS,
+  datasets: [INITIAL_BAR_DATA],
 });
 const sumPay = ref('0');
 const tableData = ref<TableData[]>([]);
@@ -226,7 +220,7 @@ const convertShowData = (
   });
 
   // TODO データ格納チェック
-  MonthKeys.forEach((monthKey) => {
+  MONTH_KEYS.forEach((monthKey) => {
     const yearMonth = year.value + '-' + monthKey;
     if (!(yearMonth in monthMap)) {
       // リストにない 'YYYY-MM' は sum を0とする
@@ -261,8 +255,8 @@ const convertShowData = (
 
   if (tmpSumPayAndIncome === 0 && tmpSumPay === 0) {
     const noneBarData: BarData = {
-      labels: MonthLabels,
-      datasets: [initialBarDataset],
+      labels: MONTH_LABELS,
+      datasets: [INITIAL_BAR_DATA],
     };
     return {
       ret1: noneBarData,
@@ -275,7 +269,7 @@ const convertShowData = (
 
   const buildBarData = (data: number[]): BarData => {
     return {
-      labels: MonthLabels,
+      labels: MONTH_LABELS,
       datasets: [
         {
           label: '',
