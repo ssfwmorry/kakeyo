@@ -79,7 +79,7 @@ const barOptions: ChartOptions = {
   responsive: true,
   // maintainAspectRatio: false,
   plugins: {
-    legend: { display: false },
+    legend: { display: true },
   },
   scales: {
     x: { stacked: true },
