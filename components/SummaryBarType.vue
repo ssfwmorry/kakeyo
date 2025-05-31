@@ -62,6 +62,7 @@ import type {
 import { getTypeList } from '@/api/supabase/type';
 import type { GetTypeListOutputData } from '@/api/supabase/type.interface';
 import { INITIAL_BAR_DATA, MONTH_LABELS } from '@/utils/constants';
+import { COLOR_CODE } from '@/utils/constants/color';
 import TimeUtility from '@/utils/time';
 import type { YearMonthNumObj } from '@/utils/types/common';
 import {
@@ -181,7 +182,7 @@ const convertShowTypesData = (summary: Exclude<GetTypeSummaryPeriodOutput['data'
     datasets.push({
       label: type.typeName,
       data: datasetsData,
-      backgroundColor: type.colorClassificationName,
+      backgroundColor: COLOR_CODE[type.colorClassificationName],
     });
   });
   return { labels: MONTH_LABELS, datasets };

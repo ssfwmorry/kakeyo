@@ -1,6 +1,6 @@
 import supabase from '@/composables/supabase';
 import { DEMO_DATA, MONTH_KEYS, SettlementRecord } from '@/utils/constants';
-import type { Id, YearMonthString } from '@/utils/types/common';
+import type { ColorString, Id, YearMonthString } from '@/utils/types/common';
 import { RecordType } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
 import {
@@ -466,7 +466,9 @@ export const getTypeSummaryPeriod = async (
     return {
       typeId: e.typeId as Id | null,
       typeName: e.typeName,
-      colorClassificationName: e.colorClassificationName,
+      colorClassificationName: e.colorClassificationName as
+        | ColorString
+        | typeof SettlementRecord.color,
     };
   });
   if (!isPair) {

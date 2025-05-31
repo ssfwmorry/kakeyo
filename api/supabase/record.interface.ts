@@ -1,4 +1,6 @@
+import type { SettlementRecord } from '@/utils/constants';
 import type {
+  ColorString,
   DateRange,
   DatetimeString,
   Id,
@@ -116,7 +118,7 @@ export type GetTypeSummaryPeriodItem = {
   types: {
     typeId: Id | null;
     typeName: string;
-    colorClassificationName: string;
+    colorClassificationName: ColorString | typeof SettlementRecord.color;
     sum: number;
   }[];
 };
@@ -127,7 +129,7 @@ export interface GetTypeSummaryPeriodOutput
       types: {
         typeId: Id | null;
         typeName: string;
-        colorClassificationName: string;
+        colorClassificationName: ColorString | typeof SettlementRecord.color;
       }[];
     },
     PostgrestError

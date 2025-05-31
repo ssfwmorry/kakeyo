@@ -17,6 +17,7 @@ export const COLOR_CODE = {
   ['blue-grey']: '#607d8b',
   ['grey']: '#9e9e9e',
   ['black']: '#000000',
+  ['yellow']: '#ffeb3b', // 精算用
 } as const;
 export type ColorCode = keyof typeof COLOR_CODE;
 
