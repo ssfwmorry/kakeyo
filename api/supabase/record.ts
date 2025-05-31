@@ -33,6 +33,9 @@ import type {
   GetTypeSummaryInput,
   GetTypeSummaryItem,
   GetTypeSummaryOutput,
+  GetTypeSummaryPeriodInput,
+  GetTypeSummaryPeriodItem,
+  GetTypeSummaryPeriodOutput,
   InsertSettlementRecordInput,
   PostRecordsInput,
   PostRecordsOutput,
@@ -71,13 +74,20 @@ import {
   type GetSummarizedRecordListRpc,
   type GetSummarizedRecordListRpcRow,
 } from './rpc/getSummarizedRecordList.interface';
+import { RPC_GET_TYPE_LIST, type GetTypeListRpc } from './rpc/getTypeList.interface';
 import {
   RPC_GET_TYPE_SUMMARY,
   type GetTypeSummaryRpc,
   type GetTypeSummaryRpcRow,
 } from './rpc/getTypeSummary.interface';
+import {
+  RPC_GET_TYPE_SUMMARY_PERIOD,
+  type GetTypeSummaryPeriodRpc,
+  type GetTypeSummaryPeriodRpcRow,
+} from './rpc/getTypeSummaryPeriod.interface';
 import { RPC_POST_RECORDS, type PostRecordsRpc } from './rpc/postRecords.interface';
 import type { DbSubType } from './subType.interface';
+import { getGroupedTypeList } from './type';
 
 export const getRecordList = async (
   { userUid }: SupabaseApiUser,
@@ -383,6 +393,100 @@ export const getSummarizedRecordList = async (
   return { data: outData, error: null, message: 'summarized_record 一覧' };
 };
 
+export const getTypeSummaryPeriod = async (
+  { userUid }: SupabaseApiUser,
+  { year, isPay, isPair }: GetTypeSummaryPeriodInput
+): Promise<GetTypeSummaryPeriodOutput> => {
+  // typeの一覧取得
+  const payload1 = { input_user_id: userUid };
+  const { data: rpcTypes, error: error1 } = await supabase.rpc<
+    typeof RPC_GET_TYPE_LIST,
+    GetTypeListRpc
+  >(RPC_GET_TYPE_LIST, payload1);
+  if (error1 != null || rpcTypes === null) {
+    return { error: error1, message: 'type 一覧' };
+  }
+  const filteredTypes = rpcTypes.filter((e) => e.is_pair === isPair && e.is_pay === isPay);
+  const typesData = getGroupedTypeList(filteredTypes);
+
+  // typeごとの集計結果を取得
+  const payload = {
+    input_user_id: userUid,
+    input_year: year,
+    input_is_pay: isPay,
+    input_is_pair: isPair,
+  };
+  const { data, error } = await supabase.rpc<
+    typeof RPC_GET_TYPE_SUMMARY_PERIOD,
+    GetTypeSummaryPeriodRpc
+  >(RPC_GET_TYPE_SUMMARY_PERIOD, payload);
+  if (error !== null || data === null) {
+    return { error, message: 'type summary period 一覧' };
+  }
+
+  // 整形
+  const camelizedData = camelizeKeys<{ data: GetTypeSummaryPeriodRpcRow[] }>({ data });
+
+  type YearMonthTypeId = string; // `${year}-${month}_${typeId}` の形式. typeIdがnull（つまり精算record）の場合は`${typeId}`の部分は空文字列になる
+  const uniqueKeySumMap = new Map<string, number>();
+  camelizedData.data.forEach((row) => {
+    const yearMonthTypeId: YearMonthTypeId = `${row.yearMonth}_${row.typeId ?? ''}`;
+    uniqueKeySumMap.set(yearMonthTypeId, row.sum);
+  });
+
+  const outData: GetTypeSummaryPeriodItem[] = [];
+  MONTH_KEYS.forEach((monthKey) => {
+    const yearMonth: YearMonthString = `${year}-${monthKey}`;
+    const types: GetTypeSummaryPeriodItem['types'] = [];
+    typesData.forEach((type) => {
+      const yearMonthSubTypeId: YearMonthTypeId = `${yearMonth}_${type.typeId}`;
+      types.push({
+        typeId: type.typeId,
+        typeName: type.typeName,
+        colorClassificationName: type.colorClassificationName,
+        sum: uniqueKeySumMap.get(yearMonthSubTypeId) ?? 0,
+      });
+    });
+    // 精算recordの合計も追加
+    if (!isPair) {
+      const settlementKey = `${yearMonth}_`;
+      types.push({
+        typeId: null,
+        typeName: SettlementRecord.name,
+        colorClassificationName: SettlementRecord.color,
+        sum: uniqueKeySumMap.get(settlementKey) ?? 0,
+      });
+    }
+
+    outData.push({ yearMonth, types });
+  });
+
+  // 精算をtypesとして追加
+  const tmpTypes = typesData.map((e) => {
+    return {
+      typeId: e.typeId as Id | null,
+      typeName: e.typeName,
+      colorClassificationName: e.colorClassificationName,
+    };
+  });
+  if (!isPair) {
+    tmpTypes.push({
+      typeId: null,
+      typeName: SettlementRecord.name,
+      colorClassificationName: SettlementRecord.color,
+    });
+  }
+
+  return {
+    data: {
+      summaries: outData,
+      types: tmpTypes,
+    },
+    error: null,
+    message: 'type summary period 一覧',
+  };
+};
+
 export const getSubTypeSummary = async ({
   year,
   typeId,
@@ -410,6 +514,7 @@ export const getSubTypeSummary = async ({
     return { error: error2, message: 'type_summarized_record 一覧' };
   }
 
+  // 整形
   const camelizedData = camelizeKeys<{ data: GetSubTypeSummaryRpcRow[] }>({ data });
   type YearMonthSubTypeId = string; // `${year}-${month}_${subTypeId}` の形式. subTypeIdがnullの場合は`${subTypeId}`の部分は空文字列になる
   const uniqueKeySumMap = new Map<string, number>();

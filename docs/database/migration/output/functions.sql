@@ -1,4 +1,4 @@
--- now: 2025-05-24 22:37
+-- now: 2025-05-31 10:15
 -- migration-sort: 1
 drop function if exists develop.swap_method(id1 int, id2 int);
 
@@ -792,6 +792,57 @@ as $$
 $$ language sql;
 
 -- migration-sort: 19
+drop function if exists develop.get_type_summary_period(input_user_id varchar(30), input_is_pay boolean, input_is_pair boolean, input_year varchar(5));
+
+create or replace function develop.get_type_summary_period(input_user_id varchar(30), input_is_pay boolean, input_is_pair boolean, input_year varchar(5))
+returns table (
+    year_month varchar(7), -- not null
+    type_id int,
+    type_name varchar(10),
+    type_color_classification_name varchar(10),
+    sum int -- not null
+)
+as $$
+    with converted_records as (
+      select
+        to_char(cast(datetime as date),'YYYY-MM') as year_month,
+        records.type_id,
+        sum(records.price) as sum
+      from develop.records
+      left join develop.pairs on
+        records.pair_id = pairs.id
+      where
+        ( records.user_id = input_user_id
+          or pairs.user1_id = input_user_id
+          or pairs.user2_id = input_user_id
+        )
+        and (case
+          when input_is_pair = true then record_type in (5, 10)
+          else (record_type in (0, 15) or ( record_type = 5 and (user_id = cast(input_user_id as char(28))) ))
+        end)
+        and (case
+          when record_type = 15 and input_is_pay = true then (user_id = cast(input_user_id as char(28)))
+          when record_type = 15 and input_is_pay = false then (user_id <> cast(input_user_id as char(28)))
+          else is_pay = input_is_pay
+        end)
+        and to_char(cast(datetime as date),'YYYY') = input_year
+      group by year_month, type_id
+    )
+    select
+      year_month,
+      converted_records.type_id,
+      types.name as type_name,
+      color_classifications.name as type_color_classification_name,
+      converted_records.sum
+    from converted_records
+    left join develop.types on
+      converted_records.type_id = types.id
+    left join develop.color_classifications on
+      types.color_classification_id = color_classifications.id
+    order by converted_records.year_month, converted_records.type_id
+$$ language sql;
+
+-- migration-sort: 20
 drop function if exists develop.get_paired_record_list(input_user_id varchar(30), input_year_month varchar(8));
 
 create or replace function develop.get_paired_record_list(input_user_id varchar(30),input_year_month varchar(8))

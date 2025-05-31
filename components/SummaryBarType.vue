@@ -31,12 +31,13 @@
             selected-class="bg-blue-grey-lighten-3"
             @update:model-value="updateChart"
           >
+            <v-chip filter :key="0" text="全て" size="small" />
             <v-chip
               v-for="(type, typeIndex) of typeList[isPay ? 'pay' : 'income'][
                 isPair ? 'pair' : 'self'
               ]"
               filter
-              :key="typeIndex"
+              :key="typeIndex + 1"
               :text="type.typeName"
               size="small"
             ></v-chip>
@@ -45,17 +46,19 @@
       </v-col>
     </v-row>
     <v-row no-gutters>
-      <div v-if="selectedTypeIndex !== null" class="w-100">
+      <div class="w-100">
         <Bar :data="barData" :options="(barOptions as any)" />
       </div>
-      <div v-else class="mt-30px w-100 text-center">カテゴリを選択してください</div>
     </v-row>
   </div>
 </template>
 
 <script setup lang="ts">
-import { getSubTypeSummary } from '@/api/supabase/record';
-import type { GetSubTypeSummaryOutput } from '@/api/supabase/record.interface';
+import { getSubTypeSummary, getTypeSummaryPeriod } from '@/api/supabase/record';
+import type {
+  GetSubTypeSummaryOutput,
+  GetTypeSummaryPeriodOutput,
+} from '@/api/supabase/record.interface';
 import { getTypeList } from '@/api/supabase/type';
 import type { GetTypeListOutputData } from '@/api/supabase/type.interface';
 import { INITIAL_BAR_DATA, MONTH_LABELS } from '@/utils/constants';
@@ -73,8 +76,9 @@ import {
 import { Bar } from 'vue-chartjs';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
-const subTypeColors = ['gold', 'mediumseagreen', 'blueviolet', 'lightpink', 'royalblue'] as const;
+const subTypeColors = ['gold', 'mediumseagreen', 'blueviolet', 'lightpink', 'royalblue', 'chocolate'] as const; // prettier-ignore
 const colorGrey = 'grey' as const;
+const allIndex = 0 as const;
 const barOptions: ChartOptions = {
   responsive: true,
   // maintainAspectRatio: false,
@@ -108,7 +112,7 @@ const { isPair } = storeToRefs(pairStore);
 
 const year = ref(TimeUtility.GetNowYear(isDemoLogin.value));
 const isPay = ref<boolean>(true);
-const selectedTypeIndex = ref<number | null>(null);
+const selectedTypeIndex = ref<number>(allIndex);
 const typeList = ref<GetTypeListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
@@ -136,28 +140,54 @@ const updateFocus = async (obj: YearMonthNumObj) => {
 };
 
 const resetTypeList = async () => {
-  selectedTypeIndex.value = null;
+  selectedTypeIndex.value = allIndex;
+  await updateChart();
 };
 
 const updateChart = async () => {
-  if (selectedTypeIndex.value === null) return;
   enableLoading();
 
-  const typeId =
-    typeList.value[isPay.value ? 'pay' : 'income'][isPair.value ? 'pair' : 'self'][
-      selectedTypeIndex.value
-    ].typeId;
+  if (selectedTypeIndex.value === allIndex) {
+    const payload = { year: String(year.value), isPair: isPair.value, isPay: isPay.value };
+    const apiRes = await getTypeSummaryPeriod({ userUid: userUid.value }, payload);
+    assertApiResponse(apiRes);
 
-  const payload = { year: String(year.value), typeId };
-  const apiRes = await getSubTypeSummary(payload);
-  assertApiResponse(apiRes);
+    barData.value = convertShowTypesData(apiRes.data);
+  } else {
+    const typeId =
+      typeList.value[isPay.value ? 'pay' : 'income'][isPair.value ? 'pair' : 'self'][
+        selectedTypeIndex.value - 1 // -1 is because the first index (0) is "All"
+      ].typeId;
 
-  barData.value = convertShowData(apiRes.data);
+    const payload = { year: String(year.value), typeId };
+    const apiRes = await getSubTypeSummary(payload);
+    assertApiResponse(apiRes);
+
+    barData.value = convertShowSubTypesData(apiRes.data);
+  }
 
   disableLoading();
 };
 
-const convertShowData = (summary: Exclude<GetSubTypeSummaryOutput['data'], undefined>) => {
+const convertShowTypesData = (summary: Exclude<GetTypeSummaryPeriodOutput['data'], undefined>) => {
+  const datasets: BarData['datasets'] = [];
+
+  // type分のデータを作成
+  summary.types.forEach((type, index) => {
+    const datasetsData: number[] = [];
+    summary.summaries.forEach((summariesItem) => {
+      datasetsData.push(summariesItem.types[index].sum ?? 0);
+    });
+    datasets.push({
+      label: type.typeName,
+      data: datasetsData,
+      backgroundColor: type.colorClassificationName,
+    });
+  });
+  return { labels: MONTH_LABELS, datasets };
+};
+
+const convertShowSubTypesData = (summary: Exclude<GetSubTypeSummaryOutput['data'], undefined>) => {
   const datasets: BarData['datasets'] = [];
   // subTypeがない分のデータを作成
   datasets.push({

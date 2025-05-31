@@ -20,6 +20,23 @@ import {
 import { RPC_SWAP_TYPE, type SwapRpc } from './rpc/swap.interface';
 import type { GetTypeListItem, GetTypeListOutput, UpsertTypeInput } from './type.interface';
 
+export const getGroupedTypeList = (data: GetTypeListRpcRow[]) => {
+  let groupedData: GetTypeListItem[] = [];
+  data.forEach((row, i: number) => {
+    if (i == 0 || groupedData[groupedData.length - 1].typeId != row.type_id) {
+      groupedData.push({ ...camelizeKeys<GetTypeListRpcRow>(row), subTypes: [] });
+    }
+    if (row.sub_type_id !== null && row.sub_type_name !== null && row.sub_type_sort !== null) {
+      groupedData[groupedData.length - 1].subTypes.push({
+        subTypeId: row.sub_type_id,
+        subTypeName: row.sub_type_name,
+        subTypeSort: row.sub_type_sort,
+      });
+    }
+  });
+  return groupedData;
+};
+
 export const getTypeList = async ({ userUid }: SupabaseApiUser): Promise<GetTypeListOutput> => {
   const payload = { input_user_id: userUid };
   const { data, error } = await supabase.rpc<typeof RPC_GET_TYPE_LIST, GetTypeListRpc>(
@@ -34,32 +51,16 @@ export const getTypeList = async ({ userUid }: SupabaseApiUser): Promise<GetType
   const incomePair = data.filter((e) => e.is_pair && !e.is_pay);
   const paySelf = data.filter((e) => !e.is_pair && e.is_pay);
   const payPair = data.filter((e) => e.is_pair && e.is_pay);
-  const getGroupedType = (data: GetTypeListRpcRow[]) => {
-    let groupedData: GetTypeListItem[] = [];
-    data.forEach((row, i: number) => {
-      if (i == 0 || groupedData[groupedData.length - 1].typeId != row.type_id) {
-        groupedData.push({ ...camelizeKeys<GetTypeListRpcRow>(row), subTypes: [] });
-      }
-      if (row.sub_type_id !== null && row.sub_type_name !== null && row.sub_type_sort !== null) {
-        groupedData[groupedData.length - 1].subTypes.push({
-          subTypeId: row.sub_type_id,
-          subTypeName: row.sub_type_name,
-          subTypeSort: row.sub_type_sort,
-        });
-      }
-    });
-    return groupedData;
-  };
 
   return {
     data: {
       income: {
-        self: getGroupedType(incomeSelf),
-        pair: getGroupedType(incomePair),
+        self: getGroupedTypeList(incomeSelf),
+        pair: getGroupedTypeList(incomePair),
       },
       pay: {
-        self: getGroupedType(paySelf),
-        pair: getGroupedType(payPair),
+        self: getGroupedTypeList(paySelf),
+        pair: getGroupedTypeList(payPair),
       },
     },
     error: null,
