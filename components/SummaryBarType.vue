@@ -45,6 +45,24 @@
         </div>
       </v-col>
     </v-row>
+    <!-- 判例表示 -->
+    <v-row no-gutters class="px-1 mb-2">
+      <div
+        v-for="(dataset, index) in barData.datasets"
+        :key="index"
+        cols="1"
+        class="d-flex align-center mr-4 fs-sm"
+      >
+        <v-avatar
+          tile
+          size="12"
+          :style="{ backgroundColor: dataset.backgroundColor }"
+          class="mr-1"
+        />
+        {{ dataset.label }}
+      </div>
+    </v-row>
+
     <v-row no-gutters>
       <div class="w-100">
         <Bar :data="barData" :options="(barOptions as any)" />
@@ -84,7 +102,7 @@ const barOptions: ChartOptions = {
   responsive: true,
   // maintainAspectRatio: false,
   plugins: {
-    legend: { display: true },
+    legend: { display: false }, // グラフの凡例を非表示
   },
   scales: {
     x: { stacked: true },
@@ -98,7 +116,7 @@ type BarData = {
   // 配列の大きさ: サブカテゴリの数+1(サブカテゴリなし)
   datasets: {
     /** subTypeName */
-    label: string | '';
+    label: string;
     /** 月ごとの金額 */
     data: number[];
     /** 棒の色 */
