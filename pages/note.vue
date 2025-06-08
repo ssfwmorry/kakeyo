@@ -520,10 +520,11 @@ watch(isPair, (newValue, oldValue) => {
 (async () => {
   enableLoading();
 
-  const apiResType = await getTypeList({ userUid: userUid.value });
+  const [apiResType, apiResMethod] = await Promise.all([
+    getTypeList({ userUid: userUid.value }),
+    getMethodList({ userUid: userUid.value }),
+  ]);
   assertApiResponse(apiResType);
-
-  const apiResMethod = await getMethodList({ userUid: userUid.value });
   assertApiResponse(apiResMethod);
 
   typeList.value = apiResType.data;

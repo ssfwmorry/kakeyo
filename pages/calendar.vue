@@ -411,20 +411,17 @@ const updateRange = async () => {
     assertApiResponse(apiResPostRecords);
   }
 
-  // 月の収支を取得
-  const apiResMonthSum = await getMonthSum(authParam, payload1);
+  const [apiResMonthSum, apiResGetRecords, apiResPlans] = await Promise.all([
+    getMonthSum(authParam, payload1), // 月の収支を取得
+    getRecordList(authParam, payload2), // record を取得
+    getPlanList(authParam, payload2), // plan を追加
+  ]);
   assertApiResponse(apiResMonthSum);
-
-  // record を取得
-  const apiResGetRecords = await getRecordList(authParam, payload2);
   assertApiResponse(apiResGetRecords);
+  assertApiResponse(apiResPlans);
 
   const tmpDaySumList = getDaySumList(apiResGetRecords.data);
   updatePaddingRecords(tmpDaySumList); // 毎日の record 用 event を定義
-
-  // plan を追加
-  const apiResPlans = await getPlanList(authParam, payload2);
-  assertApiResponse(apiResPlans);
 
   // plan 分を events に追加
   apiResPlans.data.forEach((plan) => {
@@ -671,11 +668,11 @@ const deleteMemo = async (id: Id) => {
 };
 
 // created
-(async () => {})();
+(async () => {
+  await getMemoList(); // updateRange()と非同期に実行
+})();
 
 onMounted(async () => {
-  await getMemoList();
-
   setPageFocus(route.query as RouterQueryNoteToCalendar | RouterQueryPlanToCalendar);
 
   // refはマウント後にしか参照できないので、plan更新はここでやる
