@@ -25,7 +25,7 @@
               </div>
             </div>
             <div class="d-flex justify-end">
-              {{ TimeUtility.ConvertDbDatetimeStringToJPDay(props.datetime) }}
+              {{ props.datetime ? TimeUtility.ConvertDbDatetimeStringToJPDay(props.datetime) : '' }}
             </div>
           </div>
         </v-col>
@@ -56,7 +56,7 @@ import type { DbDatetimeString } from '@/utils/types/common';
 const { $ICONS } = useNuxtApp();
 
 type Props = {
-  datetime: DbDatetimeString;
+  datetime: DbDatetimeString | null;
   labelColor: string | null;
   backgroundColor: string | null;
   typeColor: string;

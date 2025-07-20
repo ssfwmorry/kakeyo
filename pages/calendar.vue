@@ -25,18 +25,6 @@
 
     <v-row no-gutters class="mb-2">
       <v-spacer />
-      <v-col cols="3" class="pr-1">
-        <v-btn
-          variant="flat"
-          block
-          rounded
-          color="primary"
-          height="38"
-          width="70"
-          @click="isShowMemoInput = !isShowMemoInput"
-          >TODO</v-btn
-        >
-      </v-col>
       <v-col cols="3" class="px-1">
         <v-btn
           variant="flat"
@@ -44,20 +32,42 @@
           rounded
           color="primary"
           height="38"
-          width="70"
-          @click="goRecordCreatePage"
-          >記録＋</v-btn
+          @click="isShowMemoInput = !isShowMemoInput"
+          >TODO</v-btn
         >
       </v-col>
+      <v-col :cols="isExistsShortCut ? 4 : 3" class="px-1 d-flex">
+        <v-sheet rounded height="38" color="primary" class="d-flex flex-row rounded-pill w-100">
+          <v-row no-gutters>
+            <v-col :cols="isExistsShortCut ? 8 : 12">
+              <v-btn
+                variant="flat"
+                rounded
+                color="primary"
+                height="38"
+                class="px-0 w-100"
+                @click="goRecordCreatePage"
+                >記録＋</v-btn
+              >
+            </v-col>
+            <v-col cols="4">
+              <v-btn
+                v-if="isExistsShortCut"
+                variant="flat"
+                rounded
+                color="blue"
+                height="38"
+                min-width="38"
+                class="px-0 w-100"
+                @click="isShowShortCut = !isShowShortCut"
+                ><v-icon>{{ $ICONS.ARROW_RIGHT_TOP }}</v-icon></v-btn
+              >
+            </v-col>
+          </v-row>
+        </v-sheet>
+      </v-col>
       <v-col cols="3" class="pl-1">
-        <v-btn
-          variant="flat"
-          block
-          rounded
-          color="primary"
-          height="38"
-          width="70"
-          @click="goPlanCreatePage"
+        <v-btn variant="flat" block rounded color="primary" height="38" @click="goPlanCreatePage"
           >予定＋</v-btn
         >
       </v-col>
@@ -83,6 +93,29 @@
         ></v-text-field>
       </v-col>
       <v-col cols="2"></v-col>
+    </v-row>
+
+    <!-- ショートカットリスト表示 -->
+    <v-row v-if="isShowShortCut" no-gutters class="mb-3 px-2">
+      <v-col v-for="(shortCut, index) in shortCutList" :key="index" cols="6">
+        <RecordCardHalf
+          :datetime="null"
+          :labelColor="null"
+          :backgroundColor="null"
+          :typeColor="shortCut.types.colorClassifications.name"
+          :typeAndSubtype="
+            StringUtility.typeAndSubtype(shortCut.types.name, shortCut.subTypes?.name ?? null)
+          "
+          :isShowPlannedIcon="false"
+          :isSettled="false"
+          :memo="shortCut.memo ?? ''"
+          :isShowBlueColorPrice="!shortCut.isPay"
+          :price="StringUtility.ConvertIntToShowStrWithIsPay(shortCut.price, shortCut.isPay)"
+          @click.native="insertRecordFromShortCut(shortCut)"
+          class="w-100 mb-1"
+          :class="index % 2 === 0 ? 'mr-1' : 'ml-1'"
+        ></RecordCardHalf>
+      </v-col>
     </v-row>
 
     <v-row no-gutters class="mb-2 pl-2">
@@ -190,10 +223,11 @@
 <script setup lang="ts">
 import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
 import type { GetRecordListItem } from '@/api/supabase/record.interface';
+import type { GetShortCutListItem } from '@/api/supabase/shortCut.interface';
 import { PAGE, SettlementRecord } from '@/utils/constants';
 import StringUtility, { format } from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import { type DateString, type Id, type YearMonthNumObj } from '@/utils/types/common';
+import type { DateString, Id, YearMonthNumObj } from '@/utils/types/common';
 import {
   RouterParamKey,
   type PageQueryParameter,
@@ -258,8 +292,6 @@ type BaseEventGet = {
   classNames: Array<string>;
 };
 type EventGetPlan = BaseEventGet & ExternalEventPlan;
-type EventGetRecord = BaseEventGet & ExternalEventRecord;
-type EventGet = EventGetPlan | EventGetRecord;
 
 // ライブラリに登録する用の型
 type EventInputExpanded = EventInput & {
@@ -288,7 +320,9 @@ const {
   getMonthSum,
   getPlanList,
   getRecordList,
+  getShortCutList,
   insertMemo: supabaseInsertMemo,
+  upsertRecord,
   postRecords,
 } = useSupabase();
 const { setToast } = useToastStore();
@@ -345,12 +379,15 @@ const calendarOptions = ref<CalendarOptions>({
 });
 const daySumList = ref<CalendarList>({});
 const memoList = ref<GetMemoListOutput['data']>([]);
+const shortCutList = ref<GetShortCutListItem[]>([]);
 const selectedDayForShow = ref<string | null>(null);
 const selectedDate = ref<DateString | null>(null);
 const selectedDayRecords = ref<GetRecordListItem[]>([]);
 const selectedPlan = ref<EventGetPlan | null>(null);
 const monthSumStr = ref('');
 const isShowMemoInput = ref(false);
+const isExistsShortCut = ref(false);
+const isShowShortCut = ref(false);
 const isPairMemo = ref(false);
 const memoText = ref<string | null>(null);
 const isEndInit = ref(false);
@@ -411,14 +448,16 @@ const updateRange = async () => {
     assertApiResponse(apiResPostRecords);
   }
 
-  const [apiResMonthSum, apiResGetRecords, apiResPlans] = await Promise.all([
+  const [apiResMonthSum, apiResGetRecords, apiResPlans, apiResShortCuts] = await Promise.all([
     getMonthSum(authParam, payload1), // 月の収支を取得
     getRecordList(authParam, payload2), // record を取得
     getPlanList(authParam, payload2), // plan を追加
+    getShortCutList(authParam), // ショートカットリストを取得
   ]);
   assertApiResponse(apiResMonthSum);
   assertApiResponse(apiResGetRecords);
   assertApiResponse(apiResPlans);
+  assertApiResponse(apiResShortCuts);
 
   const tmpDaySumList = getDaySumList(apiResGetRecords.data);
   updatePaddingRecords(tmpDaySumList); // 毎日の record 用 event を定義
@@ -480,6 +519,8 @@ const updateRange = async () => {
   // レンダリングされるタイミングを揃えるため、全て取得してから、data を更新する
   daySumList.value = tmpDaySumList;
   monthSumStr.value = StringUtility.ConvertIntToShowPrefixStr(apiResMonthSum.data);
+  isExistsShortCut.value = apiResShortCuts.data.length > 0;
+  shortCutList.value = apiResShortCuts.data;
   calendarOptions.value.events = events;
   isEndInit.value = true; // fullCalendar 描画に必要な data 更新後に isEndInit を TRUE にして、 updateRange() を呼ぶ
   disableLoading();
@@ -664,6 +705,39 @@ const deleteMemo = async (id: Id) => {
 
   setToast('削除しました');
   await getMemoList();
+  disableLoading();
+};
+
+const insertRecordFromShortCut = async (shortCut: GetShortCutListItem) => {
+  enableLoading();
+  const now = TimeUtility.GetNowDate(isDemoLogin.value);
+
+  const payload = {
+    id: null,
+    datetime: TimeUtility.ConvertDateStrToDatetime(now),
+    isPay: shortCut.isPay,
+    methodId: shortCut.methodId,
+    isInstead: null,
+    typeId: shortCut.typeId,
+    subTypeId: shortCut.subTypeId,
+    price: shortCut.price,
+    memo: shortCut.memo,
+  };
+  const apiRes = await upsertRecord(
+    {
+      isDemoLogin: isDemoLogin.value,
+      userUid: userUid.value,
+      isPair: shortCut.pairId !== null,
+      pairId: shortCut.pairId,
+    },
+    payload
+  );
+  assertApiResponse(apiRes);
+
+  isShowShortCut.value = false;
+
+  await updateRange();
+  setToast('登録しました');
   disableLoading();
 };
 

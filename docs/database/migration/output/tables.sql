@@ -1,4 +1,4 @@
--- now: 2025-05-24 13:29
+-- now: 2025-07-20 16:00
 -- migration-sort: 1
 drop table if exists develop.day_classifications cascade;
 
@@ -340,6 +340,38 @@ alter table develop.memos
 
 create policy "develop.memos all"
     on develop.memos for all
+    to anon
+    using (
+        true
+    )
+;
+
+-- migration-sort: 65
+drop table if exists develop.short_cuts cascade;
+create table develop.short_cuts (
+    id                bigserial    primary key,
+    user_id           varchar(28)  not null,
+    pair_id           integer,
+    is_pay            boolean      not null,
+    method_id         integer      not null,
+    type_id           integer      not null,
+    sub_type_id       integer,
+    price             integer      not null check (price <= 1000000),
+    memo              text,
+    record_type       smallint     not null default 0,
+
+    foreign key (user_id) references develop.users (uid),
+    foreign key (pair_id) references develop.pairs (id),
+    foreign key (method_id) references develop.methods (id),
+    foreign key (type_id) references develop.types (id),
+    foreign key (sub_type_id) references develop.sub_types (id)
+);
+
+alter table develop.short_cuts
+    enable row level security;
+
+create policy "develop.short_cuts all"
+    on develop.short_cuts for all
     to anon
     using (
         true

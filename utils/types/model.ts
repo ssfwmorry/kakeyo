@@ -77,7 +77,7 @@ export type RecordType = (typeof RecordType)[keyof typeof RecordType];
 
 export type Record_ = {
   id: Id;
-  userId: Id | null;
+  userId: string | null;
   pairId: Id | null;
   datetime: DatetimeString;
   isPay: boolean | null;
@@ -88,5 +88,18 @@ export type Record_ = {
   memo: string | null;
   plannedRecordId: Id | null;
   isSettled: boolean | null;
+  recordType: RecordType;
+};
+
+export type ShortCut = {
+  id: Id;
+  userId: string | null;
+  pairId: Id | null;
+  isPay: boolean;
+  methodId: Id;
+  typeId: Id;
+  subTypeId: Id | null;
+  price: number;
+  memo: string | null;
   recordType: RecordType;
 };

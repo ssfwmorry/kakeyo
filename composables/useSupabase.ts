@@ -29,6 +29,7 @@ import {
   settleRecords,
   upsertRecord,
 } from '@/api/supabase/record';
+import { getShortCutList } from '@/api/supabase/shortCut';
 import { deleteSubType, swapSubType, upsertSubType } from '@/api/supabase/subType';
 import { deleteType, getTypeList, swapType, upsertType } from '@/api/supabase/type';
 import { getPairId } from '@/api/supabase/user';
@@ -67,6 +68,7 @@ export const useSupabase = () => {
     getMemoList,
     insertMemo,
     deleteMemo,
+    getShortCutList,
     getMonthSum,
     getTypeSummary,
     getMethodSummary,

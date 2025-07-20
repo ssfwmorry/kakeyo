@@ -18,6 +18,7 @@
 - 50: [plan_types](#plan_types)
 - 55: [plans(plan_types の後)](#plans)
 - 60: [memos](#memos)
+- 65: [short_cuts](#short_cuts)
 
 ## transaction tables
 
@@ -571,6 +572,59 @@ create policy "develop.memos all"
 | id  | user_id | pair_id |   memo   |
 | :-- | :-----: | :-----: | :------: |
 | 1   |    2    |    -    | 歯磨き粉 |
+
+### short_cuts
+
+#### schema
+
+| name        |  type  | size | required | auto_increment |     key      | remarks                |
+| :---------- | :----: | :--: | :------: | :------------: | :----------: | :--------------------- |
+| id          |  int   |  -   |    v     |       v        |      PK      | -                      |
+| user_id     | string |  28  |    -     |       -        |  users.uid   | pair_id とどちらか必須 |
+| pair_id     |  int   |  -   |    -     |       -        |   pairs.id   | user_id とどちらか必須 |
+| is_pay      |  bool  |  -   |    v     |       -        |      -       | -                      |
+| method_id   |  int   |  -   |    v     |       -        |  methods.id  | -                      |
+| type_id     |  int   |  -   |    v     |       -        |   types.id   | -                      |
+| sub_type_id |  int   |  -   |    -     |       -        | sub_types.id | -                      |
+| price       |  int   |  -   |    v     |       -        |      -       | -                      |
+| memo        | string |  -   |    -     |       -        |      -       | -                      |
+| record_type |  int   |  -   |    v     |       -        |      -       | records テーブルと同様 |
+
+#### migration
+
+```sql
+-- migration-sort: 65
+drop table if exists develop.short_cuts cascade;
+create table develop.short_cuts (
+    id                bigserial    primary key,
+    user_id           varchar(28)  not null,
+    pair_id           integer,
+    is_pay            boolean      not null,
+    method_id         integer      not null,
+    type_id           integer      not null,
+    sub_type_id       integer,
+    price             integer      not null check (price <= 1000000),
+    memo              text,
+    record_type       smallint     not null default 0,
+
+    foreign key (user_id) references develop.users (uid),
+    foreign key (pair_id) references develop.pairs (id),
+    foreign key (method_id) references develop.methods (id),
+    foreign key (type_id) references develop.types (id),
+    foreign key (sub_type_id) references develop.sub_types (id)
+);
+
+alter table develop.short_cuts
+    enable row level security;
+
+create policy "develop.short_cuts all"
+    on develop.short_cuts for all
+    to anon
+    using (
+        true
+    )
+;
+```
 
 ## master tables
 
