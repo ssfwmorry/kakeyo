@@ -37,7 +37,17 @@
       </v-col>
     </v-row>
     <v-row no-gutters>
-      <v-col cols="8" class="pl-0">
+      <v-col cols="4" class="pr-1">
+        <v-btn
+          size="x-large"
+          block
+          variant="flat"
+          color="blue-grey-lighten-4"
+          @click="pushDoubleZero()"
+          >00</v-btn
+        >
+      </v-col>
+      <v-col cols="4" class="px-0">
         <v-btn size="x-large" block variant="flat" color="blue-grey-lighten-4" @click="pushPrice(0)"
           >0</v-btn
         >
@@ -66,6 +76,13 @@ const pushPrice = (num: number) => {
     model.value = num;
   } else {
     if (model.value * 10 + num < MAX_PRICE) model.value = model.value * 10 + num;
+  }
+};
+const pushDoubleZero = () => {
+  if (model.value === 0) {
+    model.value = 0;
+  } else {
+    if (model.value * 100 < MAX_PRICE) model.value = model.value * 100;
   }
 };
 const popPrice = () => {
