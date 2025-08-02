@@ -1,18 +1,14 @@
 <template>
   <v-container
     v-touch="{
-      left: () => {
-        moveNext();
-      },
-      right: () => {
-        movePrev();
-      },
+      left: moveNext,
+      right: movePrev,
     }"
     class="pa-1 h-100 bg-white"
   >
     <PaginationBar
       mode="MONTH"
-      :subtitle="isEndInit ? '収支：' + monthSumStr + ' 円' : '　'"
+      :subtitle="!loading ? '収支：' + monthSumStr + ' 円' : '　'"
       :focus="focusObj"
       @prev="movePrev"
       @next="moveNext"
@@ -96,7 +92,7 @@
           variant="filled"
           hide-details
           :append-icon="$ICONS.PLUS"
-          @click:append="addMemo()"
+          @click:append="handleInsertMemo()"
         ></v-text-field>
       </v-col>
       <v-col cols="2"></v-col>
@@ -134,17 +130,10 @@
           closable
           label
           class="mr-2 mb-1"
-          @click:close="deleteMemo(memo.id)"
+          @click:close="handleDeleteMemo(memo.id)"
           ><v-icon small v-if="!!memo.pairId" class="mr-1">{{ $ICONS.SHARE }}</v-icon>
           {{ memo.memo }}
         </v-chip>
-      </v-col>
-    </v-row>
-
-    <!-- 祝日名表示 -->
-    <v-row no-gutters class="mb-2">
-      <v-col class="pl-2">
-        <h4>{{ selectedHoliday }}</h4>
       </v-col>
     </v-row>
 
@@ -235,9 +224,16 @@ import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
 import type { GetRecordListItem } from '@/api/supabase/record.interface';
 import type { GetShortCutListItem } from '@/api/supabase/shortCut.interface';
 import { PAGE, SettlementRecord } from '@/utils/constants';
-import StringUtility, { format } from '@/utils/string';
+import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
 import type { DateString, Id, YearMonthNumObj } from '@/utils/types/common';
+import {
+  eventType,
+  type CalendarList,
+  type DateRecordList,
+  type EventGetPlan,
+  type ExternalEvent,
+} from '@/utils/types/domains/calender';
 import {
   RouterParamKey,
   type PageQueryParameter,
@@ -246,78 +242,14 @@ import {
   type RouterQueryNoteToCalendar,
   type RouterQueryPlanToCalendar,
 } from '@/utils/types/page';
-import type { CalendarOptions, EventClickArg, EventInput } from '@fullcalendar/core';
+import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
-// https://fullcalendar.io/docs
 import FullCalendar from '@fullcalendar/vue3';
-import dayjs from 'dayjs';
 
-const eventType = {
-  PLAN: 'PLAN',
-  RECORD: 'RECORD',
-  HOLIDAY: 'HOLIDAY',
-} as const;
-
-type DateRecordList = {
-  //  record のデータ
-  sum: number;
-  records: GetRecordListItem[];
-  // 日付のデータ
-  isHoliday: boolean;
-  holidayStr: string | null;
-  dateLabel: string;
-  dateStr: DateString;
-  isInMonth: boolean; // その月のデータかどうか
-};
-type CalendarList = Record<DateString, DateRecordList>;
-type ExternalEventPlan = {
-  type: 'PLAN';
-  startStr: DateString;
-  endStr: DateString;
-  dbEnd: Date | null; // DBに登録されている終了日。このときBaseEventGetEndは次の日を示す
-  memo: string | null;
-  planId: number; // id はライブラリの定義に string として既存
-  isPair: boolean;
-  typeId: Id;
-  typeName: string;
-};
-type ExternalEventRecord = {
-  type: 'RECORD';
-  startStr: DateString;
-};
-type ExternalEventHoliday = {
-  type: 'HOLIDAY';
-  startStr: DateString;
-  // https://fullcalendar.io/docs/eventDisplay
-  display: 'background';
-};
-type ExternalEvent = ExternalEventPlan | ExternalEventRecord | ExternalEventHoliday;
-// 内部変数として持っておくための型
-type BaseEventGet = {
-  title: string;
-  start: Date;
-  end: Date | null;
-  allDay: true;
-  textColor: string;
-  borderColor: string;
-  backgroundColor: string;
-  classNames: Array<string>;
-};
-type EventGetPlan = BaseEventGet & ExternalEventPlan;
-
-// ライブラリに登録する用の型
-type EventInputExpanded = EventInput & {
-  title: string;
-  start: Date;
-  end: Date;
-  allDay: true;
-  textColor: string;
-  borderColor: string;
-  backgroundColor: string;
-  classNames: Array<string>;
-} & ExternalEvent;
-const { enableLoading, disableLoading } = useLoadingStore();
+const loadingStore = useLoadingStore();
+const { loading } = storeToRefs(loadingStore);
+const { enableLoading, disableLoading } = loadingStore;
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
 const { isDemoLogin, isExistPair, pairId, userUid } = storeToRefs(authStore);
 const { isPair } = storeToRefs(pairStore);
@@ -326,69 +258,12 @@ const { $ICONS } = useNuxtApp();
 const { setRouterParam } = useRouterParamStore();
 const route = useRoute();
 const router = useRouter();
-const {
-  deleteMemo: supabaseDeleteMemo,
-  getMemoList: supabaseGetMemoList,
-  getMonthSum,
-  getPlanList,
-  getRecordList,
-  getShortCutList,
-  insertMemo: supabaseInsertMemo,
-  upsertRecord,
-  postRecords,
-} = useSupabase();
+const { deleteMemo, getMemoList, getShortCutList, insertMemo, upsertRecord } = useSupabase();
+const { updateRange: calendarUpdateRange } = useCalendarStore();
 const { setToast } = useToastStore();
 
 const focus = ref<DateString | null>(null);
 const fullCalendar = ref<InstanceType<typeof FullCalendar> | undefined>();
-
-const handleShowRecords = (dateStr: DateString) => {
-  showDayRecords(dateStr);
-};
-
-const handleShowPlan = (arg: EventClickArg) => {
-  const external = arg.event.extendedProps as ExternalEvent;
-  if (external.type === eventType.RECORD || external.type === eventType.HOLIDAY) {
-    handleShowRecords(external.startStr);
-  } else {
-    const plan: EventGetPlan = {
-      title: arg.event.title,
-      start: arg.event.start ?? new Date(),
-      end: arg.event.end,
-      allDay: true,
-      textColor: arg.event.textColor,
-      borderColor: arg.event.borderColor,
-      backgroundColor: arg.event.backgroundColor,
-      classNames: [],
-      startStr: external.startStr,
-      endStr: external.endStr,
-      dbEnd: external.dbEnd,
-      type: external.type,
-      planId: external.planId,
-      isPair: external.isPair,
-      memo: external.memo,
-      typeId: external.typeId,
-      typeName: external.typeName,
-    };
-
-    showPlan(plan);
-  }
-};
-
-const calendarOptions = ref<CalendarOptions>({
-  plugins: [dayGridPlugin, interactionPlugin],
-  initialView: 'dayGridMonth',
-  contentHeight: 'auto',
-  fixedWeekCount: false,
-  // locale: 'ja',
-  selectable: false, // eventを選択すると背景色が白になるのでtrueにする場合には要調整
-  eventOrder: '-type,start,-duration,allDay,title',
-  events: [],
-  dateClick: (arg: DateClickArg) => {
-    handleShowRecords(arg.dateStr);
-  },
-  eventClick: handleShowPlan,
-});
 const daySumList = ref<CalendarList>({});
 const memoList = ref<GetMemoListOutput['data']>([]);
 const shortCutList = ref<GetShortCutListItem[]>([]);
@@ -402,29 +277,41 @@ const isExistsShortCut = ref(false);
 const isShowShortCut = ref(false);
 const isPairMemo = ref(false);
 const memoText = ref<string | null>(null);
-const isEndInit = ref(false);
+const calendarOptions = ref<CalendarOptions>({
+  plugins: [dayGridPlugin, interactionPlugin],
+  initialView: 'dayGridMonth',
+  contentHeight: 'auto',
+  fixedWeekCount: false,
+  // locale: 'ja',
+  selectable: false, // eventを選択すると背景色が白になるのでtrueにする場合には要調整
+  eventOrder: '-type,start,-duration,allDay,title',
+  events: [],
+  dateClick: (arg: DateClickArg) => showDateRecords(arg.dateStr),
+  eventClick: (arg: EventClickArg) => showPlan(arg.event),
+});
 
 const focusObj = computed(() => {
   if (focus.value === null) return null;
   return TimeUtility.ConvertDateStrToYearMonthNumObj(focus.value);
 });
 
-const movePrev = async () => {
-  if (focus.value === null) throw new Error('movePrev');
+const moveMonth = async (direction: 'prev' | 'next') => {
+  if (!focus.value) throw new Error(`move${direction}`);
   const focusObj = TimeUtility.ConvertDateStrToYearMonthObj(focus.value);
-  const prevObj = TimeUtility.PrevMonthInYearMonthObj(focusObj);
-  const prev = prevObj.year + '-' + prevObj.month + '-01';
-  focus.value = prev;
+  const newObj =
+    direction === 'prev'
+      ? TimeUtility.PrevMonthInYearMonthObj(focusObj)
+      : TimeUtility.NextMonthInYearMonthObj(focusObj);
+  focus.value = `${newObj.year}-${newObj.month}-01`;
   await updateRange();
+};
+const movePrev = async () => {
+  await moveMonth('prev');
 };
 const moveNext = async () => {
-  if (focus.value === null) throw new Error('moveNext');
-  const focusObj = TimeUtility.ConvertDateStrToYearMonthObj(focus.value);
-  const nextObj = TimeUtility.NextMonthInYearMonthObj(focusObj);
-  const next = nextObj.year + '-' + nextObj.month + '-01';
-  focus.value = next;
-  await updateRange();
+  await moveMonth('next');
 };
+
 const updateFocus = async (obj: YearMonthNumObj) => {
   const strObj = TimeUtility.ConvertYearMonthNumObjToYearMonthObj(obj);
   focus.value = `${strObj.year}-${strObj.month}-01`;
@@ -439,182 +326,53 @@ const setPageFocus = ({
 const updateRange = async () => {
   if (focus.value === null || fullCalendar.value === undefined) throw new Error('updateRange');
   enableLoading();
-  const events: EventInputExpanded[] = [];
 
   fullCalendar.value.getApi().gotoDate(focus.value);
-  const payload1 = {
-    yearMonth: TimeUtility.ConvertDateStrToYearMonth(focus.value),
-  };
-  const focusObj = TimeUtility.ConvertDateStrToYearMonthObj(focus.value);
-  const prev = TimeUtility.PrevMonthInYearMonthObj(focusObj);
-  const next = TimeUtility.NextMonthInYearMonthObj(focusObj);
-  const payload2 = {
-    start: prev.year + '-' + prev.month + '-21' + ' 00:00:00', // 全月の21日
-    end: next.year + '-' + next.month + '-09' + ' 23:59:59', // 翌月の9日
-  };
-  const authParam = { isDemoLogin: isDemoLogin.value, userUid: userUid.value };
-
-  // plannedRecord から、足りない record を登録(表示日付が、現在日付の6ヶ月後以前の場合, バッファで+1ヶ月)
-  if (dayjs(focus.value).isBefore(dayjs().add(7, 'M'))) {
-    const apiResPostRecords = await postRecords(authParam, payload1);
-    assertApiResponse(apiResPostRecords);
-  }
-
-  const [apiResMonthSum, apiResGetRecords, apiResPlans, apiResShortCuts] = await Promise.all([
-    getMonthSum(authParam, payload1), // 月の収支を取得
-    getRecordList(authParam, payload2), // record を取得
-    getPlanList(authParam, payload2), // plan を追加
-    getShortCutList(authParam), // ショートカットリストを取得
-  ]);
-  assertApiResponse(apiResMonthSum);
-  assertApiResponse(apiResGetRecords);
-  assertApiResponse(apiResPlans);
-  assertApiResponse(apiResShortCuts);
-
-  const tmpDaySumList = getDaySumList(apiResGetRecords.data);
-  updatePaddingRecords(tmpDaySumList); // 毎日の record 用 event を定義
-
-  // plan 分を events に追加
-  apiResPlans.data.forEach((plan) => {
-    events.push({
-      title: plan.name,
-      start: dayjs(plan.startDate).toDate(),
-      // events に追加するときに end に1日加算する。画面描画以外のデータ連携は dbEnd をつかう
-      end: dayjs(plan.endDate).add(1, 'd').toDate(),
-      allDay: true,
-      borderColor: 'black',
-      textColor: 'white',
-      backgroundColor: plan.planTypeColorClassificationName,
-      classNames: [`bg-${plan.planTypeColorClassificationName}`],
-      type: eventType.PLAN,
-      planId: plan.id,
-      startStr: plan.startDate,
-      endStr: plan.endDate,
-      dbEnd: dayjs(plan.endDate).toDate(),
-      isPair: plan.isPair,
-      memo: plan.memo,
-      typeId: plan.planTypeId,
-      typeName: plan.planTypeName,
-    });
-  });
-  // recordと祝日 分を events に追加
-  Object.keys(tmpDaySumList).forEach((dateStr) => {
-    if (tmpDaySumList[dateStr].isHoliday) {
-      events.push({
-        title: '',
-        start: dayjs(dateStr).toDate(),
-        end: dayjs(dateStr).toDate(),
-        allDay: true,
-        borderColor: 'black',
-        textColor: 'black',
-        display: 'background',
-        backgroundColor: 'rgba(255,255,255,0)',
-        type: eventType.HOLIDAY,
-        classNames: ['is-holiday'],
-        startStr: dateStr,
-      });
-    }
-    events.push({
-      title: daySum(tmpDaySumList, dateStr),
-      start: dayjs(dateStr).toDate(),
-      end: dayjs(dateStr).toDate(),
-      allDay: true,
-      borderColor: 'black',
-      textColor: 'black',
-      backgroundColor: 'rgba(255,255,255,0)',
-      type: eventType.RECORD,
-      classNames: ['fs-sm', 'ma-0', 'text-center'],
-      startStr: dateStr,
-    });
-  });
+  const {
+    daySumList: tmpDaySumList,
+    monthSumStr: tmpMonthSumStr,
+    events,
+  } = await calendarUpdateRange(focus.value, isDemoLogin.value, userUid.value);
 
   // レンダリングされるタイミングを揃えるため、全て取得してから、data を更新する
   daySumList.value = tmpDaySumList;
-  monthSumStr.value = StringUtility.ConvertIntToShowPrefixStr(apiResMonthSum.data);
-  isExistsShortCut.value = apiResShortCuts.data.length > 0;
-  shortCutList.value = apiResShortCuts.data;
+  monthSumStr.value = tmpMonthSumStr;
   calendarOptions.value.events = events;
-  isEndInit.value = true; // fullCalendar 描画に必要な data 更新後に isEndInit を TRUE にして、 updateRange() を呼ぶ
   disableLoading();
 };
-
-const daySum = (calendarList: CalendarList, date: DateString) => {
-  const sum = calendarList[date].sum;
-  if (sum !== null && calendarList[date].records.length > 0) {
-    return StringUtility.ConvertIntToShowStr(sum);
+const showPlan = (event: EventClickArg['event']) => {
+  const external = event.extendedProps as ExternalEvent;
+  if (external.type === eventType.RECORD || external.type === eventType.HOLIDAY) {
+    showDateRecords(external.startStr);
   } else {
-    return '　'; // なんらかの文字列を表示させる必要がある、recordがない場合にeventの描画がずれるため
-  }
-};
-
-const getDaySumList = (recordList: GetRecordListItem[]): CalendarList => {
-  let daySums: CalendarList = {};
-  recordList.forEach((record) => {
-    const dateStr = TimeUtility.ConvertDBResponseDatetimeToDateStr(record.datetime);
-    const tmpIsPay = record.isSettlement === true ? record.isSelf : record.isPay;
-    const recordPrice = record.price === 0 || tmpIsPay ? record.price : record.price * -1;
-    if (!(dateStr in daySums)) {
-      daySums[dateStr] = {
-        sum: 0,
-        records: [],
-        isHoliday: false,
-        holidayStr: null,
-        dateLabel: TimeUtility.ConvertDateStrToJPDate(dateStr),
-        dateStr,
-        isInMonth: dayjs(dateStr).isSame(focus.value, 'month'),
-      };
-    }
-    daySums[dateStr].records.push(record);
-    daySums[dateStr] = {
-      ...daySums[dateStr],
-      sum: daySums[dateStr].sum + (record.isSelf || record.isSettlement === true ? recordPrice : 0),
+    const plan: EventGetPlan = {
+      title: event.title,
+      start: event.start ?? new Date(),
+      end: event.end,
+      allDay: true,
+      textColor: event.textColor,
+      borderColor: event.borderColor,
+      backgroundColor: event.backgroundColor,
+      classNames: [],
+      startStr: external.startStr,
+      endStr: external.endStr,
+      dbEnd: external.dbEnd,
+      type: external.type,
+      planId: external.planId,
+      isPair: external.isPair,
+      memo: external.memo,
+      typeId: external.typeId,
+      typeName: external.typeName,
     };
-  });
-  return daySums;
-};
 
-const updatePaddingRecords = (calendarList: CalendarList) => {
-  if (focus.value === null) throw new Error('updatePaddingRecords');
-
-  const focusObj = TimeUtility.ConvertDateStrToYearMonthObj(focus.value);
-  const prev = TimeUtility.PrevMonthInYearMonthObj(focusObj);
-  const start = prev.year + '-' + prev.month + '-21'; // 全月の21日
-  // 50 回やっていればかならず翌月に到達する
-  for (let i = 0; i < 50; i++) {
-    const date = dayjs(start).add(i, 'd');
-    const dateStr = date.format(format.Date);
-    if (!(dateStr in calendarList)) {
-      calendarList[dateStr] = {
-        sum: 0,
-        records: [],
-        isHoliday: false,
-        holidayStr: null,
-        dateLabel: TimeUtility.ConvertDateStrToJPDate(dateStr),
-        dateStr,
-        isInMonth: dayjs(dateStr).isSame(focus.value, 'month'),
-      };
-    }
-    const holidayStr = TimeUtility.GetHolidayName(dateStr);
-
-    if (!!holidayStr) {
-      calendarList[dateStr].isHoliday = true;
-      calendarList[dateStr].holidayStr = holidayStr;
-      calendarList[dateStr].dateLabel =
-        TimeUtility.ConvertDateStrToJPDate(dateStr) + ` ( ${calendarList[dateStr].holidayStr} )`;
-    }
+    selectedDate.value = plan.startStr;
+    selectedDateRecords.value = [];
+    selectedPlan.value = plan;
   }
 };
-const showDayRecords = (dateStr: DateString) => {
+
+const showDateRecords = (dateStr: DateString) => {
   selectedPlan.value = null;
-  // 日付選択した時にrecordsがないときに祝日ラベルを表示させるための処理
-  if (daySumList.value[dateStr].records.length === 0) {
-    if (daySumList.value[dateStr].isHoliday) {
-      selectedHoliday.value = daySumList.value[dateStr].dateLabel;
-    } else {
-      selectedHoliday.value = null;
-    }
-  }
-
   selectedDate.value = dateStr;
   selectedDateRecords.value = [daySumList.value[dateStr]];
 };
@@ -628,11 +386,7 @@ const showAllRecords = () => {
     .filter((item) => item.isInMonth && item.records.length > 0);
   selectedDateRecords.value = sortedAndFilteredList;
 };
-const showPlan = (plan: EventGetPlan) => {
-  selectedDate.value = plan.startStr;
-  selectedDateRecords.value = [];
-  selectedPlan.value = plan;
-};
+
 const goRecordCreatePage = () => {
   const tmpDate = selectedDate.value ?? TimeUtility.GetNowDate(isDemoLogin.value);
   const record: Record_ = {
@@ -684,8 +438,9 @@ const goPlanEditPage = () => {
   setRouterParam(RouterParamKey.PLAN, plan);
   router.push({ name: PAGE.PLAN });
 };
-const getMemoList = async () => {
-  const apiRes = await supabaseGetMemoList({
+
+const syncMemoList = async () => {
+  const apiRes = await getMemoList({
     userUid: userUid.value,
     pairId: pairId.value,
   });
@@ -693,21 +448,18 @@ const getMemoList = async () => {
 
   memoList.value = apiRes.data;
 };
-const addMemo = async () => {
+const handleInsertMemo = async () => {
   if (!memoText.value) {
     setToast('空です', 'error');
     return;
   }
   enableLoading();
   if (isPairMemo.value === true && pairId.value === null) {
-    alert('予期せぬ状態: addMemo');
+    alert('予期せぬ状態: handleInsertMemo');
     return;
   }
-  const payload = {
-    memo: memoText.value,
-    isPair: isPairMemo.value,
-  };
-  const apiRes = await supabaseInsertMemo(
+  const payload = { memo: memoText.value, isPair: isPairMemo.value };
+  const apiRes = await insertMemo(
     {
       isDemoLogin: isDemoLogin.value,
       userUid: userUid.value,
@@ -718,7 +470,7 @@ const addMemo = async () => {
   assertApiResponse(apiRes);
 
   setToast('登録しました');
-  await getMemoList();
+  await syncMemoList();
   resetMemoInput();
   disableLoading();
 };
@@ -726,16 +478,15 @@ const resetMemoInput = () => {
   isShowMemoInput.value = false;
   memoText.value = null;
 };
-const deleteMemo = async (id: Id) => {
+const handleDeleteMemo = async (id: Id) => {
   enableLoading();
-  const apiRes = await supabaseDeleteMemo({ isDemoLogin: isDemoLogin.value }, { id });
+  const apiRes = await deleteMemo({ isDemoLogin: isDemoLogin.value }, { id });
   assertApiResponse(apiRes);
 
   setToast('削除しました');
-  await getMemoList();
+  await syncMemoList();
   disableLoading();
 };
-
 const insertRecordFromShortCut = async (shortCut: GetShortCutListItem) => {
   enableLoading();
   const now = TimeUtility.GetNowDate(isDemoLogin.value);
@@ -764,14 +515,22 @@ const insertRecordFromShortCut = async (shortCut: GetShortCutListItem) => {
 
   isShowShortCut.value = false;
 
-  await updateRange();
+  await syncShortCutList();
   setToast('登録しました');
   disableLoading();
+};
+const syncShortCutList = async () => {
+  const apiRes = await getShortCutList({ userUid: userUid.value });
+  assertApiResponse(apiRes);
+
+  isExistsShortCut.value = apiRes.data.length > 0;
+  shortCutList.value = apiRes.data;
 };
 
 // created
 (async () => {
-  await getMemoList(); // updateRange()と非同期に実行
+  // updateRange()と非同期に実行
+  await Promise.all([syncMemoList(), syncShortCutList()]);
 })();
 
 onMounted(async () => {
