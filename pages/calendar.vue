@@ -24,7 +24,14 @@
     </v-row>
 
     <v-row no-gutters class="mb-2">
-      <v-spacer />
+      <v-col class="d-flex align-center px-1">
+        <v-btn
+          variant="text"
+          height="38"
+          :icon="$ICONS.CHEVRON_DOWN"
+          @click="showAllRecords"
+        ></v-btn>
+      </v-col>
       <v-col cols="3" class="px-1">
         <v-btn
           variant="flat"
@@ -118,6 +125,7 @@
       </v-col>
     </v-row>
 
+    <!-- メモ表示 -->
     <v-row no-gutters class="mb-2 pl-2">
       <v-col class="pl-2">
         <v-chip
@@ -133,9 +141,10 @@
       </v-col>
     </v-row>
 
+    <!-- 祝日名表示 -->
     <v-row no-gutters class="mb-2">
       <v-col class="pl-2">
-        <h4>{{ selectedDayForShow }}</h4>
+        <h4>{{ selectedHoliday }}</h4>
       </v-col>
     </v-row>
 
@@ -179,44 +188,45 @@
       </v-col>
     </v-row>
 
-    <!-- record 表示 -->
-    <v-row v-if="selectedDayRecords" no-gutters>
-      <v-col>
-        <v-row v-for="record in selectedDayRecords" :key="record.id" no-gutters class="mb-1">
-          <v-col>
-            <RecordCard
-              :isDisable="!record.isSelf"
-              :isPairType="record.isPair"
-              :typeColor="record.typeColorClassificationName ?? SettlementRecord.color"
-              :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
-              :isShowPlannedIcon="!!record.plannedRecordId"
-              :isEnableEdit="
-                record.isSettlement !== true &&
-                ((record.isSelf ?? false) || ((record.isPair ?? false) && !record.isInstead))
-              "
-              :isPairMethod="(record.isPair ?? false) && !(record.isInstead ?? false)"
-              :userName="record.pairUserName ?? ''"
-              :methodColor="record.methodColorClassificationName"
-              :methodName="record.methodName"
-              :memo="record.memo ?? ''"
-              :isShowBlueColorPrice="
-                !record.isPay || (record.isSettlement === true && !record.isSelf)
-              "
-              :isSettlement="record.isSettlement ?? false"
-              :price="
-                StringUtility.ConvertIntToShowStrWithIsPay(
-                  record.price,
-                  record.isSettlement === true || record.isPay === null
-                    ? record.isSelf
-                    : record.isPay
-                )
-              "
-              @edit="goRecordEditPage(record)"
-            ></RecordCard>
-          </v-col>
-        </v-row>
-      </v-col>
-    </v-row>
+    <!-- records 表示 -->
+    <div v-for="dateRecord in selectedDateRecords" :key="dateRecord.dateLabel" class="mb-3">
+      <v-row no-gutters class="mb-2">
+        <v-col class="pl-2">
+          <h4>{{ dateRecord.dateLabel }}</h4>
+        </v-col>
+      </v-row>
+      <v-row v-for="record in dateRecord.records" :key="record.id" no-gutters class="mb-1">
+        <v-col>
+          <RecordCard
+            :isDisable="!record.isSelf"
+            :isPairType="record.isPair"
+            :typeColor="record.typeColorClassificationName ?? SettlementRecord.color"
+            :typeAndSubtype="StringUtility.typeAndSubtype(record.typeName, record.subTypeName)"
+            :isShowPlannedIcon="!!record.plannedRecordId"
+            :isEnableEdit="
+              record.isSettlement !== true &&
+              ((record.isSelf ?? false) || ((record.isPair ?? false) && !record.isInstead))
+            "
+            :isPairMethod="(record.isPair ?? false) && !(record.isInstead ?? false)"
+            :userName="record.pairUserName ?? ''"
+            :methodColor="record.methodColorClassificationName"
+            :methodName="record.methodName"
+            :memo="record.memo ?? ''"
+            :isShowBlueColorPrice="
+              !record.isPay || (record.isSettlement === true && !record.isSelf)
+            "
+            :isSettlement="record.isSettlement ?? false"
+            :price="
+              StringUtility.ConvertIntToShowStrWithIsPay(
+                record.price,
+                record.isSettlement === true || record.isPay === null ? record.isSelf : record.isPay
+              )
+            "
+            @edit="goRecordEditPage(record)"
+          ></RecordCard>
+        </v-col>
+      </v-row>
+    </div>
   </v-container>
 </template>
 
@@ -249,14 +259,17 @@ const eventType = {
   HOLIDAY: 'HOLIDAY',
 } as const;
 
-type DateRecordList = Record<
-  // TODO: BOTH定義を削除
-  'BOTH',
-  {
-    sum: number;
-    records: GetRecordListItem[];
-  }
-> & { isHoliday: boolean; holidayStr: string | null };
+type DateRecordList = {
+  //  record のデータ
+  sum: number;
+  records: GetRecordListItem[];
+  // 日付のデータ
+  isHoliday: boolean;
+  holidayStr: string | null;
+  dateLabel: string;
+  dateStr: DateString;
+  isInMonth: boolean; // その月のデータかどうか
+};
 type CalendarList = Record<DateString, DateRecordList>;
 type ExternalEventPlan = {
   type: 'PLAN';
@@ -304,7 +317,6 @@ type EventInputExpanded = EventInput & {
   backgroundColor: string;
   classNames: Array<string>;
 } & ExternalEvent;
-
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
 const { isDemoLogin, isExistPair, pairId, userUid } = storeToRefs(authStore);
@@ -380,9 +392,9 @@ const calendarOptions = ref<CalendarOptions>({
 const daySumList = ref<CalendarList>({});
 const memoList = ref<GetMemoListOutput['data']>([]);
 const shortCutList = ref<GetShortCutListItem[]>([]);
-const selectedDayForShow = ref<string | null>(null);
+const selectedHoliday = ref<string | null>(null);
+const selectedDateRecords = ref<DateRecordList[]>([]);
 const selectedDate = ref<DateString | null>(null);
-const selectedDayRecords = ref<GetRecordListItem[]>([]);
 const selectedPlan = ref<EventGetPlan | null>(null);
 const monthSumStr = ref('');
 const isShowMemoInput = ref(false);
@@ -527,8 +539,8 @@ const updateRange = async () => {
 };
 
 const daySum = (calendarList: CalendarList, date: DateString) => {
-  const sum = calendarList[date]['BOTH'].sum;
-  if (sum !== null && calendarList[date]['BOTH'].records.length > 0) {
+  const sum = calendarList[date].sum;
+  if (sum !== null && calendarList[date].records.length > 0) {
     return StringUtility.ConvertIntToShowStr(sum);
   } else {
     return '　'; // なんらかの文字列を表示させる必要がある、recordがない場合にeventの描画がずれるため
@@ -543,17 +555,19 @@ const getDaySumList = (recordList: GetRecordListItem[]): CalendarList => {
     const recordPrice = record.price === 0 || tmpIsPay ? record.price : record.price * -1;
     if (!(dateStr in daySums)) {
       daySums[dateStr] = {
-        ['BOTH']: { sum: 0, records: [] },
+        sum: 0,
+        records: [],
         isHoliday: false,
         holidayStr: null,
+        dateLabel: TimeUtility.ConvertDateStrToJPDate(dateStr),
+        dateStr,
+        isInMonth: dayjs(dateStr).isSame(focus.value, 'month'),
       };
     }
-    daySums[dateStr]['BOTH'].records.push(record);
-    daySums[dateStr]['BOTH'] = {
-      sum:
-        daySums[dateStr]['BOTH'].sum +
-        (record.isSelf || record.isSettlement === true ? recordPrice : 0),
-      records: daySums[dateStr]['BOTH'].records,
+    daySums[dateStr].records.push(record);
+    daySums[dateStr] = {
+      ...daySums[dateStr],
+      sum: daySums[dateStr].sum + (record.isSelf || record.isSettlement === true ? recordPrice : 0),
     };
   });
   return daySums;
@@ -570,11 +584,14 @@ const updatePaddingRecords = (calendarList: CalendarList) => {
     const date = dayjs(start).add(i, 'd');
     const dateStr = date.format(format.Date);
     if (!(dateStr in calendarList)) {
-      const empty = { sum: 0, records: [] };
       calendarList[dateStr] = {
-        BOTH: empty,
+        sum: 0,
+        records: [],
         isHoliday: false,
         holidayStr: null,
+        dateLabel: TimeUtility.ConvertDateStrToJPDate(dateStr),
+        dateStr,
+        isInMonth: dayjs(dateStr).isSame(focus.value, 'month'),
       };
     }
     const holidayStr = TimeUtility.GetHolidayName(dateStr);
@@ -582,27 +599,38 @@ const updatePaddingRecords = (calendarList: CalendarList) => {
     if (!!holidayStr) {
       calendarList[dateStr].isHoliday = true;
       calendarList[dateStr].holidayStr = holidayStr;
+      calendarList[dateStr].dateLabel =
+        TimeUtility.ConvertDateStrToJPDate(dateStr) + ` ( ${calendarList[dateStr].holidayStr} )`;
     }
   }
 };
 const showDayRecords = (dateStr: DateString) => {
   selectedPlan.value = null;
-
-  if (daySumList.value[dateStr].isHoliday) {
-    selectedDayForShow.value =
-      TimeUtility.ConvertDateStrToJPDate(dateStr) + ` ( ${daySumList.value[dateStr].holidayStr} )`;
-  } else {
-    selectedDayForShow.value = TimeUtility.ConvertDateStrToJPDate(dateStr);
+  // 日付選択した時にrecordsがないときに祝日ラベルを表示させるための処理
+  if (daySumList.value[dateStr].records.length === 0) {
+    if (daySumList.value[dateStr].isHoliday) {
+      selectedHoliday.value = daySumList.value[dateStr].dateLabel;
+    } else {
+      selectedHoliday.value = null;
+    }
   }
 
   selectedDate.value = dateStr;
-
-  selectedDayRecords.value = daySumList.value[dateStr]['BOTH'].records;
+  selectedDateRecords.value = [daySumList.value[dateStr]];
+};
+const showAllRecords = () => {
+  selectedPlan.value = null;
+  selectedHoliday.value = null;
+  const sortedAndFilteredList = Object.values(daySumList.value)
+    .sort((a, b) => {
+      return a.dateStr < b.dateStr ? 1 : -1; // 降順
+    })
+    .filter((item) => item.isInMonth && item.records.length > 0);
+  selectedDateRecords.value = sortedAndFilteredList;
 };
 const showPlan = (plan: EventGetPlan) => {
-  selectedDayRecords.value = [];
-  selectedDayForShow.value = TimeUtility.ConvertDateObjsToJPPeriod(plan.start, plan.dbEnd);
   selectedDate.value = plan.startStr;
+  selectedDateRecords.value = [];
   selectedPlan.value = plan;
 };
 const goRecordCreatePage = () => {

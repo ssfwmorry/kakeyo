@@ -101,13 +101,12 @@ const TimeUtility = {
     return year + '年' + Number(month) + '月';
   },
   // ex.. PARAM: '2022-01-01', RET: 1月1日
-  ConvertDateStrToJPDate: (dateStr: string) => {
-    if (!dateStr) return null;
+  ConvertDateStrToJPDate: (dateStr: DateString) => {
     let [year, month, day] = dateStr.split('-');
     return Number(month) + '月' + Number(day) + '日';
   },
   // ex.. PARAM: '2022-01-01', RET: new Date('2022-01-01')
-  ConvertDateStrToDate: (dateStr: string) => {
+  ConvertDateStrToDate: (dateStr: DateString) => {
     let [year, month, day] = dateStr.split('-');
     return new Date(Number(year), Number(month) - 1, Number(day));
   },
