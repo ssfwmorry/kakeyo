@@ -24,7 +24,7 @@
         <v-btn
           variant="text"
           height="38"
-          :icon="$ICONS.CHEVRON_DOWN"
+          :icon="allRecordListOrder === OrderBy.DESC ? $ICONS.CHEVRON_DOWN : $ICONS.CHEVRON_UP"
           @click="showAllRecords"
         ></v-btn>
       </v-col>
@@ -226,7 +226,6 @@ import type { GetShortCutListItem } from '@/api/supabase/shortCut.interface';
 import { PAGE, SettlementRecord } from '@/utils/constants';
 import StringUtility from '@/utils/string';
 import TimeUtility from '@/utils/time';
-import type { DateString, Id, YearMonthNumObj } from '@/utils/types/common';
 import {
   eventType,
   type CalendarList,
@@ -246,6 +245,7 @@ import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/vue3';
+import { OrderBy, type DateString, type Id, type YearMonthNumObj } from '~/utils/types/common';
 
 const loadingStore = useLoadingStore();
 const { loading } = storeToRefs(loadingStore);
@@ -272,6 +272,7 @@ const selectedDateRecords = ref<DateRecordList[]>([]);
 const selectedDate = ref<DateString | null>(null);
 const selectedPlan = ref<EventGetPlan | null>(null);
 const monthSumStr = ref('');
+const allRecordListOrder = ref<OrderBy>(OrderBy.DESC);
 const isShowMemoInput = ref(false);
 const isExistsShortCut = ref(false);
 const isShowShortCut = ref(false);
@@ -377,14 +378,24 @@ const showDateRecords = (dateStr: DateString) => {
   selectedDateRecords.value = [daySumList.value[dateStr]];
 };
 const showAllRecords = () => {
+  const toggleOrder = () => {
+    allRecordListOrder.value =
+      allRecordListOrder.value === OrderBy.DESC ? OrderBy.ASC : OrderBy.DESC;
+  };
+
   selectedPlan.value = null;
   selectedHoliday.value = null;
   const sortedAndFilteredList = Object.values(daySumList.value)
     .sort((a, b) => {
+      if (allRecordListOrder.value === OrderBy.ASC) {
+        return a.dateStr < b.dateStr ? -1 : 1; // 昇順
+      }
       return a.dateStr < b.dateStr ? 1 : -1; // 降順
     })
     .filter((item) => item.isInMonth && item.records.length > 0);
   selectedDateRecords.value = sortedAndFilteredList;
+
+  toggleOrder();
 };
 
 const goRecordCreatePage = () => {

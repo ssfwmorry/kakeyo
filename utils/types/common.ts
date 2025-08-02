@@ -27,6 +27,12 @@ export const BoolString = {
 } as const;
 export type BoolString = (typeof BoolString)[keyof typeof BoolString];
 
+export const OrderBy = {
+  ASC: 'asc',
+  DESC: 'desc',
+} as const;
+export type OrderBy = (typeof OrderBy)[keyof typeof OrderBy];
+
 export type PickedDate = {
   $y: number;
   $M: number;
