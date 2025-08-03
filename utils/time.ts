@@ -77,10 +77,8 @@ const TimeUtility = {
     return dateStr + now.toISOString().substring(10, 19);
   },
   // ex.. PARAM: '2022-01-01 10:10:10', RET: '2022-01-01'
-  ConvertDBResponseDatetimeToDateStr: (dBResDatetime: DatetimeString): DateString => {
-    if (!dBResDatetime) throw new Error('ConvertDBResponseDatetimeToDateStr');
-
-    return dBResDatetime.substring(0, 10);
+  ConvertDBResponseDatetimeToDateStr: (datetime: DatetimeString | DbDatetimeString): DateString => {
+    return datetime.substring(0, 10);
   },
   // ex.. PARAM: '2022-01-01', RET: '2022-01'
   ConvertDateStrToYearMonth: (dateStr: DateString): YearMonthString => {

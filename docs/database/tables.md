@@ -19,6 +19,8 @@
 - 55: [plans(plan_types の後)](#plans)
 - 60: [memos](#memos)
 - 65: [short_cuts](#short_cuts)
+- 70: [banks](#banks)
+- 75: [bank_balances(banks の後)](#bank_balances)
 
 ## transaction tables
 
@@ -619,6 +621,81 @@ alter table develop.short_cuts
 
 create policy "develop.short_cuts all"
     on develop.short_cuts for all
+    to anon
+    using (
+        true
+    )
+;
+```
+
+### banks
+
+#### schema
+
+| name                    |  type   |  size  | required | auto_increment |           key            | remarks                             |
+| :---------------------- | :-----: | :----: | :------: | :------------: | :----------------------: | :---------------------------------- |
+| id                      |   int   |   -    |    v     |       v        |            PK            | -                                   |
+| user_id                 | string  |   28   |    v     |       -        |        users.uid         | -                                   |
+| name                    | string  | max 30 |    v     |       -        |            -             | -                                   |
+| color_classification_id | tinyint |   -    |    v     |       -        | color_classifications.id | [定義](#color_classification)を参照 |
+
+#### migration
+
+```sql
+-- migration-sort: 70
+drop table if exists develop.banks cascade;
+create table develop.banks (
+    id                      serial      primary key,
+    user_id                 varchar(28) not null,
+    name                    varchar(30) not null,
+    color_classification_id smallint    not null,
+
+    foreign key (user_id) references develop.users (uid),
+    foreign key (color_classification_id) references develop.color_classifications (id)
+);
+
+alter table develop.banks
+    enable row level security;
+
+create policy "develop.banks all"
+    on develop.banks for all
+    to anon
+    using (
+        true
+    )
+;
+```
+
+### bank_balances
+
+#### schema
+
+| name       |   type   | size | required | auto_increment |   key    | remarks |
+| :--------- | :------: | :--: | :------: | :------------: | :------: | :------ |
+| id         |   int    |  -   |    v     |       v        |    PK    | -       |
+| bank_id    |   int    |  28  |    v     |       -        | banks.id | -       |
+| price      |   int    |  -   |    v     |       -        |    -     | -       |
+| created_at | datetime |  -   |    v     |       -        |    -     | -       |
+
+#### migration
+
+```sql
+-- migration-sort: 75
+drop table if exists develop.bank_balances cascade;
+create table develop.bank_balances (
+    id         serial      primary key,
+    bank_id    integer     not null,
+    price      integer     not null,
+    created_at timestamptz not null default now(),
+
+    foreign key (bank_id) references develop.banks (id)
+);
+
+alter table develop.bank_balances
+    enable row level security;
+
+create policy "develop.bank_balances all"
+    on develop.bank_balances for all
     to anon
     using (
         true

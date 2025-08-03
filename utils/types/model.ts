@@ -103,3 +103,17 @@ export type ShortCut = {
   memo: string | null;
   recordType: RecordType;
 };
+
+export type Bank = {
+  id: Id;
+  userId: Id;
+  name: string;
+  colorClassificationId: Id;
+};
+
+export type BankBalance = {
+  id: Id;
+  bankId: Id;
+  price: number;
+  createdAt: DbDatetimeString;
+};

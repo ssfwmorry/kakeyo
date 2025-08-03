@@ -328,3 +328,5 @@ update develop.planned_records set record_type = 10 where user_id is null and pa
 
 - tables.md の short_cuts テーブルを migration
   - 実際にデータ投入は Supabase の WEB サイト経由で行う
+
+## 開発 DB と本番 DB に banks と bank_balances を作成する

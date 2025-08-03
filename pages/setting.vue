@@ -8,6 +8,7 @@
     <v-tabs-window-item :value="tab.KAKEI" class="pt-2 px-2 page-tab-item">
       <SettingKakeiType :colorList="colorList" />
       <SettingKakeiMethod :colorList="colorList" />
+      <SettingKakeiBank :colorList="colorList" />
       <SettingKakeiPlannedRecord />
     </v-tabs-window-item>
     <v-tabs-window-item :value="tab.PLAN" class="pt-2 px-2 page-tab-item">
