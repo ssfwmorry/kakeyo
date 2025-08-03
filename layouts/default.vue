@@ -36,9 +36,7 @@
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       </div>
       <v-spacer />
-      <div
-        v-if="isLoggedIn && isExistPair && !['calendar', 'records'].includes($route.name as string)"
-      >
+      <div v-if="isLoggedIn && isExistPair && !pagesWithoutPair.includes($route.name as string)">
         <v-switch
           v-model="isPair"
           hide-details
@@ -150,6 +148,8 @@ const tabItems = [
     to: '/setting',
   },
 ];
+
+const pagesWithoutPair = ['calendar', 'records', 'bank'];
 
 const drawer = ref(false);
 

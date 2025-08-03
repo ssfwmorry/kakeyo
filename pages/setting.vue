@@ -8,7 +8,7 @@
     <v-tabs-window-item :value="tab.KAKEI" class="pt-2 px-2 page-tab-item">
       <SettingKakeiType :colorList="colorList" />
       <SettingKakeiMethod :colorList="colorList" />
-      <SettingKakeiBank :colorList="colorList" />
+      <SettingKakeiBank v-if="!isPair" :colorList="colorList" />
       <SettingKakeiPlannedRecord />
     </v-tabs-window-item>
     <v-tabs-window-item :value="tab.PLAN" class="pt-2 px-2 page-tab-item">
@@ -25,6 +25,8 @@ import type { ColorClassification } from '~/utils/types/model';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const { getColorClassificationList } = useSupabase();
+const pairStore = usePairStore();
+const { isPair } = storeToRefs(pairStore);
 
 const tab = {
   KAKEI: 1,
