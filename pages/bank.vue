@@ -1,7 +1,7 @@
 <template>
   <v-container class="px-2 pb-0 h-100 bg-white">
     <v-row no-gutters class="mb-3">
-      <v-table density="compact" class="px-3 w-100">
+      <v-table v-if="tableData.length > 0" density="compact" class="px-3 w-100">
         <thead>
           <tr>
             <th class="text-center">記録日</th>
@@ -16,18 +16,19 @@
             <td class="text-center">
               {{ row.createdDate }}
             </td>
-            <td class="text-right">{{ row.sum.toLocaleString() }}円</td>
+            <td class="text-right">{{ row.sum.toLocaleString() }} 万円</td>
             <td
               v-for="(bank, index) in bankList"
               :key="bank.id"
               class="text-right"
               :class="{ 'text-grey-lighten-1': row.bankPrices[index]?.isPad === true }"
             >
-              {{ row.bankPrices[index]?.price ?? '-　' }}円
+              {{ row.bankPrices[index]?.price.toLocaleString() ?? '-　' }} 万円
             </td>
           </tr>
         </tbody>
       </v-table>
+      <div v-else class="mt-30px w-100 text-center">残高履歴を追加してください</div>
     </v-row>
 
     <v-row no-gutters class="d-flex justify-end">
@@ -72,6 +73,7 @@ type Dialog = {
   isShow: boolean;
 };
 
+const { enableLoading, disableLoading } = useLoadingStore();
 const authStore = useAuthStore();
 const { getBankList, getBankBalanceList } = useSupabase();
 const { userUid } = storeToRefs(authStore);
@@ -88,6 +90,7 @@ const closeDialog = () => {
 };
 
 const updateShowData = async () => {
+  enableLoading();
   const [apiResBank, apiResBalance] = await Promise.all([
     getBankList({ userUid: userUid.value }),
     getBankBalanceList({ userUid: userUid.value }),
@@ -97,12 +100,18 @@ const updateShowData = async () => {
 
   bankList.value = apiResBank.data;
   tableData.value = paddingBankBalances(apiResBank.data, apiResBalance.data);
+  disableLoading();
 };
 
 const paddingBankBalances = (
   banks: GetBankListItem[],
   balances: GetBankBalanceListBalanceItem[]
 ): TableRow[] => {
+  // 万を単位として少数第一位まで
+  const convertManUnit = (num: number) => {
+    return Math.round(num / 1000) / 10;
+  };
+
   const tableRows: TableRow[] = [];
   balances.forEach((balance, indexBalance) => {
     const tableBankPrices: BankPrice[] = [];
@@ -111,7 +120,10 @@ const paddingBankBalances = (
       const bankId = String(bank.id);
       if (bankId in balance.banks) {
         // 存在する値ならそのまま設定
-        tableBankPrices.push({ price: balance.banks[bankId].price, isPad: false });
+        tableBankPrices.push({
+          price: convertManUnit(balance.banks[bankId].price),
+          isPad: false,
+        });
       } else if (indexBalance === 0) {
         // 最初の値なら null
         tableBankPrices.push(null);
@@ -131,7 +143,7 @@ const paddingBankBalances = (
     tableRows.push({
       createdDate: TimeUtility.ConvertDBResponseDatetimeToDateStr(balance.createdAt),
       bankPrices: tableBankPrices,
-      sum: balance.sum + padPriceSum,
+      sum: convertManUnit(balance.sum + padPriceSum),
     });
   });
   return tableRows;
