@@ -1,5 +1,5 @@
-import type { Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
+import type { Id } from '~/utils/types/common';
 
 export const PostgrestErrorCode = { FOREIGN_KEY: '23503' } as const;
 

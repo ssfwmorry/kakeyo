@@ -72,17 +72,6 @@
 </template>
 
 <script setup lang="ts">
-import { getSubTypeSummary, getTypeSummaryPeriod } from '@/api/supabase/record';
-import type {
-  GetSubTypeSummaryOutput,
-  GetTypeSummaryPeriodOutput,
-} from '@/api/supabase/record.interface';
-import { getTypeList } from '@/api/supabase/type';
-import type { GetTypeListOutputData } from '@/api/supabase/type.interface';
-import { INITIAL_BAR_DATA, MONTH_LABELS } from '@/utils/constants';
-import { COLOR_CODE } from '@/utils/constants/color';
-import TimeUtility from '@/utils/time';
-import type { YearMonthNumObj } from '@/utils/types/common';
 import {
   BarElement,
   CategoryScale,
@@ -93,6 +82,17 @@ import {
   type ChartOptions,
 } from 'chart.js';
 import { Bar } from 'vue-chartjs';
+import { getSubTypeSummary, getTypeSummaryPeriod } from '~/api/supabase/record';
+import type {
+  GetSubTypeSummaryOutput,
+  GetTypeSummaryPeriodOutput,
+} from '~/api/supabase/record.interface';
+import { getTypeList } from '~/api/supabase/type';
+import type { GetTypeListOutputData } from '~/api/supabase/type.interface';
+import { INITIAL_BAR_DATA, MONTH_LABELS } from '~/utils/constants';
+import { COLOR_CODE } from '~/utils/constants/color';
+import TimeUtility from '~/utils/time';
+import type { YearMonthNumObj } from '~/utils/types/common';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 
 const subTypeColors = ['gold', 'mediumseagreen', 'blueviolet', 'lightpink', 'royalblue', 'chocolate'] as const; // prettier-ignore

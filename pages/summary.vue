@@ -53,8 +53,8 @@
 </template>
 
 <script setup lang="ts">
-import TimeUtility from '@/utils/time';
-import { RouterParamKey, type SummaryQueryParam } from '@/utils/types/page';
+import TimeUtility from '~/utils/time';
+import { RouterParamKey, type SummaryQueryParam } from '~/utils/types/page';
 
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
 const { isPair } = storeToRefs(pairStore);

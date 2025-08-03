@@ -1,20 +1,22 @@
-import { getColorClassificationList } from '@/api/supabase/colorClassification';
-import { getDayClassificationList } from '@/api/supabase/dayClassification';
-import { deleteMemo, getMemoList, insertMemo } from '@/api/supabase/memo';
-import { deleteMethod, getMethodList, swapMethod, upsertMethod } from '@/api/supabase/method';
-import { deletePlan, getPlanList, upsertPlan } from '@/api/supabase/plan';
+import { deleteBank, getBankList, upsertBank } from '~/api/supabase/bank';
+import { getBankBalanceList, postBankBalances } from '~/api/supabase/bankBalance';
+import { getColorClassificationList } from '~/api/supabase/colorClassification';
+import { getDayClassificationList } from '~/api/supabase/dayClassification';
+import { deleteMemo, getMemoList, insertMemo } from '~/api/supabase/memo';
+import { deleteMethod, getMethodList, swapMethod, upsertMethod } from '~/api/supabase/method';
+import { deletePlan, getPlanList, upsertPlan } from '~/api/supabase/plan';
 import {
   deletePlannedRecord,
   getPlannedRecordList,
   swapPlannedRecord,
   upsertPlannedRecord,
-} from '@/api/supabase/plannedRecord';
+} from '~/api/supabase/plannedRecord';
 import {
   deletePlanType,
   getPlanTypeList,
   swapPlanType,
   upsertPlanType,
-} from '@/api/supabase/planType';
+} from '~/api/supabase/planType';
 import {
   deleteRecord,
   getMethodSummary,
@@ -28,13 +30,11 @@ import {
   postRecords,
   settleRecords,
   upsertRecord,
-} from '@/api/supabase/record';
-import { getShortCutList } from '@/api/supabase/shortCut';
-import { deleteSubType, swapSubType, upsertSubType } from '@/api/supabase/subType';
-import { deleteType, getTypeList, swapType, upsertType } from '@/api/supabase/type';
-import { getPairId } from '@/api/supabase/user';
-import { deleteBank, getBankList, upsertBank } from '~/api/supabase/bank';
-import { getBankBalanceList, postBankBalances } from '~/api/supabase/bankBalance';
+} from '~/api/supabase/record';
+import { getShortCutList } from '~/api/supabase/shortCut';
+import { deleteSubType, swapSubType, upsertSubType } from '~/api/supabase/subType';
+import { deleteType, getTypeList, swapType, upsertType } from '~/api/supabase/type';
+import { getPairId } from '~/api/supabase/user';
 
 // VSCodeでのコードジャンプができるように、composables経由でAPIをコールする
 export const useSupabase = () => {

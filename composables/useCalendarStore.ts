@@ -1,17 +1,17 @@
 // https://fullcalendar.io/docs
-import { getPlanList } from '@/api/supabase/plan';
-import type { GetPlanListItem } from '@/api/supabase/plan.interface';
-import { getMonthSum, getRecordList, postRecords } from '@/api/supabase/record';
-import type { GetRecordListItem } from '@/api/supabase/record.interface';
-import StringUtility from '@/utils/string';
-import TimeUtility from '@/utils/time';
-import type { DateString } from '@/utils/types/common';
+import dayjs from 'dayjs';
+import { getPlanList } from '~/api/supabase/plan';
+import type { GetPlanListItem } from '~/api/supabase/plan.interface';
+import { getMonthSum, getRecordList, postRecords } from '~/api/supabase/record';
+import type { GetRecordListItem } from '~/api/supabase/record.interface';
+import StringUtility from '~/utils/string';
+import TimeUtility from '~/utils/time';
+import type { DateString } from '~/utils/types/common';
 import {
   eventType,
   type CalendarList,
   type EventInputExpanded,
-} from '@/utils/types/domains/calender';
-import dayjs from 'dayjs';
+} from '~/utils/types/domains/calender';
 
 export const useCalendarStore = defineStore('calendarStore', () => {
   // actions

@@ -2,7 +2,7 @@
 // 引数に与えることで、環境変数を使えるようにする
 import type { RuntimeConfig } from 'nuxt/schema';
 // 直接 demoApi.ts から import すると 'implicitly has type any' エラーがでる。そのため本ファイルからexportする
-import DEMO_DATA from '@/utils/constants/demoApi';
+import DEMO_DATA from '~/utils/constants/demoApi';
 
 const DbSchema = {
   develop: 'develop',

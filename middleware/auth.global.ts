@@ -1,4 +1,4 @@
-import { PAGE } from '@/utils/constants';
+import { PAGE } from '~/utils/constants';
 
 const OKPageList = [PAGE.INQUIRY, PAGE.LOGIN] as string[];
 

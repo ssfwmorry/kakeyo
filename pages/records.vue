@@ -96,17 +96,17 @@
 </template>
 
 <script setup lang="ts">
-import type { GetSummarizedRecordItem } from '@/api/supabase/record.interface';
-import { PAGE } from '@/utils/constants';
-import StringUtility from '@/utils/string';
-import TimeUtility from '@/utils/time';
-import type { ColorString, Id, YearMonthNumObj, YearMonthObj } from '@/utils/types/common';
+import type { GetSummarizedRecordItem } from '~/api/supabase/record.interface';
+import { PAGE } from '~/utils/constants';
+import StringUtility from '~/utils/string';
+import TimeUtility from '~/utils/time';
+import type { ColorString, Id, YearMonthNumObj, YearMonthObj } from '~/utils/types/common';
 import {
   RouterParamKey,
   type PageQueryParameter,
   type RecordsQueryParam,
   type SummaryQueryParam,
-} from '@/utils/types/page';
+} from '~/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const authStore = useAuthStore();

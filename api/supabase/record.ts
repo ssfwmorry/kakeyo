@@ -1,8 +1,8 @@
-import supabase from '@/composables/supabase';
-import { DEMO_DATA, MONTH_KEYS, SettlementRecord } from '@/utils/constants';
-import type { ColorString, Id, YearMonthString } from '@/utils/types/common';
-import { RecordType } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
+import supabase from '~/composables/supabase';
+import { DEMO_DATA, MONTH_KEYS, SettlementRecord } from '~/utils/constants';
+import type { ColorString, Id, YearMonthString } from '~/utils/types/common';
+import { RecordType } from '~/utils/types/model';
 import {
   buildNoDataApiOutput,
   type DeleteInput,

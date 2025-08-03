@@ -1,5 +1,5 @@
-import type { Id } from '@/utils/types/common';
 import type { User } from 'firebase/auth';
+import type { Id } from '~/utils/types/common';
 
 const LoginStatus = {
   BeforeLogin: 0,

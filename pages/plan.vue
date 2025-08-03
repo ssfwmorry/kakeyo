@@ -123,14 +123,14 @@
 </template>
 
 <script setup lang="ts">
-import type { GetPlanTypeListOutputData } from '@/api/supabase/planType.interface';
-import { assertApiResponse } from '@/utils/api';
-import { PAGE } from '@/utils/constants';
-import { format } from '@/utils/string';
-import TimeUtility from '@/utils/time';
-import type { Id } from '@/utils/types/common';
-import { RouterParamKey, type Plan, type RouterQueryPlanToCalendar } from '@/utils/types/page';
 import dayjs, { type Dayjs } from 'dayjs';
+import type { GetPlanTypeListOutputData } from '~/api/supabase/planType.interface';
+import { assertApiResponse } from '~/utils/api';
+import { PAGE } from '~/utils/constants';
+import { format } from '~/utils/string';
+import TimeUtility from '~/utils/time';
+import type { Id } from '~/utils/types/common';
+import { RouterParamKey, type Plan, type RouterQueryPlanToCalendar } from '~/utils/types/page';
 
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
 const { isDemoLogin, pairId, userUid } = storeToRefs(authStore);

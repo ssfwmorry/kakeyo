@@ -81,12 +81,12 @@
 import type {
   GetPlannedRecordListItem,
   GetPlannedRecordListOutputData,
-} from '@/api/supabase/plannedRecord.interface';
-import { assertApiResponse } from '@/utils/api';
-import { PAGE } from '@/utils/constants';
-import StringUtility from '@/utils/string';
-import { type Id } from '@/utils/types/common';
-import { RouterParamKey, type PageQueryParameter, type PlannedRecord } from '@/utils/types/page';
+} from '~/api/supabase/plannedRecord.interface';
+import { assertApiResponse } from '~/utils/api';
+import { PAGE } from '~/utils/constants';
+import StringUtility from '~/utils/string';
+import { type Id } from '~/utils/types/common';
+import { RouterParamKey, type PageQueryParameter, type PlannedRecord } from '~/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];

@@ -162,15 +162,15 @@
 </template>
 
 <script setup lang="ts">
-import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
-import { PostgrestErrorCode } from '@/api/supabase/common.interface';
+import type { GetColorClassificationListOutput } from '~/api/supabase/colorClassification.interface';
+import { PostgrestErrorCode } from '~/api/supabase/common.interface';
 import type {
   GetTypeListItem,
   GetTypeListItemSubTypeListItem,
   GetTypeListOutputData,
-} from '@/api/supabase/type.interface';
-import { assertApiResponse } from '@/utils/api';
-import type { Id } from '@/utils/types/common';
+} from '~/api/supabase/type.interface';
+import { assertApiResponse } from '~/utils/api';
+import type { Id } from '~/utils/types/common';
 import type { NameAndColorDialog, NameDialog } from './SettingDialog.vue';
 
 const { enableLoading, disableLoading } = useLoadingStore();

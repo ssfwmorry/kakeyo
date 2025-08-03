@@ -50,8 +50,8 @@
 </template>
 
 <script setup lang="ts">
-import TimeUtility from '@/utils/time';
-import type { DbDatetimeString } from '@/utils/types/common';
+import TimeUtility from '~/utils/time';
+import type { DbDatetimeString } from '~/utils/types/common';
 
 const { $ICONS } = useNuxtApp();
 

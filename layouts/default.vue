@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { APP_NAME, PAGE } from '@/utils/constants';
+import { APP_NAME, PAGE } from '~/utils/constants';
 
 type PageItem = {
   icon: string;

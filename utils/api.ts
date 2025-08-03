@@ -1,4 +1,4 @@
-import type { ApiOutput } from '@/api/supabase/common.interface';
+import type { ApiOutput } from '~/api/supabase/common.interface';
 
 export function assertApiResponse<S, T>(
   apiRes: ApiOutput<S, T>

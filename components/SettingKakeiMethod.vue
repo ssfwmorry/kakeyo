@@ -94,11 +94,11 @@
 </template>
 
 <script setup lang="ts">
-import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
-import { PostgrestErrorCode } from '@/api/supabase/common.interface';
-import type { GetMethodListItem, GetMethodListOutputData } from '@/api/supabase/method.interface';
-import { assertApiResponse } from '@/utils/api';
-import type { Id } from '@/utils/types/common';
+import type { GetColorClassificationListOutput } from '~/api/supabase/colorClassification.interface';
+import { PostgrestErrorCode } from '~/api/supabase/common.interface';
+import type { GetMethodListItem, GetMethodListOutputData } from '~/api/supabase/method.interface';
+import { assertApiResponse } from '~/utils/api';
+import type { Id } from '~/utils/types/common';
 import type { NameAndColorDialog } from './SettingDialog.vue';
 
 const { enableLoading, disableLoading } = useLoadingStore();

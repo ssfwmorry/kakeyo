@@ -171,21 +171,21 @@
 </template>
 
 <script setup lang="ts">
-import type { GetMethodSummaryItem, GetTypeSummaryItem } from '@/api/supabase/record.interface';
-import { assertApiResponse } from '@/utils/api';
-import { PAGE, SettlementRecord } from '@/utils/constants';
-import { COLOR_CODE } from '@/utils/constants/color';
-import StringUtility from '@/utils/string';
-import TimeUtility from '@/utils/time';
+import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
+import { Pie } from 'vue-chartjs';
+import type { GetMethodSummaryItem, GetTypeSummaryItem } from '~/api/supabase/record.interface';
+import { assertApiResponse } from '~/utils/api';
+import { PAGE, SettlementRecord } from '~/utils/constants';
+import { COLOR_CODE } from '~/utils/constants/color';
+import StringUtility from '~/utils/string';
+import TimeUtility from '~/utils/time';
 import {
   type ColorString,
   type Id,
   type YearMonthNumObj,
   type YearMonthObj,
-} from '@/utils/types/common';
-import { RouterParamKey, type RecordsQueryParam, type SummaryQueryParam } from '@/utils/types/page';
-import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
-import { Pie } from 'vue-chartjs';
+} from '~/utils/types/common';
+import { RouterParamKey, type RecordsQueryParam, type SummaryQueryParam } from '~/utils/types/page';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 type PieData = {

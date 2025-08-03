@@ -51,8 +51,8 @@
 </template>
 
 <script setup lang="ts">
-import TimeUtility from '@/utils/time';
-import type { YearMonthNumObj } from '@/utils/types/common';
+import TimeUtility from '~/utils/time';
+import type { YearMonthNumObj } from '~/utils/types/common';
 
 const emits = defineEmits(['prev', 'next', 'update']);
 type Props = {

@@ -241,25 +241,25 @@
 </template>
 
 <script setup lang="ts">
-import { getMethodList } from '@/api/supabase/method';
-import type { GetMethodListItem } from '@/api/supabase/method.interface';
-import { createSettlementRecord } from '@/api/supabase/record';
+import { getMethodList } from '~/api/supabase/method';
+import type { GetMethodListItem } from '~/api/supabase/method.interface';
+import { createSettlementRecord } from '~/api/supabase/record';
 import type {
   GetPairedRecordItem,
   InsertSettlementRecordInput,
-} from '@/api/supabase/record.interface';
-import type { DialogInfo } from '@/components/SettlementSelectRateDialog.vue';
-import { assertApiResponse } from '@/utils/api';
+} from '~/api/supabase/record.interface';
+import type { DialogInfo } from '~/components/SettlementSelectRateDialog.vue';
+import { assertApiResponse } from '~/utils/api';
 import {
   RATE_BACKGROUND_COLOR_LIST,
   RATE_COLOR_LIST,
   RATE_LABEL_LIST,
   RATE_LIST,
   type RateColorString,
-} from '@/utils/constants/color';
-import StringUtility from '@/utils/string';
-import TimeUtility from '@/utils/time';
-import type { Id, YearMonthNumObj, YearMonthObj } from '@/utils/types/common';
+} from '~/utils/constants/color';
+import StringUtility from '~/utils/string';
+import TimeUtility from '~/utils/time';
+import type { Id, YearMonthNumObj, YearMonthObj } from '~/utils/types/common';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const authStore = useAuthStore();

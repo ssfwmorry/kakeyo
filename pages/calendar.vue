@@ -220,19 +220,24 @@
 </template>
 
 <script setup lang="ts">
-import type { GetMemoListOutput } from '@/api/supabase/memo.interface';
-import type { GetRecordListItem } from '@/api/supabase/record.interface';
-import type { GetShortCutListItem } from '@/api/supabase/shortCut.interface';
-import { PAGE, SettlementRecord } from '@/utils/constants';
-import StringUtility from '@/utils/string';
-import TimeUtility from '@/utils/time';
+import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
+import FullCalendar from '@fullcalendar/vue3';
+import type { GetMemoListOutput } from '~/api/supabase/memo.interface';
+import type { GetRecordListItem } from '~/api/supabase/record.interface';
+import type { GetShortCutListItem } from '~/api/supabase/shortCut.interface';
+import { PAGE, SettlementRecord } from '~/utils/constants';
+import StringUtility from '~/utils/string';
+import TimeUtility from '~/utils/time';
+import { OrderBy, type DateString, type Id, type YearMonthNumObj } from '~/utils/types/common';
 import {
   eventType,
   type CalendarList,
   type DateRecordList,
   type EventGetPlan,
   type ExternalEvent,
-} from '@/utils/types/domains/calender';
+} from '~/utils/types/domains/calender';
 import {
   RouterParamKey,
   type PageQueryParameter,
@@ -240,12 +245,7 @@ import {
   type Record_,
   type RouterQueryNoteToCalendar,
   type RouterQueryPlanToCalendar,
-} from '@/utils/types/page';
-import type { CalendarOptions, EventClickArg } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
-import FullCalendar from '@fullcalendar/vue3';
-import { OrderBy, type DateString, type Id, type YearMonthNumObj } from '~/utils/types/common';
+} from '~/utils/types/page';
 
 const loadingStore = useLoadingStore();
 const { loading } = storeToRefs(loadingStore);

@@ -1,4 +1,4 @@
-import { EMAIL_WHITE_LIST } from '@/utils/constants';
+import { EMAIL_WHITE_LIST } from '~/utils/constants';
 const config = useRuntimeConfig();
 
 // keyがあり、valueが有効なObjかどうか

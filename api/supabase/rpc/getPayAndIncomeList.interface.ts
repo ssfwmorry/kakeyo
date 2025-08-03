@@ -1,4 +1,4 @@
-import type { YearString } from '@/utils/types/common';
+import type { YearString } from '~/utils/types/common';
 
 export const RPC_GET_PAY_AND_INCOME_LIST = 'get_pay_and_income_list';
 

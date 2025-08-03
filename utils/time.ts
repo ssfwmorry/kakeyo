@@ -1,4 +1,7 @@
-import { DEMO_USER_INFO } from '@/utils/constants';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import JapaneseHolidays from 'japanese-holidays';
+import { DEMO_USER_INFO } from '~/utils/constants';
 import type {
   DateString,
   DatetimeString,
@@ -7,10 +10,7 @@ import type {
   YearMonthNumObj,
   YearMonthObj,
   YearMonthString,
-} from '@/utils/types/common';
-import type { Dayjs } from 'dayjs';
-import dayjs from 'dayjs';
-import JapaneseHolidays from 'japanese-holidays';
+} from '~/utils/types/common';
 
 const config = useRuntimeConfig();
 

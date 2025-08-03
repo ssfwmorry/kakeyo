@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ColorClassification } from '@/utils/types/model';
+import type { ColorClassification } from '~/utils/types/model';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const { getColorClassificationList } = useSupabase();

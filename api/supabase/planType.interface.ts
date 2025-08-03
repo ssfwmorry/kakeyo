@@ -1,6 +1,6 @@
-import type { Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
+import type { Id } from '~/utils/types/common';
 import type { ApiOutput } from './common.interface';
 import type { GetPlanTypeListRpcRow } from './rpc/getPlanTypeList.interface';
 

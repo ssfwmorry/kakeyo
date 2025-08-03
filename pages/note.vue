@@ -215,21 +215,21 @@
 </template>
 
 <script setup lang="ts">
-import { PostgrestErrorCode } from '@/api/supabase/common.interface';
-import type { GetMethodListOutputData } from '@/api/supabase/method.interface';
-import type { GetTypeListOutputData } from '@/api/supabase/type.interface';
-import { assertApiResponse } from '@/utils/api';
-import { PAGE } from '@/utils/constants';
-import TimeUtility from '@/utils/time';
-import { type DateString, type Id, type PickedDate } from '@/utils/types/common';
-import type { DayClassification } from '@/utils/types/model';
+import { PostgrestErrorCode } from '~/api/supabase/common.interface';
+import type { GetMethodListOutputData } from '~/api/supabase/method.interface';
+import type { GetTypeListOutputData } from '~/api/supabase/type.interface';
+import { assertApiResponse } from '~/utils/api';
+import { PAGE } from '~/utils/constants';
+import TimeUtility from '~/utils/time';
+import { type DateString, type Id, type PickedDate } from '~/utils/types/common';
+import type { DayClassification } from '~/utils/types/model';
 import {
   RouterParamKey,
   type PageQueryParameter,
   type PlannedRecord,
   type Record_,
   type RouterQueryNoteToCalendar,
-} from '@/utils/types/page';
+} from '~/utils/types/page';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];

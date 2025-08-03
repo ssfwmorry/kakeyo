@@ -54,10 +54,10 @@
 </template>
 
 <script setup lang="ts">
-import { assertApiResponse } from '@/utils/api';
 import type { GetBankListItem } from '~/api/supabase/bank.interface';
 import type { GetColorClassificationListOutput } from '~/api/supabase/colorClassification.interface';
 import { PostgrestErrorCode } from '~/api/supabase/common.interface';
+import { assertApiResponse } from '~/utils/api';
 import type { Id } from '~/utils/types/common';
 import type { NameAndColorDialog } from './SettingDialog.vue';
 

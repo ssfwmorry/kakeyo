@@ -1,4 +1,4 @@
-import type { Id } from '@/utils/types/common';
+import type { Id } from '~/utils/types/common';
 
 export const RPC_GET_PLANNED_RECORD_LIST = 'get_planned_record_list';
 

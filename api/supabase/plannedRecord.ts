@@ -1,7 +1,7 @@
-import supabase from '@/composables/supabase';
-import { DEMO_DATA } from '@/utils/constants';
-import { RecordType } from '@/utils/types/model';
 import { camelizeKeys } from 'humps';
+import supabase from '~/composables/supabase';
+import { DEMO_DATA } from '~/utils/constants';
+import { RecordType } from '~/utils/types/model';
 import type {
   DeleteInput,
   DeleteOutput,

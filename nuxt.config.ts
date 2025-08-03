@@ -18,7 +18,7 @@ export default defineNuxtConfig({
     transpile: ['vuetify'],
   },
 
-  // css: ['@/assets/common.scss'], // npm run dev では common.scss の中身が呼ばれない
+  // css: ['~/assets/common.scss'], // npm run dev では common.scss の中身が呼ばれない
   devtools: { enabled: true },
   modules: [
     '@pinia/nuxt',

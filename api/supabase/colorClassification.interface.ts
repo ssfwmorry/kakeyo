@@ -1,6 +1,6 @@
-import type { ColorClassification } from '@/utils/types/model';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Decamelized } from 'humps';
+import type { ColorClassification } from '~/utils/types/model';
 import type { ApiOutput } from './common.interface';
 
 export type DbColorClassification = Decamelized<ColorClassification>;

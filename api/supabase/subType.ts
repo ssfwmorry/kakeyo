@@ -1,5 +1,5 @@
-import supabase from '@/composables/supabase';
-import { DEMO_DATA } from '@/utils/constants';
+import supabase from '~/composables/supabase';
+import { DEMO_DATA } from '~/utils/constants';
 import {
   buildNoDataApiOutput,
   type DeleteInput,

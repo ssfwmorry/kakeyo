@@ -61,8 +61,8 @@
 </template>
 
 <script setup lang="ts">
-import type { GetColorClassificationListOutput } from '@/api/supabase/colorClassification.interface';
-import type { Id } from '@/utils/types/common';
+import type { GetColorClassificationListOutput } from '~/api/supabase/colorClassification.interface';
+import type { Id } from '~/utils/types/common';
 
 export type NameAndColorDialog = {
   isShow: boolean;

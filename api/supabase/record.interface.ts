@@ -1,4 +1,6 @@
-import type { SettlementRecord } from '@/utils/constants';
+import type { PostgrestError } from '@supabase/supabase-js';
+import type { Camelized } from 'humps';
+import type { SettlementRecord } from '~/utils/constants';
 import type {
   ColorString,
   DateRange,
@@ -7,10 +9,8 @@ import type {
   MonthString,
   YearMonthString,
   YearString,
-} from '@/utils/types/common';
-import type { Pair } from '@/utils/types/model';
-import type { PostgrestError } from '@supabase/supabase-js';
-import type { Camelized } from 'humps';
+} from '~/utils/types/common';
+import type { Pair } from '~/utils/types/model';
 import type { ApiOutput, InvalidArgumentError } from './common.interface';
 import type { GetMethodSummaryRpcRow } from './rpc/getMethodSummary.interface';
 import type { GetPairedRecordListRpcRow } from './rpc/getPairedRecordList.interface';

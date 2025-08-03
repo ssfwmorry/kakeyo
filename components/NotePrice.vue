@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { MAX_PRICE } from '@/utils/constants';
+import { MAX_PRICE } from '~/utils/constants';
 
 const model = defineModel<number>('price', { required: true });
 

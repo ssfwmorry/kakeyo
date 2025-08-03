@@ -1,6 +1,6 @@
-import type { ColorString, Id } from '@/utils/types/common';
-import type { ShortCut } from '@/utils/types/model';
 import type { PostgrestError } from '@supabase/supabase-js';
+import type { ColorString, Id } from '~/utils/types/common';
+import type { ShortCut } from '~/utils/types/model';
 import type { ApiOutput } from './common.interface';
 
 export type GetShortCutListItem = ShortCut & {

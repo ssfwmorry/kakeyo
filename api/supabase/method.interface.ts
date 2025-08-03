@@ -1,7 +1,7 @@
-import type { Id } from '@/utils/types/common';
-import type { Method } from '@/utils/types/model';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
+import type { Id } from '~/utils/types/common';
+import type { Method } from '~/utils/types/model';
 import type { ApiOutput, InvalidArgumentError } from './common.interface';
 import type { GetMethodListRpcRow } from './rpc/getMethodList.interface';
 

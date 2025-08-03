@@ -1,4 +1,4 @@
-import type { ColorString, Id, MonthString, YearString } from '@/utils/types/common';
+import type { ColorString, Id, MonthString, YearString } from '~/utils/types/common';
 
 export const RPC_GET_TYPE_SUMMARY = 'get_type_summary';
 

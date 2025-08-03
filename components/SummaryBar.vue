@@ -100,11 +100,6 @@
 </template>
 
 <script setup lang="ts">
-import type { GetPayAndIncomeItem } from '@/api/supabase/record.interface';
-import { INITIAL_BAR_DATA, MONTH_KEYS, MONTH_LABELS } from '@/utils/constants';
-import StringUtility from '@/utils/string';
-import TimeUtility from '@/utils/time';
-import { type YearMonthNumObj, type YearMonthString } from '@/utils/types/common';
 import {
   BarElement,
   CategoryScale,
@@ -116,6 +111,11 @@ import {
   type ChartOptions,
 } from 'chart.js';
 import { Bar } from 'vue-chartjs';
+import type { GetPayAndIncomeItem } from '~/api/supabase/record.interface';
+import { INITIAL_BAR_DATA, MONTH_KEYS, MONTH_LABELS } from '~/utils/constants';
+import StringUtility from '~/utils/string';
+import TimeUtility from '~/utils/time';
+import { type YearMonthNumObj, type YearMonthString } from '~/utils/types/common';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 type BarData = {

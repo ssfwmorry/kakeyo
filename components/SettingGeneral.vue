@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { PAGE } from '@/utils/constants';
+import { PAGE } from '~/utils/constants';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const { signOut, deleteUser: firebaseDeleteUser } = useFirebase();

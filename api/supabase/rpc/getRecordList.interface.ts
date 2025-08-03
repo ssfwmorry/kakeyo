@@ -1,5 +1,5 @@
-import type { DbDatetimeString, Id } from '@/utils/types/common';
-import type { RecordType } from '@/utils/types/model';
+import type { DbDatetimeString, Id } from '~/utils/types/common';
+import type { RecordType } from '~/utils/types/model';
 
 export const RPC_GET_RECORD_LIST = 'get_record_list';
 

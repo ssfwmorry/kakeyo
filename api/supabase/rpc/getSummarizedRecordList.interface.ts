@@ -1,5 +1,5 @@
-import type { DatetimeString, Id, YearMonthString } from '@/utils/types/common';
-import type { RecordType } from '@/utils/types/model';
+import type { DatetimeString, Id, YearMonthString } from '~/utils/types/common';
+import type { RecordType } from '~/utils/types/model';
 
 export const RPC_GET_SUMMARIZED_RECORD_LIST = 'get_summarized_record_list';
 

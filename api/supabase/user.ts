@@ -1,4 +1,4 @@
-import supabase from '@/composables/supabase';
+import supabase from '~/composables/supabase';
 import type { DbPair, GetPairIdInput, GetPairIdOutput } from './user.interface';
 
 export const getPairId = async ({ uid }: GetPairIdInput): Promise<GetPairIdOutput> => {

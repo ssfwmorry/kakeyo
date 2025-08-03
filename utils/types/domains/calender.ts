@@ -1,5 +1,5 @@
-import type { GetRecordListItem } from '@/api/supabase/record.interface';
 import type { EventInput } from '@fullcalendar/core/index.js';
+import type { GetRecordListItem } from '~/api/supabase/record.interface';
 import type { DateString, Id } from '../common';
 
 export const eventType = {

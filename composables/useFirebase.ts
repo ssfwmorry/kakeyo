@@ -1,6 +1,3 @@
-import firebaseApp from '@/composables/firebase';
-import { DEMO_DATA, DEMO_USER_INFO } from '@/utils/constants';
-import { IsInWhiteList } from '@/utils/others';
 import {
   createUserWithEmailAndPassword,
   deleteUser as firebaseDeleteUser,
@@ -10,6 +7,9 @@ import {
   sendEmailVerification,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
+import firebaseApp from '~/composables/firebase';
+import { DEMO_DATA, DEMO_USER_INFO } from '~/utils/constants';
+import { IsInWhiteList } from '~/utils/others';
 const config = useRuntimeConfig();
 const Auth = getAuth(firebaseApp);
 

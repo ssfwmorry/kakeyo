@@ -1,4 +1,4 @@
-import type { Id, YearString } from '@/utils/types/common';
+import type { Id, YearString } from '~/utils/types/common';
 
 export const RPC_GET_SUB_TYPE_SUMMARY = 'get_sub_type_summary';
 

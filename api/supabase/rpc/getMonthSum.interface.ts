@@ -1,4 +1,4 @@
-import type { YearMonthString } from '@/utils/types/common';
+import type { YearMonthString } from '~/utils/types/common';
 
 export const RPC_GET_MONTH_SUM = 'get_month_sum';
 

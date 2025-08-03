@@ -1,6 +1,6 @@
-import type { DateRange, Id } from '@/utils/types/common';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Camelized } from 'humps';
+import type { DateRange, Id } from '~/utils/types/common';
 import type { ApiOutput } from './common.interface';
 import type { GetPlanListRpcRow } from './rpc/getPlanList.interface';
 

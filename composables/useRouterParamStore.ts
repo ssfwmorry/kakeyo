@@ -5,7 +5,7 @@ import type {
   RecordsQueryParam,
   RouterParamKey,
   SummaryQueryParam,
-} from '@/utils/types/page';
+} from '~/utils/types/page';
 
 type RouterParam = Record_ | Plan | PlannedRecord | RecordsQueryParam | SummaryQueryParam;
 

@@ -1,6 +1,6 @@
-import supabase from '@/composables/supabase';
-import { DEMO_DATA } from '@/utils/constants';
 import { camelizeKeys } from 'humps';
+import supabase from '~/composables/supabase';
+import { DEMO_DATA } from '~/utils/constants';
 import {
   buildNoDataApiOutput,
   type DeleteInput,

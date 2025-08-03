@@ -1,4 +1,4 @@
-import supabase from '@/composables/supabase';
+import supabase from '~/composables/supabase';
 import type {
   DbDayClassification,
   GetDayClassificationListOutput,

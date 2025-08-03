@@ -1,4 +1,4 @@
-import type { ColorString, Id } from '@/utils/types/common';
+import type { ColorString, Id } from '~/utils/types/common';
 
 export const RPC_GET_TYPE_LIST = 'get_type_list';
 

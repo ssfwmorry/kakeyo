@@ -1,4 +1,4 @@
-import type { Id } from '@/utils/types/common';
+import type { Id } from '~/utils/types/common';
 
 export const RPC_GET_METHOD_LIST = 'get_method_list';
 

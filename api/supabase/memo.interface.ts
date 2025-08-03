@@ -1,6 +1,6 @@
-import type { Memo } from '@/utils/types/model';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Decamelized } from 'humps';
+import type { Memo } from '~/utils/types/model';
 import type { ApiOutput } from './common.interface';
 
 export type DbMemo = Decamelized<Memo>; // Pick<Memo, 'id' | 'memo' | 'pairId'>>;
