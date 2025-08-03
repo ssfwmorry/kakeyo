@@ -105,12 +105,12 @@ type Balance = {
   price: BankBalance['price'] | null;
 };
 
-const initialBalance: Balance = { bankId: null, price: 0 };
+const initialBalance = (): Balance => ({ bankId: null, price: 0 });
 
 const props = defineProps<Props>();
 const emits = defineEmits();
 
-const balances = ref<Balance[]>([initialBalance]);
+const balances = ref<Balance[]>([initialBalance()]);
 const loading = ref(false);
 
 const isDisableDialogPostBtn = () => {
@@ -124,11 +124,11 @@ const isDisableAddBalanceBtn = () => {
 };
 
 const addBalance = () => {
-  balances.value.push(initialBalance);
+  balances.value.push(initialBalance());
 };
 
 const closeDialog = () => {
-  balances.value = [initialBalance];
+  balances.value = [initialBalance()];
   emits('closeDialog');
 };
 const apply = async () => {
