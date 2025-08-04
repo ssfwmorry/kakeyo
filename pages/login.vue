@@ -62,9 +62,10 @@
               </v-btn>
               <v-btn
                 v-else
-                color="blue darken-3"
+                color="primary"
                 :disabled="!email || !password"
-                class="w-50 text-white"
+                dark
+                class="w-50"
                 @click="userLogin()"
               >
                 ログイン
@@ -90,26 +91,12 @@
             <v-btn color="primary" variant="text" @click="resetAction()">キャンセル</v-btn>
           </div>
         </v-card>
-        <div v-if="!isSignUp" class="d-flex justify-center mt-6">
-          <v-btn variant="outlined" class="btn-demo" @click="demoLogin">デモページ</v-btn>
+        <div v-if="!isSignUp" class="d-flex flex-row justify-center mt-6">
+          <v-btn variant="outlined" class="btn-demo mr-4" @click="demoLogin">デモページ</v-btn>
+          <v-btn variant="outlined" class="btn-demo ml-4" @click="goTutorialPage"
+            >とりせつ　 <v-icon>{{ $ICONS.OPEN_IN_NEW }}</v-icon></v-btn
+          >
         </div>
-      </v-col>
-    </v-row>
-
-    <div class="mt-50px mb-2 w-100 text-center"><h3>〜　お知らせ　〜</h3></div>
-    <v-row v-for="content in ContentList" :key="content.title" justify="center" class="pa-2 mb-3">
-      <v-col sm="10" class="pa-0">
-        <v-card class="pa-2 w-100" :color="content.color">
-          <h4 class="pl-1">{{ content.title }}</h4>
-          <v-divider class="mb-1"></v-divider>
-          <div class="pl-5 fs-sm">
-            <ul>
-              <li v-for="item in content.items" :key="item.message" class="mb-1">
-                {{ item.message }}
-              </li>
-            </ul>
-          </div>
-        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -117,52 +104,6 @@
 
 <script setup lang="ts">
 import { APP_NAME, DEMO_USER_INFO, PAGE } from '~/utils/constants';
-
-const ContentList = [
-  {
-    title: '想定ユーザ',
-    color: 'amber-lighten-4',
-    items: [
-      { message: 'レシートの項目ごとではなく、会計ごとにざっくりと記入で十分' },
-      { message: '自分でつけた収入・支出の記録を「正」とみなせる' },
-    ],
-  },
-  {
-    title: 'できること',
-    color: 'pink-lighten-5',
-    items: [
-      { message: 'スマホアプリみたいに使う' },
-      { message: 'パパっと家計をつける' },
-      { message: '給与や家賃などの、定期的な収入・支出を自動的に記録する' },
-      { message: '自分の家計、と、パートナーと共有する家計とを分離する' },
-      { message: 'パートナーとの立替を精算する' },
-      { message: 'カテゴリや支払い方法のカスタマイズする' },
-      { message: 'ざっくり予定とTODOを管理する' },
-      { message: 'パートナーと予定を共有する' },
-    ],
-  },
-  {
-    title: 'できないこと',
-    color: 'blue-lighten-5',
-    items: [
-      { message: 'オフラインの動作' },
-      { message: '各種金融機関とのデータ共有' },
-      {
-        message: '「締め日」「チャージ」などの、支払いと資産反映にラグが発生するような、家計管理',
-      },
-    ],
-  },
-  {
-    title: 'デモページ',
-    color: 'white-lighten-5',
-    items: [
-      { message: '操作イメージを掴むために用意しました' },
-      { message: '現在時刻を 2021.01.13 と想定しています' },
-      { message: '1 ヶ月分の、でたらめなデータが入っています' },
-      { message: 'データの閲覧はできますが、登録 / 削除 / 更新はできません' },
-    ],
-  },
-];
 
 const {
   signInByUserLogin,
@@ -225,6 +166,11 @@ const demoLogin = async () => {
 
 const goCalendarPage = () => {
   router.push({ name: PAGE.CALENDAR });
+};
+
+const goTutorialPage = () => {
+  const url = 'https://incredible-result-9c1.notion.site/245ec170d05c802dacbfd04d2ab22cbf';
+  window.open(url, '_blank');
 };
 
 const showSignUp = () => {
