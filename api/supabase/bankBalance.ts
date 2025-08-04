@@ -27,7 +27,7 @@ export const getBankBalanceList = async ({
       bank_id,
       price,
       created_at,
-      banks (
+      banks!inner (
         id,
         user_id,
         name,
