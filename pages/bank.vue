@@ -4,23 +4,23 @@
       <v-table v-if="tableData.length > 0" density="compact" class="px-3 w-100">
         <thead>
           <tr>
-            <th class="text-center">記録日</th>
-            <th class="text-center">合計</th>
-            <th v-for="bank in bankList" :key="bank.id" class="text-center">
+            <th class="px-0 text-center">記録日</th>
+            <th class="px-2 text-center">合計</th>
+            <th v-for="bank in bankList" :key="bank.id" class="px-2 text-center">
               {{ bank.name }}
             </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="row in tableData" :key="row.createdDate">
-            <td class="text-center">
+            <td class="px-0 text-center">
               {{ row.createdDate }}
             </td>
-            <td class="text-right">{{ row.sum.toLocaleString() }} 万円</td>
+            <td class="px-2 text-right">{{ row.sum.toLocaleString() }} 万円</td>
             <td
               v-for="(bank, index) in bankList"
               :key="bank.id"
-              class="text-right"
+              class="px-2 text-right"
               :class="{ 'text-grey-lighten-1': row.bankPrices[index]?.isPad === true }"
             >
               {{ row.bankPrices[index]?.price.toLocaleString() ?? '-　' }} 万円
