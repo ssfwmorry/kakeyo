@@ -1,5 +1,6 @@
 import {
   mdiAccountMultiple,
+  mdiAlert,
   mdiArrowBottomLeft,
   mdiArrowDown,
   mdiArrowRight,
@@ -21,6 +22,7 @@ import {
   mdiEyeOff,
   mdiFolder,
   mdiGoogleAnalytics,
+  mdiInformation,
   mdiLabel,
   mdiLogin,
   mdiLogout,
@@ -38,6 +40,7 @@ import {
 } from '@mdi/js';
 
 const ICONS = {
+  ALERT: mdiAlert,
   ANALYTICS: mdiGoogleAnalytics,
   ARROW_BOTTOM_LEFT: mdiArrowBottomLeft,
   ARROW_DOWN: mdiArrowDown,
@@ -59,6 +62,7 @@ const ICONS = {
   EYE: mdiEye,
   EYE_OFF: mdiEyeOff,
   FOLDER: mdiFolder,
+  INFO: mdiInformation,
   LABEL: mdiLabel,
   LOGIN: mdiLogin,
   LOGOUT: mdiLogout,

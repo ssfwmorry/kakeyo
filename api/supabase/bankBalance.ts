@@ -4,12 +4,14 @@ import { DEMO_DATA } from '~/utils/constants';
 import type {
   BankBalanceListItem,
   GetBankBalanceListOutput,
+  HaveLatestBankBalanceOutput,
   PostBankBalancesInput,
   PostBankBalancesOutput,
 } from './bankBalance.interface';
 import {
   buildNoDataApiOutput,
   type SupabaseApiDemo,
+  type SupabaseApiDemoAndUser,
   type SupabaseApiUser,
 } from './common.interface';
 
@@ -89,4 +91,53 @@ export const postBankBalances = async (
     }))
   );
   return buildNoDataApiOutput(error, 'bank_balance 登録');
+};
+
+// 口座がなければnull、あればboolean
+export const haveLatestBankBalance = async ({
+  isDemoLogin,
+  userUid,
+}: SupabaseApiDemoAndUser): Promise<HaveLatestBankBalanceOutput> => {
+  if (isDemoLogin) {
+    return {
+      data: false,
+      error: null,
+      message: 'デモユーザは最新の口座残高がない',
+    };
+  }
+
+  const { data, error } = await supabase
+    .from('bank_balances')
+    .select(
+      `
+      created_at,
+      banks!inner (
+        user_id
+      )`
+    )
+    .eq('banks.user_id', userUid)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (error) {
+    return { error, message: 'bank_balances 取得' };
+  }
+  if (data === null || data.length === 0) {
+    return {
+      data: null,
+      error: null,
+      message: 'bank_balances 取得時にデータがありません',
+    };
+  }
+
+  const latestDate = dayjs(data[0].created_at);
+  const now = dayjs();
+
+  // 最新のレコードが、1ヶ月以上前の場合はfalse
+  const isAfter1Month = latestDate.isAfter(now.subtract(1, 'month'));
+  return {
+    data: isAfter1Month,
+    error: null,
+    message: '最新の bank_balance 確認',
+  };
 };

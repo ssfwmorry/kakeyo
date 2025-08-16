@@ -35,6 +35,9 @@
       <div class="app-bar-content">
         <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       </div>
+      <div v-if="isLoggedIn" class="ml-1">
+        <AppBarInfoIcon />
+      </div>
       <v-spacer />
       <div v-if="isLoggedIn && isExistPair && !pagesWithoutPair.includes($route.name as string)">
         <v-switch

@@ -1,10 +1,10 @@
-type Color = 'error' | 'info';
+type Color = 'info' | 'warning' | 'error';
 
 export const useToastStore = defineStore(
   'toastStore',
   () => {
     // state
-    const state = ref<{ message: string; color: string | undefined }>({
+    const state = ref<{ message: string; color: Color | undefined }>({
       message: '',
       color: undefined,
     });

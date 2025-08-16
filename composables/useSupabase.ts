@@ -1,5 +1,9 @@
 import { deleteBank, getBankList, upsertBank } from '~/api/supabase/bank';
-import { getBankBalanceList, postBankBalances } from '~/api/supabase/bankBalance';
+import {
+  getBankBalanceList,
+  haveLatestBankBalance,
+  postBankBalances,
+} from '~/api/supabase/bankBalance';
 import { getColorClassificationList } from '~/api/supabase/colorClassification';
 import { getDayClassificationList } from '~/api/supabase/dayClassification';
 import { deleteMemo, getMemoList, insertMemo } from '~/api/supabase/memo';
@@ -68,6 +72,7 @@ export const useSupabase = () => {
     getSummarizedRecordList,
     getTypeList,
     getTypeSummary,
+    haveLatestBankBalance,
     insertMemo,
     postBankBalances,
     postRecords,

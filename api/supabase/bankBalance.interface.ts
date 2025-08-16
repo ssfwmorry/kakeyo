@@ -37,3 +37,5 @@ export interface PostBankBalancesInput {
   balances: Pick<BankBalance, 'bankId' | 'price'>[];
 }
 export interface PostBankBalancesOutput extends ApiOutput<null, PostgrestError> {}
+
+export interface HaveLatestBankBalanceOutput extends ApiOutput<boolean | null, PostgrestError> {}
