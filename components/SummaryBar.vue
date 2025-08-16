@@ -58,43 +58,42 @@
         v-if="(isPayAndIncome ? barDataPayAndIncome : barDataPay).labels.length !== 0"
         class="w-100"
       >
-        <Bar
-          :data="isPayAndIncome ? barDataPayAndIncome : barDataPay"
-          :options="(barOptions as any)"
-        ></Bar>
+        <Bar :data="isPayAndIncome ? barDataPayAndIncome : barDataPay" :options="barOptions" />
       </div>
       <div v-else class="mt-30px w-100 text-center">表示するデータがありません</div>
     </v-row>
 
     <v-row no-gutters>
-      <v-table density="compact" class="px-3 w-100">
-        <thead>
-          <tr>
-            <th v-for="header in ['月', '支出', '収入', '収支']" :key="header" class="text-left">
-              {{ header }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="data in tableData" :key="data.month">
-            <td class="text-center">{{ data.month }}</td>
-            <td class="text-right">
-              {{ data.pay.toLocaleString() }}
-            </td>
-            <td class="text-right">
-              {{ data.income.toLocaleString() }}
-            </td>
-            <td
-              class="text-right"
-              :class="
-                data.payAndIncome === 0 ? '' : data.payAndIncome > 0 ? 'blue--text' : 'red--text'
-              "
-            >
-              {{ data.payAndIncome.toLocaleString() }}
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
+      <v-card variant="outlined" class="card-border px-3 w-100">
+        <v-table density="compact">
+          <thead>
+            <tr>
+              <th v-for="header in ['月', '支出', '収入', '収支']" :key="header" class="text-left">
+                {{ header }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="data in tableData" :key="data.month">
+              <td class="text-center">{{ data.month }}</td>
+              <td class="text-right">
+                {{ data.pay.toLocaleString() }}
+              </td>
+              <td class="text-right">
+                {{ data.income.toLocaleString() }}
+              </td>
+              <td
+                class="text-right"
+                :class="
+                  data.payAndIncome === 0 ? '' : data.payAndIncome > 0 ? 'blue--text' : 'red--text'
+                "
+              >
+                {{ data.payAndIncome.toLocaleString() }}
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </v-card>
     </v-row>
   </div>
 </template>
@@ -135,7 +134,7 @@ type TableData = {
   payAndIncome: number;
 };
 
-const barOptions: ChartOptions = {
+const barOptions: ChartOptions<'bar'> = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {

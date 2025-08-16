@@ -1,37 +1,10 @@
 <template>
   <v-container class="px-2 pb-0 h-100 bg-white">
-    <v-row no-gutters class="mb-3">
-      <v-table v-if="tableData.length > 0" density="compact" class="px-3 w-100">
-        <thead>
-          <tr>
-            <th class="px-0 text-center">記録日</th>
-            <th class="px-2 text-center">合計</th>
-            <th v-for="bank in bankList" :key="bank.id" class="px-2 text-center">
-              {{ bank.name }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in tableData" :key="row.createdDate">
-            <td class="px-0 text-center">
-              {{ row.createdDate }}
-            </td>
-            <td class="px-2 text-right">{{ row.sum.toLocaleString() }} 万円</td>
-            <td
-              v-for="(bank, index) in bankList"
-              :key="bank.id"
-              class="px-2 text-right"
-              :class="{ 'text-grey-lighten-1': row.bankPrices[index]?.isPad === true }"
-            >
-              {{ row.bankPrices[index]?.price.toLocaleString() ?? '-　' }} 万円
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
-      <div v-else class="mt-30px w-100 text-center">残高履歴を追加してください</div>
+    <v-row no-gutters class="mb-1">
+      <Line :data="chartData" :options="lineOptions" />
     </v-row>
 
-    <v-row no-gutters class="d-flex justify-end">
+    <v-row no-gutters class="d-flex justify-end mb-2">
       <v-btn
         variant="flat"
         rounded
@@ -45,6 +18,39 @@
       >
     </v-row>
 
+    <v-row no-gutters>
+      <v-card v-if="tableData.length > 0" variant="outlined" class="card-border px-3 w-100">
+        <v-table density="compact">
+          <thead>
+            <tr>
+              <th class="px-0 text-center">記録日</th>
+              <th class="px-2 text-center">合計</th>
+              <th v-for="bank in bankList" :key="bank.id" class="px-2 text-center">
+                {{ bank.name }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in tableData" :key="row.createdDate">
+              <td class="px-0 text-center">
+                {{ row.createdDate }}
+              </td>
+              <td class="px-2 text-right">{{ row.sum.toLocaleString() }} 万円</td>
+              <td
+                v-for="(bank, index) in bankList"
+                :key="bank.id"
+                class="px-2 text-right"
+                :class="{ 'text-grey-lighten-1': row.bankPrices[index]?.isPad === true }"
+              >
+                {{ row.bankPrices[index]?.price.toLocaleString() ?? '-　' }} 万円
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </v-card>
+      <div v-else class="mt-30px w-100 text-center">残高履歴を追加してください</div>
+    </v-row>
+
     <BankBalanceDialog
       v-model="dialog"
       :bankList="bankList"
@@ -55,12 +61,41 @@
 </template>
 
 <script setup lang="ts">
+import {
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  TimeScale,
+  Title,
+  Tooltip,
+  type ChartOptions,
+  type Point,
+} from 'chart.js';
+import 'chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm';
+import dayjs from 'dayjs';
+import { Line } from 'vue-chartjs';
 import type { GetBankListItem } from '~/api/supabase/bank.interface';
 import type { GetBankBalanceListBalanceItem } from '~/api/supabase/bankBalance.interface';
 import BankBalanceDialog from '~/components/BankBalanceDialog.vue';
+import { COLOR_CODE } from '~/utils/constants/color';
+import { convertManUnit } from '~/utils/others';
 import TimeUtility from '~/utils/time';
 import type { DateString } from '~/utils/types/common';
-
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  TimeScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 type BankPrice = {
   price: number;
   isPad: boolean; // 補完された値であれば true
@@ -73,6 +108,33 @@ type Dialog = {
   isShow: boolean;
 };
 
+type LineData = {
+  datasets: {
+    label: string;
+    data: Point[];
+    backgroundColor: string;
+    fill: true;
+    tension: 0.2;
+  }[];
+};
+const lineOptions: ChartOptions<'line'> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: {
+      type: 'time',
+      time: { unit: 'month', displayFormats: { month: 'YYYY/MM' }, tooltipFormat: 'YYYY/MM/DD' },
+    },
+    y: {
+      stacked: true,
+      ticks: {
+        callback: (value) => `${convertManUnit(Number(value))}万円`,
+      },
+    },
+  },
+} as const;
+
 const { enableLoading, disableLoading } = useLoadingStore();
 const authStore = useAuthStore();
 const { getBankList, getBankBalanceList } = useSupabase();
@@ -81,6 +143,7 @@ const { userUid } = storeToRefs(authStore);
 const tableData = ref<TableRow[]>([]);
 const bankList = ref<GetBankListItem[]>([]);
 const dialog = ref<Dialog>({ isShow: false });
+const chartData = ref<LineData>({ datasets: [] });
 
 const openDialog = () => {
   dialog.value.isShow = true;
@@ -99,6 +162,7 @@ const updateShowData = async () => {
   assertApiResponse(apiResBalance);
 
   bankList.value = apiResBank.data;
+  chartData.value = getChartData(apiResBank.data, apiResBalance.data);
   tableData.value = paddingBankBalances(apiResBank.data, apiResBalance.data);
   disableLoading();
 };
@@ -107,11 +171,6 @@ const paddingBankBalances = (
   banks: GetBankListItem[],
   balances: GetBankBalanceListBalanceItem[]
 ): TableRow[] => {
-  // 万を単位として少数第一位まで
-  const convertManUnit = (num: number) => {
-    return Math.round(num / 1000) / 10;
-  };
-
   const tableRows: TableRow[] = [];
   balances.forEach((balance, indexBalance) => {
     const tableBankPrices: BankPrice[] = [];
@@ -149,6 +208,32 @@ const paddingBankBalances = (
   return tableRows;
 };
 
+const getChartData = (
+  banks: GetBankListItem[],
+  balances: GetBankBalanceListBalanceItem[]
+): LineData => {
+  const datasets: LineData['datasets'] = [];
+  banks.forEach((bank) => {
+    const data: Point[] = [];
+    balances.forEach((balance) => {
+      if (bank.id in balance.banks) {
+        data.push({
+          x: dayjs(balance.createdAt).valueOf(),
+          y: balance.banks[bank.id].price,
+        });
+      }
+    });
+    datasets.push({
+      label: bank.name,
+      data,
+      backgroundColor: COLOR_CODE[bank.colorClassifications.name],
+      fill: true,
+      tension: 0.2,
+    });
+  });
+
+  return { datasets };
+};
 // created
 (async () => {
   await updateShowData();

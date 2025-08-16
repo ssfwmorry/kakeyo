@@ -12,3 +12,8 @@ export const IsInWhiteList = function (email: string) {
   }
   return false;
 };
+
+// 万を単位として少数第一位まで
+export const convertManUnit = (num: number) => {
+  return Math.round(num / 1000) / 10;
+};

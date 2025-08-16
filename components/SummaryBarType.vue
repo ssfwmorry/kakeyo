@@ -65,7 +65,7 @@
 
     <v-row no-gutters>
       <div class="w-100">
-        <Bar :data="barData" :options="(barOptions as any)" />
+        <Bar :data="barData" :options="barOptions" />
       </div>
     </v-row>
   </div>
@@ -98,7 +98,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 const subTypeColors = ['gold', 'mediumseagreen', 'blueviolet', 'lightpink', 'royalblue', 'chocolate'] as const; // prettier-ignore
 const colorGrey = 'grey' as const;
 const allIndex = 0 as const;
-const barOptions: ChartOptions = {
+const barOptions: ChartOptions<'bar'> = {
   responsive: true,
   // maintainAspectRatio: false,
   plugins: {
