@@ -48,7 +48,7 @@
     <!-- 判例表示 -->
     <v-row no-gutters class="px-1 mb-2">
       <div
-        v-for="(dataset, index) in barData.datasets"
+        v-for="(dataset, index) in chartData.datasets"
         :key="index"
         cols="1"
         class="d-flex align-center mr-4 fs-sm"
@@ -65,7 +65,7 @@
 
     <v-row no-gutters>
       <div class="w-100">
-        <Bar :data="barData" :options="barOptions" />
+        <Bar :data="chartData" :options="chartOptions" />
       </div>
     </v-row>
   </div>
@@ -98,7 +98,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip);
 const subTypeColors = ['gold', 'mediumseagreen', 'blueviolet', 'lightpink', 'royalblue', 'chocolate'] as const; // prettier-ignore
 const colorGrey = 'grey' as const;
 const allIndex = 0 as const;
-const barOptions: ChartOptions<'bar'> = {
+const chartOptions: ChartOptions<'bar'> = {
   responsive: true,
   // maintainAspectRatio: false,
   plugins: {
@@ -136,7 +136,7 @@ const typeList = ref<GetTypeListOutputData>({
   income: { self: [], pair: [] },
   pay: { self: [], pair: [] },
 });
-const barData = ref<BarData>({
+const chartData = ref<BarData>({
   labels: MONTH_LABELS,
   datasets: [INITIAL_BAR_DATA],
 });
@@ -171,7 +171,7 @@ const updateChart = async () => {
     const apiRes = await getTypeSummaryPeriod({ userUid: userUid.value }, payload);
     assertApiResponse(apiRes);
 
-    barData.value = convertShowTypesData(apiRes.data);
+    chartData.value = convertShowTypesData(apiRes.data);
   } else {
     const typeId =
       typeList.value[isPay.value ? 'pay' : 'income'][isPair.value ? 'pair' : 'self'][
@@ -182,7 +182,7 @@ const updateChart = async () => {
     const apiRes = await getSubTypeSummary(payload);
     assertApiResponse(apiRes);
 
-    barData.value = convertShowSubTypesData(apiRes.data);
+    chartData.value = convertShowSubTypesData(apiRes.data);
   }
 
   disableLoading();

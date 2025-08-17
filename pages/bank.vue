@@ -1,7 +1,7 @@
 <template>
   <v-container class="px-2 pb-0 h-100 bg-white">
     <v-row no-gutters class="mb-1">
-      <Line :data="chartData" :options="lineOptions" />
+      <Line :data="chartData" :options="chartOptions" />
     </v-row>
 
     <v-row no-gutters class="d-flex justify-end mb-2">
@@ -35,14 +35,9 @@
               <td class="px-0 text-center">
                 {{ row.createdDate }}
               </td>
-              <td class="px-2 text-right">{{ row.sum.toLocaleString() }} 万円</td>
-              <td
-                v-for="(bank, index) in bankList"
-                :key="bank.id"
-                class="px-2 text-right"
-                :class="{ 'text-grey-lighten-1': row.bankPrices[index]?.isPad === true }"
-              >
-                {{ row.bankPrices[index]?.price.toLocaleString() ?? '-　' }} 万円
+              <td class="px-2 text-right">{{ row.sum?.toLocaleString() ?? '-　' }} 万円</td>
+              <td v-for="(bank, index) in bankList" :key="bank.id" class="px-2 text-right">
+                {{ row.bankPrices[index]?.toLocaleString() ?? '-　' }} 万円
               </td>
             </tr>
           </tbody>
@@ -96,13 +91,11 @@ ChartJS.register(
   Legend,
   Filler
 );
-type BankPrice = {
-  price: number;
-  isPad: boolean; // 補完された値であれば true
-} | null; // null は price 未登録を示す
-type TableRow = Omit<GetBankBalanceListBalanceItem, 'createdAt' | 'banks'> & {
+type TableRow = Omit<GetBankBalanceListBalanceItem, 'createdAt' | 'banks' | 'sum'> & {
   createdDate: DateString;
-  bankPrices: BankPrice[];
+  sum: number | null;
+  // null は price 未登録を示す
+  bankPrices: (number | null)[];
 };
 type Dialog = {
   isShow: boolean;
@@ -117,7 +110,7 @@ type LineData = {
     tension: 0.2;
   }[];
 };
-const lineOptions: ChartOptions<'line'> = {
+const chartOptions: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: { legend: { display: false } },
@@ -163,46 +156,32 @@ const updateShowData = async () => {
 
   bankList.value = apiResBank.data;
   chartData.value = getChartData(apiResBank.data, apiResBalance.data);
-  tableData.value = paddingBankBalances(apiResBank.data, apiResBalance.data);
+  tableData.value = getTableData(apiResBank.data, apiResBalance.data);
   disableLoading();
 };
 
-const paddingBankBalances = (
+const getTableData = (
   banks: GetBankListItem[],
   balances: GetBankBalanceListBalanceItem[]
 ): TableRow[] => {
   const tableRows: TableRow[] = [];
   balances.forEach((balance, indexBalance) => {
-    const tableBankPrices: BankPrice[] = [];
-    let padPriceSum = 0; // 補完された金額の合計
-    banks.forEach((bank, indexBank) => {
+    const tableBankPrices: (number | null)[] = [];
+    let isHaveNoBank = false;
+    banks.forEach((bank) => {
       const bankId = String(bank.id);
       if (bankId in balance.banks) {
         // 存在する値ならそのまま設定
-        tableBankPrices.push({
-          price: convertManUnit(balance.banks[bankId].price),
-          isPad: false,
-        });
-      } else if (indexBalance === 0) {
-        // 最初の値なら null
-        tableBankPrices.push(null);
+        tableBankPrices.push(convertManUnit(balance.banks[bankId].price));
       } else {
-        // 前の行のデータを流用する
-        const prevPrice = tableRows[indexBalance - 1].bankPrices[indexBank];
-        if (prevPrice === null) {
-          // 前の行がないなら null
-          tableBankPrices.push(null);
-        } else {
-          // 前の行を補完するので isPad = true
-          tableBankPrices.push({ price: prevPrice.price, isPad: true });
-          padPriceSum += prevPrice.price;
-        }
+        tableBankPrices.push(null);
+        isHaveNoBank = true;
       }
     });
     tableRows.push({
       createdDate: TimeUtility.ConvertDBResponseDatetimeToDateStr(balance.createdAt),
       bankPrices: tableBankPrices,
-      sum: convertManUnit(balance.sum + padPriceSum),
+      sum: isHaveNoBank ? null : convertManUnit(balance.sum),
     });
   });
   return tableRows;

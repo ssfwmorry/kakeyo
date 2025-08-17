@@ -71,8 +71,8 @@
       </v-col> -->
     </v-row>
     <v-row no-gutters class="mb-3 text-center">
-      <div v-if="pieData.labels.length !== 0" class="w-100">
-        <Pie :data="pieData" :options="pieOptions" />
+      <div v-if="chartData.labels.length !== 0" class="w-100">
+        <Pie :data="chartData" :options="chartOptions" />
       </div>
       <div v-else-if="isEndInit" class="mt-30px w-100 text-center">表示するデータがありません</div>
     </v-row>
@@ -208,7 +208,7 @@ type TypeOrMethod = {
   subs: TypeListSubs[];
 };
 type TypeOrMethodList = TypeOrMethod[];
-const pieOptions = {
+const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
 } as const;
@@ -233,7 +233,7 @@ const isType = ref(true);
 const isIncludeInstead = ref(true);
 const typeOrMethodList = ref<TypeOrMethodList>([]);
 const isEndInit = ref(false);
-const pieData = ref<PieData>({
+const chartData = ref<PieData>({
   labels: [],
   datasets: [
     {
@@ -296,7 +296,7 @@ const updateChart = async () => {
   sum = getTypeOrMethodSum(apiRes.data);
   monthListSum.value = StringUtility.ConvertIntToShowStrWithIsPay(sum, isPay.value);
   const { pie, list } = convertShowData(apiRes.data);
-  [pieData.value, typeOrMethodList.value] = [pie, list];
+  [chartData.value, typeOrMethodList.value] = [pie, list];
 
   disableLoading();
 };
@@ -306,7 +306,7 @@ const getTypeOrMethodSum = (monthSummary: GetTypeSummaryItem[] | GetMethodSummar
   }, 0);
 };
 const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSummaryItem[]) => {
-  let pieData: PieData = { labels: [], datasets: [{ data: [], backgroundColor: [] }] };
+  let chartData: PieData = { labels: [], datasets: [{ data: [], backgroundColor: [] }] };
   let typeOrMethodList: TypeOrMethodList = [];
   monthSummaryList.forEach((typeOrMethodSummary) => {
     const sum = typeOrMethodSummary.sum;
@@ -330,9 +330,9 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
       : (typeOrMethodSummary as GetMethodSummaryItem).pairUserName;
 
     // 円グラフデータの格納
-    pieData.datasets[0].data.push(sum);
-    pieData.datasets[0].backgroundColor.push(color);
-    pieData.labels.push(name);
+    chartData.datasets[0].data.push(sum);
+    chartData.datasets[0].backgroundColor.push(color);
+    chartData.labels.push(name);
 
     // リストデータの格納
     let typeOrMethod: TypeOrMethod = {
@@ -359,7 +359,7 @@ const convertShowData = (monthSummaryList: GetTypeSummaryItem[] | GetMethodSumma
     typeOrMethodList.push(typeOrMethod);
   });
 
-  return { pie: pieData, list: typeOrMethodList };
+  return { pie: chartData, list: typeOrMethodList };
 };
 const goRecordsShowPage = (typeOrMethod: TypeOrMethod, subType: TypeListSubs | null) => {
   if (typeOrMethod.id === null || typeOrMethod.color === SettlementRecord.color) {

@@ -55,10 +55,13 @@
     </v-row>
     <v-row no-gutters class="text-center">
       <div
-        v-if="(isPayAndIncome ? barDataPayAndIncome : barDataPay).labels.length !== 0"
+        v-if="(isPayAndIncome ? chartDataPayAndIncome : chartDataPay).labels.length !== 0"
         class="w-100"
       >
-        <Bar :data="isPayAndIncome ? barDataPayAndIncome : barDataPay" :options="barOptions" />
+        <Bar
+          :data="isPayAndIncome ? chartDataPayAndIncome : chartDataPay"
+          :options="chartOptions"
+        />
       </div>
       <div v-else class="mt-30px w-100 text-center">表示するデータがありません</div>
     </v-row>
@@ -134,7 +137,7 @@ type TableData = {
   payAndIncome: number;
 };
 
-const barOptions: ChartOptions<'bar'> = {
+const chartOptions: ChartOptions<'bar'> = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -158,12 +161,12 @@ const focusObj = computed<YearMonthNumObj>(() => {
   return { year: year.value, month: 0 };
 });
 
-const barDataPayAndIncome = ref<BarData>({
+const chartDataPayAndIncome = ref<BarData>({
   labels: MONTH_LABELS,
   datasets: [INITIAL_BAR_DATA],
 });
 const sumPayAndIncome = ref('0');
-const barDataPay = ref<BarData>({
+const chartDataPay = ref<BarData>({
   labels: MONTH_LABELS,
   datasets: [INITIAL_BAR_DATA],
 });
@@ -195,9 +198,9 @@ const updateChart = async () => {
   assertApiResponse(apiRes);
 
   const { ret1, ret2, ret3, ret4, ret5 } = convertShowData(apiRes.data);
-  barDataPayAndIncome.value = ret1;
+  chartDataPayAndIncome.value = ret1;
   sumPayAndIncome.value = ret2;
-  barDataPay.value = ret3;
+  chartDataPay.value = ret3;
   sumPay.value = ret4;
   tableData.value = ret5;
 
