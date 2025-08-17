@@ -63,7 +63,7 @@
       </v-row>
     </div>
 
-    <SettingDialog
+    <setting-common-Dialog
       v-model="planTypeDialog"
       title="カテゴリ名"
       :colorList="props.colorList"
@@ -83,7 +83,7 @@ import type {
 } from '~/api/supabase/planType.interface';
 import { assertApiResponse } from '~/utils/api';
 import type { Id } from '~/utils/types/common';
-import type { NameAndColorDialog } from './SettingDialog.vue';
+import type { NameAndColorDialog } from './common/Dialog.vue';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];

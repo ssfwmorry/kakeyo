@@ -142,7 +142,7 @@
       </v-row>
     </div>
 
-    <SettingDialog
+    <setting-common-Dialog
       v-model="typeDialog"
       title="カテゴリ名"
       :colorList="props.colorList"
@@ -150,7 +150,7 @@
       @upsert="upsertApi(mode.TYPE)"
       @delete="deleteApi(mode.TYPE)"
     />
-    <SettingDialog
+    <setting-common-Dialog
       v-model="subTypeDialog"
       title="サブカテゴリ名"
       :colorList="undefined"
@@ -171,7 +171,7 @@ import type {
 } from '~/api/supabase/type.interface';
 import { assertApiResponse } from '~/utils/api';
 import type { Id } from '~/utils/types/common';
-import type { NameAndColorDialog, NameDialog } from './SettingDialog.vue';
+import type { NameAndColorDialog, NameDialog } from './common/Dialog.vue';
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];

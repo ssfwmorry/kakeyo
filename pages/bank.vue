@@ -77,7 +77,7 @@ import type { GetBankListItem } from '~/api/supabase/bank.interface';
 import type { GetBankBalanceListBalanceItem } from '~/api/supabase/bankBalance.interface';
 import BankBalanceDialog from '~/components/BankBalanceDialog.vue';
 import { COLOR_CODE } from '~/utils/constants/color';
-import { convertManUnit } from '~/utils/others';
+import { ConvertManUnit } from '~/utils/others';
 import TimeUtility from '~/utils/time';
 import type { DateString } from '~/utils/types/common';
 ChartJS.register(
@@ -122,7 +122,7 @@ const chartOptions: ChartOptions<'line'> = {
     y: {
       stacked: true,
       ticks: {
-        callback: (value) => `${convertManUnit(Number(value))}万円`,
+        callback: (value) => `${ConvertManUnit(Number(value))}万円`,
       },
     },
   },
@@ -172,7 +172,7 @@ const getTableData = (
       const bankId = String(bank.id);
       if (bankId in balance.banks) {
         // 存在する値ならそのまま設定
-        tableBankPrices.push(convertManUnit(balance.banks[bankId].price));
+        tableBankPrices.push(ConvertManUnit(balance.banks[bankId].price));
       } else {
         tableBankPrices.push(null);
         isHaveNoBank = true;
@@ -181,7 +181,7 @@ const getTableData = (
     tableRows.push({
       createdDate: TimeUtility.ConvertDBResponseDatetimeToDateStr(balance.createdAt),
       bankPrices: tableBankPrices,
-      sum: isHaveNoBank ? null : convertManUnit(balance.sum),
+      sum: isHaveNoBank ? null : ConvertManUnit(balance.sum),
     });
   });
   return tableRows;

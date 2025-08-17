@@ -6,16 +6,16 @@
   </v-tabs>
   <v-tabs-window v-model="tabMode" :touchless="true" class="h-100 bg-white">
     <v-tabs-window-item :value="tab.KAKEI" class="pt-2 px-2 page-tab-item">
-      <SettingKakeiType :colorList="colorList" />
-      <SettingKakeiMethod :colorList="colorList" />
-      <SettingKakeiBank v-if="!isPair" :colorList="colorList" />
-      <SettingKakeiPlannedRecord />
+      <setting-KakeiType :colorList="colorList" />
+      <setting-KakeiMethod :colorList="colorList" />
+      <setting-KakeiBank v-if="!isPair" :colorList="colorList" />
+      <setting-KakeiPlannedRecord />
     </v-tabs-window-item>
     <v-tabs-window-item :value="tab.PLAN" class="pt-2 px-2 page-tab-item">
-      <SettingPlanType :colorList="colorList" />
+      <setting-PlanType :colorList="colorList" />
     </v-tabs-window-item>
     <v-tabs-window-item :value="tab.OTHER" class="pt-2 px-2 page-tab-item">
-      <SettingGeneral />
+      <setting-General />
     </v-tabs-window-item>
   </v-tabs-window>
 </template>
