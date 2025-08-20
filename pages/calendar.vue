@@ -494,7 +494,7 @@ const insertRecordFromShortCut = async (shortCut: GetShortCutListItem) => {
 
   isShowShortCut.value = false;
 
-  await syncShortCutList();
+  await updateRange();
   setToast('登録しました');
   disableLoading();
 };
