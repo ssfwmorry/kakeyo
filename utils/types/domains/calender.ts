@@ -2,10 +2,13 @@ import type { EventInput } from '@fullcalendar/core/index.js';
 import type { GetRecordListItem } from '~/api/supabase/record.interface';
 import type { DateString, Id } from '../common';
 
+// 文字列の先頭は優先順位を表す数字にする
+// eventOrder: 'type,start,-duration,allDay,title'
 export const eventType = {
-  PLAN: 'PLAN',
-  RECORD: 'RECORD',
-  HOLIDAY: 'HOLIDAY',
+  HOLIDAY: '1_HOLIDAY',
+  RECORD: '2_RECORD',
+  REMINDER: '3_REMINDER',
+  PLAN: '4_PLAN',
 } as const;
 export type DateRecordList = {
   //  record のデータ
@@ -20,27 +23,37 @@ export type DateRecordList = {
 };
 export type CalendarList = Record<DateString, DateRecordList>;
 export type ExternalEventPlan = {
-  type: 'PLAN';
+  type: typeof eventType.PLAN;
   startStr: DateString;
   endStr: DateString;
   dbEnd: Date | null; // DBに登録されている終了日。このときBaseEventGetEndは次の日を示す
   memo: string | null;
   planId: number; // id はライブラリの定義に string として既存
   isPair: boolean;
-  typeId: Id;
-  typeName: string;
+  typeId: Id | null; // null はreminder経由で登録されたplan
+  typeName: string | null; // null はreminder経由で登録されたplan
 };
 type ExternalEventRecord = {
-  type: 'RECORD';
+  type: typeof eventType.RECORD;
   startStr: DateString;
 };
 type ExternalEventHoliday = {
-  type: 'HOLIDAY';
+  type: typeof eventType.HOLIDAY;
   startStr: DateString;
   // https://fullcalendar.io/docs/eventDisplay
   display: 'background';
 };
-export type ExternalEvent = ExternalEventPlan | ExternalEventRecord | ExternalEventHoliday;
+type ExternalEventReminder = {
+  type: typeof eventType.REMINDER;
+  memo: string | null;
+  reminderId: Id;
+  isPair: boolean;
+};
+export type ExternalEvent =
+  | ExternalEventPlan
+  | ExternalEventRecord
+  | ExternalEventHoliday
+  | ExternalEventReminder;
 // 内部変数として持っておくための型
 export type BaseEventGet = {
   title: string;

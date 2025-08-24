@@ -1,4 +1,4 @@
--- now: 2025-05-31 10:15
+-- now: 2025-08-24 13:03
 -- migration-sort: 1
 drop function if exists develop.swap_method(id1 int, id2 int);
 
@@ -557,15 +557,16 @@ drop function if exists develop.get_plan_list(input_user_id varchar(30), input_s
 
 create or replace function develop.get_plan_list(input_user_id varchar(30), input_start_date varchar(10), input_end_date varchar(10))
 returns table (
-  id integer,
-  start_date date,
-  end_date date,
-  name varchar(30),
+  id integer, -- not null
+  start_date date, -- not null
+  end_date date, -- not null
+  name varchar(30), -- not null
   memo text,
   plan_type_id integer,
   plan_type_name varchar(10),
   plan_type_color_classification_name varchar(10),
-  is_pair boolean
+  reminder_color_classification_name varchar(10),
+  is_pair boolean -- not null
 )
 as $$
     select
@@ -576,13 +577,18 @@ as $$
       plans.memo,
       plan_types.id as plan_type_id,
       plan_types.name as plan_type_name,
-      color_classifications.name as plan_type_color_classification_name,
+      type_colors.name as plan_type_color_classification_name,
+      reminder_colors.name as reminder_color_classification_name,
       pairs.id is not null as is_pair
     from develop.plans
     left join develop.plan_types on
         plans.plan_type_id = plan_types.id
-    inner join develop.color_classifications on
-        plan_types.color_classification_id = color_classifications.id
+    left join develop.color_classifications as type_colors on
+        plan_types.color_classification_id = type_colors.id
+    left join develop.reminders on
+        plans.reminder_id = reminders.id
+    left join develop.color_classifications as reminder_colors on
+        reminders.color_classification_id = reminder_colors.id
     left join develop.pairs on
         plans.pair_id = pairs.id
     where

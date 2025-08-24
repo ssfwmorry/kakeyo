@@ -4,9 +4,11 @@ import { getPlanList } from '~/api/supabase/plan';
 import type { GetPlanListItem } from '~/api/supabase/plan.interface';
 import { getMonthSum, getRecordList, postRecords } from '~/api/supabase/record';
 import type { GetRecordListItem } from '~/api/supabase/record.interface';
+import { getReminderList } from '~/api/supabase/reminder';
+import type { GetReminderListOutputData } from '~/api/supabase/reminder.interface';
 import StringUtility from '~/utils/string';
 import TimeUtility from '~/utils/time';
-import type { DateString } from '~/utils/types/common';
+import type { DateString, Id } from '~/utils/types/common';
 import {
   eventType,
   type CalendarList,
@@ -15,7 +17,12 @@ import {
 
 export const useCalendarStore = defineStore('calendarStore', () => {
   // actions
-  const updateRange = async (focus: DateString, isDemoLogin: boolean, userUid: string) => {
+  const updateRange = async (
+    focus: DateString,
+    isDemoLogin: boolean,
+    userUid: string,
+    pairId: Id | null
+  ) => {
     const payload1 = {
       yearMonth: TimeUtility.ConvertDateStrToYearMonth(focus),
     };
@@ -26,7 +33,7 @@ export const useCalendarStore = defineStore('calendarStore', () => {
       start: prev.year + '-' + prev.month + '-21' + ' 00:00:00', // 全月の21日
       end: next.year + '-' + next.month + '-09' + ' 23:59:59', // 翌月の9日
     };
-    const authParam = { isDemoLogin, userUid };
+    const authParam = { isDemoLogin, userUid, pairId };
 
     // plannedRecord から、足りない record を登録(表示日付が、現在日付の6ヶ月後以前の場合, バッファで+1ヶ月)
     if (dayjs(focus).isBefore(dayjs().add(7, 'M'))) {
@@ -34,17 +41,19 @@ export const useCalendarStore = defineStore('calendarStore', () => {
       assertApiResponse(apiResPostRecords);
     }
 
-    const [apiResMonthSum, apiResGetRecords, apiResPlans] = await Promise.all([
+    const [apiResMonthSum, apiResGetRecords, apiResPlans, apiResReminders] = await Promise.all([
       getMonthSum(authParam, payload1), // 月の収支を取得
       getRecordList(authParam, payload2), // record を取得
       getPlanList(authParam, payload2), // plan を追加
+      getReminderList(authParam), // reminder を追加
     ]);
     assertApiResponse(apiResMonthSum);
     assertApiResponse(apiResGetRecords);
     assertApiResponse(apiResPlans);
+    assertApiResponse(apiResReminders);
 
     const daySumList = getDaySumList(apiResGetRecords.data, focus);
-    const events = createCalendarEvents(apiResPlans.data, daySumList);
+    const events = createCalendarEvents(apiResPlans.data, daySumList, apiResReminders.data);
 
     return {
       daySumList,
@@ -112,7 +121,8 @@ export const useCalendarStore = defineStore('calendarStore', () => {
   };
   const createCalendarEvents = (
     plans: GetPlanListItem[],
-    calendarList: CalendarList
+    calendarList: CalendarList,
+    reminderList: GetReminderListOutputData
   ): EventInputExpanded[] => {
     const events: EventInputExpanded[] = [];
     // plan 分を events に追加
@@ -125,7 +135,9 @@ export const useCalendarStore = defineStore('calendarStore', () => {
         allDay: true,
         borderColor: 'black',
         textColor: 'white',
-        backgroundColor: plan.planTypeColorClassificationName,
+        // TODO どちらかは必ずあるように
+        backgroundColor:
+          plan.planTypeColorClassificationName ?? plan.reminderColorClassificationName ?? '',
         classNames: [`bg-${plan.planTypeColorClassificationName}`],
         type: eventType.PLAN,
         planId: plan.id,
@@ -168,6 +180,25 @@ export const useCalendarStore = defineStore('calendarStore', () => {
         startStr: dateStr,
       });
     });
+    // reminder 分を events に追加
+    reminderList.all.forEach((reminder) => {
+      events.push({
+        title: reminder.name,
+        start: dayjs(reminder.date).toDate(),
+        // events に追加するときに end に1日加算する。画面描画以外のデータ連携は dbEnd をつかう
+        end: dayjs(reminder.date).add(1, 'd').toDate(),
+        allDay: true,
+        borderColor: 'black',
+        textColor: 'red', // TODO: reminder.colorClassification.name,を使うように
+        backgroundColor: 'white',
+        classNames: ['border-red'],
+        type: eventType.REMINDER,
+        reminderId: reminder.id,
+        isPair: reminder.pairId !== null,
+        memo: reminder.memo,
+      });
+    });
+
     return events;
   };
   const daySum = (calendarList: CalendarList, date: DateString) => {

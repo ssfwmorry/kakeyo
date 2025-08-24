@@ -35,6 +35,12 @@ import {
   settleRecords,
   upsertRecord,
 } from '~/api/supabase/record';
+import {
+  checkReminder,
+  deleteReminder,
+  getReminderList,
+  insertReminder,
+} from '~/api/supabase/reminder';
 import { getShortCutList } from '~/api/supabase/shortCut';
 import { deleteSubType, swapSubType, upsertSubType } from '~/api/supabase/subType';
 import { deleteType, getTypeList, swapType, upsertType } from '~/api/supabase/type';
@@ -43,6 +49,7 @@ import { getPairId } from '~/api/supabase/user';
 // VSCodeでのコードジャンプができるように、composables経由でAPIをコールする
 export const useSupabase = () => {
   return {
+    checkReminder,
     deleteBank,
     deleteMemo,
     deleteMethod,
@@ -50,6 +57,7 @@ export const useSupabase = () => {
     deletePlanType,
     deletePlannedRecord,
     deleteRecord,
+    deleteReminder,
     deleteSubType,
     deleteType,
     getBankBalanceList,
@@ -67,6 +75,7 @@ export const useSupabase = () => {
     getPlanTypeList,
     getPlannedRecordList,
     getRecordList,
+    getReminderList,
     getShortCutList,
     getSubTypeSummary,
     getSummarizedRecordList,
@@ -74,6 +83,7 @@ export const useSupabase = () => {
     getTypeSummary,
     haveLatestBankBalance,
     insertMemo,
+    insertReminder,
     postBankBalances,
     postRecords,
     settleRecords,

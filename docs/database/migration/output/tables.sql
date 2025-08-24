@@ -1,4 +1,4 @@
--- now: 2025-08-03 22:24
+-- now: 2025-08-24 13:03
 -- migration-sort: 1
 drop table if exists develop.day_classifications cascade;
 
@@ -294,6 +294,55 @@ create policy "develop.plan_types all"
     )
 ;
 
+-- migration-sort: 52
+drop table if exists develop.conditions cascade;
+create table develop.conditions (
+    id    serial  primary key,
+    month int not null
+);
+
+alter table develop.conditions
+    enable row level security;
+
+create policy "develop.conditions all"
+    on develop.conditions for all
+    to anon
+    using (
+        true
+    )
+;
+
+-- migration-sort: 53
+drop table if exists develop.reminders cascade;
+create table develop.reminders (
+    id                      serial      primary key,
+    user_id                 varchar(28),
+    pair_id                 integer,
+    name                    varchar(10) not null check (length(name) <= 10),
+    reminder_type           smallint    not null,
+    condition_id            integer     not null,
+    base_type               smallint    not null,
+    date                    date        not null,
+    memo                    text,
+    color_classification_id smallint    not null,
+
+    foreign key (user_id) references develop.users (uid),
+    foreign key (pair_id) references develop.pairs (id),
+    foreign key (condition_id) references develop.conditions (id),
+    foreign key (color_classification_id) references develop.color_classifications (id)
+);
+
+alter table develop.reminders
+    enable row level security;
+
+create policy "develop.reminders all"
+    on develop.reminders for all
+    to anon
+    using (
+        true
+    )
+;
+
 -- migration-sort: 55
 drop table if exists develop.plans cascade;
 
@@ -303,13 +352,15 @@ create table develop.plans (
     pair_id      integer,
     start_date   date         not null,
     end_date     date         not null,
-    plan_type_id integer      not null,
+    plan_type_id integer,
     name         varchar(30)  not null check (length(name) <= 30),
     memo         text,
+    reminder_id  integer,
 
     foreign key (user_id) references develop.users (uid),
     foreign key (pair_id) references develop.pairs (id),
     foreign key (plan_type_id) references develop.plan_types (id)
+    foreign key (reminder_id) references develop.reminders (id)
 );
 
 alter table develop.plans

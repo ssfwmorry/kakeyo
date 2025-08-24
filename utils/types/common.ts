@@ -16,6 +16,8 @@ export type DateString = string;
 export type DatetimeString = string;
 /** ex..2024-12-31T20:06:38+09:00 */
 export type DbDatetimeString = string;
+/** YYYY-MM */
+export type DBDateString = string;
 /** {year: YYYY, month: MM} */
 export type YearMonthObj = { year: YearString; month: MonthString };
 /** {year: YYYY, month: MM} */

@@ -329,4 +329,26 @@ update develop.planned_records set record_type = 10 where user_id is null and pa
 - tables.md の short_cuts テーブルを migration
   - 実際にデータ投入は Supabase の WEB サイト経由で行う
 
-## 開発 DB と本番 DB に banks と bank_balances を作成する
+## 20250803\_開発 DB と本番 DB に banks と bank_balances テーブルを作成する
+
+## 20250823\_開発 DB の plans にカラム追加・変更、reminders と conditions テーブルを作成する
+
+```sql
+ALTER TABLE develop.plans ADD COLUMN reminder_id int;
+ALTER TABLE develop.plans ADD FOREIGN KEY (reminder_id) REFERENCES develop.reminders (id);
+ALTER TABLE develop.plans ALTER COLUMN plan_type_id DROP NOT NULL;
+```
+
+## 20250824\_開発の get_plan_list に plan_type_id が Nullable になるのを許容する
+
+- `develop.get_plan_list`
+
+## 20250824\_本番の plans にカラム追加・変更、reminders と conditions テーブルを作成、get_plan_list を変更
+
+```sql
+ALTER TABLE public.plans ADD COLUMN reminder_id int;
+ALTER TABLE public.plans ADD FOREIGN KEY (reminder_id) REFERENCES develop.reminders (id);
+ALTER TABLE public.plans ALTER COLUMN plan_type_id DROP NOT NULL;
+```
+
+- `public.get_plan_list`

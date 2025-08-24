@@ -1,4 +1,11 @@
-import type { ColorString, DateString, DatetimeString, DbDatetimeString, Id } from './common';
+import type {
+  ColorString,
+  DateString,
+  DatetimeString,
+  DBDateString,
+  DbDatetimeString,
+  Id,
+} from './common';
 
 export type ColorClassification = {
   id: Id;
@@ -116,4 +123,34 @@ export type BankBalance = {
   bankId: Id;
   price: number;
   createdAt: DbDatetimeString;
+};
+
+export type Condition = {
+  id: Id;
+  month: number;
+};
+
+export const ReminderType = {
+  flow: 5,
+  stock: 10,
+} as const;
+export type ReminderType = (typeof ReminderType)[keyof typeof ReminderType];
+
+export const BaseType = {
+  now: 5,
+  date: 10,
+} as const;
+export type BaseType = (typeof BaseType)[keyof typeof BaseType];
+
+export type Reminder = {
+  id: Id;
+  userId: string | null;
+  pairId: Id | null;
+  name: string;
+  reminderType: ReminderType;
+  conditionId: Id;
+  baseType: BaseType;
+  date: DBDateString;
+  memo: string | null;
+  colorClassificationId: Id;
 };

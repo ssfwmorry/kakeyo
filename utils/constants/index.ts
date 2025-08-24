@@ -47,7 +47,7 @@ const EMAIL_WHITE_LIST = (config: RuntimeConfig) => {
       return [];
   }
 };
-
+const MONTH_VALUES: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 const MONTH_LABELS: string[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12(月)'] as const; // prettier-ignore
 const MONTH_KEYS: string[] = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'] as const; // prettier-ignore
 const INITIAL_BAR_DATA = {
@@ -71,5 +71,6 @@ export {
   MAX_PRICE,
   MONTH_KEYS,
   MONTH_LABELS,
+  MONTH_VALUES,
   PAGE,
 };

@@ -13,6 +13,7 @@
     </v-tabs-window-item>
     <v-tabs-window-item :value="tab.PLAN" class="pt-2 px-2 page-tab-item">
       <setting-PlanType :colorList="colorList" />
+      <setting-Reminder :colorList="colorList" />
     </v-tabs-window-item>
     <v-tabs-window-item :value="tab.OTHER" class="pt-2 px-2 page-tab-item">
       <setting-General />

@@ -253,7 +253,7 @@ const calendarOptions = ref<CalendarOptions>({
   fixedWeekCount: false,
   // locale: 'ja',
   selectable: false, // eventを選択すると背景色が白になるのでtrueにする場合には要調整
-  eventOrder: '-type,start,-duration,allDay,title',
+  eventOrder: 'type,start,-duration,allDay,title',
   events: [],
   dateClick: (arg: DateClickArg) => showDateRecords(arg.dateStr),
   eventClick: (arg: EventClickArg) => showPlan(arg.event),
@@ -301,7 +301,7 @@ const updateRange = async () => {
     daySumList: tmpDaySumList,
     monthSumStr: tmpMonthSumStr,
     events,
-  } = await calendarUpdateRange(focus.value, isDemoLogin.value, userUid.value);
+  } = await calendarUpdateRange(focus.value, isDemoLogin.value, userUid.value, pairId.value);
 
   // レンダリングされるタイミングを揃えるため、全て取得してから、data を更新する
   daySumList.value = tmpDaySumList;
@@ -313,6 +313,9 @@ const showPlan = (event: EventClickArg['event']) => {
   const external = event.extendedProps as ExternalEvent;
   if (external.type === eventType.RECORD || external.type === eventType.HOLIDAY) {
     showDateRecords(external.startStr);
+  } else if (external.type === eventType.REMINDER) {
+    // TODO: 情報を可視化
+    return;
   } else {
     const plan: EventGetPlan = {
       title: event.title,
@@ -399,7 +402,12 @@ const goRecordEditPage = (record: GetRecordListItem) => {
   router.push({ name: PAGE.NOTE, query });
 };
 const goPlanEditPage = () => {
-  if (selectedPlan.value === null) throw new Error('goPlanEditPage');
+  if (
+    selectedPlan.value === null ||
+    selectedPlan.value.typeId === null ||
+    selectedPlan.value.typeName === null
+  )
+    throw new Error('goPlanEditPage');
   setIsPair(selectedPlan.value.isPair);
 
   const plan: Plan = {
@@ -590,11 +598,5 @@ onMounted(async () => {
 :deep(.event-price) {
   background-color: inherit !important;
   border: 0;
-}
-.size-28 {
-  min-width: 28px;
-  max-width: 28px;
-  min-height: 28px;
-  max-height: 28px;
 }
 </style>

@@ -16,7 +16,9 @@
 - 40: [planned_records](#planned_records)
 - 45: [records(planned_records の後)](#records)
 - 50: [plan_types](#plan_types)
-- 55: [plans(plan_types の後)](#plans)
+- 52: [conditions](#conditions)
+- 53: [reminders(conditions の後)](#reminders)
+- 55: [plans(plan_types, reminders の後)](#plans)
 - 60: [memos](#memos)
 - 65: [short_cuts](#short_cuts)
 - 70: [banks](#banks)
@@ -432,16 +434,17 @@ create policy "develop.planned_records all"
 
 #### schema
 
-| name         |  type  |  size  | required | auto_increment |      key      | remarks                |
-| :----------- | :----: | :----: | :------: | :------------: | :-----------: | :--------------------- |
-| id           |  int   |   -    |    v     |       v        |      PK       | -                      |
-| user_id      | string |   28   |    -     |       -        |   users.uid   | pair_id とどちらか必須 |
-| pair_id      |  int   |   -    |    -     |       -        |   pairs.uid   | user_id とどちらか必須 |
-| start_date   |  date  |   -    |    v     |       -        |       -       | -                      |
-| end_date     |  date  |   -    |    v     |       -        |       -       | -                      |
-| plan_type_id |  int   |   -    |    v     |       -        | plan_types.id | -                      |
-| name         | string | max 30 |    v     |       -        |       -       | -                      |
-| memo         | string |   -    |    -     |       -        |       -       | -                      |
+| name         |  type  |  size  | required | auto_increment |      key      | remarks                                                   |
+| :----------- | :----: | :----: | :------: | :------------: | :-----------: | :-------------------------------------------------------- |
+| id           |  int   |   -    |    v     |       v        |      PK       | -                                                         |
+| user_id      | string |   28   |    -     |       -        |   users.uid   | pair_id とどちらか必須                                    |
+| pair_id      |  int   |   -    |    -     |       -        |   pairs.uid   | user_id とどちらか必須                                    |
+| start_date   |  date  |   -    |    v     |       -        |       -       | -                                                         |
+| end_date     |  date  |   -    |    v     |       -        |       -       | -                                                         |
+| plan_type_id |  int   |   -    |    -     |       -        | plan_types.id | -                                                         |
+| name         | string | max 30 |    v     |       -        |       -       | -                                                         |
+| memo         | string |   -    |    -     |       -        |       -       | -                                                         |
+| reminder_id  |  int   |   -    |    -     |       -        | reminders.id  | reminders.reminder_type=10(Stock)の場合に作られたかどうか |
 
 #### migration
 
@@ -455,13 +458,15 @@ create table develop.plans (
     pair_id      integer,
     start_date   date         not null,
     end_date     date         not null,
-    plan_type_id integer      not null,
+    plan_type_id integer,
     name         varchar(30)  not null check (length(name) <= 30),
     memo         text,
+    reminder_id  integer,
 
     foreign key (user_id) references develop.users (uid),
     foreign key (pair_id) references develop.pairs (id),
     foreign key (plan_type_id) references develop.plan_types (id)
+    foreign key (reminder_id) references develop.reminders (id)
 );
 
 alter table develop.plans
@@ -673,7 +678,7 @@ create policy "develop.banks all"
 | name       |   type   | size | required | auto_increment |   key    | remarks |
 | :--------- | :------: | :--: | :------: | :------------: | :------: | :------ |
 | id         |   int    |  -   |    v     |       v        |    PK    | -       |
-| bank_id    |   int    |  28  |    v     |       -        | banks.id | -       |
+| bank_id    |   int    |  -   |    v     |       -        | banks.id | -       |
 | price      |   int    |  -   |    v     |       -        |    -     | -       |
 | created_at | datetime |  -   |    v     |       -        |    -     | -       |
 
@@ -696,6 +701,89 @@ alter table develop.bank_balances
 
 create policy "develop.bank_balances all"
     on develop.bank_balances for all
+    to anon
+    using (
+        true
+    )
+;
+```
+
+### conditions
+
+#### schema
+
+| name  | type | size | required | auto_increment | key | remarks  |
+| :---- | :--: | :--: | :------: | :------------: | :-: | :------- |
+| id    | int  |  -   |    v     |       v        | PK  | -        |
+| month | int  |  -   |    v     |       -        |  -  | N ヶ月後 |
+
+#### migration
+
+```sql
+-- migration-sort: 52
+drop table if exists develop.conditions cascade;
+create table develop.conditions (
+    id    serial  primary key,
+    month int not null
+);
+
+alter table develop.conditions
+    enable row level security;
+
+create policy "develop.conditions all"
+    on develop.conditions for all
+    to anon
+    using (
+        true
+    )
+;
+```
+
+### reminders
+
+#### schema
+
+| name                    |  type   |  size  | required | auto_increment |           key            | remarks                                                                    |
+| :---------------------- | :-----: | :----: | :------: | :------------: | :----------------------: | :------------------------------------------------------------------------- |
+| id                      |   int   |   -    |    v     |       v        |            PK            | -                                                                          |
+| user_id                 | string  |   28   |    -     |       -        |        users.uid         | pair_id とどちらか必須                                                     |
+| pair_id                 |   int   |   -    |    -     |       -        |         pairs.id         | user_id とどちらか必須                                                     |
+| name                    | string  | max 10 |    v     |       -        |            -             | -                                                                          |
+| reminder_type           | tinyint |   -    |    v     |       -        |         banks.id         | 5(Flow): チェック後に日付が変わる, 10(Stock): チェック後に plan として残る |
+| condition_id            |   int   |   -    |    v     |       -        |      conditions.id       | -                                                                          |
+| base_type               | tinyint |   -    |    v     |       -        |            -             | 5(Now): 基準が現在日付, 10(Date): 基準が date                              |
+| date                    |  date   |   -    |    v     |       -        |            -             | -                                                                          |
+| memo                    | string  |   -    |    -     |       -        |            -             | -                                                                          |
+| color_classification_id | tinyint |   -    |    v     |       -        | color_classifications.id | [定義](#color_classification)を参照                                        |
+
+#### migration
+
+```sql
+-- migration-sort: 53
+drop table if exists develop.reminders cascade;
+create table develop.reminders (
+    id                      serial      primary key,
+    user_id                 varchar(28),
+    pair_id                 integer,
+    name                    varchar(10) not null check (length(name) <= 10),
+    reminder_type           smallint    not null,
+    condition_id            integer     not null,
+    base_type               smallint    not null,
+    date                    date        not null,
+    memo                    text,
+    color_classification_id smallint    not null,
+
+    foreign key (user_id) references develop.users (uid),
+    foreign key (pair_id) references develop.pairs (id),
+    foreign key (condition_id) references develop.conditions (id),
+    foreign key (color_classification_id) references develop.color_classifications (id)
+);
+
+alter table develop.reminders
+    enable row level security;
+
+create policy "develop.reminders all"
+    on develop.reminders for all
     to anon
     using (
         true
