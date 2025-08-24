@@ -6,7 +6,7 @@
     @click:outside="closeDialog"
   >
     <v-card class="pa-4">
-      <v-row no-gutters class="mb-2"> <h4>リマインダ名</h4></v-row>
+      <v-row no-gutters class="mb-2"> <h4>定期的な予定名</h4></v-row>
       <v-row no-gutters class="mb-3 px-2">
         <v-text-field
           v-model="props.modelValue.name"
@@ -51,7 +51,7 @@
         />
       </v-row>
 
-      <v-row no-gutters class="mb-2"> <h4>初回リマインド</h4></v-row>
+      <v-row no-gutters class="mb-2"> <h4>直近の日付</h4></v-row>
       <v-row no-gutters class="mb-2">
         <v-btn variant="flat" height="40" class="px-2 fw-nml fs-nml" color="grey-lighten-3">
           <v-icon size="30" color="grey-darken-1" class="pr-1">{{ $ICONS.CALENDAR }}</v-icon>
@@ -89,7 +89,7 @@
         </v-radio-group>
       </v-row>
 
-      <v-row no-gutters class="mb-2"> <h4>次回リマインド条件</h4></v-row>
+      <v-row no-gutters class="mb-2"> <h4>サイクル条件</h4></v-row>
       <v-row no-gutters class="mb-2">
         <v-radio-group v-model="props.modelValue.baseType" hide-details density="compact">
           <v-radio label="リマインドのチェック日" :value="BaseType.now"></v-radio>

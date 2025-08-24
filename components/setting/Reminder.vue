@@ -1,7 +1,7 @@
 <template>
   <div>
     <h4 class="mb-2">
-      <v-icon size="small">{{ $ICONS.BELL }}</v-icon> リマインダ
+      <v-icon size="small">{{ $ICONS.BELL }}</v-icon> 定期的な予定
     </h4>
     <div class="px-3 mb-4">
       <v-row
@@ -38,13 +38,13 @@
             <v-row v-if="reminder.memo" no-gutters class="pl-1">
               ・メモ: {{ reminder.memo }}
             </v-row>
-            <v-row no-gutters class="pl-1"> ・リマインド日付: {{ reminder.date }} </v-row>
+            <v-row no-gutters class="pl-1"> ・直近の日付: {{ reminder.date }} </v-row>
             <v-row no-gutters class="pl-1">
               ・チェック後の予定連携:
               {{ reminder.reminderType == ReminderType.stock ? 'あり' : 'なし' }}
             </v-row>
             <v-row no-gutters class="pl-1">
-              ・次回リマインド条件:
+              ・サイクル条件:
               {{ reminder.baseType == BaseType.now ? 'チェック日' : 'リマインド日' }}
               から
               {{ reminder.condition.month }}ヶ月後
@@ -69,7 +69,7 @@
 
     <setting-ReminderDialog
       v-model="dialog"
-      title="リマインダ名"
+      title="定期的な予定"
       :colorList="props.colorList"
       @close="closeDialog"
       @create="createApi()"
@@ -130,7 +130,16 @@ const openCreateDialog = () => {
   };
 };
 const closeDialog = () => {
-  dialog.value.isShow = false;
+  dialog.value = {
+    isShow: false,
+    name: null,
+    reminderType: null,
+    conditionMonth: null,
+    baseType: null,
+    date: null,
+    colorId: null,
+    memo: null,
+  };
 };
 
 const createApi = async () => {
@@ -176,7 +185,7 @@ const validateCreateApi = (
 };
 
 const deleteApi = async (reminder: GetReminderListItem) => {
-  const idOk = window.confirm('削除してもよろしいですか？');
+  const idOk = window.confirm('予定への連携もなくなります。\n本当に削除してもよいですか？');
   if (!idOk) return;
 
   enableLoading();
