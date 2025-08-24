@@ -347,7 +347,7 @@ ALTER TABLE develop.plans ALTER COLUMN plan_type_id DROP NOT NULL;
 
 ```sql
 ALTER TABLE public.plans ADD COLUMN reminder_id int;
-ALTER TABLE public.plans ADD FOREIGN KEY (reminder_id) REFERENCES develop.reminders (id);
+ALTER TABLE public.plans ADD FOREIGN KEY (reminder_id) REFERENCES public.reminders (id);
 ALTER TABLE public.plans ALTER COLUMN plan_type_id DROP NOT NULL;
 ```
 
