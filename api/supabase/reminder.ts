@@ -116,8 +116,8 @@ export const checkReminder = async (
   let newDate: Date;
   if (input.condition.conditionType === ConditionType.monthDay) {
     // 月日指定
-    const nextYear = dayjs().add(1, 'year');
-    newDate = dayjs(`${nextYear}-${input.condition.monthDay}`).toDate();
+    const nextYear = dayjs().add(1, 'year').year();
+    newDate = new Date(`${nextYear}-${input.condition.monthDay}`);
   } else {
     // 〜ヶ月後指定
     const newDateBase = input.condition.baseType == BaseType.now ? dayjs() : dayjs(input.date);
