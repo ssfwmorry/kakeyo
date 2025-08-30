@@ -9,6 +9,7 @@ $footer-height: 80px;
 $fontsize-large: 1.2rem;
 
 $zindex-demo-label: 2000; // <v-app-bar>が1006であるため
+$zindex-loading: 3000; // <v-dialog>が2400であるため
 
 // vuetifyの色定義を明示
 // https://vuetifyjs.com/ja/styles/colors

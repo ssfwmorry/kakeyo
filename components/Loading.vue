@@ -4,9 +4,9 @@
   </div>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .loader-background {
-  z-index: 99;
+  z-index: $zindex-loading;
   position: fixed;
   background: #0a0a0a;
   opacity: 0.4;
