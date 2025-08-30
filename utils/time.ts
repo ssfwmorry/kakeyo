@@ -6,6 +6,7 @@ import type {
   DateString,
   DatetimeString,
   DbDatetimeString,
+  MonthDayString,
   PickedDate,
   YearMonthNumObj,
   YearMonthObj,
@@ -45,6 +46,11 @@ const TimeUtility = {
     const month = ('0' + String(d.$M + 1)).slice(-2);
     const day = ('0' + String(d.$D)).slice(-2);
     return `${d.$y}-${month}-${day}`;
+  },
+  GetMonthDay: (m: number, d: number): MonthDayString => {
+    const month = ('0' + String(m)).slice(-2);
+    const day = ('0' + String(d)).slice(-2);
+    return `${month}-${day}`;
   },
   // ex.. PARAM: 2022, RET: 2021
   PrevYear: (year: number) => {
@@ -101,6 +107,11 @@ const TimeUtility = {
   // ex.. PARAM: '2022-01-01', RET: 1月1日
   ConvertDateStrToJPDate: (dateStr: DateString) => {
     let [year, month, day] = dateStr.split('-');
+    return Number(month) + '月' + Number(day) + '日';
+  },
+  // ex.. PARAM: '01-01', RET: 1月1日
+  ConvertMonthDayToJPMonthDay: (monthDay: MonthDayString) => {
+    let [month, day] = monthDay.split('-');
     return Number(month) + '月' + Number(day) + '日';
   },
   // ex.. PARAM: '2022-01-01', RET: new Date('2022-01-01')
@@ -254,6 +265,14 @@ const TimeUtility = {
       ret.push(tmpDate);
     }
     return ret;
+  },
+  // その月に存在する日にちを返却する
+  DaysByMonth: (month: number | null): number[] => {
+    // month.value が null の場合は 31日まで
+    const m = month ?? 1;
+    // うるう年は考慮せず28日固定
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1] || 31;
+    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
   },
 };
 

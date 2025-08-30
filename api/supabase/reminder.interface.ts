@@ -3,7 +3,7 @@ import type { Decamelized } from 'humps';
 import type { ColorClassification, Condition, Pair, Reminder } from '~/utils/types/model';
 import type { ApiOutput } from './common.interface';
 
-export type DbCondition = Decamelized<ColorClassification>;
+export type DbCondition = Decamelized<Condition>;
 
 export type GetReminderListItem = Reminder & {
   colorClassification: ColorClassification;
@@ -20,10 +20,10 @@ export interface GetReminderListOutput
 
 export interface InsertReminderInput
   extends Omit<Reminder, 'id' | 'userId' | 'pairId' | 'conditionId'> {
-  condition: Pick<Condition, 'month'>;
+  condition: Omit<Condition, 'id'>;
 }
 export interface InsertReminderOutput extends ApiOutput<null, PostgrestError> {}
 
 export interface CheckReminderInput extends Reminder {
-  condition: Pick<Condition, 'month'>;
+  condition: Omit<Condition, 'id'>;
 }

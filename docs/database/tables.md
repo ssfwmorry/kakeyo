@@ -712,10 +712,21 @@ create policy "develop.bank_balances all"
 
 #### schema
 
-| name  | type | size | required | auto_increment | key | remarks  |
-| :---- | :--: | :--: | :------: | :------------: | :-: | :------- |
-| id    | int  |  -   |    v     |       v        | PK  | -        |
-| month | int  |  -   |    v     |       -        |  -  | N ヶ月後 |
+| name           |  type   | size | required | auto_increment | key | remarks                                       |
+| :------------- | :-----: | :--: | :------: | :------------: | :-: | :-------------------------------------------- |
+| id             |   int   |  -   |    v     |       v        | PK  | -                                             |
+| condition_type | tinyint |  -   |    -     |       -        |  -  | 5(MONTH): ~ヶ月後, 10(MONTH_DAY): 月日        |
+| month          |   int   |  -   |    -     |       -        |  -  | N ヶ月後                                      |
+| month_day      | string  |  -   |    -     |       -        |  -  | 'MM-DD'                                       |
+| base_type      | tinyint |  -   |    -     |       -        |  -  | 5(NOW): 基準が現在日付, 10(DATE): 基準が date |
+
+##### 起こり得る状況
+
+| condition_type | month | month_day | base_type | 状況説明                        |
+| :------------: | :---: | :-------: | :-------: | :------------------------------ |
+|    5:MONTH     |   Q   |     -     |   5:NOW   | 現在日付から Q ヶ月後に次の予定 |
+|    5:MONTH     |   Q   |     -     |  10:DATE  | ある日付から Q ヶ月後に次の予定 |
+|  10:MONTH_DAY  |   -   |   MM-DD   |     -     | 翌年の MM-DD に次の予定         |
 
 #### migration
 
@@ -723,8 +734,11 @@ create policy "develop.bank_balances all"
 -- migration-sort: 52
 drop table if exists develop.conditions cascade;
 create table develop.conditions (
-    id    serial  primary key,
-    month int not null
+    id             serial  primary key,
+    month          int,
+    month_day      varchar(5),
+    condition_type smallint not null,
+    base_type      smallint
 );
 
 alter table develop.conditions
@@ -751,7 +765,6 @@ create policy "develop.conditions all"
 | name                    | string  | max 10 |    v     |       -        |            -             | -                                                                          |
 | reminder_type           | tinyint |   -    |    v     |       -        |         banks.id         | 5(Flow): チェック後に日付が変わる, 10(Stock): チェック後に plan として残る |
 | condition_id            |   int   |   -    |    v     |       -        |      conditions.id       | -                                                                          |
-| base_type               | tinyint |   -    |    v     |       -        |            -             | 5(Now): 基準が現在日付, 10(Date): 基準が date                              |
 | date                    |  date   |   -    |    v     |       -        |            -             | -                                                                          |
 | memo                    | string  |   -    |    -     |       -        |            -             | -                                                                          |
 | color_classification_id | tinyint |   -    |    v     |       -        | color_classifications.id | [定義](#color_classification)を参照                                        |
@@ -768,7 +781,6 @@ create table develop.reminders (
     name                    varchar(10) not null check (length(name) <= 10),
     reminder_type           smallint    not null,
     condition_id            integer     not null,
-    base_type               smallint    not null,
     date                    date        not null,
     memo                    text,
     color_classification_id smallint    not null,

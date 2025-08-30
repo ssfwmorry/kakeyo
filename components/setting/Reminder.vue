@@ -38,16 +38,24 @@
             <v-row v-if="reminder.memo" no-gutters class="pl-1">
               ・メモ: {{ reminder.memo }}
             </v-row>
-            <v-row no-gutters class="pl-1"> ・直近の日付: {{ reminder.date }} </v-row>
+            <v-row no-gutters class="pl-1"> ・直近の日付：{{ reminder.date }} </v-row>
             <v-row no-gutters class="pl-1">
-              ・チェック後の予定連携:
-              {{ reminder.reminderType == ReminderType.stock ? 'あり' : 'なし' }}
+              ・チェック後に予定として：
+              {{ reminder.reminderType == ReminderType.stock ? '残す' : '残さない' }}
             </v-row>
-            <v-row no-gutters class="pl-1">
-              ・サイクル条件:
-              {{ reminder.baseType == BaseType.now ? 'チェック日' : 'リマインド日' }}
+            <v-row
+              v-if="reminder.condition.conditionType === ConditionType.month"
+              no-gutters
+              class="pl-1"
+            >
+              ・次の予定：
+              {{ reminder.condition.baseType == BaseType.now ? 'チェック日' : 'リマインド日' }}
               から
               {{ reminder.condition.month }}ヶ月後
+            </v-row>
+            <v-row v-else no-gutters class="pl-1">
+              ・次の予定：来年の
+              {{ TimeUtility.ConvertMonthDayToJPMonthDay(reminder.condition.monthDay) }}
             </v-row>
           </v-card>
         </v-col>
@@ -84,8 +92,22 @@ import type {
   GetReminderListOutputData,
 } from '~/api/supabase/reminder.interface';
 import { assertApiResponse } from '~/utils/api';
-import { BaseType, ReminderType } from '~/utils/types/model';
+import TimeUtility from '~/utils/time';
+import { BaseType, ConditionType, ReminderType } from '~/utils/types/model';
 import type { ReminderDialog, ReminderDialogNonNullable } from './ReminderDialog.vue';
+
+const initialDialog = () => ({
+  isShow: false,
+  name: null,
+  reminderType: null,
+  conditionType: ConditionType.month,
+  conditionBaseType: null,
+  conditionMonth: null,
+  conditionMonthDay: null,
+  date: null,
+  colorId: null,
+  memo: null,
+});
 
 const { enableLoading, disableLoading } = useLoadingStore();
 const [authStore, pairStore] = [useAuthStore(), usePairStore()];
@@ -101,16 +123,7 @@ type Props = {
 const props = defineProps<Props>();
 
 const reminderList = ref<GetReminderListOutputData>({ self: [], pair: [], all: [] });
-const dialog = ref<ReminderDialog>({
-  isShow: false,
-  name: null,
-  reminderType: null,
-  conditionMonth: null,
-  baseType: null,
-  date: null,
-  colorId: null,
-  memo: null,
-});
+const dialog = ref<ReminderDialog>(initialDialog());
 
 const updateShowData = async () => {
   const apiRes = await getReminderList({ userUid: userUid.value, pairId: pairId.value });
@@ -118,28 +131,10 @@ const updateShowData = async () => {
   reminderList.value = apiRes.data;
 };
 const openCreateDialog = () => {
-  dialog.value = {
-    isShow: true,
-    name: null,
-    reminderType: null,
-    conditionMonth: null,
-    baseType: null,
-    date: null,
-    colorId: null,
-    memo: null,
-  };
+  dialog.value = { ...initialDialog(), isShow: true };
 };
 const closeDialog = () => {
-  dialog.value = {
-    isShow: false,
-    name: null,
-    reminderType: null,
-    conditionMonth: null,
-    baseType: null,
-    date: null,
-    colorId: null,
-    memo: null,
-  };
+  dialog.value = initialDialog();
 };
 
 const createApi = async () => {
@@ -159,7 +154,10 @@ const createApi = async () => {
     ...dialog.value,
     colorClassificationId: dialog.value.colorId,
     condition: {
+      conditionType: dialog.value.conditionType,
       month: dialog.value.conditionMonth,
+      monthDay: dialog.value.conditionMonthDay,
+      baseType: dialog.value.conditionBaseType,
     },
   };
   const apiRes = await insertReminder(auth, payload);
@@ -174,11 +172,10 @@ const createApi = async () => {
 const validateCreateApi = (
   dialog: ReminderDialog
 ): dialog is ReminderDialogNonNullable & { memo: string | null } => {
+  // TODO: 任意条件をダイアログのロジックと共通化させる
   return !(
     dialog.name === null ||
     dialog.reminderType === null ||
-    dialog.conditionMonth === null ||
-    dialog.baseType === null ||
     dialog.date === null ||
     dialog.colorId === null
   );
@@ -202,18 +199,6 @@ const deleteApi = async (reminder: GetReminderListItem) => {
 (async () => {
   await updateShowData();
 })();
-
-/**
-- 美容室や歯医者が終わったら、次の予約の目安をしる。口座を一ヶ月ごとに記録したいのをリマインドする
-- 超えたら通知アイコンでアラートする
-  - reminders.dateが過去のものがあれば通知
-  - アラートからチェックができるように
-    - チェックをすると。todo_type=10の場合はplanを自動的に残す
-    - dateを更新する
-- カレンダー
-  - planとtodoを合算して表示する
-  - reminders由来のものは表示色を区別する
- */
 </script>
 
 <style scoped lang="scss">

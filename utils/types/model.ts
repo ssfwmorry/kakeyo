@@ -4,6 +4,7 @@ import type {
   DatetimeString,
   DBDateString,
   DbDatetimeString,
+  DBMonthDayString,
   Id,
 } from './common';
 
@@ -125,9 +126,24 @@ export type BankBalance = {
   createdAt: DbDatetimeString;
 };
 
+export const ConditionType = {
+  month: 5,
+  monthDay: 10,
+} as const;
+export type ConditionType = (typeof ConditionType)[keyof typeof ConditionType];
+
+export const BaseType = {
+  now: 5,
+  date: 10,
+} as const;
+export type BaseType = (typeof BaseType)[keyof typeof BaseType];
+
 export type Condition = {
   id: Id;
+  conditionType: ConditionType;
   month: number;
+  monthDay: DBMonthDayString;
+  baseType: BaseType;
 };
 
 export const ReminderType = {
@@ -136,12 +152,6 @@ export const ReminderType = {
 } as const;
 export type ReminderType = (typeof ReminderType)[keyof typeof ReminderType];
 
-export const BaseType = {
-  now: 5,
-  date: 10,
-} as const;
-export type BaseType = (typeof BaseType)[keyof typeof BaseType];
-
 export type Reminder = {
   id: Id;
   userId: string | null;
@@ -149,7 +159,6 @@ export type Reminder = {
   name: string;
   reminderType: ReminderType;
   conditionId: Id;
-  baseType: BaseType;
   date: DBDateString;
   memo: string | null;
   colorClassificationId: Id;

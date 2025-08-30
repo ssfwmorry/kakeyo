@@ -12,12 +12,16 @@ export type DayString = string;
 export type YearMonthString = string;
 /** YYYY-MM-DD */
 export type DateString = string;
+/** MM-DD */
+export type MonthDayString = string;
 /** YYYY-MM-DD HH:MM:SS */
 export type DatetimeString = string;
 /** ex..2024-12-31T20:06:38+09:00 */
 export type DbDatetimeString = string;
-/** YYYY-MM */
+/** YYYY-MM-DD */
 export type DBDateString = string;
+/** MM-DD */
+export type DBMonthDayString = string;
 /** {year: YYYY, month: MM} */
 export type YearMonthObj = { year: YearString; month: MonthString };
 /** {year: YYYY, month: MM} */

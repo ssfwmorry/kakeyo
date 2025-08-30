@@ -1,4 +1,4 @@
--- now: 2025-08-24 13:03
+-- now: 2025-08-30 23:07
 -- migration-sort: 1
 drop table if exists develop.day_classifications cascade;
 
@@ -297,8 +297,11 @@ create policy "develop.plan_types all"
 -- migration-sort: 52
 drop table if exists develop.conditions cascade;
 create table develop.conditions (
-    id    serial  primary key,
-    month int not null
+    id             serial  primary key,
+    month          int,
+    month_day      varchar(5),
+    condition_type smallint not null,
+    base_type      smallint
 );
 
 alter table develop.conditions
@@ -321,7 +324,6 @@ create table develop.reminders (
     name                    varchar(10) not null check (length(name) <= 10),
     reminder_type           smallint    not null,
     condition_id            integer     not null,
-    base_type               smallint    not null,
     date                    date        not null,
     memo                    text,
     color_classification_id smallint    not null,

@@ -352,3 +352,20 @@ ALTER TABLE public.plans ALTER COLUMN plan_type_id DROP NOT NULL;
 ```
 
 - `public.get_plan_list`
+
+## 2025030\_開発と本番 DB の　 reminders と conditions のカラムを調整
+
+```sql
+ALTER TABLE develop.conditions ALTER COLUMN month DROP NOT NULL;
+ALTER TABLE develop.conditions ADD COLUMN month_day varchar(5);
+ALTER TABLE develop.conditions ADD COLUMN condition_type smallint;
+UPDATE develop.conditions SET condition_type=5;
+ALTER TABLE develop.conditions ADD COLUMN base_type smallint;
+UPDATE develop.conditions SET base_type=5
+  WHERE id IN (SELECT condition_id FROM develop.reminders WHERE base_type=5);
+UPDATE develop.conditions SET base_type=10
+  WHERE id IN (SELECT condition_id FROM develop.reminders WHERE base_type=10);
+ALTER TABLE develop.conditions ALTER COLUMN condition_type SET not null;
+ALTER TABLE develop.reminders DROP COLUMN base_type;
+-- publicは省略
+```
