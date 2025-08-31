@@ -4,7 +4,6 @@ import { DEMO_DATA } from '~/utils/constants';
 import { BaseType, ConditionType, ReminderType } from '~/utils/types/model';
 import {
   buildNoDataApiOutput,
-  type DeleteInput,
   type SupabaseApiAuthUpsert,
   type SupabaseApiDemo,
   type SupabaseApiUserAndPair,
@@ -12,6 +11,7 @@ import {
 import type {
   CheckReminderInput,
   DbCondition,
+  DeleteReminderInput,
   GetReminderListItem,
   GetReminderListOutput,
   InsertReminderInput,
@@ -144,16 +144,16 @@ export const checkReminder = async (
   return buildNoDataApiOutput(error, 'reminder チェック');
 };
 
-export const deleteReminder = async ({ isDemoLogin }: SupabaseApiDemo, { id }: DeleteInput) => {
+export const deleteReminder = async (
+  { isDemoLogin }: SupabaseApiDemo,
+  input: DeleteReminderInput
+) => {
   if (isDemoLogin) return DEMO_DATA.SUPABASE.COMMON_NO_ERROR;
 
-  // TODO conditionsも削除する
-  const { error: error1 } = await supabase
-    .from('plans')
-    .update({ reminder_id: null })
-    .eq('reminder_id', id);
-  if (error1 != null) return buildNoDataApiOutput(error1, 'plan.reminder_id 削除');
-
-  const { error } = await supabase.from('reminders').delete().eq('id', id);
-  return buildNoDataApiOutput(error, 'reminder 削除');
+  // reminder 削除
+  const { error: error1 } = await supabase.from('reminders').delete().eq('id', input.reminderId);
+  if (error1 != null) return buildNoDataApiOutput(error1, 'reminder 削除');
+  // condition 削除
+  const { error: error2 } = await supabase.from('conditions').delete().eq('id', input.conditionId);
+  return buildNoDataApiOutput(error2, 'condition 削除');
 };

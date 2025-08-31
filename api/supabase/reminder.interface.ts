@@ -1,5 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Decamelized } from 'humps';
+import type { Id } from '~/utils/types/common';
 import type { ColorClassification, Condition, Pair, Reminder } from '~/utils/types/model';
 import type { ApiOutput } from './common.interface';
 
@@ -26,4 +27,9 @@ export interface InsertReminderOutput extends ApiOutput<null, PostgrestError> {}
 
 export interface CheckReminderInput extends Reminder {
   condition: Omit<Condition, 'id'>;
+}
+
+export interface DeleteReminderInput {
+  reminderId: Id;
+  conditionId: Id;
 }

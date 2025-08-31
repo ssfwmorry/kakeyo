@@ -29,7 +29,7 @@
                   :icon="$ICONS.TRASH"
                   variant="flat"
                   density="compact"
-                  @click.stop="deleteApi(reminder)"
+                  @click.stop="handleDelete(reminder)"
                 ></v-btn>
               </v-col>
             </v-row>
@@ -181,12 +181,12 @@ const validateCreateApi = (
   );
 };
 
-const deleteApi = async (reminder: GetReminderListItem) => {
+const handleDelete = async (reminder: GetReminderListItem) => {
   const idOk = window.confirm('予定への連携もなくなります。\n本当に削除してもよいですか？');
   if (!idOk) return;
 
   enableLoading();
-  const payload = { id: reminder.id };
+  const payload = { reminderId: reminder.id, conditionId: reminder.conditionId };
   const apiRes = await deleteReminder({ isDemoLogin: isDemoLogin.value }, payload);
   assertApiResponse(apiRes);
 
