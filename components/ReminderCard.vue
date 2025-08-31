@@ -1,22 +1,19 @@
 <template>
   <v-card variant="outlined" class="pa-2 card-border">
     <v-row no-gutters class="mb-1">
-      <v-col cols="9">
+      <v-col>
         <v-card-title class="py-0 px-1 fs-nml">
+          <v-btn
+            size="28"
+            rounded="0"
+            variant="flat"
+            :class="`bg-${props.reminder.reminderColor}`"
+            class="mr-3 pa-0 btn-icon text-white"
+          >
+            <v-icon>{{ props.reminder.isPair ? $ICONS.SHARE : '' }}</v-icon>
+          </v-btn>
           {{ props.reminder.title }}
         </v-card-title>
-      </v-col>
-      <v-col cols="3" class="py-0 pl-1 d-flex align-center">
-        <v-btn
-          dark
-          size="28"
-          rounded="0"
-          variant="flat"
-          :class="`bg-${props.reminder.backgroundColor}`"
-          class="mr-3 pa-0 btn-icon text-white"
-        >
-          <v-icon>{{ props.reminder.isPair ? $ICONS.SHARE : '' }}</v-icon>
-        </v-btn>
       </v-col>
     </v-row>
     <v-divider v-if="props.reminder.memo" class="mb-1" />

@@ -1,6 +1,6 @@
 import type { EventInput } from '@fullcalendar/core/index.js';
 import type { GetRecordListItem } from '~/api/supabase/record.interface';
-import type { DateString, Id } from '../common';
+import type { ColorString, DateString, Id } from '../common';
 
 // 文字列の先頭は優先順位を表す数字にする
 // eventOrder: 'type,start,-duration,allDay,title'
@@ -49,7 +49,8 @@ type ExternalEventReminder = {
   memo: string | null;
   reminderId: Id;
   isPair: boolean;
-  date: DateString;
+  reminderDate: DateString; // フィールド名がかdateだとなぜか動かない
+  reminderColor: ColorString; // フィールド名がかcolorだとなぜか動かない
 };
 export type ExternalEvent =
   | ExternalEventPlan

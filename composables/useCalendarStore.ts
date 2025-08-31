@@ -6,6 +6,7 @@ import { getMonthSum, getRecordList, postRecords } from '~/api/supabase/record';
 import type { GetRecordListItem } from '~/api/supabase/record.interface';
 import { getReminderList } from '~/api/supabase/reminder';
 import type { GetReminderListOutputData } from '~/api/supabase/reminder.interface';
+import { COLOR_CODE } from '~/utils/constants/color';
 import StringUtility from '~/utils/string';
 import TimeUtility from '~/utils/time';
 import type { DateString, Id } from '~/utils/types/common';
@@ -183,6 +184,7 @@ export const useCalendarStore = defineStore('calendarStore', () => {
     });
     // reminder 分を events に追加
     reminderList.all.forEach((reminder) => {
+      const color = reminder.colorClassification.name;
       events.push({
         title: reminder.name,
         start: dayjs(reminder.date).toDate(),
@@ -190,14 +192,15 @@ export const useCalendarStore = defineStore('calendarStore', () => {
         end: dayjs(reminder.date).add(1, 'd').toDate(),
         allDay: true,
         borderColor: 'black',
-        textColor: 'red', // TODO: reminder.colorClassification.name,を使うように
+        textColor: COLOR_CODE[color],
         backgroundColor: 'white',
-        classNames: ['border-red'],
+        classNames: ['border-solid border-thin', `border-${color}`],
         type: eventType.REMINDER,
         reminderId: reminder.id,
         isPair: reminder.pairId !== null,
-        date: reminder.date,
+        reminderDate: reminder.date,
         memo: reminder.memo,
+        reminderColor: color,
       });
     });
 

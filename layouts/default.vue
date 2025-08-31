@@ -1,6 +1,6 @@
 <template>
   <div class="h-100">
-    <LazyLoading v-show="loading" />
+    <lazy-Loading v-show="loading" />
     <div v-if="isDemoLogin" class="demo-label">デモ用</div>
     <v-navigation-drawer
       v-model="drawer"

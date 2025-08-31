@@ -335,11 +335,12 @@ const showEvent = (event: EventClickArg['event']) => {
       type: external.type,
       reminderId: external.reminderId,
       isPair: external.isPair,
-      date: external.date,
+      reminderDate: external.reminderDate,
       memo: external.memo,
+      reminderColor: external.reminderColor,
     };
 
-    selectedDate.value = reminder.date;
+    selectedDate.value = reminder.reminderDate;
     selectedDateRecords.value = [];
     selectedPlan.value = null;
     selectedReminder.value = reminder;
