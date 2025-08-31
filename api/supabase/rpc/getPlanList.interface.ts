@@ -17,6 +17,7 @@ export type GetPlanListRpcRow = {
   plan_type_color_classification_name: ColorString | null;
   reminder_color_classification_name: ColorString | null;
   is_pair: boolean;
+  reminder_id: Id | null;
 };
 // TODO: interfaceに置き換える
 type GetPlanListRpcResponse = GetPlanListRpcRow[] | null;

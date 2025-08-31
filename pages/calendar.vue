@@ -137,10 +137,20 @@
       </v-col>
     </v-row>
 
-    <!-- plan 表示 -->
+    <!-- plan / reminder 表示 -->
     <v-row v-if="selectedPlan" no-gutters class="px-2">
       <v-col>
-        <PlanCard :plan="selectedPlan" @edit="goPlanEditPage()" class="mb-2 w-100" />
+        <PlanCard
+          :plan="selectedPlan"
+          @edit="goPlanEditPage()"
+          @delete="deleteReminderPlan"
+          class="mb-2 w-100"
+        />
+      </v-col>
+    </v-row>
+    <v-row v-else-if="selectedReminder" no-gutters class="px-2">
+      <v-col>
+        <ReminderCard :reminder="selectedReminder" class="mb-2 w-100" />
       </v-col>
     </v-row>
 
@@ -204,6 +214,7 @@ import {
   type CalendarList,
   type DateRecordList,
   type EventGetPlan,
+  type EventGetReminder,
   type ExternalEvent,
 } from '~/utils/types/domains/calender';
 import {
@@ -226,7 +237,8 @@ const { $ICONS } = useNuxtApp();
 const { setRouterParam } = useRouterParamStore();
 const route = useRoute();
 const router = useRouter();
-const { deleteMemo, getMemoList, getShortCutList, insertMemo, upsertRecord } = useSupabase();
+const { deleteMemo, deletePlan, getMemoList, getShortCutList, insertMemo, upsertRecord } =
+  useSupabase();
 const { updateRange: calendarUpdateRange } = useCalendarStore();
 const { setToast } = useToastStore();
 
@@ -239,6 +251,7 @@ const selectedHoliday = ref<string | null>(null);
 const selectedDateRecords = ref<DateRecordList[]>([]);
 const selectedDate = ref<DateString | null>(null);
 const selectedPlan = ref<EventGetPlan | null>(null);
+const selectedReminder = ref<EventGetReminder | null>(null);
 const monthSumStr = ref('');
 const allRecordListOrder = ref<OrderBy>(OrderBy.DESC);
 const isShowMemoInput = ref(false);
@@ -256,7 +269,7 @@ const calendarOptions = ref<CalendarOptions>({
   eventOrder: 'type,start,-duration,allDay,title',
   events: [],
   dateClick: (arg: DateClickArg) => showDateRecords(arg.dateStr),
-  eventClick: (arg: EventClickArg) => showPlan(arg.event),
+  eventClick: (arg: EventClickArg) => showEvent(arg.event),
 });
 
 const focusObj = computed(() => {
@@ -309,13 +322,27 @@ const updateRange = async () => {
   calendarOptions.value.events = events;
   disableLoading();
 };
-const showPlan = (event: EventClickArg['event']) => {
+const showEvent = (event: EventClickArg['event']) => {
   const external = event.extendedProps as ExternalEvent;
   if (external.type === eventType.RECORD || external.type === eventType.HOLIDAY) {
     showDateRecords(external.startStr);
   } else if (external.type === eventType.REMINDER) {
-    // TODO: 情報を可視化
-    return;
+    const reminder: EventGetReminder = {
+      title: event.title,
+      textColor: event.textColor,
+      borderColor: event.borderColor,
+      backgroundColor: event.backgroundColor,
+      type: external.type,
+      reminderId: external.reminderId,
+      isPair: external.isPair,
+      date: external.date,
+      memo: external.memo,
+    };
+
+    selectedDate.value = reminder.date;
+    selectedDateRecords.value = [];
+    selectedPlan.value = null;
+    selectedReminder.value = reminder;
   } else {
     const plan: EventGetPlan = {
       title: event.title,
@@ -332,6 +359,7 @@ const showPlan = (event: EventClickArg['event']) => {
       type: external.type,
       planId: external.planId,
       isPair: external.isPair,
+      isFromReminder: external.isFromReminder,
       memo: external.memo,
       typeId: external.typeId,
       typeName: external.typeName,
@@ -339,11 +367,29 @@ const showPlan = (event: EventClickArg['event']) => {
 
     selectedDate.value = plan.startStr;
     selectedDateRecords.value = [];
+    selectedReminder.value = null;
     selectedPlan.value = plan;
   }
 };
 
+const deleteReminderPlan = async () => {
+  const idOk = window.confirm('削除してもよいですか？');
+  if (!idOk) return;
+
+  const planId = selectedPlan.value?.planId;
+  if (!planId) throw new Error('deletePlan');
+
+  const payload = { id: planId };
+  const apiRes = await deletePlan({ isDemoLogin: isDemoLogin.value }, payload);
+  assertApiResponse(apiRes);
+
+  setToast('削除しました');
+  selectedReminder.value = null;
+  await updateRange();
+};
+
 const showDateRecords = (dateStr: DateString) => {
+  selectedReminder.value = null;
   selectedPlan.value = null;
   selectedDate.value = dateStr;
   selectedDateRecords.value = [daySumList.value[dateStr]];

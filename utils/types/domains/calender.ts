@@ -30,6 +30,7 @@ export type ExternalEventPlan = {
   memo: string | null;
   planId: number; // id はライブラリの定義に string として既存
   isPair: boolean;
+  isFromReminder: boolean;
   typeId: Id | null; // null はreminder経由で登録されたplan
   typeName: string | null; // null はreminder経由で登録されたplan
 };
@@ -48,6 +49,7 @@ type ExternalEventReminder = {
   memo: string | null;
   reminderId: Id;
   isPair: boolean;
+  date: DateString;
 };
 export type ExternalEvent =
   | ExternalEventPlan
@@ -55,7 +57,7 @@ export type ExternalEvent =
   | ExternalEventHoliday
   | ExternalEventReminder;
 // 内部変数として持っておくための型
-export type BaseEventGet = {
+type BaseEventGet = {
   title: string;
   start: Date;
   end: Date | null;
@@ -65,7 +67,14 @@ export type BaseEventGet = {
   backgroundColor: string;
   classNames: Array<string>;
 };
+type BaseReminderGet = {
+  title: string;
+  textColor: string;
+  borderColor: string;
+  backgroundColor: string;
+};
 export type EventGetPlan = BaseEventGet & ExternalEventPlan;
+export type EventGetReminder = BaseReminderGet & ExternalEventReminder;
 
 // ライブラリに登録する用の型
 export type EventInputExpanded = EventInput & {

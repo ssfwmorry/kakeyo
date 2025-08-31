@@ -15,8 +15,8 @@
             <v-row no-gutters class="mb-1">
               <v-col cols="11" class="px-4 d-flex justify-start align-center">
                 <v-btn
-                  size="28"
                   dark
+                  size="28"
                   rounded="0"
                   variant="flat"
                   :class="`bg-${reminder.colorClassification.name}`"
@@ -75,7 +75,7 @@
       </v-row>
     </div>
 
-    <setting-ReminderDialog
+    <setting-PlanReminderDialog
       v-model="dialog"
       title="定期的な予定"
       :colorList="props.colorList"
@@ -94,7 +94,7 @@ import type {
 import { assertApiResponse } from '~/utils/api';
 import TimeUtility from '~/utils/time';
 import { BaseType, ConditionType, ReminderType } from '~/utils/types/model';
-import type { ReminderDialog, ReminderDialogNonNullable } from './ReminderDialog.vue';
+import type { ReminderDialog, ReminderDialogNonNullable } from './PlanReminderDialog.vue';
 
 const initialDialog = () => ({
   isShow: false,

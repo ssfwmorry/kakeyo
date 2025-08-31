@@ -353,7 +353,7 @@ ALTER TABLE public.plans ALTER COLUMN plan_type_id DROP NOT NULL;
 
 - `public.get_plan_list`
 
-## 2025030\_開発と本番 DB の　 reminders と conditions のカラムを調整
+## 20250830\_開発と本番 DB の　 reminders と conditions のカラムを調整
 
 ```sql
 ALTER TABLE develop.conditions ALTER COLUMN month DROP NOT NULL;
@@ -369,3 +369,8 @@ ALTER TABLE develop.conditions ALTER COLUMN condition_type SET not null;
 ALTER TABLE develop.reminders DROP COLUMN base_type;
 -- publicは省略
 ```
+
+## 20250830\_開発と本番 DB の　 get_plan_list 更新
+
+- `develop.get_plan_list`
+- `public.get_plan_list`

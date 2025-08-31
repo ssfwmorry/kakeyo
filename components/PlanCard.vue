@@ -6,7 +6,7 @@
           {{ props.plan.title }}
         </v-card-title>
       </v-col>
-      <v-col cols="3" class="py-0 pl-1 d-flex align-center">
+      <v-col v-if="!props.plan.isFromReminder" cols="3" class="py-0 pl-1 d-flex align-center">
         <v-btn
           size="28"
           variant="flat"
@@ -30,11 +30,21 @@
       <v-col cols="2" class="d-flex justify-center align-center">
         <div class="px-2 py-0">
           <v-btn
-            v-if="props.plan.typeId !== null"
+            v-if="props.plan.isFromReminder"
+            size="28"
+            variant="flat"
+            color="error"
+            class="btn-action"
+            @click="handleDelete"
+          >
+            <v-icon>{{ $ICONS.TRASH }}</v-icon>
+          </v-btn>
+          <v-btn
+            v-else-if="props.plan.typeId !== null"
             :icon="$ICONS.PENCIL"
             variant="flat"
             @click="handleEdit"
-          ></v-btn>
+          />
         </div>
       </v-col>
     </v-row>
@@ -55,5 +65,8 @@ const props = defineProps<Props>();
 
 const handleEdit = () => {
   emits('edit');
+};
+const handleDelete = () => {
+  emits('delete');
 };
 </script>

@@ -145,6 +145,7 @@ export const useCalendarStore = defineStore('calendarStore', () => {
         endStr: plan.endDate,
         dbEnd: dayjs(plan.endDate).toDate(),
         isPair: plan.isPair,
+        isFromReminder: !!plan.reminderId,
         memo: plan.memo,
         typeId: plan.planTypeId,
         typeName: plan.planTypeName,
@@ -195,6 +196,7 @@ export const useCalendarStore = defineStore('calendarStore', () => {
         type: eventType.REMINDER,
         reminderId: reminder.id,
         isPair: reminder.pairId !== null,
+        date: reminder.date,
         memo: reminder.memo,
       });
     });
