@@ -31,14 +31,11 @@
         <div class="px-2 py-0">
           <v-btn
             v-if="props.plan.isFromReminder"
-            size="28"
+            :icon="$ICONS.TRASH"
             variant="flat"
-            color="error"
-            class="btn-action"
-            @click="handleDelete"
-          >
-            <v-icon>{{ $ICONS.TRASH }}</v-icon>
-          </v-btn>
+            density="compact"
+            @click.stop="handleDelete"
+          />
           <v-btn
             v-else-if="props.plan.typeId !== null"
             :icon="$ICONS.PENCIL"

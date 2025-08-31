@@ -384,7 +384,7 @@ const deleteReminderPlan = async () => {
   assertApiResponse(apiRes);
 
   setToast('削除しました');
-  selectedReminder.value = null;
+  selectedPlan.value = null;
   await updateRange();
 };
 
