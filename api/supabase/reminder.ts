@@ -48,7 +48,8 @@ export const getReminderList = async ({
       )
     `
     )
-    .or(`user_id.eq.${userUid},pair_id.eq.${pairId ?? 'dummy'}`);
+    .or(`user_id.eq.${userUid},pair_id.eq.${pairId ?? 'dummy'}`)
+    .order('color_classification_id', { ascending: true });
   if (error != null || data === null) {
     return { error: error, message: 'reminder 一覧' };
   }
