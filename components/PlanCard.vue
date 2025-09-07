@@ -6,16 +6,17 @@
           {{ props.plan.title }}
         </v-card-title>
       </v-col>
-      <v-col v-if="!props.plan.isFromReminder" cols="3" class="py-0 pl-1 d-flex align-center">
+      <v-col cols="3" class="py-0 pl-1 d-flex align-center">
         <v-btn
           size="28"
           variant="flat"
+          :rounded="props.plan.isFromReminder ? 0 : undefined"
           :class="`bg-${props.plan.backgroundColor}`"
           class="mr-3 pa-0 btn-icon text-white"
         >
           <v-icon>{{ props.plan.isPair ? $ICONS.SHARE : '' }}</v-icon>
         </v-btn>
-        {{ props.plan.typeName }}
+        <span v-if="!props.plan.isFromReminder">{{ props.plan.typeName }}</span>
       </v-col>
     </v-row>
     <v-divider class="mb-1" />
