@@ -14,7 +14,7 @@ import {
   eventType,
   type CalendarList,
   type EventInputExpanded,
-} from '~/utils/types/domains/calender';
+} from '~/utils/types/domains/calendar';
 
 export const useCalendarStore = defineStore('calendarStore', () => {
   // actions

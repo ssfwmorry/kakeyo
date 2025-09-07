@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import StringUtility from '~/utils/string';
-import type { EventGetPlan } from '~/utils/types/domains/calender';
+import type { EventGetPlan } from '~/utils/types/domains/calendar';
 
 const { $ICONS } = useNuxtApp();
 const emits = defineEmits();

@@ -31,7 +31,7 @@
 
 <script setup lang="ts">
 import StringUtility from '~/utils/string';
-import type { EventGetReminder } from '~/utils/types/domains/calender';
+import type { EventGetReminder } from '~/utils/types/domains/calendar';
 
 const { $ICONS } = useNuxtApp();
 const emits = defineEmits();

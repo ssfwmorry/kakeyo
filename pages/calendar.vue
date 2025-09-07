@@ -216,7 +216,7 @@ import {
   type EventGetPlan,
   type EventGetReminder,
   type ExternalEvent,
-} from '~/utils/types/domains/calender';
+} from '~/utils/types/domains/calendar';
 import {
   RouterParamKey,
   type PageQueryParameter,
