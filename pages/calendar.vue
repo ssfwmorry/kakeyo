@@ -178,9 +178,7 @@
             :methodColor="record.methodColorClassificationName"
             :methodName="record.methodName"
             :memo="record.memo ?? ''"
-            :isShowBlueColorPrice="
-              !record.isPay || (record.isSettlement === true && !record.isSelf)
-            "
+            :isShowBlueColorPrice="record.isSettlement === true ? !record.isSelf : !record.isPay"
             :isSettlement="record.isSettlement ?? false"
             :price="
               StringUtility.ConvertIntToShowStrWithIsPay(
