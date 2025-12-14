@@ -440,8 +440,8 @@ const goRecordEditPage = (record: GetRecordListItem) => {
     alert('予期せぬ状況');
     return;
   }
-  setIsPair(record.isPair);
 
+  setIsPair(record.isPair);
   setRouterParam(RouterParamKey.RECORD, { ...record, isPay: record.isPay });
   const query: PageQueryParameter = { key: RouterParamKey.RECORD };
   router.push({ name: PAGE.NOTE, query });

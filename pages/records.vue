@@ -230,6 +230,7 @@ const goSummaryPage = () => {
   router.push({ name: PAGE.SUMMARY });
 };
 const goRecordEditPage = (record: GetSummarizedRecordItem) => {
+  setIsPair(record.isPair);
   setRouterParam(RouterParamKey.RECORD, record);
   const query: PageQueryParameter = { key: RouterParamKey.RECORD };
   router.push({ name: PAGE.NOTE, query });

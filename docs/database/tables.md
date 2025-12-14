@@ -763,7 +763,7 @@ create policy "develop.conditions all"
 | user_id                 | string  |   28   |    -     |       -        |        users.uid         | pair_id とどちらか必須                                                     |
 | pair_id                 |   int   |   -    |    -     |       -        |         pairs.id         | user_id とどちらか必須                                                     |
 | name                    | string  | max 10 |    v     |       -        |            -             | -                                                                          |
-| reminder_type           | tinyint |   -    |    v     |       -        |         banks.id         | 5(Flow): チェック後に日付が変わる, 10(Stock): チェック後に plan として残る |
+| reminder_type           | tinyint |   -    |    v     |       -        |            -             | 5(Flow): チェック後に日付が変わる, 10(Stock): チェック後に plan として残る |
 | condition_id            |   int   |   -    |    v     |       -        |      conditions.id       | -                                                                          |
 | date                    |  date   |   -    |    v     |       -        |            -             | -                                                                          |
 | memo                    | string  |   -    |    -     |       -        |            -             | -                                                                          |
