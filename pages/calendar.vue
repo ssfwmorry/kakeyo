@@ -215,6 +215,7 @@ import {
   type EventGetReminder,
   type ExternalEvent,
 } from '~/utils/types/domains/calendar';
+import { RecordType } from '~/utils/types/model';
 import {
   RouterParamKey,
   type PageQueryParameter,
@@ -528,7 +529,7 @@ const insertRecordFromShortCut = async (shortCut: GetShortCutListItem) => {
     datetime: TimeUtility.ConvertDateStrToDatetime(now),
     isPay: shortCut.isPay,
     methodId: shortCut.methodId,
-    isInstead: null,
+    isInstead: shortCut.recordType === RecordType.instead,
     typeId: shortCut.typeId,
     subTypeId: shortCut.subTypeId,
     price: shortCut.price,
