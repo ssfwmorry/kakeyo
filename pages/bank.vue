@@ -167,21 +167,33 @@ const getTableData = (
   const tableRows: TableRow[] = [];
   balances.forEach((balance, indexBalance) => {
     const tableBankPrices: (number | null)[] = [];
-    let isHaveNoBank = false;
-    banks.forEach((bank) => {
+    let sum = 0;
+    banks.forEach((bank, indexBank) => {
       const bankId = String(bank.id);
       if (bankId in balance.banks) {
         // 存在する値ならそのまま設定
-        tableBankPrices.push(ConvertManUnit(balance.banks[bankId].price));
+        const price = balance.banks[bankId].price;
+        tableBankPrices.push(ConvertManUnit(price));
+        sum += price;
+      } else if (indexBalance > 0) {
+        const previousBankPrice = tableRows[indexBalance - 1].bankPrices[indexBank];
+        if (previousBankPrice !== null){
+          // 前回の値が存在するなら前回の値を設定
+          tableBankPrices.push(previousBankPrice);
+          sum += previousBankPrice;
+        } else {
+          // 前回も null なら今回も null を設定
+          tableBankPrices.push(null);
+        }
       } else {
+        // 初回なら null を設定
         tableBankPrices.push(null);
-        isHaveNoBank = true;
       }
     });
     tableRows.push({
       createdDate: TimeUtility.ConvertDBResponseDatetimeToDateStr(balance.createdAt),
       bankPrices: tableBankPrices,
-      sum: isHaveNoBank ? null : ConvertManUnit(balance.sum),
+      sum: sum === 0 ? null : ConvertManUnit(sum),
     });
   });
   return tableRows;
