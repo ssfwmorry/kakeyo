@@ -35,9 +35,15 @@
               <td class="px-0 text-center">
                 {{ row.createdDate }}
               </td>
-              <td class="px-2 text-right">{{ row.sum?.toLocaleString() ?? '-　' }} 万円</td>
+              <td class="px-2 text-right">
+                {{ row.sum ? ConvertManUnit(row.sum).toLocaleString() : '-　' }}
+              </td>
               <td v-for="(bank, index) in bankList" :key="bank.id" class="px-2 text-right">
-                {{ row.bankPrices[index]?.toLocaleString() ?? '-　' }} 万円
+                {{
+                  row.bankPrices[index]
+                    ? ConvertManUnit(row.bankPrices[index]!).toLocaleString()
+                    : '-　'
+                }}
               </td>
             </tr>
           </tbody>
@@ -122,7 +128,7 @@ const chartOptions: ChartOptions<'line'> = {
     y: {
       stacked: true,
       ticks: {
-        callback: (value) => `${ConvertManUnit(Number(value))}万円`,
+        callback: (value) => `${ConvertManUnit(Number(value))}`,
       },
     },
   },
@@ -173,11 +179,11 @@ const getTableData = (
       if (bankId in balance.banks) {
         // 存在する値ならそのまま設定
         const price = balance.banks[bankId].price;
-        tableBankPrices.push(ConvertManUnit(price));
+        tableBankPrices.push(price);
         sum += price;
       } else if (indexBalance > 0) {
         const previousBankPrice = tableRows[indexBalance - 1].bankPrices[indexBank];
-        if (previousBankPrice !== null){
+        if (previousBankPrice !== null) {
           // 前回の値が存在するなら前回の値を設定
           tableBankPrices.push(previousBankPrice);
           sum += previousBankPrice;
@@ -193,7 +199,7 @@ const getTableData = (
     tableRows.push({
       createdDate: TimeUtility.ConvertDBResponseDatetimeToDateStr(balance.createdAt),
       bankPrices: tableBankPrices,
-      sum: sum === 0 ? null : ConvertManUnit(sum),
+      sum: sum === 0 ? null : sum,
     });
   });
   return tableRows;
