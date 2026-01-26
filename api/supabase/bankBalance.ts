@@ -17,7 +17,7 @@ export const getBankBalanceList = async ({
   userUid,
 }: SupabaseApiUser): Promise<GetBankBalanceListOutput> => {
   const now = new Date();
-  const ago2Years = dayjs(now).subtract(2, 'year');
+  const ago2Years = dayjs(now).subtract(5, 'year');
 
   const { data, error } = await supabase
     .from('bank_balances')
