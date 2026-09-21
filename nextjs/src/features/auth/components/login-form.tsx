@@ -5,8 +5,12 @@ import { parseWithZod } from '@conform-to/zod/v4';
 import { FormField } from '@/components/form/form-field';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
-import { demoLoginAction, loginAction, resetPasswordAction } from './actions';
-import { loginSchema, resetPasswordSchema } from './schema';
+import {
+  demoLoginAction,
+  loginAction,
+  resetPasswordAction
+} from '../actions/login-actions';
+import { loginSchema, resetPasswordSchema } from '../schemas/login-schema';
 
 // login フォーム（Conform + Zod、通知はトースト）。
 // login / reset / demo をそれぞれ独立したフォーム・アクションとして扱う

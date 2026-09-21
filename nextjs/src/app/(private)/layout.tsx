@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { requireAuth } from '@/lib/server/auth/requireAuth';
+import { requireAuth } from '@/features/auth/server/requireAuth';
 
 // 認証必須画面の共有 layout（凍結資産の骨組み）。ここでは認証ガードのみ。
 // 共通レイアウト（ボトムナビ・ペア切替スイッチ・リマインダー通知）の統合は P5。

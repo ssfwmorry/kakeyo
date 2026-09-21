@@ -1,6 +1,6 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
-import { authRoutes } from '@/lib/shared/auth/routes';
+import { authRoutes } from '@/features/auth/shared/routes';
 import type { SessionData } from '@/lib/shared/types/auth';
 import { getSessionData } from './session';
 

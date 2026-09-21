@@ -2,17 +2,17 @@
 
 import { parseWithZod } from '@conform-to/zod/v4';
 import { redirect } from 'next/navigation';
-import {
-  sendResetPasswordEmail,
-  signInWithPassword
-} from '@/lib/server/auth/authActions';
 import { serverEnv } from '@/lib/server/env.server';
-import { authRoutes } from '@/lib/shared/auth/routes';
 import {
   type FormActionResult,
   ToastType
 } from '@/lib/shared/types/formResult';
-import { loginSchema, resetPasswordSchema } from './schema';
+import { loginSchema, resetPasswordSchema } from '../schemas/login-schema';
+import {
+  sendResetPasswordEmail,
+  signInWithPassword
+} from '../server/authActions';
+import { authRoutes } from '../shared/routes';
 
 // login 画面の Server Actions（Conform + Zod、通知はトースト）。
 // 戻り値は FormActionResult（submission=field 検証 / toast=成否通知）。

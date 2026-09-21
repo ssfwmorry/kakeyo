@@ -6,16 +6,27 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['lib/**/*.test.ts']
+    include: ['src/lib/**/*.test.ts']
   },
   resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('.', import.meta.url)),
+    alias: [
+      // prisma 生成物は src 外（prisma/generated）にあるため src エイリアスより先に解決する。
+      {
+        find: /^@\/prisma\//,
+        replacement: `${fileURLToPath(new URL('./prisma', import.meta.url))}/`
+      },
+      {
+        find: /^@\//,
+        replacement: `${fileURLToPath(new URL('./src', import.meta.url))}/`
+      },
       // server-only は非 Next 環境（Vitest）で import すると投げるため空モジュール化。
       // ドメイン計算の単体テストが server-only 付きファイルを間接 import しても通る。
-      'server-only': fileURLToPath(
-        new URL('./test/stubs/empty.ts', import.meta.url)
-      )
-    }
+      {
+        find: 'server-only',
+        replacement: fileURLToPath(
+          new URL('./test/stubs/empty.ts', import.meta.url)
+        )
+      }
+    ]
   }
 });

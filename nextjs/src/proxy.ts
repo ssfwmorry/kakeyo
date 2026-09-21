@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getUserInProxy } from '@/lib/server/auth/supabaseProxy';
-import { authRoutes } from '@/lib/shared/auth/routes';
+import { getUserInProxy } from '@/features/auth/server/supabaseProxy';
+import { authRoutes } from '@/features/auth/shared/routes';
 
 // 認証ガード（凍結資産）。ファイル名は proxy.ts（Next.js 16 で middleware から改名）。
 //
