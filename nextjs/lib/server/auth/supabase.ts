@@ -1,7 +1,7 @@
 import 'server-only';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { publicEnv } from '@/lib/env';
+import { publicEnv } from '@/lib/shared/env';
 
 // Supabase Auth のサーバクライアント（凍結資産）。
 // Cookie の読み書きは next/headers の cookies() に委譲する。

@@ -1,7 +1,7 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
-import type { SessionData } from '@/lib/types/auth';
-import { authRoutes } from './routes';
+import { authRoutes } from '@/lib/shared/auth/routes';
+import type { SessionData } from '@/lib/shared/types/auth';
 import { getSessionData } from './session';
 
 // 認証ガード（凍結資産）。Server Component / Server Action の先頭で呼ぶ。

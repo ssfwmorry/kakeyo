@@ -1,18 +1,19 @@
 import 'server-only';
-import type { ApiResult } from '@/lib/types/apiResult';
-import { ok } from '@/lib/types/apiResult';
+import type { Result } from '@/lib/shared/types/result';
+import { ok } from '@/lib/shared/types/result';
 
 // デモ注入の土台（凍結資産の骨組み。各ドメインが自分のモックを足す）。
 // 旧 `if (isDemoLogin) return DEMO_DATA...` の散在を解消し、Server 層でデモ判定時に
 // モックを注入する形へ集約する。引数順は 3 関数とも「isDemo → デモ時の値 → 実処理」で統一。
 //
-// 使い方（各ドメインのサービス層）:
+// 使い方（各ドメインのサービス層 = 戻りは Result。UI 文言は持たない）:
 //   const list = await withDemoRead(session.isDemo, demoTypeList, () =>
 //     typeRepository.getList(session)
 //   );
 //   const result = await withDemoWrite(session.isDemo, demoResult, () =>
-//     typeRepository.upsert(session, input)
+//     typeService.upsert(session, input) // Result<T> を返す
 //   );
+// Server Action 側で toFormResult(result, { success, ... }) → FormActionResult 化する。
 
 // 取得系: デモ時は用意したモックデータを、そうでなければ実処理の結果を返す。
 export async function withDemoRead<T>(
@@ -30,8 +31,8 @@ export async function withDemoRead<T>(
 export async function withDemoWrite<T>(
   isDemo: boolean,
   demoResult: T,
-  real: () => Promise<ApiResult<T>>
-): Promise<ApiResult<T>> {
+  real: () => Promise<Result<T>>
+): Promise<Result<T>> {
   if (isDemo) {
     return ok(demoResult);
   }
@@ -41,8 +42,8 @@ export async function withDemoWrite<T>(
 // 更新系（戻り値なし）: デモ時は no-op で成功。
 export async function withDemoWriteVoid(
   isDemo: boolean,
-  real: () => Promise<ApiResult>
-): Promise<ApiResult> {
+  real: () => Promise<Result>
+): Promise<Result> {
   if (isDemo) {
     return ok(undefined);
   }

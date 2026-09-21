@@ -1,5 +1,5 @@
 import 'server-only';
-import type { Id } from '@/lib/types/id';
+import type { Id } from '@/lib/shared/types/id';
 
 // L1 マスタ（day_classification）の「被参照 I/F」先置きスタブ。
 // L3 定期+Cron が参照するため型のみ先に確定。中身は L1 が実装する。

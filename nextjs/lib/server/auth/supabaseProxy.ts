@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
-import { publicEnv } from '@/lib/env';
+import { publicEnv } from '@/lib/shared/env';
 
 // Proxy 専用の Supabase クライアント（凍結資産）。
 // 他の lib/auth/* と異なり server-only を付けない。proxy ランタイム専用で、

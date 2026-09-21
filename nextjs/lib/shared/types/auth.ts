@@ -1,4 +1,4 @@
-import type { Id } from '@/lib/types/id';
+import type { Id } from '@/lib/shared/types/id';
 
 // 認証・スコープの共有型（凍結資産）。
 // 全リポジトリの取得系は SessionScope を受け取り buildScopeWhere で自分/ペアに絞る。

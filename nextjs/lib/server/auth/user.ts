@@ -1,5 +1,5 @@
 import 'server-only';
-import { prisma } from '@/lib/db/client';
+import { prisma } from '@/lib/server/db/client';
 
 // Supabase Auth の UID(UUID) から、アプリ内部で全 FK のキーとなる Firebase uid を
 // 解決する（凍結資産）。Firebase→Supabase Auth 移行の突合点。

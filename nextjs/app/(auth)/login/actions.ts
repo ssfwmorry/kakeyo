@@ -5,10 +5,13 @@ import { redirect } from 'next/navigation';
 import {
   sendResetPasswordEmail,
   signInWithPassword
-} from '@/lib/auth/authActions';
-import { authRoutes } from '@/lib/auth/routes';
-import { serverEnv } from '@/lib/env.server';
-import { type FormActionResult, ToastType } from '@/lib/types/formResult';
+} from '@/lib/server/auth/authActions';
+import { serverEnv } from '@/lib/server/env.server';
+import { authRoutes } from '@/lib/shared/auth/routes';
+import {
+  type FormActionResult,
+  ToastType
+} from '@/lib/shared/types/formResult';
 import { loginSchema, resetPasswordSchema } from './schema';
 
 // login 画面の Server Actions（Conform + Zod、通知はトースト）。

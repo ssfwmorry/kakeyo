@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import type { FormActionResult } from '@/lib/types/formResult';
+import type { FormActionResult } from '@/lib/shared/types/formResult';
 
 // Server Action の結果（FormActionResult）に埋め込まれた toast を自動発火する
 // （凍結資産・フォーム標準）。全フォームがこのフックで「レスポンス→トースト」を

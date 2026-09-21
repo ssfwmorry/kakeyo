@@ -1,6 +1,7 @@
+import 'server-only';
 import { cookies } from 'next/headers';
-import { FLASH_COOKIE } from '@/lib/toast/flashCookie';
-import type { ToastMessage } from '@/lib/types/formResult';
+import { FLASH_COOKIE } from '@/lib/shared/toast/flashCookie';
+import type { ToastMessage } from '@/lib/shared/types/formResult';
 
 // ページ遷移をまたぐトースト（flash message）の書き込み側。
 // Server Action が redirect する場合、戻り値の FormActionResult は

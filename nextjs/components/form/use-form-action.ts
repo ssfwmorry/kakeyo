@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import type { FormActionResult } from '@/lib/types/formResult';
+import type { FormActionResult } from '@/lib/shared/types/formResult';
 import { useFormToast } from './use-form-toast';
 
 // useActionState と useFormToast を一体化するフォーム標準フック。

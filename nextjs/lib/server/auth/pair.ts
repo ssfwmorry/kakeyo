@@ -1,6 +1,6 @@
 import 'server-only';
-import { prisma } from '@/lib/db/client';
-import type { Id } from '@/lib/types/id';
+import { prisma } from '@/lib/server/db/client';
+import type { Id } from '@/lib/shared/types/id';
 
 // ペア ID の取得（凍結資産）。getSessionData がセッションごとに呼ぶ。
 // uid が user1_id / user2_id のいずれかである pair.id を返す。0 件 = null（ペア未設定）。

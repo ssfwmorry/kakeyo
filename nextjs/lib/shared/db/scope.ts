@@ -1,4 +1,4 @@
-import type { SessionScope } from '@/lib/types/auth';
+import type { SessionScope } from '@/lib/shared/types/auth';
 
 // 本移行の心臓（凍結資産）。
 // Prisma は DB 直結で RLS をバイパスするため、ペア家計簿の「自分と共有相手の

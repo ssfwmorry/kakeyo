@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RecordType } from '@/lib/types/recordType';
+import { RecordType } from '@/lib/shared/types/recordType';
 import { isSettlementTarget, resolveRecordType } from './recordType';
 
 describe('resolveRecordType', () => {

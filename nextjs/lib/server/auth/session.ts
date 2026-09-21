@@ -1,6 +1,7 @@
 import 'server-only';
-import { serverEnv } from '@/lib/env.server';
-import type { SessionData } from '@/lib/types/auth';
+import { cache } from 'react';
+import { serverEnv } from '@/lib/server/env.server';
+import type { SessionData } from '@/lib/shared/types/auth';
 import { getPairId } from './pair';
 import { createSupabaseServerClient } from './supabase';
 import { findUserBySupabaseUid } from './user';
@@ -19,7 +20,10 @@ import { findUserBySupabaseUid } from './user';
 // 残存による帰属ずれ（A の pairId が B のセッションに引きずられ他ペア露出）」の
 // ため不採用。pair は 1 ユーザ 1 件と軽量で毎回照会しても実害はない。
 
-export async function getSessionData(): Promise<SessionData | null> {
+// 多層防御方針（各 Server Component / Server Action の先頭で毎回呼ぶ）のため、
+// React cache() で per-request メモ化し、1 レンダリング内の重複 I/O
+// （getUser() 検証往復 + DB 2 クエリ）を 1 回に畳む。
+export const getSessionData = cache(async (): Promise<SessionData | null> => {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user }
@@ -43,7 +47,7 @@ export async function getSessionData(): Promise<SessionData | null> {
     pairId,
     isDemo: isDemoEmail(user.email)
   };
-}
+});
 
 // デモユーザか否かは Supabase 認証済み email から一意に決まる。
 // 資格情報が未設定（デモ無効環境）なら常に false。

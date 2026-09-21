@@ -1,6 +1,6 @@
 import 'server-only';
-import type { SessionScope } from '@/lib/types/auth';
-import type { Id } from '@/lib/types/id';
+import type { SessionScope } from '@/lib/shared/types/auth';
+import type { Id } from '@/lib/shared/types/id';
 
 // L4 type/method レーンの「被参照 I/F」先置きスタブ（凍結資産の I/F 部分）。
 // L2 record / L6 summary / L8 shortcut が参照するため、シグネチャと戻り型だけを

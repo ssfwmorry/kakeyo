@@ -1,7 +1,7 @@
 import 'server-only';
-import type { SessionScope } from '@/lib/types/auth';
-import type { Id } from '@/lib/types/id';
-import type { RecordType } from '@/lib/types/recordType';
+import type { SessionScope } from '@/lib/shared/types/auth';
+import type { Id } from '@/lib/shared/types/id';
+import type { RecordType } from '@/lib/shared/types/recordType';
 
 // L2 record レーンの「被参照 I/F」先置きスタブ（凍結資産の I/F 部分）。
 // L3 定期+Cron が INSERT I/F を、L6 summary/records が取得系を参照するため

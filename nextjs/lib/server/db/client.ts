@@ -1,6 +1,6 @@
 import 'server-only';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { serverEnv } from '@/lib/env.server';
+import { serverEnv } from '@/lib/server/env.server';
 import { PrismaClient } from '@/prisma/generated/client';
 
 // Prisma クライアントのシングルトン（凍結資産）。
