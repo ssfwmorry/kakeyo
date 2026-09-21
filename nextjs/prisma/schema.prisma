@@ -53,9 +53,11 @@ model ColorClassification {
 
 /// ユーザ。uid は Firebase UID(char28) 由来だが JS 操作の都合で可変長 string
 model User {
-  uid  String @id @db.VarChar(28)
-  mail String @db.VarChar(100)
-  name String @db.VarChar(10)
+  uid             String  @id @db.VarChar(28)
+  mail            String  @db.VarChar(100)
+  name            String  @db.VarChar(10)
+  /// Supabase Auth の UID。全 FK は uid(Firebase) のまま、認証の突合にこの列を使う（Firebase→Supabase Auth 移行）
+  supabaseUserUid String? @unique @map("supabase_user_uid") @db.Uuid
 
   pairsAsUser1   Pair[]          @relation("PairUser1")
   pairsAsUser2   Pair[]          @relation("PairUser2")
@@ -172,6 +174,7 @@ model Record {
   plannedRecordId Int?     @map("planned_record_id")
   /// record_type=5 の時、精算済みかどうか
   isSettled       Boolean? @map("is_settled")
+  // TODO: ENUMにする
   recordType      Int      @default(0) @map("record_type") @db.SmallInt
 
   user          User           @relation(fields: [userId], references: [uid])

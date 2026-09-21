@@ -374,3 +374,15 @@ ALTER TABLE develop.reminders DROP COLUMN base_type;
 
 - `develop.get_plan_list`
 - `public.get_plan_list`
+
+## 20260921\_開発 DB の users に supabase_user_uid を追加する作業
+
+Next.js 移行に伴い認証を Firebase Auth → Supabase Auth へ移す。既存の FK は
+Firebase UID(`users.uid`) を参照しているため、これを残したまま Supabase Auth の
+UID(UUID) を併存させる列を追加する（本番の付け替えは Next.js 移行完了時にまとめて実施）。
+
+```sql
+alter table develop.users add column supabase_user_uid uuid unique; -- NULL 許容
+-- 開発用テストユーザに Supabase Auth 作成後の UID を紐付ける（値は Supabase 画面で確認して手動 update）
+-- update develop.users set supabase_user_uid = '<uuid>' where uid = '<firebase uid>';
+```
