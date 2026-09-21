@@ -1,0 +1,353 @@
+// かけよ Prisma スキーマ（凍結資産）
+//
+// 正: kakeyo/docs/database/tables.md（DDL 実体）
+// 方針:
+// - PK は連番 int を維持（Id = number）。UUID 化しない（方針確定書 §4）
+// - users.uid は Firebase UID(char28) 由来。Supabase Auth 移行後も schema 上は可変長 string のまま
+//   （実 UID の付け替えは P5 のデータ移行で手作業。schema はここで凍結し変えない）
+// - スキーマ切替（develop / public）は実行時に adapter-pg の schema オプションで行う（schema.prisma には固定しない）
+// - RLS は Supabase 側に残す多層防御。アプリ層の絞り込みは lib/db/scope.ts に集約（P1）
+
+generator client {
+  provider     = "prisma-client"
+  output       = "./generated"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =========================================================
+// master tables
+// =========================================================
+
+/// 毎月何日とするかを指定するマスタ（1日/10日/15日/25日）
+model DayClassification {
+  id    Int    @id @db.SmallInt
+  name  String @db.VarChar(10)
+  value Int    @db.SmallInt
+
+  plannedRecords PlannedRecord[]
+
+  @@map("day_classifications")
+}
+
+/// 色マスタ（red / pink / ... / black）
+model ColorClassification {
+  id   Int    @id @db.SmallInt
+  name String @db.VarChar(20)
+
+  methods   Method[]
+  types     Type[]
+  planTypes PlanType[]
+  banks     Bank[]
+  reminders Reminder[]
+
+  @@map("color_classifications")
+}
+
+// =========================================================
+// transaction tables
+// =========================================================
+
+/// ユーザ。uid は Firebase UID(char28) 由来だが JS 操作の都合で可変長 string
+model User {
+  uid  String @id @db.VarChar(28)
+  mail String @db.VarChar(100)
+  name String @db.VarChar(10)
+
+  pairsAsUser1   Pair[]          @relation("PairUser1")
+  pairsAsUser2   Pair[]          @relation("PairUser2")
+  methods        Method[]
+  types          Type[]
+  records        Record[]
+  plannedRecords PlannedRecord[]
+  plans          Plan[]
+  planTypes      PlanType[]
+  memos          Memo[]
+  shortCuts      ShortCut[]
+  banks          Bank[]
+  reminders      Reminder[]
+
+  @@map("users")
+}
+
+/// ペア（夫婦）
+model Pair {
+  id      Int    @id @default(autoincrement())
+  user1Id String @map("user1_id") @db.VarChar(28)
+  user2Id String @map("user2_id") @db.VarChar(28)
+
+  user1 User @relation("PairUser1", fields: [user1Id], references: [uid])
+  user2 User @relation("PairUser2", fields: [user2Id], references: [uid])
+
+  methods        Method[]
+  types          Type[]
+  records        Record[]
+  plannedRecords PlannedRecord[]
+  plans          Plan[]
+  planTypes      PlanType[]
+  memos          Memo[]
+  shortCuts      ShortCut[]
+  reminders      Reminder[]
+
+  @@map("pairs")
+}
+
+/// 支払/受取/送金方法。user_id と pair_id のどちらか必須。is_pay は送金方法の場合 NULL
+model Method {
+  id                    Int      @id @default(autoincrement())
+  userId                String?  @map("user_id") @db.VarChar(28)
+  pairId                Int?     @map("pair_id")
+  name                  String   @db.VarChar(10)
+  isPay                 Boolean? @map("is_pay")
+  colorClassificationId Int      @map("color_classification_id") @db.SmallInt
+  /// クエリひとつでスワップするため UK としない
+  sort                  Int      @default(autoincrement())
+
+  user                User?               @relation(fields: [userId], references: [uid])
+  pair                Pair?               @relation(fields: [pairId], references: [id])
+  colorClassification ColorClassification @relation(fields: [colorClassificationId], references: [id])
+
+  records        Record[]
+  plannedRecords PlannedRecord[]
+  shortCuts      ShortCut[]
+
+  @@map("methods")
+}
+
+/// 費目。user_id と pair_id のどちらか必須。is_pay は NotNull
+model Type {
+  id                    Int     @id @default(autoincrement())
+  userId                String? @map("user_id") @db.VarChar(28)
+  pairId                Int?    @map("pair_id")
+  name                  String  @db.VarChar(10)
+  isPay                 Boolean @map("is_pay")
+  colorClassificationId Int     @map("color_classification_id") @db.SmallInt
+  /// クエリひとつでスワップするため UK としない
+  sort                  Int     @default(autoincrement())
+
+  user                User?               @relation(fields: [userId], references: [uid])
+  pair                Pair?               @relation(fields: [pairId], references: [id])
+  colorClassification ColorClassification @relation(fields: [colorClassificationId], references: [id])
+
+  subTypes       SubType[]
+  records        Record[]
+  plannedRecords PlannedRecord[]
+  shortCuts      ShortCut[]
+
+  @@map("types")
+}
+
+/// 費目の細目
+model SubType {
+  id     Int    @id @default(autoincrement())
+  typeId Int    @map("type_id")
+  name   String @db.VarChar(10)
+  /// クエリひとつでスワップするため UK としない
+  sort   Int    @default(autoincrement())
+
+  type Type @relation(fields: [typeId], references: [id])
+
+  records        Record[]
+  plannedRecords PlannedRecord[]
+  shortCuts      ShortCut[]
+
+  @@map("sub_types")
+}
+
+/// 家計レコード。record_type = 0:SELF / 5:INSTEAD / 10:PAIR / 15:SETTLEMENT
+model Record {
+  id              BigInt   @id @default(autoincrement())
+  userId          String   @map("user_id") @db.VarChar(28)
+  pairId          Int?     @map("pair_id")
+  datetime        DateTime @db.Timestamptz()
+  isPay           Boolean? @map("is_pay")
+  methodId        Int      @map("method_id")
+  typeId          Int?     @map("type_id")
+  subTypeId       Int?     @map("sub_type_id")
+  price           Int
+  memo            String?  @db.Text
+  plannedRecordId Int?     @map("planned_record_id")
+  /// record_type=5 の時、精算済みかどうか
+  isSettled       Boolean? @map("is_settled")
+  recordType      Int      @default(0) @map("record_type") @db.SmallInt
+
+  user          User           @relation(fields: [userId], references: [uid])
+  pair          Pair?          @relation(fields: [pairId], references: [id])
+  method        Method         @relation(fields: [methodId], references: [id])
+  type          Type?          @relation(fields: [typeId], references: [id])
+  subType       SubType?       @relation(fields: [subTypeId], references: [id])
+  /// 外部キーが削除されると null（on delete set null）
+  plannedRecord PlannedRecord? @relation(fields: [plannedRecordId], references: [id], onDelete: SetNull)
+
+  @@map("records")
+}
+
+/// 定期レコード（固定費のひな型）。record_type=15 にはならないため is_pay/type_id は NotNull
+model PlannedRecord {
+  id                  Int      @id @default(autoincrement())
+  userId              String?  @map("user_id") @db.VarChar(28)
+  pairId              Int?     @map("pair_id")
+  dayClassificationId Int      @map("day_classification_id") @db.SmallInt
+  isPay               Boolean  @map("is_pay")
+  methodId            Int      @map("method_id")
+  typeId              Int      @map("type_id")
+  subTypeId           Int?     @map("sub_type_id")
+  price               Int
+  memo                String?  @db.Text
+  /// クエリひとつでスワップするため UK としない
+  sort                Int      @default(autoincrement())
+  /// supabase の moddatetime トリガで更新
+  updatedAt           DateTime @default(now()) @map("updated_at") @db.Timestamptz()
+  recordType          Int      @default(0) @map("record_type") @db.SmallInt
+
+  user              User?             @relation(fields: [userId], references: [uid])
+  pair              Pair?             @relation(fields: [pairId], references: [id])
+  dayClassification DayClassification @relation(fields: [dayClassificationId], references: [id])
+  method            Method            @relation(fields: [methodId], references: [id])
+  type              Type              @relation(fields: [typeId], references: [id])
+  subType           SubType?          @relation(fields: [subTypeId], references: [id])
+
+  records Record[]
+
+  @@map("planned_records")
+}
+
+/// 予定。reminder_type=10(Stock) から生成された場合 reminder_id を持つ
+model Plan {
+  id         Int      @id @default(autoincrement())
+  userId     String?  @map("user_id") @db.VarChar(28)
+  pairId     Int?     @map("pair_id")
+  startDate  DateTime @map("start_date") @db.Date
+  endDate    DateTime @map("end_date") @db.Date
+  planTypeId Int?     @map("plan_type_id")
+  name       String   @db.VarChar(30)
+  memo       String?  @db.Text
+  reminderId Int?     @map("reminder_id")
+
+  user     User?     @relation(fields: [userId], references: [uid])
+  pair     Pair?     @relation(fields: [pairId], references: [id])
+  planType PlanType? @relation(fields: [planTypeId], references: [id])
+  reminder Reminder? @relation(fields: [reminderId], references: [id])
+
+  @@map("plans")
+}
+
+/// 予定の種別
+model PlanType {
+  id                    Int     @id @default(autoincrement())
+  userId                String? @map("user_id") @db.VarChar(28)
+  name                  String  @db.VarChar(10)
+  colorClassificationId Int     @map("color_classification_id") @db.SmallInt
+  /// クエリひとつでスワップするため UK としない
+  sort                  Int     @default(autoincrement())
+  pairId                Int?    @map("pair_id")
+
+  user                User?               @relation(fields: [userId], references: [uid])
+  colorClassification ColorClassification @relation(fields: [colorClassificationId], references: [id])
+  pair                Pair?               @relation(fields: [pairId], references: [id])
+
+  plans Plan[]
+
+  @@map("plan_types")
+}
+
+/// カレンダー内 TODO メモ
+model Memo {
+  id     Int     @id @default(autoincrement())
+  userId String? @map("user_id") @db.VarChar(28)
+  pairId Int?    @map("pair_id")
+  memo   String  @db.VarChar(30)
+
+  user User? @relation(fields: [userId], references: [uid])
+  pair Pair? @relation(fields: [pairId], references: [id])
+
+  @@map("memos")
+}
+
+/// ショートカット（記録入力のひな型）。record_type は records と同様
+model ShortCut {
+  id         BigInt  @id @default(autoincrement())
+  userId     String  @map("user_id") @db.VarChar(28)
+  pairId     Int?    @map("pair_id")
+  isPay      Boolean @map("is_pay")
+  methodId   Int     @map("method_id")
+  typeId     Int     @map("type_id")
+  subTypeId  Int?    @map("sub_type_id")
+  price      Int
+  memo       String? @db.Text
+  recordType Int     @default(0) @map("record_type") @db.SmallInt
+
+  user    User     @relation(fields: [userId], references: [uid])
+  pair    Pair?    @relation(fields: [pairId], references: [id])
+  method  Method   @relation(fields: [methodId], references: [id])
+  type    Type     @relation(fields: [typeId], references: [id])
+  subType SubType? @relation(fields: [subTypeId], references: [id])
+
+  @@map("short_cuts")
+}
+
+/// 口座
+model Bank {
+  id                    Int    @id @default(autoincrement())
+  userId                String @map("user_id") @db.VarChar(28)
+  name                  String @db.VarChar(30)
+  colorClassificationId Int    @map("color_classification_id") @db.SmallInt
+
+  user                User                @relation(fields: [userId], references: [uid])
+  colorClassification ColorClassification @relation(fields: [colorClassificationId], references: [id])
+
+  bankBalances BankBalance[]
+
+  @@map("banks")
+}
+
+/// 口座残高履歴
+model BankBalance {
+  id        Int      @id @default(autoincrement())
+  bankId    Int      @map("bank_id")
+  price     Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  bank Bank @relation(fields: [bankId], references: [id])
+
+  @@map("bank_balances")
+}
+
+/// リマインダーの発火条件。condition_type=5(MONTH):Nヶ月後 / 10(MONTH_DAY):月日
+model Condition {
+  id            Int     @id @default(autoincrement())
+  month         Int?
+  monthDay      String? @map("month_day") @db.VarChar(5)
+  conditionType Int     @map("condition_type") @db.SmallInt
+  /// base_type=5(NOW):基準が現在日付 / 10(DATE):基準が date
+  baseType      Int?    @map("base_type") @db.SmallInt
+
+  reminders Reminder[]
+
+  @@map("conditions")
+}
+
+/// リマインダー。reminder_type=5(Flow):チェックで日付更新 / 10(Stock):チェックで plan 化
+model Reminder {
+  id                    Int      @id @default(autoincrement())
+  userId                String?  @map("user_id") @db.VarChar(28)
+  pairId                Int?     @map("pair_id")
+  name                  String   @db.VarChar(10)
+  reminderType          Int      @map("reminder_type") @db.SmallInt
+  conditionId           Int      @map("condition_id")
+  date                  DateTime @db.Date
+  memo                  String?  @db.Text
+  colorClassificationId Int      @map("color_classification_id") @db.SmallInt
+
+  user                User?               @relation(fields: [userId], references: [uid])
+  pair                Pair?               @relation(fields: [pairId], references: [id])
+  condition           Condition           @relation(fields: [conditionId], references: [id])
+  colorClassification ColorClassification @relation(fields: [colorClassificationId], references: [id])
+
+  plans Plan[]
+
+  @@map("reminders")
+}
