@@ -1,8 +1,8 @@
 'use client';
 
 import { cn } from 'cn';
+import { colorHex } from '@/features/master';
 import type { RecordListItem } from '@/features/record';
-import { colorHex } from '@/features/record';
 import { formatRecordPrice } from '../domain/format';
 import { resolveDisplayIsPay } from '../domain/record-sign';
 import { calendarLabels } from '../labels';

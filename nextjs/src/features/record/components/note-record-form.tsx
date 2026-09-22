@@ -7,6 +7,7 @@ import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { colorHex } from '@/features/master';
 import type {
   GroupedMethodList,
   GroupedTypeList,
@@ -20,7 +21,6 @@ import {
   deleteRecordAction,
   upsertRecordAction
 } from '../actions/record-actions';
-import { colorHex } from '../color';
 import { recordLabels } from '../labels';
 import { recordUpsertSchema } from '../schemas/record-schema';
 

@@ -1,4 +1,4 @@
-import { colorHex } from '@/features/record';
+import { colorHex } from '@/features/master';
 import type { CalendarEvent, CalendarMonthData } from '../types';
 import { formatDaySum } from './format';
 

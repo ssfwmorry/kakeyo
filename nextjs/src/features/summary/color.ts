@@ -1,43 +1,17 @@
-// 色名 → 実 CSS 色（hex）の対応（summary feature 内・純粋関数）。
-// DB の color_classifications.name は Vuetify のマテリアル色名で保存される。
-// bank/record にも同等の COLOR_HEX があるが、barrel が公開していない色関数を
-// 他 feature の内部から直接 import するのは所有境界違反のため、summary は自前で持つ
-// （旧 Nuxt の COLOR_CODE を踏襲。精算の 'yellow' を含む）。
+// summary 固有の色ヘルパ。色名 → hex の単一の正は @/features/master の colorHex。
+// summary は「type 未設定（精算）= colorName が null」という固有の意味を持つため、
+// null を精算色に寄せる薄いラッパだけをここに置く（マップは二重定義しない）。
+import { colorHex as baseColorHex } from '@/features/master';
 import { SETTLEMENT_DISPLAY } from '@/features/record';
-
-const COLOR_HEX: Record<string, string> = {
-  red: '#f44336',
-  pink: '#e91e63',
-  purple: '#9c27b0',
-  'deep-purple': '#673ab7',
-  indigo: '#3f51b5',
-  blue: '#2196f3',
-  'light-blue': '#03a9f4',
-  cyan: '#00bcd4',
-  teal: '#009688',
-  green: '#4caf50',
-  'light-green': '#8bc34a',
-  lime: '#cddc39',
-  amber: '#ffc107',
-  orange: '#ff9800',
-  brown: '#795548',
-  'blue-grey': '#607d8b',
-  grey: '#9e9e9e',
-  black: '#000000',
-  yellow: '#ffeb3b'
-};
 
 // 精算（type 未設定）の表示名・色。単一の正は record の SETTLEMENT_DISPLAY
 // （barrel 公開済み）。summary はそこから別名で公開し、'精算'/'yellow' を二重定義しない。
 export const SETTLEMENT_COLOR_NAME = SETTLEMENT_DISPLAY.color;
 export const SETTLEMENT_NAME = SETTLEMENT_DISPLAY.name;
 
-// 色名 → hex。未知の色名／null はグレーにフォールバックする。
+// 色名 → hex。null（精算 = type 未設定）は精算色に寄せる。未知の色名はグレー。
 export function colorHex(name: string | null): string {
-  if (name === null) {
-    return COLOR_HEX[SETTLEMENT_COLOR_NAME];
-  }
-  return COLOR_HEX[name] ?? '#9e9e9e';
+  return baseColorHex(name ?? SETTLEMENT_COLOR_NAME);
 }
 
 // サブカテゴリ積み上げ棒用の固定色（旧 SummaryBarType の subTypeColors）。

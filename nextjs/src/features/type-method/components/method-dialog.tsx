@@ -2,6 +2,7 @@
 
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
+import { ColorPicker } from '@/components/form/color-picker';
 import { FormField } from '@/components/form/form-field';
 import { useCloseOnSuccess } from '@/components/form/use-close-on-success';
 import { useFormAction } from '@/components/form/use-form-action';
@@ -19,7 +20,6 @@ import { deleteMethodAction, upsertMethodAction } from '../actions';
 import { typeMethodLabels } from '../labels';
 import { methodUpsertSchema } from '../schemas';
 import type { MethodCard } from '../types';
-import { ColorPicker } from './color-picker';
 
 // 方法 upsert / delete ダイアログ。payMode（pay/income/both）と isPair を hidden で送る。
 // service 側で payMode → isPay(true/false/null) に写す。

@@ -9,9 +9,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { colorHex } from '@/features/master';
 import { L } from '@/lib/shared/labels';
 import { deletePlanAction, upsertPlanAction } from '../actions';
-import { planColorHex } from '../color';
 import { planReminderLabels } from '../labels';
 import { planUpsertSchema } from '../schemas';
 import type { GroupedPlanTypeList, PlanItem, PlanTypeCard } from '../types';
@@ -282,7 +282,7 @@ function PlanTypeSelect({
         {selected ? (
           <span
             className='inline-block size-5 rounded-full'
-            style={{ backgroundColor: planColorHex(selected.colorName) }}
+            style={{ backgroundColor: colorHex(selected.colorName) }}
           />
         ) : null}
         <select

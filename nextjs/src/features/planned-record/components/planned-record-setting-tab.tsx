@@ -5,9 +5,9 @@ import { useState } from 'react';
 import { SwapButton } from '@/components/form/swap-button';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
+import { colorHex } from '@/features/master';
 import { L } from '@/lib/shared/labels';
 import { swapPlannedRecordAction } from '../actions';
-import { colorHex } from '../color';
 import { plannedRecordLabels } from '../labels';
 import type { GroupedPlannedRecordList, PlannedRecordListItem } from '../types';
 

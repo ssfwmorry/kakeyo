@@ -1,4 +1,3 @@
-import { planColorHex } from './color';
 import type { PlanRow } from './server/repositories/plan';
 import type { PlanTypeRow } from './server/repositories/plan-type';
 import type { ReminderRow } from './server/repositories/reminder';
@@ -14,8 +13,8 @@ import type {
 // （server-only を含まず Client / Vitest からも import 可能）。
 // 色名 → hex や self/pair 振り分けなど「表示のための整形」をここに集約する。
 
-// planColorHex は inline style 用の hex だが、カードは colorName（色分類名）を持てば
-// 十分なため、ここでは行→カードの写像と self/pair 振り分けのみを行う。
+// カードは colorName（色分類名）を持てば十分なため、ここでは行→カードの写像と
+// self/pair 振り分けのみを行う（hex 化は表示側で @/features/master の colorHex を使う）。
 export function groupPlanTypeList(rows: PlanTypeRow[]): GroupedPlanTypeList {
   const cards: PlanTypeCard[] = rows.map((row) => ({
     id: row.id,
@@ -70,6 +69,3 @@ export function groupReminderList(rows: ReminderRow[]): GroupedReminderList {
     all: items
   };
 }
-
-// 未知色フォールバック込みの hex 変換を再エクスポート（UI が color.ts を直接持たず済む）。
-export { planColorHex };

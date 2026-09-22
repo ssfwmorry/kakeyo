@@ -15,7 +15,6 @@ export {
   createSettlementRecordAction,
   settleRecordsAction
 } from './actions/settlement-actions';
-export { colorHex } from './color';
 export type { NoteRecordDefault } from './components/note-record-form';
 export { NoteRecordForm } from './components/note-record-form';
 export { SETTLEMENT_DISPLAY } from './labels';

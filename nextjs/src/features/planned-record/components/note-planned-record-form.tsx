@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { DayClassification } from '@/features/master';
+import { colorHex } from '@/features/master';
 import type {
   GroupedMethodList,
   GroupedTypeList,
@@ -20,7 +21,6 @@ import {
   deletePlannedRecordAction,
   upsertPlannedRecordAction
 } from '../actions';
-import { colorHex } from '../color';
 import { plannedRecordLabels } from '../labels';
 import { plannedRecordUpsertSchema } from '../schemas';
 import type { NotePlannedRecordDefault } from '../types';

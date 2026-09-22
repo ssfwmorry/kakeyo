@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { shortcutColorHex } from '../color';
+import { colorHex } from '@/features/master';
 import { formatShortcutAmount } from '../domain/format';
 import { memoShortcutLabels } from '../labels';
 import type { ShortCutItem } from '../types';
@@ -41,7 +41,7 @@ export function ShortcutList({ items, onSelect }: ShortcutListProps) {
                 <span
                   aria-hidden='true'
                   className='inline-block size-3 shrink-0 rounded-full'
-                  style={{ backgroundColor: shortcutColorHex(item.colorName) }}
+                  style={{ backgroundColor: colorHex(item.colorName) }}
                 />
                 <span className='flex flex-col'>
                   <span className='text-sm'>

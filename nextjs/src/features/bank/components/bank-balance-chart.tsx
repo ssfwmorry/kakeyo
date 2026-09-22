@@ -9,7 +9,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
-import { bankColorHex } from '../color';
+import { colorHex } from '@/features/master';
 import { toManUnit } from '../domain/format';
 import type { BalanceChartPoint, BankItem } from '../types';
 
@@ -32,7 +32,7 @@ export function BankBalanceChart({ banks, points }: BankBalanceChartProps) {
   const config: ChartConfig = Object.fromEntries(
     banks.map((bank) => [
       String(bank.id),
-      { label: bank.name, color: bankColorHex(bank.colorName) }
+      { label: bank.name, color: colorHex(bank.colorName) }
     ])
   );
 

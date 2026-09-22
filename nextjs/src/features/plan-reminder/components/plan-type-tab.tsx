@@ -5,9 +5,9 @@ import { SwapButton } from '@/components/form/swap-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import type { ColorClassification } from '@/features/master';
+import { colorHex } from '@/features/master';
 import { L } from '@/lib/shared/labels';
 import { swapPlanTypeAction } from '../actions';
-import { planColorHex } from '../color';
 import { planReminderLabels } from '../labels';
 import type { GroupedPlanTypeList, PlanTypeCard } from '../types';
 import { PlanTypeDialog } from './plan-type-dialog';
@@ -106,7 +106,7 @@ function PlanTypeCardView({
         <span className='flex items-center gap-2'>
           <span
             className='inline-block size-5 rounded-full'
-            style={{ backgroundColor: planColorHex(card.colorName) }}
+            style={{ backgroundColor: colorHex(card.colorName) }}
           />
           {card.name}
         </span>

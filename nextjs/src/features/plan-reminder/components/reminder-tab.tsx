@@ -5,10 +5,10 @@ import { useFormToast } from '@/components/form/use-form-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { ColorClassification } from '@/features/master';
+import { colorHex } from '@/features/master';
 import { L } from '@/lib/shared/labels';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 import { deleteReminderAction } from '../actions';
-import { planColorHex } from '../color';
 import {
   BaseType,
   ConditionType,
@@ -90,7 +90,7 @@ function ReminderCardView({ reminder }: ReminderCardViewProps) {
         <span className='flex items-center gap-2'>
           <span
             className='inline-block size-5 rounded-full'
-            style={{ backgroundColor: planColorHex(reminder.colorName) }}
+            style={{ backgroundColor: colorHex(reminder.colorName) }}
           />
           {reminder.name}
         </span>

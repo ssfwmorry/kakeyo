@@ -2,6 +2,7 @@
 
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
+import { ColorPicker } from '@/components/form/color-picker';
 import { FormField } from '@/components/form/form-field';
 import { useCloseOnSuccess } from '@/components/form/use-close-on-success';
 import { useFormAction } from '@/components/form/use-form-action';
@@ -19,7 +20,6 @@ import { deleteTypeAction, upsertTypeAction } from '../actions';
 import { typeMethodLabels } from '../labels';
 import { typeUpsertSchema } from '../schemas';
 import type { TypeCard } from '../types';
-import { ColorPicker } from './color-picker';
 
 // カテゴリ upsert / delete ダイアログ（1 フォーム = 1 スキーマ = 1 useForm）。
 // isPay / isPair は hidden で送る（画面のタブ状態由来。クライアント値は

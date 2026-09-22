@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import type { ColorClassification } from '@/features/master';
-import { colorHex } from '../color';
+import { colorHex } from '@/features/master';
 
-// 色ピッカー。FormField はテキスト系専用のため、色は hidden input + 色ボタングリッド
-// で表現する。選択中の colorId を hidden input に載せて Conform の colorId に渡す。
+// 色ピッカー（フォーム共通）。FormField はテキスト系専用のため、色は hidden input +
+// 色ボタングリッドで表現する。選択中の colorId を hidden input に載せて Conform の
+// colorId フィールドに渡す。type-method / plan-reminder / bank の各フォームが共有する。
 
 type ColorPickerProps = {
   name: string;

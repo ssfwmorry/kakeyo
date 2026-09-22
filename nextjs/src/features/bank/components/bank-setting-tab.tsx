@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import type { ColorClassification } from '@/features/master';
+import { colorHex } from '@/features/master';
 import { L } from '@/lib/shared/labels';
-import { bankColorHex } from '../color';
 import { bankLabels } from '../labels';
 import type { BankItem } from '../types';
 import { BankFormDialog } from './bank-form-dialog';
@@ -75,7 +75,7 @@ function BankCardView({ bank, onEdit }: BankCardViewProps) {
         <span className='flex items-center gap-2'>
           <span
             className='inline-block size-5 rounded-full'
-            style={{ backgroundColor: bankColorHex(bank.colorName) }}
+            style={{ backgroundColor: colorHex(bank.colorName) }}
           />
           {bank.name}
         </span>
