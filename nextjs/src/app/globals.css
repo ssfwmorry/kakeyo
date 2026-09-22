@@ -128,3 +128,75 @@
     @apply font-sans;
   }
 }
+
+/*
+ * FullCalendar のカスタム表示（旧 pages/calendar.vue の :deep() スタイル移植）。
+ * 「今日=黄・曜日=赤青・小フォント・余白詰め・収支ラベルの黒点除去」を復元し、
+ * 素の FullCalendar から旧のコンパクトな家計簿カレンダーへ戻す（差分リスト U-4 / B-11）。
+ * 独自ヘッダーで年月・移動を出すため標準ツールバーは React 側で非表示にする（headerToolbar=false）。
+ */
+
+/* 列ヘッダ（曜日）の小フォント。 */
+.fc .fc-col-header-cell-cushion {
+  font-size: 0.7rem;
+  padding: 2px 4px;
+}
+
+/* セルの日付数字を小さく・左上寄せに詰める。 */
+.fc .fc-daygrid-day-top {
+  font-size: 0.8rem;
+  font-weight: 550;
+  justify-content: flex-start;
+  padding-left: 4px;
+}
+.fc .fc-daygrid-day-number {
+  padding: 0;
+}
+
+/* 今日セルは黄色（旧 yellow-accent2 相当）。ダークでも視認できる濃さに。 */
+.fc .fc-day-today {
+  background-color: #fff59d !important;
+}
+.dark .fc .fc-day-today {
+  background-color: #7a6f00 !important;
+}
+
+/* 曜日の色分け: 日曜=赤・土曜=青（ヘッダ・本文の先頭列/末尾列）。 */
+.fc .fc-col-header-cell.fc-day-sun .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day.fc-day-sun .fc-daygrid-day-number {
+  color: #f44336;
+}
+.fc .fc-col-header-cell.fc-day-sat .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day.fc-day-sat .fc-daygrid-day-number {
+  color: #2196f3;
+}
+
+/* 祝日セルの日付数字を赤に（月グリッドのセルへ is-holiday クラスを付与して着色）。
+   曜日色より優先させる（祝日は日曜以外でも赤）。 */
+.fc .fc-daygrid-day.is-holiday .fc-daygrid-day-number {
+  color: #f44336 !important;
+}
+
+/* 収支ラベル（daySum）は枠・背景・黒点を消してプレーンな小テキストにする。 */
+.fc .calendar-day-sum {
+  list-style: none;
+  background-color: transparent !important;
+  border: 0 !important;
+  font-size: 0.7rem;
+  padding: 0;
+  margin: 0;
+}
+.fc .calendar-day-sum .fc-list-item-marker,
+.fc .calendar-day-sum::marker {
+  display: none;
+  content: "";
+}
+
+/* イベント行の余白を詰める（コンパクト表示）。 */
+.fc .fc-daygrid-day-events {
+  margin-bottom: 0.3rem;
+  min-height: 0;
+}
+.fc .fc-h-event {
+  border: 0;
+}

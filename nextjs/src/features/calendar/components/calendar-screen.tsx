@@ -2,17 +2,25 @@
 
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
-import { buttonVariants } from '@/components/ui/button';
+import { MonthJumpPicker } from '@/components/month-jump-picker';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { MemoList } from '@/features/memo-shortcut';
 import { getCalendarMonthAction } from '../actions';
+import {
+  type AllRecordsOrder,
+  nextAllRecordsOrder,
+  selectAllRecordDays
+} from '../domain/all-records';
 import { formatMonthSum } from '../domain/format';
+import { monthLabel, shiftMonth } from '../domain/period';
 import { calendarLabels } from '../labels';
 import type {
   CalendarEvent,
   CalendarInitialData,
   CalendarMonthData
 } from '../types';
-import { DayRecordList } from './day-record-list';
+import { useSwipe } from '../use-swipe';
+import { AllRecordsList, DayRecordList } from './day-record-list';
 import { EventDetail } from './event-detail';
 import { MonthCalendar } from './month-calendar';
 import { ShortcutRecordList } from './shortcut-record-list';
@@ -39,6 +47,8 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     planId: number | null;
     reminderId: number | null;
   } | null>(null);
+  // 全記録一覧の並び（null=選択日1日表示 / 'desc' or 'asc'=当月全記録）。旧 showAllRecords。
+  const [allRecordsOrder, setAllRecordsOrder] = useState<AllRecordsOrder>(null);
   const [isPending, startTransition] = useTransition();
 
   // 選択日の DaySum（records / holiday）を月データから引く。
@@ -67,48 +77,113 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     [month.reminders, selectedEvent]
   );
 
-  // 日付を選び直したらイベント詳細は閉じる（旧 showDateRecords の挙動）。
+  // 当月の全記録（記録のある日のみ・並び順は allRecordsOrder）。旧 showAllRecords 相当。
+  // フィルタ・並べ替えは selectAllRecordDays（純粋関数・Vitest）に集約する。
+  const allRecordDays = useMemo(
+    () =>
+      allRecordsOrder === null
+        ? []
+        : selectAllRecordDays(month.days, month.yearMonth, allRecordsOrder),
+    [allRecordsOrder, month.days, month.yearMonth]
+  );
+
+  // 日付を選び直したらイベント詳細・全記録表示は閉じる（旧 showDateRecords の挙動）。
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(dateStr);
     setSelectedEvent(null);
+    setAllRecordsOrder(null);
   };
 
   // plan / reminder クリック → 詳細カードを開き、選択日をイベント日に寄せる。
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedDate(event.start);
     setSelectedEvent({ planId: event.planId, reminderId: event.reminderId });
+    setAllRecordsOrder(null);
+  };
+
+  // 全記録一覧のトグル（旧: 初回 DESC → 再押下で ASC/DESC を交互）。
+  const toggleAllRecords = () => {
+    setSelectedEvent(null);
+    setAllRecordsOrder(nextAllRecordsOrder);
   };
 
   const handleMonthChange = (yearMonth: string) => {
     startTransition(async () => {
       const next = await getCalendarMonthAction(yearMonth);
       setMonth(next);
-      // 月が変わったら選択日・イベント詳細をクリアする（前月の選択を持ち越さない）。
+      // 月が変わったら選択日・イベント詳細・全記録表示をクリアする（前月の選択を持ち越さない）。
       setSelectedDate(null);
       setSelectedEvent(null);
+      setAllRecordsOrder(null);
     });
   };
 
+  const move = (delta: number) =>
+    handleMonthChange(shiftMonth(month.yearMonth, delta));
+
+  // 左右スワイプで前月/次月へ（旧 calendar のみのタッチ操作。差分リスト B-6）。
+  // FullCalendar 自体はタッチを日付選択に使うため、カレンダー領域を含む外側のヘッダー
+  // コンテナに結線する（グリッド内タップとの競合を避ける）。
+  const swipe = useSwipe({
+    onSwipeLeft: () => move(1),
+    onSwipeRight: () => move(-1)
+  });
+
   return (
     <div className='mx-auto flex w-full max-w-md flex-col gap-4 p-4'>
-      <header className='flex flex-col gap-1'>
+      <header className='flex flex-col gap-2'>
         <h1 className='font-bold text-lg'>{calendarLabels.heading.title}</h1>
-        <p className='text-muted-foreground text-sm'>
-          {calendarLabels.heading.monthSum}：{formatMonthSum(month.monthSum)} 円
-        </p>
+        {/* 旧 PaginationBar 相当: 前月/次月 ＋ 中央に年月ジャンプ ＋ 月収支サブタイトル。 */}
+        <div className='flex items-center justify-between gap-2'>
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            onClick={() => move(-1)}
+            disabled={isPending}
+            aria-label='前月'
+          >
+            ＜
+          </Button>
+          <div className='flex flex-col items-center'>
+            <MonthJumpPicker
+              yearMonth={month.yearMonth}
+              label={monthLabel(month.yearMonth)}
+              onSelect={handleMonthChange}
+            />
+            <span className='text-muted-foreground text-xs'>
+              {calendarLabels.heading.monthSum}：
+              {formatMonthSum(month.monthSum)} 円
+            </span>
+          </div>
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            onClick={() => move(1)}
+            disabled={isPending}
+            aria-label='次月'
+          >
+            ＞
+          </Button>
+        </div>
       </header>
 
-      <div data-pending={isPending} className='data-[pending=true]:opacity-60'>
+      <div
+        data-pending={isPending}
+        className='data-[pending=true]:opacity-60'
+        onTouchStart={swipe.onTouchStart}
+        onTouchEnd={swipe.onTouchEnd}
+      >
         <MonthCalendar
           data={month}
           selectedDate={selectedDate}
           onDateClick={handleDateClick}
           onEventClick={handleEventClick}
-          onMonthChange={handleMonthChange}
         />
       </div>
 
-      <div className='flex gap-2'>
+      <div className='flex items-center gap-2'>
         {/* note は日付クエリを受け取らないためプレーンに遷移する（記録の初期日付
             プリフィルは note 側の受け口が無く TODO）。 */}
         <Link href='/note' className={buttonVariants({ variant: 'default' })}>
@@ -120,11 +195,24 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
         >
           {calendarLabels.action.addPlan}
         </Link>
+        {/* 当月の全記録を昇順/降順トグルで一覧（旧 calendar.vue showAllRecords）。 */}
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          className='ml-auto'
+          onClick={toggleAllRecords}
+          aria-pressed={allRecordsOrder !== null}
+        >
+          {allRecordsLabel(allRecordsOrder)}
+        </Button>
       </div>
 
-      {/* イベント選択中は詳細カードを、そうでなければ選択日の記録一覧を出す
-          （旧 calendar.vue は showEvent 時に selectedDateRecords を空にして排他）。 */}
-      {selectedPlan || selectedReminder ? (
+      {/* 表示は排他: ①全記録一覧（トグル ON） ②イベント詳細（plan/reminder 選択）
+          ③選択日の記録一覧。旧 calendar.vue の showAllRecords / showEvent / showDateRecords。 */}
+      {allRecordsOrder !== null ? (
+        <AllRecordsList days={allRecordDays} />
+      ) : selectedPlan || selectedReminder ? (
         <EventDetail
           plan={selectedPlan}
           reminder={selectedReminder}
@@ -145,4 +233,13 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
       ) : null}
     </div>
   );
+}
+
+// 全記録トグルのボタン文言（OFF=通常 / 降順=↓ / 昇順=↑）。
+function allRecordsLabel(order: AllRecordsOrder): string {
+  const base = calendarLabels.action.showAllRecords;
+  if (order === null) {
+    return base;
+  }
+  return order === 'desc' ? `${base} ↓` : `${base} ↑`;
 }

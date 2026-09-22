@@ -11,7 +11,7 @@ import {
   loginAction,
   resetPasswordAction
 } from '../actions/login-actions';
-import { authLabels } from '../labels';
+import { authLabels, TUTORIAL_URL } from '../labels';
 import { loginSchema, resetPasswordSchema } from '../schemas/login-schema';
 
 const { appName, field, action } = authLabels;
@@ -97,13 +97,24 @@ export function LoginForm() {
         </Button>
       </form>
 
-      {/* 問い合わせ導線（旧ドロワーの inquiryItem 相当・未ログインでも到達可）。 */}
-      <Link
-        href='/inquiry'
-        className='text-center text-muted-foreground text-sm underline'
-      >
-        {action.inquiry}
-      </Link>
+      <div className='flex flex-col items-center gap-2'>
+        {/* 問い合わせ導線（旧ドロワーの inquiryItem 相当・未ログインでも到達可）。 */}
+        <Link
+          href='/inquiry'
+          className='text-muted-foreground text-sm underline'
+        >
+          {action.inquiry}
+        </Link>
+        {/* 使い方（とりせつ）への外部リンク（旧 login.vue の goTutorialPage 相当）。 */}
+        <a
+          href={TUTORIAL_URL}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='text-muted-foreground text-sm underline'
+        >
+          {action.tutorial}
+        </a>
+      </div>
     </div>
   );
 }

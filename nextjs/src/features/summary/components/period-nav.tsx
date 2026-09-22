@@ -1,9 +1,12 @@
 'use client';
 
+import { MonthJumpPicker } from '@/components/month-jump-picker';
 import { Button } from '@/components/ui/button';
 
-// 月移動 / 年移動の共通ナビ（＜ ラベル ＞）。旧 PaginationBar の最小移植。
+// 月移動 / 年移動の共通ナビ（＜ ラベル ＞）。旧 PaginationBar の移植。
 // 中央に現在の期間ラベル、右にサブタイトル（合計など）を任意で出す。
+// 月ナビでは jumpYearMonth / onJump を渡すと中央ラベルが年月ダイレクトジャンプ
+// （旧 PaginationBar のタイトルタップ→年→月ピッカー）になる（差分リスト B-5）。
 
 type PeriodNavProps = {
   label: string;
@@ -11,6 +14,9 @@ type PeriodNavProps = {
   onPrev: () => void;
   onNext: () => void;
   disabled?: boolean;
+  // 年月ジャンプを有効にする場合の現在 'YYYY-MM'（月ナビでのみ渡す）。
+  jumpYearMonth?: string;
+  onJump?: (yearMonth: string) => void;
 };
 
 export function PeriodNav({
@@ -18,7 +24,9 @@ export function PeriodNav({
   subtitle,
   onPrev,
   onNext,
-  disabled
+  disabled,
+  jumpYearMonth,
+  onJump
 }: PeriodNavProps) {
   return (
     <div className='flex items-center justify-between gap-2 py-2'>
@@ -33,7 +41,15 @@ export function PeriodNav({
         ＜
       </Button>
       <div className='flex flex-col items-center'>
-        <span className='font-medium text-sm'>{label}</span>
+        {jumpYearMonth && onJump ? (
+          <MonthJumpPicker
+            yearMonth={jumpYearMonth}
+            label={label}
+            onSelect={onJump}
+          />
+        ) : (
+          <span className='font-medium text-sm'>{label}</span>
+        )}
         {subtitle ? (
           <span className='text-muted-foreground text-xs'>{subtitle}</span>
         ) : null}

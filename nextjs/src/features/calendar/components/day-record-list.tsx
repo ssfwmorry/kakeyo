@@ -1,16 +1,14 @@
 'use client';
 
-import { cn } from 'cn';
-import { colorHex } from '@/features/master';
-import type { RecordListItem } from '@/features/record';
-import { formatRecordPrice } from '../domain/format';
-import { resolveDisplayIsPay } from '../domain/record-sign';
+import { useRouter } from 'next/navigation';
+import { RecordCard, type RecordListItem } from '@/features/record';
 import { calendarLabels } from '../labels';
 
-// 選択した日の record 一覧（表示のみ）。旧 pages/calendar.vue の RecordCard 相当。
-// record ドメインの表示用 Client（NoteRecordForm 等）は編集フォーム用途で、単純な
-// 一覧表示 Component は公開されていないため、ここでカレンダー用の軽量カードを持つ。
-// 編集導線（記録の個別編集）は /note に record 編集の受け口が無いため今回は TODO。
+// 選択した日の record 一覧（旧 pages/calendar.vue の RecordCard 一覧の移植）。
+// 表示は record ドメインの共通 RecordCard に集約（方法色/共有/定期/収入青字/編集ガード）。
+// 編集導線は A-1 で接続済みの /note?RECORD= へ。編集可否（ペア相手の立替は不可・精算は
+// 不可）は RecordCard 内の isEnableEdit が判定し、可のときのみ編集ボタンを出す。
+// router は各リストで 1 回だけ取得し（行ごとに useRouter を呼ばない）、onEdit を渡す。
 
 type DayRecordListProps = {
   dateStr: string | null;
@@ -19,55 +17,12 @@ type DayRecordListProps = {
   holidayName: string | null;
 };
 
-// カテゴリ / サブ / 方法 / 相手名を 1 行に連結する（表示専用）。
-function recordSummary(record: RecordListItem): string {
-  const type = record.typeName ?? '精算';
-  const sub = record.subTypeName ? ` / ${record.subTypeName}` : '';
-  const method = ` · ${record.methodName}`;
-  const pair =
-    record.isPair && record.pairUserName ? ` · ${record.pairUserName}` : '';
-  return `${type}${sub}${method}${pair}`;
-}
-
-// 1 record の表示行。map 内のネストを浅くして複雑度を下げる。
-function DayRecordRow({ record }: { record: RecordListItem }) {
-  return (
-    <li
-      // 相手（自分以外）の record は淡色で区別する（自分視点の一覧のため）。
-      className={cn(
-        'flex items-center justify-between gap-2 rounded-md border px-3 py-2',
-        !record.isSelf && 'opacity-60'
-      )}
-    >
-      <span className='flex items-center gap-2'>
-        <span
-          aria-hidden='true'
-          className='inline-block size-3 shrink-0 rounded-full'
-          style={{
-            backgroundColor: colorHex(
-              record.typeColorClassificationName ?? 'yellow'
-            )
-          }}
-        />
-        <span className='flex flex-col'>
-          <span className='text-sm'>{recordSummary(record)}</span>
-          {record.memo ? (
-            <span className='text-muted-foreground text-xs'>{record.memo}</span>
-          ) : null}
-        </span>
-      </span>
-      <span className='font-medium text-sm'>
-        {formatRecordPrice(record.price, resolveDisplayIsPay(record))}
-      </span>
-    </li>
-  );
-}
-
 export function DayRecordList({
   dateStr,
   records,
   holidayName
 }: DayRecordListProps) {
+  const router = useRouter();
   if (dateStr === null) {
     return null;
   }
@@ -88,12 +43,50 @@ export function DayRecordList({
           {calendarLabels.empty.dayRecords}
         </p>
       ) : (
-        <ul className='flex flex-col gap-2'>
+        <div className='flex flex-col gap-2'>
           {records.map((record) => (
-            <DayRecordRow key={record.id} record={record} />
+            <RecordCard
+              key={record.id}
+              record={record}
+              onEdit={() => router.push(`/note?RECORD=${record.id}`)}
+            />
           ))}
-        </ul>
+        </div>
       )}
+    </section>
+  );
+}
+
+// 当月の全記録を日付ごとにまとめて一覧する（旧 calendar.vue showAllRecords 相当）。
+// 親（calendar-screen）が month.days を並べ替え・フィルタして「記録のある日」のみ渡す。
+type AllRecordsListProps = {
+  // 表示する日（{ dateStr, records } の配列。records は 1 件以上・並び順は親が決める）。
+  days: { dateStr: string; records: RecordListItem[] }[];
+};
+
+export function AllRecordsList({ days }: AllRecordsListProps) {
+  const router = useRouter();
+  if (days.length === 0) {
+    return (
+      <p className='text-muted-foreground text-sm'>
+        {calendarLabels.empty.monthRecords}
+      </p>
+    );
+  }
+  return (
+    <section className='flex flex-col gap-3'>
+      {days.map((day) => (
+        <div key={day.dateStr} className='flex flex-col gap-1'>
+          <p className='text-muted-foreground text-xs'>{day.dateStr}</p>
+          {day.records.map((record) => (
+            <RecordCard
+              key={record.id}
+              record={record}
+              onEdit={() => router.push(`/note?RECORD=${record.id}`)}
+            />
+          ))}
+        </div>
+      ))}
     </section>
   );
 }

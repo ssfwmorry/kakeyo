@@ -3,15 +3,23 @@
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { colorHex } from '@/features/master';
 import { L } from '@/lib/shared/labels';
 import { deletePlanAction, upsertPlanAction } from '../actions';
+import { formatLocalDate, parseLocalDate } from '../domain/local-date';
 import { planReminderLabels } from '../labels';
 import { planUpsertSchema } from '../schemas';
 import type { GroupedPlanTypeList, PlanItem, PlanTypeCard } from '../types';
@@ -204,6 +212,15 @@ type PlanDateSectionProps = {
   endErrors?: string[];
 };
 
+// 選択済み日付の表示ラベル（'2026年9月22日'）。未選択は空文字。
+function dateLabel(value: string): string {
+  const d = parseLocalDate(value);
+  if (!d) {
+    return '';
+  }
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
 function PlanDateSection({
   startId,
   startName,
@@ -217,45 +234,88 @@ function PlanDateSection({
   endErrors
 }: PlanDateSectionProps) {
   const periodId = `${startId}-period`;
+
+  // hidden の startDate（Conform 連携）は常に維持し、UI はカレンダー選択で更新する。
+  // 旧 pages/plan.vue の v-date-picker（単日 / multiple="range"）を移植（差分リスト B-9）。
+  // トリガーの表示ラベル: 期間 ON は「開始 〜 終了」、単日は選択日（未選択はプレースホルダ）。
+  const triggerLabel = isPeriod
+    ? startDate && endDate
+      ? `${dateLabel(startDate)} 〜 ${dateLabel(endDate)}`
+      : dateLabel(startDate) || entity.startDate
+    : dateLabel(startDate) || entity.date;
+
+  // 期間 ON の range 選択ハンドラ（from=開始 / to=終了。to 未定なら開始と同値）。
+  const handleRangeSelect = (range: DateRange | undefined) => {
+    if (range?.from) {
+      onStartChange(formatLocalDate(range.from));
+      onEndChange(formatLocalDate(range.to ?? range.from));
+    }
+  };
+
   return (
     <>
-      <div className='flex items-end gap-3'>
-        <div className='flex flex-col gap-2'>
-          <Label htmlFor={startId}>
-            {isPeriod ? entity.startDate : entity.date}
-          </Label>
-          <Input
-            id={startId}
-            name={startName}
-            type='date'
-            value={startDate}
-            onChange={(e) => onStartChange(e.target.value)}
-          />
-        </div>
-        <div className='flex items-center gap-2 pb-2'>
-          <Checkbox
-            id={periodId}
-            checked={isPeriod}
-            onCheckedChange={(checked) => onPeriodChange(checked === true)}
-          />
-          <Label htmlFor={periodId} className='font-normal'>
-            {P.period}
-          </Label>
-        </div>
-      </div>
-      <FieldError errors={startErrors} />
+      {/* Conform 連携の startDate は hidden で常時送る（カレンダーで更新）。 */}
+      <input
+        id={startId}
+        type='hidden'
+        name={startName}
+        value={startDate}
+        readOnly
+      />
 
-      {isPeriod ? (
-        <div className='flex flex-col gap-2'>
-          <Label>{entity.endDate}</Label>
-          <Input
-            type='date'
-            value={endDate}
-            onChange={(e) => onEndChange(e.target.value)}
-          />
-          <FieldError errors={endErrors} />
-        </div>
-      ) : null}
+      <div className='flex items-center gap-2'>
+        <Checkbox
+          id={periodId}
+          checked={isPeriod}
+          onCheckedChange={(checked) => onPeriodChange(checked === true)}
+        />
+        <Label htmlFor={periodId} className='font-normal'>
+          {P.period}
+        </Label>
+      </div>
+
+      <div className='flex flex-col gap-2'>
+        <Label>{isPeriod ? P.period : entity.date}</Label>
+        <Popover>
+          <PopoverTrigger
+            render={
+              <Button
+                type='button'
+                variant='outline'
+                className='justify-start'
+              />
+            }
+          >
+            {triggerLabel}
+          </PopoverTrigger>
+          <PopoverContent className='w-auto p-0'>
+            {isPeriod ? (
+              <Calendar
+                mode='range'
+                selected={{
+                  from: parseLocalDate(startDate),
+                  to: parseLocalDate(endDate)
+                }}
+                onSelect={handleRangeSelect}
+                autoFocus
+              />
+            ) : (
+              <Calendar
+                mode='single'
+                selected={parseLocalDate(startDate)}
+                onSelect={(date) => {
+                  if (date) {
+                    onStartChange(formatLocalDate(date));
+                  }
+                }}
+                autoFocus
+              />
+            )}
+          </PopoverContent>
+        </Popover>
+        <FieldError errors={startErrors} />
+        <FieldError errors={endErrors} />
+      </div>
     </>
   );
 }

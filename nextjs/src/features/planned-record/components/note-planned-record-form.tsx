@@ -3,6 +3,7 @@
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { useMemo, useState } from 'react';
+import { PriceKeypad } from '@/components/form/price-keypad';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -238,12 +239,9 @@ function PlannedDetailForm({
         placeholder={plannedRecordLabels.placeholder.memo}
         onChange={(memo) => patch({ memo })}
       />
-      <TextInputRow
-        id='planned-price'
+      <PriceKeypad
         label={plannedRecordLabels.field.price}
         value={state.price}
-        placeholder={plannedRecordLabels.placeholder.price}
-        inputMode='numeric'
         onChange={(price) => patch({ price })}
       />
       {errorMessages.length > 0 ? (
@@ -515,14 +513,12 @@ function TextInputRow({
   label,
   value,
   placeholder,
-  inputMode,
   onChange
 }: {
   id: string;
   label: string;
   value: string;
   placeholder: string;
-  inputMode?: 'numeric';
   onChange: (value: string) => void;
 }) {
   return (
@@ -532,7 +528,6 @@ function TextInputRow({
         id={id}
         value={value}
         placeholder={placeholder}
-        inputMode={inputMode}
         onChange={(event) => onChange(event.target.value)}
       />
     </div>

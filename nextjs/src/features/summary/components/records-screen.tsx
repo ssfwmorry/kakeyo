@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import type { SummarizedRecordItem } from '@/features/record';
+import { RecordCard, type SummarizedRecordItem } from '@/features/record';
 import { toDateStringJst } from '@/lib/shared/domain/date';
 import { colorHex } from '../color';
 import { toShowStr } from '../domain/format';
@@ -29,8 +29,8 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
 
   const total = records.reduce((sum, r) => sum + r.price, 0);
 
-  const move = (delta: number) => {
-    const next = shiftMonth(yearMonth, delta);
+  // 指定の年月へ移動して再取得する（前後移動・年月ジャンプ共通）。
+  const goYearMonth = (next: string) => {
     setYearMonth(next);
     startTransition(async () => {
       const result = await fetchSummarizedRecordsAction({
@@ -40,6 +40,7 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
       setRecords(result);
     });
   };
+  const move = (delta: number) => goYearMonth(shiftMonth(yearMonth, delta));
 
   // 日付ごとにグルーピング（降順で来る前提）。
   const groups = groupByDate(records);
@@ -89,6 +90,8 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
         label={monthLabel(yearMonth)}
         subtitle={`合計: ${toShowStr(total)} 円`}
         disabled={isPending}
+        jumpYearMonth={yearMonth}
+        onJump={goYearMonth}
         onPrev={() => move(-1)}
         onNext={() => move(1)}
       />
@@ -103,30 +106,13 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
             <div key={group.date} className='flex flex-col gap-1'>
               <p className='text-muted-foreground text-xs'>{group.date}</p>
               {group.records.map((record) => (
-                <button
-                  type='button'
+                <RecordCard
                   key={record.id}
-                  onClick={() => router.push(`/note?RECORD=${record.id}`)}
-                  className='flex items-center gap-2 rounded-md border p-2 text-left'
-                >
-                  <span
-                    aria-hidden
-                    className='inline-block size-3 shrink-0 rounded-full'
-                    style={{
-                      backgroundColor: colorHex(
-                        record.typeColorClassificationName
-                      )
-                    }}
-                  />
-                  <span className='flex-1 truncate text-sm'>
-                    {record.typeName ?? ''}
-                    {record.subTypeName ? ` / ${record.subTypeName}` : ''}
-                    {record.memo ? ` / ${record.memo}` : ''}
-                  </span>
-                  <span className='text-sm tabular-nums'>
-                    {record.price.toLocaleString()} 円
-                  </span>
-                </button>
+                  record={record}
+                  // 編集可否は RecordCard 内の isEnableEdit で判定。編集可のときのみ
+                  // note 編集へ遷移する（ペア相手の立替 record は編集導線が出ない）。
+                  onEdit={() => router.push(`/note?RECORD=${record.id}`)}
+                />
               ))}
             </div>
           ))}

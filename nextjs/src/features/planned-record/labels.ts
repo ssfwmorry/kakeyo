@@ -26,8 +26,7 @@ export const plannedRecordLabels = {
   },
   placeholder: {
     memo: 'メモ',
-    selectMethod: '方法を選択',
-    price: '金額'
+    selectMethod: '方法を選択'
   },
   empty: {
     // カテゴリ/方法が未設定のとき note で案内する文言（旧 Nuxt 踏襲）。

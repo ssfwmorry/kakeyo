@@ -50,6 +50,12 @@ export function SummaryPie({ isPair, isExistPair }: SummaryPieProps) {
     });
   };
 
+  // 年月を移動して再取得する（前後移動・年月ジャンプ共通）。records-screen と同型。
+  const goYearMonth = (next: string) => {
+    setYearMonth(next);
+    refetch({ isPay, isType, isIncludeInstead, yearMonth: next });
+  };
+
   // 初回 + isPair 変化時に取得。
   // biome-ignore lint/correctness/useExhaustiveDependencies: 明示トグルは各ハンドラで再取得するため isPair のみを依存に取る
   useEffect(() => {
@@ -138,16 +144,10 @@ export function SummaryPie({ isPair, isExistPair }: SummaryPieProps) {
         label={monthLabel(yearMonth)}
         subtitle={subtitle}
         disabled={isPending}
-        onPrev={() => {
-          const next = shiftMonth(yearMonth, -1);
-          setYearMonth(next);
-          refetch({ isPay, isType, isIncludeInstead, yearMonth: next });
-        }}
-        onNext={() => {
-          const next = shiftMonth(yearMonth, 1);
-          setYearMonth(next);
-          refetch({ isPay, isType, isIncludeInstead, yearMonth: next });
-        }}
+        jumpYearMonth={yearMonth}
+        onJump={goYearMonth}
+        onPrev={() => goYearMonth(shiftMonth(yearMonth, -1))}
+        onNext={() => goYearMonth(shiftMonth(yearMonth, 1))}
       />
 
       <SummaryPieChart slices={data.slices} />

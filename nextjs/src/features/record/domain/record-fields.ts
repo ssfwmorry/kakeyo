@@ -47,3 +47,23 @@ export function resolveRecordOwnership({
     recordType
   };
 }
+
+// record の「編集可否」を導出する純粋関数（一覧カードの編集導線ガード・機能安全）。
+// 旧 pages/calendar.vue の isEnableEdit（172-175 行）を移植:
+//   isEnableEdit = isSettlement !== true && (isSelf || (isPair && !isInstead))
+// - 精算(isSettlement=true)は編集不可。
+// - 自分の record は編集可。
+// - 共有 record は「非立替（PAIR）」のみ編集可。ペア相手の立替 record は編集不可
+//   （相手が起票した立替を自分が書き換えられないようにする）。
+// isSettlement を持たない型（SummarizedRecordItem。精算は既に除外済み）では省略可。
+export function resolveRecordEditable(record: {
+  isSelf: boolean;
+  isPair: boolean;
+  isInstead: boolean | null;
+  isSettlement?: boolean | null;
+}): boolean {
+  if (record.isSettlement === true) {
+    return false;
+  }
+  return record.isSelf || (record.isPair && record.isInstead !== true);
+}

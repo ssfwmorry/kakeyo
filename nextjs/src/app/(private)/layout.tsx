@@ -34,7 +34,15 @@ export default async function PrivateLayout({
     <div className='flex min-h-full flex-1 flex-col'>
       <header className='sticky top-0 z-40 flex h-12 items-center justify-between gap-2 border-b bg-background px-4'>
         <ReminderBell dueReminders={dueReminders} />
-        <PairModeSwitch isExistPair={isExistPair} isPair={isPair} />
+        <div className='flex items-center gap-2'>
+          {/* デモログイン中の視覚的手がかり（旧 layouts/default.vue の右上「デモ用」ラベル）。 */}
+          {session.isDemo ? (
+            <span className='rounded bg-red-600 px-2 py-0.5 font-bold text-white text-xs'>
+              デモ用
+            </span>
+          ) : null}
+          <PairModeSwitch isExistPair={isExistPair} isPair={isPair} />
+        </div>
       </header>
       {/* ボトムナビの高さ分だけ下部に余白を確保する。 */}
       <main className='flex flex-1 flex-col pb-20'>{children}</main>

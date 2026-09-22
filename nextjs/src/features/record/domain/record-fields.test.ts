@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RecordType } from '@/lib/shared/types/recordType';
-import { resolveRecordOwnership } from './record-fields';
+import { resolveRecordEditable, resolveRecordOwnership } from './record-fields';
 
 // record の所有者・精算フラグ・record_type 導出の単体テスト（旧 upsertRecord 分岐）。
 // ※ 現行 vitest.config.mts の include は src/lib/** のためこのファイルはデフォルト
@@ -56,5 +56,51 @@ describe('resolveRecordOwnership', () => {
       isSettled: null,
       recordType: RecordType.pair
     });
+  });
+});
+
+describe('resolveRecordEditable', () => {
+  it('精算 record は編集不可', () => {
+    expect(
+      resolveRecordEditable({
+        isSelf: true,
+        isPair: false,
+        isInstead: null,
+        isSettlement: true
+      })
+    ).toBe(false);
+  });
+
+  it('自分の個人 record は編集可', () => {
+    expect(
+      resolveRecordEditable({ isSelf: true, isPair: false, isInstead: null })
+    ).toBe(true);
+  });
+
+  it('共有・非立替（PAIR）は自分/相手どちらでも編集可', () => {
+    expect(
+      resolveRecordEditable({ isSelf: true, isPair: true, isInstead: false })
+    ).toBe(true);
+    expect(
+      resolveRecordEditable({ isSelf: false, isPair: true, isInstead: false })
+    ).toBe(true);
+  });
+
+  it('ペア相手の立替 record は編集不可（起票者でないため）', () => {
+    expect(
+      resolveRecordEditable({ isSelf: false, isPair: true, isInstead: true })
+    ).toBe(false);
+  });
+
+  it('自分の立替 record は編集可（isSelf）', () => {
+    expect(
+      resolveRecordEditable({ isSelf: true, isPair: true, isInstead: true })
+    ).toBe(true);
+  });
+
+  it('isSettlement を持たない型（精算除外済み）は他条件で判定', () => {
+    expect(
+      resolveRecordEditable({ isSelf: false, isPair: true, isInstead: false })
+    ).toBe(true);
   });
 });

@@ -13,9 +13,11 @@ import type { CalendarEvent, CalendarMonthData } from '../types';
 // 月次カレンダー（FullCalendar dayGridMonth）の描画のみを担う Client Component。
 // 旧 pages/calendar.vue の calendarOptions を App Router / React アダプタへ読み替え。
 // - 日付クリック（dateClick）→ 親へ YYYY-MM-DD を通知（日別 record 一覧を出す）。
-// - 月移動（prev/next のツールバー）→ 親へ表示中の年月（YYYY-MM）を通知して再取得。
-// - plan / reminder のイベントクリックは段階実装（TODO）。今回は onEventClick で
-//   種別と id を親へ渡すのみ（親側で編集導線は未実装）。
+// - 月移動は親（calendar-screen）の独自ヘッダー（年月ジャンプ含む）に一本化するため
+//   FullCalendar 標準ツールバーは非表示（headerToolbar=false）にし、年月は key 再マウントで反映。
+//   → 旧 PaginationBar 同様に年月を 1 箇所へ集約し、標準タイトルとの重複を解消（差分リスト U-4）。
+// - 祝日セルは dayCellClassNames で is-holiday を付与し、globals.css で日付数字を赤字化（B-11）。
+// - plan / reminder のイベントクリック → 親へ種別と id を渡す（EventDetail で編集/削除）。
 //
 // FullCalendar の end は排他的（その日を含まない）ため、複数日 plan は end に +1 日する。
 //
@@ -29,8 +31,6 @@ type MonthCalendarProps = {
   // 選択中の日付（YYYY-MM-DD）。ハイライト等には使わず、親が保持する状態を反映。
   selectedDate: string | null;
   onDateClick: (dateStr: string) => void;
-  // 表示中の年月が変わったとき（前月/次月ボタン）に呼ぶ（YYYY-MM）。
-  onMonthChange: (yearMonth: string) => void;
   // plan / reminder イベントのクリック（段階実装用のフック）。
   onEventClick?: (event: CalendarEvent) => void;
 };
@@ -78,12 +78,22 @@ function toEventInput(event: CalendarEvent): EventInput {
 export function MonthCalendar({
   data,
   onDateClick,
-  onMonthChange,
   onEventClick
 }: MonthCalendarProps) {
   const events = useMemo<EventInput[]>(
     () => buildCalendarEvents(data).map(toEventInput),
     [data]
+  );
+
+  // 祝日の日付集合（YYYY-MM-DD）。dayCellClassNames で該当セルへ is-holiday を付ける。
+  const holidayDates = useMemo(
+    () =>
+      new Set(
+        data.days
+          .filter((day) => day.holidayName !== null)
+          .map((day) => day.dateStr)
+      ),
+    [data.days]
   );
 
   // 対象月の 1 日を初期表示にする（前後の月の日も一部見える）。
@@ -100,8 +110,15 @@ export function MonthCalendar({
       height='auto'
       fixedWeekCount={false}
       selectable={false}
-      headerToolbar={{ left: 'title', center: '', right: 'prev,next' }}
-      buttonText={{ prev: '前月', next: '次月' }}
+      // 月移動・年月ジャンプは親の独自ヘッダーに一本化するため標準ツールバーは出さない。
+      headerToolbar={false}
+      // 祝日セルへ is-holiday を付与（globals.css で日付数字を赤字化）。arg.date は
+      // ローカル暦日なので dayjs でそのまま 'YYYY-MM-DD' 化して集合と突き合わせる。
+      dayCellClassNames={(arg) =>
+        holidayDates.has(dayjs(arg.date).format('YYYY-MM-DD'))
+          ? ['is-holiday']
+          : []
+      }
       events={events}
       dateClick={(arg: DateClickArg) => onDateClick(arg.dateStr)}
       eventClick={(arg: EventClickArg) => {
@@ -123,15 +140,6 @@ export function MonthCalendar({
           reminderId:
             (arg.event.extendedProps.reminderId as number | null) ?? null
         });
-      }}
-      datesSet={(arg) => {
-        // ツールバーの prev/next で表示範囲が変わったら「表示中央月」を親へ通知。
-        // dayGridMonth の start は前月末を含むため、範囲中央の日付で年月を判定する。
-        const midMs = (arg.start.getTime() + arg.end.getTime()) / 2;
-        const yearMonth = dayjs(midMs).format('YYYY-MM');
-        if (yearMonth !== data.yearMonth) {
-          onMonthChange(yearMonth);
-        }
       }}
     />
   );

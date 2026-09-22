@@ -13,10 +13,14 @@ export const calendarLabels = {
     nextMonth: '次の月',
     addRecord: '記録＋',
     addPlan: '予定＋',
-    editRecord: '記録を編集'
+    editRecord: '記録を編集',
+    // 当月の全記録を一覧表示するトグル（旧 calendar.vue showAllRecords）。
+    showAllRecords: '全ての記録',
+    showSelectedDay: '選択日に戻す'
   },
   empty: {
-    dayRecords: '記録がありません'
+    dayRecords: '記録がありません',
+    monthRecords: 'この月の記録はありません'
   },
   event: {
     plan: '予定',

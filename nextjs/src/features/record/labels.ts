@@ -16,8 +16,7 @@ export const recordLabels = {
   // プレースホルダ。
   placeholder: {
     memo: 'メモ',
-    selectMethod: '方法を選択',
-    price: '金額'
+    selectMethod: '方法を選択'
   },
   // 見出し・空状態。
   heading: {
