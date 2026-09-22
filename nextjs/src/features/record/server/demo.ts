@@ -1,7 +1,9 @@
 import 'server-only';
+import { toDateStringJst } from '@/lib/shared/domain/date';
 import { RecordType } from '@/lib/shared/types/recordType';
 import { SETTLEMENT_DISPLAY } from '../labels';
 import type {
+  NoteRecordDefault,
   PairedRecordItem,
   RecordListItem,
   SummarizedRecordItem
@@ -35,6 +37,29 @@ export const demoRecordList: RecordListItem[] = [
     isSettlement: null
   }
 ];
+
+// note（記録編集）用: デモの record 1 件をプリフィル初期値へ写す。
+// scope 検証は無く、demoRecordList から id 一致を引くのみ（デモは DB へ触れない）。
+// 精算 record（record_type=15）は編集導線に乗らない前提（本体 findRecordForEdit と同様）。
+export function findDemoRecordDefault(id: number): NoteRecordDefault | null {
+  const item = demoRecordList.find(
+    (row) => row.id === id && row.recordType !== RecordType.settlement
+  );
+  if (!item) {
+    return null;
+  }
+  return {
+    id: item.id,
+    isPay: item.isPay ?? true,
+    date: toDateStringJst(item.datetime),
+    methodId: item.methodId,
+    typeId: item.typeId,
+    subTypeId: item.subTypeId,
+    memo: item.memo,
+    price: item.price,
+    isInstead: item.isInstead ?? false
+  };
+}
 
 export const demoSummarizedRecordList: SummarizedRecordItem[] = [
   {

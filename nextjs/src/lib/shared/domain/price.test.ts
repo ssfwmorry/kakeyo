@@ -43,6 +43,15 @@ describe('priceSchema', () => {
     expect(priceSchema.safeParse('-100').success).toBe(false);
     expect(priceSchema.safeParse(-1).success).toBe(false);
   });
+
+  it('上限は 1000 万円未満（旧 MAX_PRICE 準拠）', () => {
+    // 9,999,999 円までは許容、10,000,000 円ちょうどは不可（「未満」判定）。
+    expect(priceSchema.parse('9999999')).toBe(9999999);
+    expect(priceSchema.parse(9_999_999)).toBe(9_999_999);
+    expect(priceSchema.safeParse('10000000').success).toBe(false);
+    expect(priceSchema.safeParse(10_000_000).success).toBe(false);
+    expect(priceSchema.safeParse(10_000_001).success).toBe(false);
+  });
 });
 
 describe('parsePrice', () => {

@@ -79,6 +79,22 @@ export type PairedRecordItem = {
   isSettlement: boolean;
 };
 
+// note（記録編集）用: 初期値 1 件（record 1 件分のプリフィル）。新規時は undefined。
+// scope 外・不存在は null（呼び出し側で新規扱いにする）。旧 note.vue setPageRecord の
+// 編集プリフィル項目（id/isPay/date/price/memo/methodId/isInstead/typeId/subTypeId）に対応。
+export type NoteRecordDefault = {
+  id: Id;
+  isPay: boolean;
+  // YYYY-MM-DD（JST 暦日）。datetime を toDateStringJst で丸めたもの。
+  date: string;
+  methodId: Id;
+  typeId: Id | null;
+  subTypeId: Id | null;
+  memo: string | null;
+  price: number;
+  isInstead: boolean;
+};
+
 // 検索条件（get_summarized_record_list の input）。records 明細画面が組み立てる。
 export type SummarizedRecordQuery = {
   isPay: boolean;

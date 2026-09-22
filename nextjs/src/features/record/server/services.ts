@@ -7,6 +7,7 @@ import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
 import { resolveRecordOwnership } from '../domain/record-fields';
 import type {
+  NoteRecordDefault,
   PairedRecordItem,
   RecordError,
   RecordListItem,
@@ -16,7 +17,8 @@ import type {
 import {
   demoPairedRecordList,
   demoRecordList,
-  demoSummarizedRecordList
+  demoSummarizedRecordList,
+  findDemoRecordDefault
 } from './demo';
 import * as recordRepo from './repositories/record';
 
@@ -56,6 +58,17 @@ export async function getPairedRecords(
     }
     return recordRepo.getPairedRecordList(session, yearMonth);
   });
+}
+
+// note（記録編集）用: 初期値 1 件。scope 外・不存在は null（呼び出し側が新規扱い）。
+// planned-record 側 getPlannedRecordForEdit と同流儀（withDemoRead でデモは DB 非依存）。
+export async function getRecordForEdit(
+  session: SessionData,
+  id: Id
+): Promise<NoteRecordDefault | null> {
+  return withDemoRead(session.isDemo, findDemoRecordDefault(id), () =>
+    recordRepo.findRecordForEdit(session, id)
+  );
 }
 
 type UpsertRecordInput = {

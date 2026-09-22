@@ -47,6 +47,19 @@ export async function getPlanList(
   });
 }
 
+// plan 編集画面（/plan?planId=）のプリフィル用に plan 1 件を取得する。
+// scope 外・不存在は null（呼び出し側で新規扱いにするかを決める）。
+// PlanRow は PlanItem と同形のためそのまま返す（toPlanItems は配列整形のみで単件は不要）。
+export async function getPlanForEdit(
+  session: SessionData,
+  id: Id
+): Promise<PlanItem | null> {
+  const demo = demoPlanList.find((plan) => plan.id === id) ?? null;
+  return withDemoRead(session.isDemo, demo, () =>
+    planRepo.findPlanForEdit(session, id)
+  );
+}
+
 // reminder 一覧は 1 リクエスト内で複数箇所から呼ばれる（共通レイアウトの通知ベル用
 // dueReminders と、setting/calendar の各 page）。getSessionData と同じく React cache()
 // で per-request メモ化し、findReminderRows の DB クエリ二重発行を防ぐ。

@@ -6,6 +6,11 @@
 // - setting 統合（P5）は PlanSettingTab を配置し、データは
 //   @/features/plan-reminder/server/services から直接 import して取得する。
 
+// calendar のイベント（reminder 由来 plan）削除から呼ぶ Server Action。
+// 'use server' の Action は Client から呼べる公開 I/F のため barrel re-export で安全
+// （record feature の settlement actions と同じ扱い・AGENTS.md）。
+export { deletePlanAction } from './actions';
+export { AutoLinkText } from './components/auto-link-text';
 export { PlanScreen } from './components/plan-screen';
 export { PlanSettingTab } from './components/plan-setting-tab';
 export { PlanTypeTab } from './components/plan-type-tab';

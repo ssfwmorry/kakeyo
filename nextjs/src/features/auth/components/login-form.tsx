@@ -2,6 +2,7 @@
 
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
+import Link from 'next/link';
 import { FormField } from '@/components/form/form-field';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
@@ -95,6 +96,14 @@ export function LoginForm() {
           {action.demo}
         </Button>
       </form>
+
+      {/* 問い合わせ導線（旧ドロワーの inquiryItem 相当・未ログインでも到達可）。 */}
+      <Link
+        href='/inquiry'
+        className='text-center text-muted-foreground text-sm underline'
+      >
+        {action.inquiry}
+      </Link>
     </div>
   );
 }

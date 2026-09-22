@@ -23,6 +23,7 @@ import {
 } from '../actions/record-actions';
 import { recordLabels } from '../labels';
 import { recordUpsertSchema } from '../schemas/record-schema';
+import type { NoteRecordDefault } from '../types';
 
 // note（記録入力）の record 部分の UI（Client Component）。
 // type/method は @/features/type-method の barrel 経由で受け取り（内部直参照しない）。
@@ -30,19 +31,6 @@ import { recordUpsertSchema } from '../schemas/record-schema';
 // Server Action へ送る。record_type/所有者導出は Server（service）に委ねる。
 // ペアモード（共有 ON/OFF）は Server が Cookie から読むが、UI 出し分けのため
 // isPair を props で受ける（自前で Cookie を読まない）。
-
-// note が編集時に受け取る初期値（record 1 件分）。新規時は undefined。
-export type NoteRecordDefault = {
-  id: number;
-  isPay: boolean;
-  date: string;
-  methodId: number;
-  typeId: number | null;
-  subTypeId: number | null;
-  memo: string | null;
-  price: number;
-  isInstead: boolean;
-};
 
 type NoteRecordFormProps = {
   typeList: GroupedTypeList;

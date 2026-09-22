@@ -1,13 +1,18 @@
 import 'server-only';
 import { prisma } from '@/lib/server/db/client';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
-import { startOfMonthJst, startOfNextMonthJst } from '@/lib/shared/domain/date';
+import {
+  startOfMonthJst,
+  startOfNextMonthJst,
+  toDateStringJst
+} from '@/lib/shared/domain/date';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { RecordType } from '@/lib/shared/types/recordType';
 import type { Prisma } from '@/prisma/generated/client';
 import { SETTLEMENT_DISPLAY } from '../../labels';
 import type {
+  NoteRecordDefault,
   PairedRecordItem,
   RecordListItem,
   SummarizedRecordItem,
@@ -340,6 +345,46 @@ export async function findRecordInScope(
     id: Number(row.id),
     datetime: row.datetime,
     plannedRecordId: row.plannedRecordId
+  };
+}
+
+// READ: note（記録編集）の初期値 1 件。scope 内でなければ null。
+// 旧 note.vue setPageRecord の編集プリフィルに対応する（id/isPay/date/price/memo/
+// methodId/isInstead/typeId/subTypeId）。isInstead は旧 note の `!!pairUserName` と
+// 等価な「共有かつ user_id あり（=立替者が特定されている）」で導出する
+// （findPlannedRecordForEdit と同流儀）。datetime は JST 暦日（YYYY-MM-DD）へ丸める。
+export async function findRecordForEdit(
+  scope: SessionScope,
+  id: Id
+): Promise<NoteRecordDefault | null> {
+  const row = await prisma.record.findFirst({
+    // 精算 record（record_type=15・is_pay=null・type なし）は記録タブで編集できない
+    // （旧 note.vue も精算は編集導線に乗らない）。UI 前提をデータ層でも保証し、
+    // ?RECORD=<精算id> の直打ちで壊れた編集フォームが開くのを防ぐ。
+    where: {
+      AND: [
+        { id },
+        buildScopeWhere(scope),
+        { recordType: { not: RecordType.settlement } }
+      ]
+    }
+  });
+  if (!row) {
+    return null;
+  }
+  const isPair = row.pairId !== null;
+  return {
+    id: Number(row.id),
+    // 記録タブで編集する通常 record は is_pay を持つ（精算は上の where で除外済み）。
+    // 型上は nullable のため防御的に true へ寄せる。
+    isPay: row.isPay ?? true,
+    date: toDateStringJst(row.datetime),
+    methodId: row.methodId,
+    typeId: row.typeId,
+    subTypeId: row.subTypeId,
+    memo: row.memo,
+    price: row.price,
+    isInstead: isPair && row.userId !== null
   };
 }
 

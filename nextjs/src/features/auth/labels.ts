@@ -11,7 +11,9 @@ export const authLabels = {
   action: {
     login: 'ログイン',
     sendReset: '再設定メールを送る',
-    demo: 'デモページを見る'
+    demo: 'デモページを見る',
+    // 問い合わせ画面（/inquiry）への導線。旧ドロワーの inquiryItem 相当。
+    inquiry: 'お問い合わせ'
   },
   toast: {
     loginFailed: 'ログインに失敗しました。入力内容をご確認ください',

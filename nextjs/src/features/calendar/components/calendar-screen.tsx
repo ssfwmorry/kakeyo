@@ -7,8 +7,13 @@ import { MemoList } from '@/features/memo-shortcut';
 import { getCalendarMonthAction } from '../actions';
 import { formatMonthSum } from '../domain/format';
 import { calendarLabels } from '../labels';
-import type { CalendarInitialData, CalendarMonthData } from '../types';
+import type {
+  CalendarEvent,
+  CalendarInitialData,
+  CalendarMonthData
+} from '../types';
 import { DayRecordList } from './day-record-list';
+import { EventDetail } from './event-detail';
 import { MonthCalendar } from './month-calendar';
 import { ShortcutRecordList } from './shortcut-record-list';
 
@@ -17,17 +22,23 @@ import { ShortcutRecordList } from './shortcut-record-list';
 // 表示は純粋読み取り（副作用 INSERT なし）。TODO 追加/削除は memo-shortcut の MemoList、
 // ショートカット記録は ShortcutRecordList（calendar 所有 Action）が担う。
 //
-// 段階実装の TODO（表示優先の方針に従う）:
-// - plan / reminder イベントのクリック編集・削除（onEventClick で id は拾えるが編集
-//   導線は未接続）。plan-reminder の deletePlanAction 等は barrel 非公開のため、
-//   公開点の追加が必要になったら別レーンで対応する。
-// - record カードの個別編集遷移（/note に record 編集の受け口が無いため未接続）。
+// イベントクリック（旧 showEvent 相当）: plan / reminder をクリックすると EventDetail に
+// 詳細カードを出す。通常 plan は「編集」で /plan?planId= へ、リマインダー由来 plan は
+// その場で削除できる（旧 PlanCard/ReminderCard の導線を移植）。日付クリック・月移動で
+// 選択は解除する（旧: selectedDate 変更時に selectedPlan/Reminder を null 化）。
+//
+// record カードの個別編集遷移は day-record-list 側で /note?RECORD= へ接続済み。
 
 export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
   const [month, setMonth] = useState<CalendarMonthData>(initial.month);
   const [selectedDate, setSelectedDate] = useState<string | null>(
     initial.today
   );
+  // クリックされたイベントの参照 id（plan / reminder）。両 null なら詳細カード非表示。
+  const [selectedEvent, setSelectedEvent] = useState<{
+    planId: number | null;
+    reminderId: number | null;
+  } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // 選択日の DaySum（records / holiday）を月データから引く。
@@ -36,12 +47,45 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     [month.days, selectedDate]
   );
 
+  // 選択イベントの実体（plan / reminder）を月データから引く。
+  // イベントは planId か reminderId のどちらかを持つ（events.ts の kind に対応）。
+  const selectedPlan = useMemo(
+    () =>
+      selectedEvent?.planId == null
+        ? null
+        : (month.plans.find((plan) => plan.id === selectedEvent.planId) ??
+          null),
+    [month.plans, selectedEvent]
+  );
+  const selectedReminder = useMemo(
+    () =>
+      selectedEvent?.reminderId == null || selectedEvent.planId != null
+        ? null
+        : (month.reminders.find(
+            (reminder) => reminder.id === selectedEvent.reminderId
+          ) ?? null),
+    [month.reminders, selectedEvent]
+  );
+
+  // 日付を選び直したらイベント詳細は閉じる（旧 showDateRecords の挙動）。
+  const handleDateClick = (dateStr: string) => {
+    setSelectedDate(dateStr);
+    setSelectedEvent(null);
+  };
+
+  // plan / reminder クリック → 詳細カードを開き、選択日をイベント日に寄せる。
+  const handleEventClick = (event: CalendarEvent) => {
+    setSelectedDate(event.start);
+    setSelectedEvent({ planId: event.planId, reminderId: event.reminderId });
+  };
+
   const handleMonthChange = (yearMonth: string) => {
     startTransition(async () => {
       const next = await getCalendarMonthAction(yearMonth);
       setMonth(next);
-      // 月が変わったら選択日をクリアする（前月の日を選んだままにしない）。
+      // 月が変わったら選択日・イベント詳細をクリアする（前月の選択を持ち越さない）。
       setSelectedDate(null);
+      setSelectedEvent(null);
     });
   };
 
@@ -58,7 +102,8 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
         <MonthCalendar
           data={month}
           selectedDate={selectedDate}
-          onDateClick={setSelectedDate}
+          onDateClick={handleDateClick}
+          onEventClick={handleEventClick}
           onMonthChange={handleMonthChange}
         />
       </div>
@@ -77,11 +122,21 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
         </Link>
       </div>
 
-      <DayRecordList
-        dateStr={selectedDate}
-        records={selectedDay?.records ?? []}
-        holidayName={selectedDay?.holidayName ?? null}
-      />
+      {/* イベント選択中は詳細カードを、そうでなければ選択日の記録一覧を出す
+          （旧 calendar.vue は showEvent 時に selectedDateRecords を空にして排他）。 */}
+      {selectedPlan || selectedReminder ? (
+        <EventDetail
+          plan={selectedPlan}
+          reminder={selectedReminder}
+          onClose={() => setSelectedEvent(null)}
+        />
+      ) : (
+        <DayRecordList
+          dateStr={selectedDate}
+          records={selectedDay?.records ?? []}
+          holidayName={selectedDay?.holidayName ?? null}
+        />
+      )}
 
       <MemoList items={initial.memos} hasPair={initial.hasPair} />
 

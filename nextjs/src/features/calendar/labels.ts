@@ -19,8 +19,16 @@ export const calendarLabels = {
     dayRecords: '記録がありません'
   },
   event: {
-    // plan / reminder のクリック編集は段階実装（今回は表示のみ）。
     plan: '予定',
     reminder: 'リマインダー'
+  },
+  // カレンダーのイベント（予定/リマインダー）をクリックしたときの詳細カード文言。
+  eventDetail: {
+    plan: {
+      deleteConfirm: '削除してもよいですか？'
+    },
+    reminder: {
+      badge: 'リマインダー'
+    }
   }
 } as const;

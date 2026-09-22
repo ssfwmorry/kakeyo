@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useTransition } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { logoutAction } from './logout-action';
 
@@ -14,7 +15,9 @@ import { logoutAction } from './logout-action';
 const generalLabels = {
   heading: 'アカウント',
   logout: 'ログアウト',
-  logoutConfirm: 'ログアウトしますか？'
+  logoutConfirm: 'ログアウトしますか？',
+  // 問い合わせ導線（旧ドロワーの inquiryItem 相当・ログイン後の到達点）。
+  inquiry: 'お問い合わせ'
 } as const;
 
 export function GeneralTab() {
@@ -35,7 +38,7 @@ export function GeneralTab() {
       <h2 className='text-base font-medium'>{generalLabels.heading}</h2>
 
       <Card>
-        <CardContent>
+        <CardContent className='flex flex-col items-start gap-3'>
           <Button
             type='button'
             variant='destructive'
@@ -44,6 +47,12 @@ export function GeneralTab() {
           >
             {generalLabels.logout}
           </Button>
+          <Link
+            href='/inquiry'
+            className={buttonVariants({ variant: 'link', className: 'px-0' })}
+          >
+            {generalLabels.inquiry}
+          </Link>
         </CardContent>
       </Card>
     </section>

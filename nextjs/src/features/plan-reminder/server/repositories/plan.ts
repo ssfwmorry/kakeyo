@@ -25,6 +25,52 @@ export type PlanRow = {
   isPair: boolean;
 };
 
+// get_plan_list / 単一取得で共通の include（plan_type 色・reminder 色を結合）。
+const planInclude = {
+  planType: {
+    select: {
+      id: true,
+      name: true,
+      colorClassification: { select: { name: true } }
+    }
+  },
+  reminder: {
+    select: { colorClassification: { select: { name: true } } }
+  }
+} as const;
+
+type PlanWithRelations = {
+  id: Id;
+  startDate: Date;
+  endDate: Date;
+  name: string;
+  memo: string | null;
+  reminderId: Id | null;
+  pairId: Id | null;
+  planType: {
+    id: Id;
+    name: string;
+    colorClassification: { name: string };
+  } | null;
+  reminder: { colorClassification: { name: string } } | null;
+};
+
+function toPlanRow(row: PlanWithRelations): PlanRow {
+  return {
+    id: row.id,
+    startDate: toDateStringJst(row.startDate),
+    endDate: toDateStringJst(row.endDate),
+    name: row.name,
+    memo: row.memo,
+    planTypeId: row.planType?.id ?? null,
+    planTypeName: row.planType?.name ?? null,
+    planTypeColorName: row.planType?.colorClassification.name ?? null,
+    reminderColorName: row.reminder?.colorClassification.name ?? null,
+    reminderId: row.reminderId,
+    isPair: row.pairId !== null
+  };
+}
+
 // READ。期間（start_date が [start, end] の範囲）で絞る（現行 get_plan_list 踏襲）。
 export async function findPlanRows(
   scope: SessionScope,
@@ -42,33 +88,22 @@ export async function findPlanRows(
         }
       ]
     },
-    include: {
-      planType: {
-        select: {
-          id: true,
-          name: true,
-          colorClassification: { select: { name: true } }
-        }
-      },
-      reminder: {
-        select: { colorClassification: { select: { name: true } } }
-      }
-    },
+    include: planInclude,
     orderBy: { startDate: 'asc' }
   });
-  return rows.map((row) => ({
-    id: row.id,
-    startDate: toDateStringJst(row.startDate),
-    endDate: toDateStringJst(row.endDate),
-    name: row.name,
-    memo: row.memo,
-    planTypeId: row.planType?.id ?? null,
-    planTypeName: row.planType?.name ?? null,
-    planTypeColorName: row.planType?.colorClassification.name ?? null,
-    reminderColorName: row.reminder?.colorClassification.name ?? null,
-    reminderId: row.reminderId,
-    isPair: row.pairId !== null
-  }));
+  return rows.map(toPlanRow);
+}
+
+// READ（1 件）。plan 編集画面のプリフィル用。scope 外・不存在は null。
+export async function findPlanForEdit(
+  scope: SessionScope,
+  id: Id
+): Promise<PlanRow | null> {
+  const row = await prisma.plan.findFirst({
+    where: { AND: [{ id }, buildScopeWhere(scope)] },
+    include: planInclude
+  });
+  return row ? toPlanRow(row) : null;
 }
 
 // scope 検証: 指定 plan が scope 内か。update / delete の対象確認に使う。
