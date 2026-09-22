@@ -3,7 +3,7 @@ import type {
   MethodSummaryItem,
   PayAndIncomeItem,
   SubTypeSummaryRow,
-  TypeChip,
+  TypeChipsByQuadrant,
   TypeSummaryItem,
   TypeSummaryPeriodRow
 } from '../types';
@@ -104,10 +104,7 @@ export const demoSubTypeSummary: SubTypeSummaryRow[] = [
   { yearMonth: '2026-02', subTypeId: null, sum: 5000 }
 ];
 
-export const demoTypeChips: {
-  pay: { self: TypeChip[]; pair: TypeChip[] };
-  income: { self: TypeChip[]; pair: TypeChip[] };
-} = {
+export const demoTypeChips: TypeChipsByQuadrant = {
   pay: {
     self: [
       { typeId: -1, name: '食費', colorName: 'orange' },

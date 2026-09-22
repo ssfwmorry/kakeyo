@@ -29,20 +29,26 @@ export default async function NotePage({
   const session = await requireAuth();
   const { plannedRecordId } = await searchParams;
 
-  const [typeList, methodList, dayClassifications, isPair] = await Promise.all([
+  // ?plannedRecordId= があれば定期タブを初期表示し、その 1 件を編集対象にする。
+  // scope 外・不存在なら null（＝新規扱い）。負でない整数のみ受け付ける。
+  // 編集対象取得は他のどの取得にも依存しないため一括で並行取得する。
+  const editingId = parsePositiveInt(plannedRecordId);
+  const [
+    typeList,
+    methodList,
+    dayClassifications,
+    isPair,
+    editingPlannedRecord
+  ] = await Promise.all([
     getTypeCardList(session),
     getMethodCardList(session),
     getDayClassifications(session),
-    getPairMode()
+    getPairMode(),
+    editingId === null
+      ? Promise.resolve(null)
+      : getPlannedRecordForEdit(session, editingId)
   ]);
 
-  // ?plannedRecordId= があれば定期タブを初期表示し、その 1 件を編集対象にする。
-  // scope 外・不存在なら null（＝新規扱い）。負でない整数のみ受け付ける。
-  const editingId = parsePositiveInt(plannedRecordId);
-  const editingPlannedRecord =
-    editingId === null
-      ? null
-      : await getPlannedRecordForEdit(session, editingId);
   const defaultTab = editingPlannedRecord ? 'planned' : 'record';
 
   return (

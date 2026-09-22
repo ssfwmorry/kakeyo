@@ -11,7 +11,7 @@ import type {
   PayAndIncomeItem,
   PieSummaryQuery,
   SubTypeSummaryRow,
-  TypeChip,
+  TypeChipsByQuadrant,
   TypeSummaryItem,
   TypeSummaryPeriodQuery,
   TypeSummaryPeriodRow
@@ -123,10 +123,9 @@ export async function getSubTypeSummary(
 // 推移 > カテゴリ別のチップ（カテゴリ選択肢）。type-method の GroupedTypeList を
 // isPay × isPair の 4 象限に平坦化して返す（scope 内のカテゴリのみ = getSubTypeSummary の
 // typeId 供給元）。方法別チップは使わないためカテゴリのみ。
-export async function getTypeChips(session: SessionData): Promise<{
-  pay: { self: TypeChip[]; pair: TypeChip[] };
-  income: { self: TypeChip[]; pair: TypeChip[] };
-}> {
+export async function getTypeChips(
+  session: SessionData
+): Promise<TypeChipsByQuadrant> {
   return withDemoRead(session.isDemo, demoTypeChips, async () => {
     // カテゴリ一覧のみ type-method から取得する（精算方法はここでは扱わない）。
     const grouped = await getTypeCardList(session);

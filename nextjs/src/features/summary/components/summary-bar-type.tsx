@@ -12,17 +12,12 @@ import {
 import { fetchSubTypeAction, fetchTypePeriodAction } from '../actions';
 import type { StackShowData } from '../domain/chart-data';
 import { currentYear, yearLabel } from '../domain/period';
-import type { TypeChip } from '../types';
+import type { TypeChipsByQuadrant } from '../types';
 import { PeriodNav } from './period-nav';
 
 // 推移 > カテゴリ別タブ（旧 SummaryBarType.vue）。
 // チップ「全て」= カテゴリ別 積み上げ棒（getTypeSummaryPeriod）、
 // 特定カテゴリ選択 = サブカテゴリ別 積み上げ棒（getSubTypeSummary）。
-
-type TypeChipsByQuadrant = {
-  pay: { self: TypeChip[]; pair: TypeChip[] };
-  income: { self: TypeChip[]; pair: TypeChip[] };
-};
 
 type SummaryBarTypeProps = {
   isPair: boolean;

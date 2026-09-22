@@ -1,8 +1,8 @@
 import 'server-only';
 import { prisma } from '@/lib/server/db/client';
+import { schemaSql } from '@/lib/server/db/schema-sql';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { PieSummaryQuery, TypeSummaryPeriodQuery } from '../../types';
-import { schemaSql } from '../schema-sql';
 
 // L6 summary レーンのリポジトリ層（server-only）。
 //

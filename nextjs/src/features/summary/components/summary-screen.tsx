@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { PairedRecordItem } from '@/features/record';
 import type { Id } from '@/lib/shared/types/id';
-import type { TypeChip } from '../types';
+import type { TypeChipsByQuadrant } from '../types';
 import { SummaryBar } from './summary-bar';
 import { SummaryBarType } from './summary-bar-type';
 import { SummaryPie } from './summary-pie';
@@ -13,11 +13,6 @@ import { SummarySettlement } from './summary-settlement';
 // 集計画面のタブシェル（旧 pages/summary.vue）。内訳 / 推移(全体・カテゴリ別) / 精算。
 // 精算タブは isExistPair のときのみ表示（旧 v-if="isExistPair"）。
 // 各タブは Client で年月/トグルを変えて Server Action から再取得する。
-
-type TypeChipsByQuadrant = {
-  pay: { self: TypeChip[]; pair: TypeChip[] };
-  income: { self: TypeChip[]; pair: TypeChip[] };
-};
 
 type SummaryScreenProps = {
   isPair: boolean;

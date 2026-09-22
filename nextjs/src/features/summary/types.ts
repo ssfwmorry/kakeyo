@@ -80,6 +80,13 @@ export type TypeChip = {
   colorName: string;
 };
 
+// isPay × isPair の 4 象限に振り分けたカテゴリチップ（getTypeChips の戻り・props で
+// 受け渡す形の単一の正）。services / demo / summary-screen / summary-bar-type で共有する。
+export type TypeChipsByQuadrant = {
+  pay: { self: TypeChip[]; pair: TypeChip[] };
+  income: { self: TypeChip[]; pair: TypeChip[] };
+};
+
 // summary 画面が Server Component で組んで Client に渡す初期データ一式。
 // 各タブは Client 側で年月/トグルを変えて Server Action 経由で再取得する。
 export type SummaryScreenData = {

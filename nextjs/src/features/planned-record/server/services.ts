@@ -5,7 +5,7 @@ import {
   getDayClassificationList
 } from '@/features/master/server/repositories/dayClassification';
 import { prisma } from '@/lib/server/db/client';
-import { serverEnv } from '@/lib/server/env.server';
+import { schemaSql } from '@/lib/server/db/schema-sql';
 import { todayJst, toYearMonthJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
@@ -214,19 +214,8 @@ export async function swapPlannedRecord(
 //      （adapter-pg の schema オプションは ORM クエリのみに効き、$queryRaw の
 //      生 SQL には search_path が適用されないため、明示修飾が必須）
 
-// スキーマ名は識別子としてインライン展開するため、念のため形式を検証する
-// （env 由来の信頼値だが、SQL へ raw 展開する以上ここで機械的に縛る）。
-const SCHEMA_NAME_PATTERN = /^[a-z_][a-z0-9_]*$/;
-
-function schemaSql(): Prisma.Sql {
-  const schema = serverEnv.supabaseDatabaseSchema;
-  if (!SCHEMA_NAME_PATTERN.test(schema)) {
-    throw new Error(`Invalid database schema name: ${schema}`);
-  }
-  return Prisma.raw(schema);
-}
-
 // 1 ヶ月分の実体化（func_post_records 相当）。挿入行数を返す。
+// スキーマ修飾は共有ヘルパ schemaSql()（末尾ドット付き `develop.` を返す）を使う。
 async function insertRecordsFromPlannedRecords(
   yearMonth: string
 ): Promise<number> {
@@ -236,15 +225,15 @@ async function insertRecordsFromPlannedRecords(
     with summarized_records as (
         select
             planned_record_id
-        from ${schema}.records
-        left join ${schema}.pairs on
+        from ${schema}records
+        left join ${schema}pairs on
             records.pair_id = pairs.id
         where
             to_char(cast(datetime as date),'YYYY-MM') = ${yearMonth}
             and planned_record_id is not null
     )
     -- コピーされたものを登録する
-    insert into ${schema}.records (
+    insert into ${schema}records (
         user_id,
         pair_id,
         datetime,
@@ -279,12 +268,12 @@ async function insertRecordsFromPlannedRecords(
             when planned_records.pair_id is not null and planned_records.user_id is null then 10
             else 15 -- 起こり得ない
         end as record_type
-    from ${schema}.planned_records
-    inner join ${schema}.day_classifications on
+    from ${schema}planned_records
+    inner join ${schema}day_classifications on
         planned_records.day_classification_id = day_classifications.id
     left join summarized_records on
         planned_records.id = summarized_records.planned_record_id
-    left join ${schema}.pairs on
+    left join ${schema}pairs on
         planned_records.pair_id = pairs.id
     where
         summarized_records.planned_record_id is null -- planned_record_id が登録されていないものを抽出
