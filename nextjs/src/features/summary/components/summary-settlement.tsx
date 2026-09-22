@@ -16,7 +16,7 @@ import type { PairedRecordItem } from '@/features/record';
 import {
   createSettlementRecordAction,
   settleRecordsAction
-} from '@/features/record/actions/settlement-actions';
+} from '@/features/record';
 import type { Id } from '@/lib/shared/types/id';
 import { colorHex } from '../color';
 import { toShowStr } from '../domain/format';

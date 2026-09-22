@@ -69,8 +69,8 @@ export function buildTypePie(
     const colorName = item.colorName ?? settlementColorName;
     slices.push({ name, value: item.sum, fill: toHex(item.colorName) });
     list.push({
-      // typeId=null（精算）は「＞」不可を表現するため id=-1 のダミーにはせず、
-      // 呼び出し側が id<0 or typeId null を判定できるよう typeId を採用する。
+      // typeId=null（精算）は id=-1 にして、呼び出し側が id<0 で「＞」（records への
+      // 遷移）不可を判定できるようにする。通常カテゴリは typeId をそのまま採用。
       id: item.typeId ?? -1,
       name,
       value: item.sum,

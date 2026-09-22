@@ -104,14 +104,14 @@ export async function getTypeSummaryPeriod(
 }
 
 // 推移 > カテゴリ別（特定カテゴリ選択時 = 年次サブカテゴリ別）。
-// ★旧 RPC は scope 引数を持たない（type_id と year のみで絞る）。type_id は
-//   自分/ペア所有カテゴリの id を Client が渡す前提（typeChips は scope 内から作る）。
+// typeId は公開 Server Action にクライアントが渡す値のため、リポジトリで records を
+// scope（自分/ペア）に絞り込む（他ペアの typeId を渡しても空になる。IDOR 防止）。
 export async function getSubTypeSummary(
   session: SessionData,
   input: { year: number; typeId: number }
 ): Promise<SubTypeSummaryRow[]> {
   return withDemoRead(session.isDemo, demoSubTypeSummary, async () => {
-    const rows = await summaryRepo.getSubTypeSummaryRows(input);
+    const rows = await summaryRepo.getSubTypeSummaryRows(session, input);
     return rows.map((row) => ({
       yearMonth: row.year_month,
       subTypeId: row.sub_type_id,

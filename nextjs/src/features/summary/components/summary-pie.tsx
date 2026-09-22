@@ -54,7 +54,6 @@ export function SummaryPie({ isPair, isExistPair }: SummaryPieProps) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: 明示トグルは各ハンドラで再取得するため isPair のみを依存に取る
   useEffect(() => {
     refetch({ isPay, isType, isIncludeInstead, yearMonth });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPair]);
 
   const total = data.list.reduce((sum, row) => sum + row.value, 0);

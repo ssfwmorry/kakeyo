@@ -39,15 +39,18 @@ export function colorHex(name: string | null): string {
 }
 
 // サブカテゴリ積み上げ棒用の固定色（旧 SummaryBarType の subTypeColors）。
-// CSS 色名。type 別の色（color_classifications）とは別系統で、
-// 1 カテゴリ内のサブカテゴリを見分けるための循環パレット。
+// type 別の色（color_classifications）とは別系統で、1 カテゴリ内のサブカテゴリを
+// 見分けるための循環パレット。Recharts の fill に直接渡すため hex で持つ
+// （旧 CSS 色名 gold/mediumseagreen/... と同一色の hex 表現）。
+// ★このパレットが「サブカテゴリ色」の単一の正。積み上げ棒の色供給（actions の
+//   buildSubTypeStack）はここから import して使う（値の二重定義を作らない）。
 export const SUB_TYPE_COLORS = [
-  'gold',
-  'mediumseagreen',
-  'blueviolet',
-  'lightpink',
-  'royalblue',
-  'chocolate'
+  '#ffd700',
+  '#3cb371',
+  '#8a2be2',
+  '#ffb6c1',
+  '#4169e1',
+  '#d2691e'
 ] as const;
 
 // 「サブカテゴリなし」系列の色（旧 colorGrey）。

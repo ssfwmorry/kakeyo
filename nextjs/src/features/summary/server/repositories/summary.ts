@@ -449,15 +449,20 @@ export type SubTypeSummaryRawRow = {
 
 // 年次サブカテゴリ別集計（推移 > カテゴリ別・特定カテゴリ選択時）。
 // 旧 func_get_sub_type_summary を移植。
-// ★注意（scope）: 旧 RPC は input_user_id を受け取らず scope 絞り込みを持たない
-//   （type_id = input_type_id と year のみで絞る）。ただし input_type_id で絞る type は
-//   その user/pair 所有の type であり、他人の records は他人の type_id を持つため、
-//   type_id 一致だけで実質的に自分/ペアの records に限定される（旧仕様どおり）。
-//   本移植は旧 SQL を改変しない方針のため、旧 RPC と同一の WHERE（scope 引数なし）を維持する。
-export async function getSubTypeSummaryRows(input: {
-  year: number;
-  typeId: number;
-}): Promise<SubTypeSummaryRawRow[]> {
+// ★scope（セキュリティレビュー対応）: 旧 RPC は input_user_id を受け取らず
+//   「type_id = input_type_id と year のみ」で絞っていた。旧環境は Supabase RLS が
+//   別レイヤで絞っていたが、Prisma 直結（RLS バイパス）の本移行では type_id 一致だけの
+//   暗黙 scope は成立しない（typeId は公開 Server Action にクライアントが渡す値のため、
+//   他ペアの type_id を渡すとそのペアの集計が漏れる IDOR になる）。よって他 5 本の集計と
+//   同じく records × pairs の 3-way OR（user_id=自分 OR pairs.user1_id/user2_id=自分）を
+//   WHERE に明示追加し、DB 条件で自分/ペアの records に限定する。集計値・列は不変。
+export async function getSubTypeSummaryRows(
+  scope: SessionScope,
+  input: {
+    year: number;
+    typeId: number;
+  }
+): Promise<SubTypeSummaryRawRow[]> {
   const yearStr = String(input.year);
   const rows = await prisma.$queryRaw<
     Array<{
@@ -473,14 +478,21 @@ export async function getSubTypeSummaryRows(input: {
     with converted_records as (
       select
         to_char(cast(datetime as date),'YYYY-MM') as year_month,
-        type_id,
-        sub_type_id,
-        sum(price) as sum
+        records.type_id,
+        records.sub_type_id,
+        sum(records.price) as sum
       from ${schemaSql()}records
+      left join ${schemaSql()}pairs on
+        records.pair_id = pairs.id
       where
-        type_id = ${input.typeId}
-        and to_char(cast(datetime as date),'YYYY') = ${yearStr}
-      group by year_month, type_id, sub_type_id
+        (
+          records.user_id = ${scope.userUid}
+          or pairs.user1_id = ${scope.userUid}
+          or pairs.user2_id = ${scope.userUid}
+        )
+        and records.type_id = ${input.typeId}
+        and to_char(cast(records.datetime as date),'YYYY') = ${yearStr}
+      group by year_month, records.type_id, records.sub_type_id
     )
     select
       year_month,

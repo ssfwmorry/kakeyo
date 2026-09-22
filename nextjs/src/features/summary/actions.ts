@@ -1,7 +1,13 @@
 'use server';
 
 import { requireAuth } from '@/features/auth/server/requireAuth';
-import { colorHex, SETTLEMENT_COLOR_NAME, SETTLEMENT_NAME } from './color';
+import {
+  colorHex,
+  NO_SUB_TYPE_COLOR,
+  SETTLEMENT_COLOR_NAME,
+  SETTLEMENT_NAME,
+  subTypeColor
+} from './color';
 import {
   buildMethodPie,
   buildPayIncomeBar,
@@ -101,19 +107,9 @@ export async function fetchSubTypeAction(input: {
     input.year,
     (subTypeId) =>
       subTypeId === null ? 'サブカテゴリなし' : `サブ${subTypeId}`,
-    (index) => {
-      // 循環パレットは色名（CSS 名）ではなく hex に寄せる（Recharts の fill に直接使う）。
-      const palette = [
-        '#ffd700',
-        '#3cb371',
-        '#8a2be2',
-        '#ffb6c1',
-        '#4169e1',
-        '#d2691e'
-      ];
-      return palette[index % palette.length];
-    },
-    '#9e9e9e',
+    // 色は color.ts のパレットを単一の正として使う（値の二重定義を作らない）。
+    subTypeColor,
+    NO_SUB_TYPE_COLOR,
     'サブカテゴリなし'
   );
 }

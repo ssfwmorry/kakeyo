@@ -55,7 +55,6 @@ export function SummaryBar({ isPair, isExistPair }: SummaryBarProps) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: トグル操作は各ハンドラで再取得するため isPair のみ依存
   useEffect(() => {
     refetch({ year, isIncludeInstead });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPair]);
 
   const dataKey = isPayAndIncome ? 'payAndIncome' : 'pay';

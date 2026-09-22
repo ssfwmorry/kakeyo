@@ -70,7 +70,6 @@ export function SummaryBarType({ isPair, chips }: SummaryBarTypeProps) {
   useEffect(() => {
     setSelectedTypeId(null);
     refetch({ year, isPay, typeId: null });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPair]);
 
   const config: ChartConfig = Object.fromEntries(
