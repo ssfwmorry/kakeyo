@@ -162,7 +162,9 @@ model SubType {
 /// 家計レコード。record_type = 0:SELF / 5:INSTEAD / 10:PAIR / 15:SETTLEMENT
 model Record {
   id              BigInt   @id @default(autoincrement())
-  userId          String   @map("user_id") @db.VarChar(28)
+  /// record_type=10(PAIR/共有財布) は作成者に帰属しないため NULL。実 DB(develop/public) も nullable
+  /// （tables.md の DDL は `not null` 表記だが実 DB とズレており、実 DB を正とする。record_type=0/5/15 は非 NULL）
+  userId          String?  @map("user_id") @db.VarChar(28)
   pairId          Int?     @map("pair_id")
   datetime        DateTime @db.Timestamptz()
   isPay           Boolean? @map("is_pay")
@@ -177,7 +179,7 @@ model Record {
   // TODO: ENUMにする
   recordType      Int      @default(0) @map("record_type") @db.SmallInt
 
-  user          User           @relation(fields: [userId], references: [uid])
+  user          User?          @relation(fields: [userId], references: [uid])
   pair          Pair?          @relation(fields: [pairId], references: [id])
   method        Method         @relation(fields: [methodId], references: [id])
   type          Type?          @relation(fields: [typeId], references: [id])

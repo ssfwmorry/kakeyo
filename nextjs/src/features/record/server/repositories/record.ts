@@ -1,18 +1,35 @@
 import 'server-only';
+import { prisma } from '@/lib/server/db/client';
+import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
-import type { RecordType } from '@/lib/shared/types/recordType';
+import { RecordType } from '@/lib/shared/types/recordType';
+import type { Prisma } from '@/prisma/generated/client';
+import { SETTLEMENT_DISPLAY } from '../../labels';
+import type {
+  PairedRecordItem,
+  RecordListItem,
+  SummarizedRecordItem,
+  SummarizedRecordQuery
+} from '../../types';
 
-// L2 record レーンの「被参照 I/F」先置きスタブ（凍結資産の I/F 部分）。
-// L3 定期+Cron が INSERT I/F を、L6 summary/records が取得系を参照するため
-// 型とシグネチャを先に確定する。中身（Prisma ORM / $queryRaw）は L2 が実装する。
-// 【L2 実装者へ】取得系は必ず buildScopeWhere を通すこと。record_type は
-// resolveRecordType で算出すること（自前で 0/5/10/15 を書かない）。
+// L2 record レーンのリポジトリ層（server-only・被参照の中心）。
+// ★ 全取得系は必ず buildScopeWhere を通す（scope 漏れ = 他ペアのデータ露出＝最重要）。
+// ★ BigInt PK: records.id は Prisma 上 BigInt。境界で Number(row.id) 変換し、
+//   公開する型は id: number（方針確定書 §4.1）。Server→Client を跨ぐ全戻り型で徹底。
+// 取得系はグループ A（Prisma ORM の include/relation）で移植する。集計の
+// CASE WHEN が絡む get_summarized/paired の where 条件は functions.md を壊さず TS で表現する。
+
+// ============================================================
+// 型（INSERT 入力）
+// ============================================================
 
 // records への INSERT 入力（L3 の実体化バッチが使う最小の形）。
-// record_type は resolveRecordType 済みの値を渡す前提。
+// record_type は resolveRecordType 済みの値を渡す前提（呼び出し側が算出する）。
+// userId は record_type=10（PAIR/共有財布）の planned_record 実体化で null が入りうる
+// ため string | null（実 DB / schema.prisma とも user_id は nullable。★L3 申し送り）。
 export type RecordInsertInput = {
-  userId: string;
+  userId: string | null;
   pairId: Id | null;
   datetime: Date;
   isPay: boolean | null;
@@ -26,16 +43,457 @@ export type RecordInsertInput = {
   recordType: RecordType;
 };
 
-const notImplemented = (name: string) =>
-  new Error(
-    `recordRepository.${name} は L2 エージェントが実装します（I/F スタブ）`
-  );
+// upsertRecord の書き込みフィールド（user_id/pair_id/is_settled/record_type は
+// service 層が resolveRecordOwnership で導出済み）。id 有無で insert/update を分ける。
+export type RecordUpsertInput = {
+  userId: string | null;
+  pairId: Id | null;
+  datetime: Date;
+  isPay: boolean | null;
+  methodId: Id;
+  typeId: Id | null;
+  subTypeId: Id | null;
+  price: number;
+  memo: string | null;
+  isSettled: boolean | null;
+  recordType: RecordType;
+};
 
-// CREATE
-// 定期実体化（L3 Cron）などからのまとめ INSERT。scope は所有者確定用。
+// ============================================================
+// 取得系（グループ A: Prisma ORM）
+// ============================================================
+
+// get_record_list / get_summarized_record_list の共通 include（method 必須・
+// type/subType/color は任意・pair があるとき user 名を引く）。
+const recordInclude = {
+  method: { include: { colorClassification: true } },
+  type: { include: { colorClassification: true } },
+  subType: true,
+  pair: true,
+  user: true
+} satisfies Prisma.RecordInclude;
+
+type RecordWithRelations = Prisma.RecordGetPayload<{
+  include: typeof recordInclude;
+}>;
+
+// smallint の record_type を RecordType(0/5/10/15) へ確定する。DB 制約上この 4 値のみ。
+function toRecordType(value: number): RecordType {
+  return value as RecordType;
+}
+
+// 共有 record かどうか（pair_id の有無）。
+function isPairRecord(row: RecordWithRelations): boolean {
+  return row.pairId !== null;
+}
+
+// READ: 期間内 record（カレンダー用）。get_record_list を Prisma ORM で移植。
+// datetime は [start, end]（両端含む）で絞る。scope は自分 or ペア。
+export async function getRecordList(
+  scope: SessionScope,
+  start: Date,
+  end: Date
+): Promise<RecordListItem[]> {
+  const rows = await prisma.record.findMany({
+    where: {
+      AND: [buildScopeWhere(scope), { datetime: { gte: start, lte: end } }]
+    },
+    include: recordInclude,
+    orderBy: { datetime: 'asc' }
+  });
+  return rows.map((row) => toRecordListItem(row, scope.userUid));
+}
+
+// READ: 条件検索 record（records 明細画面用）。get_summarized_record_list を移植。
+// 精算(15)は取得されない（旧 RPC 仕様）。ペア関係 × 立替込みの分岐は where で表現する。
+export async function getSummarizedRecordList(
+  scope: SessionScope,
+  query: SummarizedRecordQuery
+): Promise<SummarizedRecordItem[]> {
+  const rows = await prisma.record.findMany({
+    where: {
+      AND: [
+        buildScopeWhere(scope),
+        buildSummarizedYearMonthWhere(query.yearMonth),
+        { isPay: query.isPay },
+        buildSummarizedTargetWhere(query),
+        buildSummarizedPairWhere(scope.userUid, query)
+      ]
+    },
+    include: recordInclude,
+    orderBy: { datetime: 'desc' }
+  });
+  return rows.map((row) => toSummarizedRecordItem(row, scope.userUid));
+}
+
+// READ: ペアの record（精算画面用）。get_paired_record_list を移植。
+// pair_id を持つ record のみ（inner join pairs 相当）。scope で自分のペアに限定。
+export async function getPairedRecordList(
+  scope: SessionScope,
+  yearMonth: string
+): Promise<PairedRecordItem[]> {
+  const rows = await prisma.record.findMany({
+    where: {
+      AND: [
+        buildScopeWhere(scope),
+        // 旧 RPC は pairs を inner join = pair_id 必須。
+        { pairId: { not: null } },
+        buildSummarizedYearMonthWhere(yearMonth)
+      ]
+    },
+    include: recordInclude,
+    orderBy: { datetime: 'desc' }
+  });
+  return rows.map((row) => toPairedRecordItem(row, scope.userUid));
+}
+
+// ============================================================
+// 取得系: where 断片ヘルパ（集計 CASE WHEN の移植）
+// ============================================================
+
+// datetime を JST 暦月で絞るのは境界計算が絡むため service 層が [gte,lt] の Date で
+// 渡すのが本来だが、旧 RPC は to_char(datetime,'YYYY-MM') 一致。DB のタイムゾーンに
+// 依存しないよう、ここでは year/month の期間 [monthStart, nextMonthStart) を使う。
+function buildSummarizedYearMonthWhere(
+  yearMonth: string
+): Prisma.RecordWhereInput {
+  const [yearText, monthText] = yearMonth.split('-');
+  const year = Number(yearText);
+  const month = Number(monthText);
+  // JS の Date(UTC) で月境界を作る（DB の timestamptz と UTC で突合）。
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  const next = new Date(Date.UTC(year, month, 1));
+  return { datetime: { gte: start, lt: next } };
+}
+
+// isType による絞り込み対象（type/sub_type or method）。旧 RPC の
+// input_is_type / input_id / input_sub_type_id を移植。
+function buildSummarizedTargetWhere(
+  query: SummarizedRecordQuery
+): Prisma.RecordWhereInput {
+  if (!query.isType) {
+    return { methodId: query.id };
+  }
+  if (query.subTypeId !== null) {
+    return { AND: [{ typeId: query.id }, { subTypeId: query.subTypeId }] };
+  }
+  return { typeId: query.id };
+}
+
+// ペア関係 × 立替込みの絞り込み（旧 RPC の 4 分岐 CASE を移植）。
+// - pair && include   : pair_id あり（共有全部）
+// - pair && !include   : pair_id あり かつ record_type in (10,15)（立替を除く）
+// - !pair && include   : 自分の user_id（個人＋自分の立替＋精算）
+// - !pair && !include  : 自分の user_id かつ pair_id なし（純個人のみ）
+function buildSummarizedPairWhere(
+  userUid: string,
+  query: SummarizedRecordQuery
+): Prisma.RecordWhereInput {
+  if (query.isPair && query.isIncludeInstead) {
+    return { pairId: { not: null } };
+  }
+  if (query.isPair && !query.isIncludeInstead) {
+    return {
+      AND: [
+        { pairId: { not: null } },
+        { recordType: { in: [RecordType.pair, RecordType.settlement] } }
+      ]
+    };
+  }
+  if (!query.isPair && query.isIncludeInstead) {
+    return { userId: userUid };
+  }
+  return { AND: [{ userId: userUid }, { pairId: null }] };
+}
+
+// ============================================================
+// 取得系: 行 → 公開 DTO 変換（BigInt→number 境界）
+// ============================================================
+
+// 立替かどうか（個人 record は判定不能のため null。旧 FE 整形踏襲）。
+function toIsInstead(isPair: boolean, recordType: RecordType): boolean | null {
+  if (!isPair) {
+    return null;
+  }
+  return recordType === RecordType.instead;
+}
+
+// 精算かどうか（個人 record は null）。
+function toIsSettlement(isPair: boolean, recordType: RecordType): boolean | null {
+  if (!isPair) {
+    return null;
+  }
+  return recordType === RecordType.settlement;
+}
+
+// type 名の表示補完（type 未設定 or 精算は '精算'）。
+function toDisplayTypeName(
+  typeName: string | null,
+  recordType: RecordType
+): string | null {
+  if (typeName === null || recordType === RecordType.settlement) {
+    return SETTLEMENT_DISPLAY.name;
+  }
+  return typeName;
+}
+
+function toRecordListItem(
+  row: RecordWithRelations,
+  userUid: string
+): RecordListItem {
+  const isPair = isPairRecord(row);
+  const recordType = toRecordType(row.recordType);
+  return {
+    id: Number(row.id),
+    isSelf: row.userId === userUid,
+    datetime: row.datetime,
+    isPay: row.isPay,
+    price: row.price,
+    memo: row.memo,
+    recordType,
+    plannedRecordId: row.plannedRecordId,
+    methodId: row.methodId,
+    methodName: row.method.name,
+    methodColorClassificationName: row.method.colorClassification.name,
+    typeId: row.typeId,
+    typeName: toDisplayTypeName(row.type?.name ?? null, recordType),
+    subTypeId: row.subTypeId,
+    subTypeName: row.subType?.name ?? null,
+    typeColorClassificationName: row.type?.colorClassification.name ?? null,
+    isPair,
+    // 旧 RPC は pair_id ありのとき records.user 名を引く（立替者名）。
+    pairUserName: isPair ? (row.user?.name ?? null) : null,
+    isInstead: toIsInstead(isPair, recordType),
+    isSettlement: toIsSettlement(isPair, recordType)
+  };
+}
+
+function toSummarizedRecordItem(
+  row: RecordWithRelations,
+  userUid: string
+): SummarizedRecordItem {
+  const isPair = isPairRecord(row);
+  const recordType = toRecordType(row.recordType);
+  return {
+    id: Number(row.id),
+    isSelf: row.userId === userUid,
+    datetime: row.datetime,
+    isPay: row.isPay,
+    price: row.price,
+    memo: row.memo,
+    recordType,
+    plannedRecordId: row.plannedRecordId,
+    methodId: row.methodId,
+    methodName: row.method.name,
+    methodColorClassificationName: row.method.colorClassification.name,
+    typeId: row.typeId,
+    typeName: row.type?.name ?? null,
+    subTypeId: row.subTypeId,
+    subTypeName: row.subType?.name ?? null,
+    typeColorClassificationName: row.type?.colorClassification.name ?? null,
+    isPair,
+    pairUserName: isPair ? (row.user?.name ?? null) : null,
+    isInstead: toIsInstead(isPair, recordType)
+  };
+}
+
+function toPairedRecordItem(
+  row: RecordWithRelations,
+  userUid: string
+): PairedRecordItem {
+  const recordType = toRecordType(row.recordType);
+  return {
+    id: Number(row.id),
+    datetime: row.datetime,
+    isSelf: row.userId === userUid,
+    isPay: row.isPay,
+    price: row.price,
+    memo: row.memo,
+    recordType,
+    isSettled: row.isSettled,
+    isPlannedRecord: row.plannedRecordId !== null,
+    methodName: row.method.name,
+    methodColorClassificationName: row.method.colorClassification.name,
+    typeName: row.type?.name ?? SETTLEMENT_DISPLAY.name,
+    subTypeName: row.subType?.name ?? null,
+    typeColorClassificationName:
+      row.type?.colorClassification.name ?? SETTLEMENT_DISPLAY.color,
+    isInstead: recordType === RecordType.instead,
+    isSettlement: recordType === RecordType.settlement
+  };
+}
+
+// ============================================================
+// scope 検証（更新/削除の対象が自分/ペアの行か）
+// ============================================================
+
+// 指定 record が scope 内か。update / delete / settle の対象確認に使う
+// （他ペアの行を触らせない）。datetime は「同月のみ更新可」検証に使う。
+export async function findRecordInScope(
+  scope: SessionScope,
+  id: Id
+): Promise<{ id: Id; datetime: Date; plannedRecordId: Id | null } | null> {
+  const row = await prisma.record.findFirst({
+    where: { AND: [{ id }, buildScopeWhere(scope)] },
+    select: { id: true, datetime: true, plannedRecordId: true }
+  });
+  if (!row) {
+    return null;
+  }
+  return {
+    id: Number(row.id),
+    datetime: row.datetime,
+    plannedRecordId: row.plannedRecordId
+  };
+}
+
+// 指定 id 群のうち scope 内の件数を数える（settleRecords の一括対象検証用）。
+export async function countRecordsInScope(
+  scope: SessionScope,
+  ids: Id[]
+): Promise<number> {
+  return prisma.record.count({
+    where: { AND: [{ id: { in: ids } }, buildScopeWhere(scope)] }
+  });
+}
+
+// ============================================================
+// CRUD
+// ============================================================
+
+// CREATE（まとめ INSERT）。定期実体化（L3 Cron）などから使う被参照 I/F。
+// scope は所有者確定用（現状は追加検証に使わないが、将来の絞り込み拡張の受け口）。
 export async function insertRecords(
   _scope: SessionScope,
-  _inputs: RecordInsertInput[]
+  inputs: RecordInsertInput[]
 ): Promise<void> {
-  throw notImplemented('insertRecords');
+  if (inputs.length === 0) {
+    return;
+  }
+  await prisma.record.createMany({
+    data: inputs.map((input) => ({
+      userId: input.userId,
+      pairId: input.pairId,
+      datetime: input.datetime,
+      isPay: input.isPay,
+      methodId: input.methodId,
+      typeId: input.typeId,
+      subTypeId: input.subTypeId,
+      price: input.price,
+      memo: input.memo,
+      plannedRecordId: input.plannedRecordId,
+      isSettled: input.isSettled,
+      recordType: input.recordType
+    }))
+  });
+}
+
+// CREATE / UPDATE は Prisma ORM で行う。records.user_id は実 DB（develop/public）で
+//   nullable であり schema.prisma も String?（nullable）に確定済みのため、PAIR
+//   （record_type=10・共有かつ非立替）record の user_id=null を型付き create/update で
+//   そのまま書ける（旧 Nuxt upsertRecord / get_record_list の left join と整合）。
+//   所有列（user_id/pair_id/is_settled/record_type）は service が resolveRecordOwnership 済み。
+
+// CREATE（1 件）。note の新規登録。所有列は service が resolveRecordOwnership 済み。
+export async function insertRecord(input: RecordUpsertInput): Promise<void> {
+  await prisma.record.create({
+    data: {
+      userId: input.userId,
+      pairId: input.pairId,
+      datetime: input.datetime,
+      isPay: input.isPay,
+      methodId: input.methodId,
+      typeId: input.typeId,
+      subTypeId: input.subTypeId,
+      price: input.price,
+      memo: input.memo,
+      isSettled: input.isSettled,
+      recordType: input.recordType
+    }
+  });
+}
+
+// UPDATE（1 件）。対象が scope 内であることは service 層で検証済み前提。
+// 共有↔個人の切替で user_id を NULL 化しうるため明示的に全列を上書きする。
+export async function updateRecord(
+  id: Id,
+  input: RecordUpsertInput
+): Promise<void> {
+  await prisma.record.update({
+    where: { id },
+    data: {
+      userId: input.userId,
+      pairId: input.pairId,
+      datetime: input.datetime,
+      isPay: input.isPay,
+      methodId: input.methodId,
+      typeId: input.typeId,
+      subTypeId: input.subTypeId,
+      price: input.price,
+      memo: input.memo,
+      isSettled: input.isSettled,
+      recordType: input.recordType
+    }
+  });
+}
+
+// 精算の相手 user_id を引く。受取（!isPay）の精算 record は「相手が負担」する
+// ため user_id に相手を入れる。session.pairId で自分のペアに限定して照会する
+// （scope: 自分が当事者でない pair は引かない）。相手が定まらなければ null。
+export async function findCounterpartUserId(
+  scope: SessionScope,
+  pairId: Id
+): Promise<string | null> {
+  const pair = await prisma.pair.findFirst({
+    where: {
+      AND: [
+        { id: pairId },
+        { OR: [{ user1Id: scope.userUid }, { user2Id: scope.userUid }] }
+      ]
+    },
+    select: { user1Id: true, user2Id: true }
+  });
+  if (!pair) {
+    return null;
+  }
+  return pair.user1Id === scope.userUid ? pair.user2Id : pair.user1Id;
+}
+
+// CREATE（精算 record）。record_type=15・is_pay=null・type なし。
+// user_id は「精算を負担する側」= 支払時は自分、受取時は相手（service が解決）。
+export async function insertSettlementRecord(input: {
+  userId: string;
+  pairId: Id;
+  datetime: Date;
+  methodId: Id;
+  price: number;
+}): Promise<void> {
+  await prisma.record.create({
+    data: {
+      userId: input.userId,
+      pairId: input.pairId,
+      datetime: input.datetime,
+      isPay: null,
+      methodId: input.methodId,
+      typeId: null,
+      subTypeId: null,
+      price: input.price,
+      memo: null,
+      isSettled: null,
+      recordType: RecordType.settlement
+    }
+  });
+}
+
+// UPDATE（一括精算）。scope 内であることは service 層で検証済み前提。
+export async function markRecordsSettled(ids: Id[]): Promise<void> {
+  await prisma.record.updateMany({
+    where: { id: { in: ids } },
+    data: { isSettled: true }
+  });
+}
+
+// DELETE（1 件）。対象が scope 内であることは service 層で検証済み前提。
+export async function deleteRecordById(id: Id): Promise<void> {
+  await prisma.record.delete({ where: { id } });
 }
