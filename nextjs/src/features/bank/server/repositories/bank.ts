@@ -5,11 +5,9 @@ import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { Prisma } from '@/prisma/generated/client';
 
-// L7 bank レーンのリポジトリ（server-only）。
-// ★ bank は個人専用テーブル（pair で共有しない）。取得・更新・削除の全経路で
-//   buildOwnerScopeWhere（自分の user_id のみ）を通す。旧 Nuxt の .eq('id') 単独は
-//   Prisma が RLS をバイパスするため IDOR（他人の id を指定して更新/削除）に脆弱。
-//   よって update/delete は updateMany/deleteMany の where に userId を必ず AND する。
+// bank は個人専用テーブル（pair で共有しない）ため buildOwnerScopeWhere を通す。
+// update/delete は updateMany/deleteMany の where に userId を AND して IDOR を塞ぐ
+// （旧 Nuxt の .eq('id') 単独は Prisma が RLS をバイパスするため他人の id で更新/削除できた）。
 
 // Postgres の外部キー制約違反コード（残高が紐づく口座を削除しようとした等）。
 const FK_VIOLATION_CODE = 'P2003';
@@ -27,8 +25,7 @@ export type BankUpsertError = 'notFound';
 // delete の失敗種別。foreignKey = 紐づく残高があり削除不可。
 export type BankDeleteError = 'notFound' | 'foreignKey';
 
-// READ
-// 個人専用のため buildOwnerScopeWhere。色マスタを include し id 昇順で安定させる。
+// 色マスタを include し id 昇順で安定させる。
 export async function getBankList(
   scope: SessionScope
 ): Promise<BankListItem[]> {
@@ -45,8 +42,6 @@ export async function getBankList(
   }));
 }
 
-// CREATE
-// user_id はサーバの scope から確定（クライアント値を信用しない）。
 export async function insertBank(
   scope: SessionScope,
   input: { name: string; colorClassificationId: Id }
@@ -60,8 +55,7 @@ export async function insertBank(
   });
 }
 
-// UPDATE
-// ★ updateMany + where に owner scope を AND。count===0 は「他人 or 不存在」= notFound。
+// updateMany + where に owner scope を AND。count===0 は「他人 or 不存在」= notFound。
 export async function updateBank(
   scope: SessionScope,
   input: { id: Id; name: string; colorClassificationId: Id }
@@ -79,9 +73,8 @@ export async function updateBank(
   return { ok: true };
 }
 
-// DELETE
-// ★ deleteMany + owner scope を AND。count===0 = notFound。
-//   FK 制約（紐づく bank_balances あり）は P2003 を捕捉して foreignKey に分類する。
+// deleteMany + owner scope を AND。count===0 = notFound。
+// FK 制約（紐づく bank_balances あり）は P2003 を捕捉して foreignKey に分類する。
 export async function deleteBank(
   scope: SessionScope,
   id: Id

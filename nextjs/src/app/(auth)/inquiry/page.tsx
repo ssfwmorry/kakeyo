@@ -19,7 +19,6 @@ export default function InquiryPage() {
         <CardHeader>
           <CardTitle>お問い合わせ</CardTitle>
           <CardDescription>
-            {/* TODO: 差し替え予定 */}
             なんらかの方法でコンタクトをとってください。
           </CardDescription>
         </CardHeader>

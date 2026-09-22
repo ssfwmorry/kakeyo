@@ -5,14 +5,10 @@ import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import type { RecordType } from '@/lib/shared/types/recordType';
 
-// L8 short_cut（ショートカット）レーンのリポジトリ（server-only）。
-// ★ short_cut は個人専用テーブル（pair で共有しない）。取得は必ず
-//   buildOwnerScopeWhere（自分の user_id のみ）を通す。scope 漏れ = 情報漏洩。
-// ★ short_cuts.id は Prisma 上 BigInt。JSON.stringify で例外を投げるため
-//   Server→Client を跨ぐとクラッシュする。境界で Number(row.id) へ変換し、
-//   公開型は id: number（= Id）で固定する（方針確定書 §4.1）。
-// ※ 旧 Nuxt に short_cut の作成/削除 API は存在せず（be-api.md）、本レーンは
-//   一覧取得（getShortCutList）のみを実装する。記録は record ドメインの upsertRecord。
+// short_cut は個人専用テーブル（pair で共有しない）ため取得は buildOwnerScopeWhere
+// （buildScopeWhere ではない）を通す。short_cuts.id は BigInt のため境界で Number 変換する。
+// 旧 Nuxt に作成/削除 API は無く（be-api.md）、本レーンは一覧取得のみ。記録自体は
+// record ドメインの upsertRecord が担う。
 
 // ショートカット 1 件（type/sub_type/method・color 名を結合済み）。
 // price は Int（金額）。record_type は records と同様の分類。
@@ -33,9 +29,7 @@ export type ShortCutListItem = {
   subTypeName: string | null;
 };
 
-// READ
-// 個人専用のため buildOwnerScopeWhere。type/method/subType を include し、
-// type 経由で color 名を取り出す。id 昇順で安定させる。
+// type/method/subType を include し、type 経由で color 名を取り出す。id 昇順で安定させる。
 export async function getShortCutList(
   scope: SessionScope
 ): Promise<ShortCutListItem[]> {

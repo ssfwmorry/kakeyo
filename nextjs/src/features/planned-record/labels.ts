@@ -1,6 +1,4 @@
-// planned-record feature 固有の UI 文言（feature 内コロケーション）。
-// 全 feature 共通の汎用文言（保存/削除・成否通知・汎用エラー）は
-// @/lib/shared/labels（L）に置く。ここは定期（planned_record）固有のもののみ。
+// planned-record（定期）feature 固有の UI 文言。
 
 export const plannedRecordLabels = {
   // 見出し（設定「定期」タブ。旧 KakeiPlannedRecord.vue 踏襲）。

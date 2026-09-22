@@ -1,6 +1,4 @@
-// bank feature 固有の UI 文言（feature 内コロケーション）。
-// 全 feature 共通の汎用文言は @/lib/shared/labels（L）に置く。ここは bank 固有のみ。
-// 汎用ボタン（保存・削除・色・編集）や成否通知・汎用エラーは L を使い、ここには入れない。
+// bank feature 固有の UI 文言。
 
 export const bankLabels = {
   heading: {

@@ -20,7 +20,6 @@ import type { BankError } from './types';
 // parseWithZod → service（Result）→ toFormResult。bank 画面 / 設定タブは同一画面内
 // 更新（遷移なし）のため flash ではなく FormActionResult.toast を使い、保存後
 // revalidatePath('/bank') で再取得する（二重発火回避のため flash は使わない）。
-// 各 Action 冒頭で requireAuth。userId は session から取り、クライアント値を信用しない。
 
 const BANK_PATH = '/bank';
 
@@ -52,7 +51,6 @@ function toResult(
   });
 }
 
-// ===== BANK（口座 CRUD） =====
 export async function upsertBankAction(
   _prev: FormActionResult | null,
   formData: FormData
@@ -86,7 +84,6 @@ export async function deleteBankAction(
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
-// ===== BANK BALANCE（残高登録・可変行） =====
 export async function postBankBalancesAction(
   _prev: FormActionResult | null,
   formData: FormData

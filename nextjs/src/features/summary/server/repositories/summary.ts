@@ -50,9 +50,7 @@ function toNullableNumber(
   return toNumber(value);
 }
 
-// ============================================================
 // func_get_month_sum（月の self_sum）
-// ============================================================
 
 type MonthSumRawRow = {
   year_month: string;
@@ -103,9 +101,7 @@ export async function getMonthSum(
   return toNumber(rows[0].self_sum);
 }
 
-// ============================================================
 // func_get_method_summary（方法別集計）
-// ============================================================
 
 // リポジトリの公開行は Number() 変換後の形（id/sum は number）。
 export type MethodSummaryRawRow = {
@@ -191,9 +187,7 @@ export async function getMethodSummaryRows(
   }));
 }
 
-// ============================================================
 // func_get_type_summary（カテゴリ別集計・sub_type 横長行）
-// ============================================================
 
 // 旧 RPC の 1 行（type × sub_type の展開行。partition by types.id の sum を各行が持つ）。
 export type TypeSummaryRawRow = {
@@ -288,9 +282,7 @@ export async function getTypeSummaryRows(
   }));
 }
 
-// ============================================================
 // func_get_pay_and_income_list（年次 月別 支出/収入）
-// ============================================================
 
 export type PayAndIncomeRawRow = {
   year_month: string;
@@ -359,9 +351,7 @@ export async function getPayAndIncomeRows(
   }));
 }
 
-// ============================================================
 // func_get_type_summary_period（年次カテゴリ別）
-// ============================================================
 
 export type TypeSummaryPeriodRawRow = {
   year_month: string;
@@ -433,9 +423,7 @@ export async function getTypeSummaryPeriodRows(
   }));
 }
 
-// ============================================================
 // func_get_sub_type_summary（年次サブカテゴリ別・カテゴリ選択時）
-// ============================================================
 
 export type SubTypeSummaryRawRow = {
   year_month: string;

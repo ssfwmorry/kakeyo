@@ -1,13 +1,10 @@
 import type { Id } from '@/lib/shared/types/id';
 import type { RecordType } from '@/lib/shared/types/recordType';
 
-// record feature の公開 FE 型（server-only を含まない = Client / 他レーン / Vitest 用）。
-// ★ BigInt PK 境界: records.id は Prisma 上 BigInt。ここに現れる id は全て
-//   リポジトリ層で Number(row.id) 済みの number（Id）。Server→Client を跨いでも
-//   JSON.stringify で落ちない（方針確定書 §4.1）。
-//
+// record feature の公開 FE 型。records.id は BigInt だが、ここに現れる id は全て
+// リポジトリ層で Number 済みの number（Id）で、Server→Client を跨いでも落ちない。
 // L6 summary/records は getRecordList / getSummarizedRecordList / getPairedRecordList の
-// 戻り型（下記）を @/features/record barrel から参照する。
+// 戻り型を @/features/record barrel から参照する。
 
 // get_record_list の 1 行（カレンダー表示用）。旧 RPC の出力を camelCase 化し、
 // id は record_id を採用、type_name の '精算' 補完・isInstead/isSettlement 導出済み。

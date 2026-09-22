@@ -28,7 +28,6 @@ import type { PlanReminderError } from './types';
 // - PLAN（予定入力画面）: 保存/削除後に /calendar へ遷移するため flash トーストを使う。
 // - PLAN TYPE / REMINDER（設定「予定管理」タブ）: 同一画面内更新のため
 //   FormActionResult.toast を使い、保存後 revalidatePath('/setting') で再取得する。
-// 各 Action 冒頭で requireAuth。所有情報は session から取りクライアント値を信用しない。
 
 const SETTING_PATH = '/setting';
 const CALENDAR_PATH = '/calendar';
@@ -61,7 +60,6 @@ function toResult(
   });
 }
 
-// ===== PLAN TYPE（予定カテゴリ CRUD・設定タブ）=====
 export async function upsertPlanTypeAction(
   _prev: FormActionResult | null,
   formData: FormData
@@ -111,7 +109,6 @@ export async function swapPlanTypeAction(
   return toResult(result, L.snackbar.swapped);
 }
 
-// ===== PLAN（予定 CRUD・plan 画面）=====
 // 保存/削除後は /calendar へ遷移する（現行踏襲）。遷移で戻り値が消えるため
 // redirect 直前に setFlashToast で通知を Cookie に載せる（二重発火回避のため toast は返さない）。
 export async function upsertPlanAction(
@@ -166,7 +163,6 @@ export async function deletePlanAction(
   redirect(CALENDAR_PATH);
 }
 
-// ===== REMINDER（定期的な予定・設定タブ）=====
 export async function insertReminderAction(
   _prev: FormActionResult | null,
   formData: FormData

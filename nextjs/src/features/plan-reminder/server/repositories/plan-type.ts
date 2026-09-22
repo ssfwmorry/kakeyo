@@ -4,10 +4,9 @@ import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
-// L5 plan_type リポジトリ（自己完結レーンの I/F は自分で作る）。
-// 現行 RPC get_plan_type_list / swap_plan_type / upsertPlanType / deletePlanType を移植。
-// 取得系は必ず buildScopeWhere を通す（scope 漏れ = 情報漏洩）。plan_type は
-// user_id / pair_id のどちらか一方を持つため buildScopeWhere（pair 込み）。
+// plan_type リポジトリ。現行 RPC get_plan_type_list / swap_plan_type / upsertPlanType /
+// deletePlanType を移植。plan_type は user_id / pair_id のどちらか一方を持つため、
+// 取得は pair 込みの buildScopeWhere を使う。
 
 // 画面用の plan_type 行（色名・sort・is_pair 判定に必要な列込み）。
 export type PlanTypeRow = {
@@ -50,7 +49,6 @@ export async function findPlanTypeInScope(
   });
 }
 
-// CREATE
 export async function insertPlanType(input: {
   name: string;
   colorClassificationId: Id;

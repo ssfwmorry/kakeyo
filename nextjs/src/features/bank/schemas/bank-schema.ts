@@ -4,9 +4,8 @@ import { bankLabels } from '../labels';
 
 const { validation } = bankLabels;
 
-// 口座（bank）フォームの入力スキーマ（Conform + Zod）。
+// 口座（bank）フォームの入力スキーマ。
 // 口座は「名前 + 色」だけを持つ個人専用データ。id は編集時のみ存在する。
-// FormData は全て文字列で届くため id / colorId は coerce で数値化する。
 
 // 口座の追加・編集。id 未指定なら新規、指定なら更新。
 // Conform は空欄フィールドを送出しないため、編集時のみ id が届く。

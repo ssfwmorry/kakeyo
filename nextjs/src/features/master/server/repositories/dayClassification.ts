@@ -13,7 +13,6 @@ export type DayClassification = {
   value: number;
 };
 
-// READ
 // 全ユーザ共通マスタ。id 昇順で安定させる（選択 UI の並びを固定）。
 export async function getDayClassificationList(): Promise<DayClassification[]> {
   return prisma.dayClassification.findMany({

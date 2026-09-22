@@ -82,7 +82,6 @@ export async function findPlanInScope(
   });
 }
 
-// CREATE
 export async function insertPlan(input: {
   name: string;
   startDate: string;

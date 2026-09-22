@@ -5,9 +5,8 @@ import { bankLabels } from '../labels';
 
 const { validation } = bankLabels;
 
-// 口座残高（bank_balance）登録フォームの入力スキーマ（Conform + Zod）。
+// 口座残高（bank_balance）登録フォームの入力スキーマ。
 // 可変行（口座を選び残高を入力する行を複数）で、行ごとに { bankId, price }。
-// 金額は必ず共有の priceSchema を経由する（素の Number() 禁止・方針書 §4.2）。
 
 // 1 行分。price は priceSchema（全角/カンマ正規化 + 非負整数）＋ 0 より大きいことを要求。
 const balanceRowSchema = z.object({

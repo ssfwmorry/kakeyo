@@ -23,7 +23,6 @@ import * as service from './server/services';
 // L6 summary 画面のデータ取得 Server Actions（取得のみ・フォーム送信ではない）。
 // Client のタブが年月/トグル/カテゴリ選択を変えるたびに useTransition から呼び、
 // 整形済みのグラフデータ（PieShowData / PayIncomeShowData / StackShowData）を受け取る。
-// session は各 Action で requireAuth() から取る（クライアント値を信用しない）。
 
 // 内訳（カテゴリ別 or 方法別）の円 + 一覧を返す。
 export async function fetchPieAction(input: {

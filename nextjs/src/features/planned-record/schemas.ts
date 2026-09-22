@@ -3,10 +3,8 @@ import { entityIdSchema } from '@/lib/shared/domain/entityId';
 import { priceSchema } from '@/lib/shared/domain/price';
 import { plannedRecordLabels } from './labels';
 
-// note（定期編集）の planned_record 登録・更新スキーマ（Conform + Zod）。
-// record-schema と同じ流儀: userId / pairId は session 由来のためスキーマに含めない
-// （クライアント値を信用しない）。金額は共有 priceSchema（素の Number() 禁止）。
-// record との違いは「日付ではなく day_classification_id を持つ」こと。
+// note（定期編集）の planned_record 登録・更新スキーマ。
+// record-schema との違いは「日付ではなく day_classification_id を持つ」こと。
 
 // メモは空文字を null に寄せる（任意項目）。
 const optionalMemo = z

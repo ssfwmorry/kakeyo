@@ -25,21 +25,11 @@ import {
 } from './demo';
 import * as plannedRecordRepo from './repositories/planned-record';
 
-// L3 planned-record サービス層（server-only）。Server Action / Cron Route から呼ぶ入口。
-// 戻りは Result<T, PlannedRecordError>（UI 文言は持たない）。取得は withDemoRead、
-// 更新は withDemoWriteVoid でデモ注入（デモは DB へ触れず成功扱い）。
-// userUid / pairId は session から作りクライアント値を信用しない（scope 漏れ防止）。
-
-// FK 制約違反（P2003）を foreignKey へ写す。それ以外は unknown。
-// 旧 FE は PostgrestErrorCode.FOREIGN_KEY(23503) 判定で「紐づくデータがあるので
-// 削除できません」を出していた（実体化済み record が planned_record_id で参照する）。
+// 削除失敗を分類する。実体化済み record が planned_record_id で参照している場合、
+// FK 制約違反 → foreignKey（「紐づくデータがあり削除できません」）になる。
 function toDeleteError(error: unknown): PlannedRecordError {
   return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
-
-// ============================================================
-// READ
-// ============================================================
 
 // 設定「定期」タブ用: 定期一覧を self/pair に振り分けて返す（旧 getPlannedRecordList）。
 export async function getPlannedRecordList(
@@ -79,10 +69,6 @@ export async function getPlannedRecordForEdit(
     plannedRecordRepo.findPlannedRecordForEdit(session, id)
   );
 }
-
-// ============================================================
-// CRUD
-// ============================================================
 
 type UpsertPlannedRecordInput = {
   id?: Id;
@@ -190,9 +176,7 @@ export async function swapPlannedRecord(
   });
 }
 
-// ============================================================
 // 実体化バッチ（グループ C: func_post_records の $queryRaw 移植）
-// ============================================================
 //
 // 旧 useCalendarStore.updateRange は「表示月が現在+7 ヶ月より前なら表示月分を
 // post_records」していた（閲覧駆動・表示コードに副作用 INSERT が混在）。

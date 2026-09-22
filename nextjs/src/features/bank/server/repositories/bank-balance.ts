@@ -21,7 +21,6 @@ export type BankBalanceRow = {
   createdAt: Date;
 };
 
-// READ
 // 親 bank の所有者スコープで絞る。合計補完が前行依存のため created_at 昇順で返す。
 export async function getBankBalanceList(
   scope: SessionScope
@@ -45,7 +44,6 @@ export async function getBankBalanceList(
   }));
 }
 
-// CREATE
 // ★ 挿入前に、渡された bankId が全て自分の口座か検証する（他人の口座に残高を
 //   差し込ませない）。検証対象の id だけを in で絞って count し、ユニークな
 //   bankId 数と一致すれば全て自分の口座（全所有口座を引かずに済む）。

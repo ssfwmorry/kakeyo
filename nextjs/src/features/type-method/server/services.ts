@@ -16,16 +16,10 @@ import { demoGroupedMethodList, demoGroupedTypeList } from './demo';
 import * as methodRepo from './repositories/method';
 import * as typeRepo from './repositories/type';
 
-// L4 サービス層。Result<T, TypeMethodError> を返す（UI 文言は持たない）。
-// 取得は withDemoRead、更新は withDemoWriteVoid でデモ注入。
-// userId / pairId は session から作りクライアント値を信用しない。
-
-// FK 制約違反（P2003）を捕捉して foreignKey へ写す。それ以外は unknown。
 function toDeleteError(error: unknown): TypeMethodError {
   return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
 
-// ===== READ（画面用リッチ取得） =====
 export async function getTypeCardList(
   session: SessionData
 ): Promise<GroupedTypeList> {
@@ -50,7 +44,6 @@ export async function getMethodCardList(
   });
 }
 
-// ===== TYPE CRUD =====
 export async function upsertType(
   session: SessionData,
   input: {
@@ -108,7 +101,6 @@ export async function deleteType(
   });
 }
 
-// ===== SUB TYPE CRUD =====
 export async function upsertSubType(
   session: SessionData,
   input: { id?: Id; typeId: Id; name: string }
@@ -150,7 +142,6 @@ export async function deleteSubType(
   });
 }
 
-// ===== METHOD CRUD =====
 // payMode を isPay(true/false/null) に写す。both = 精算 = null。
 function toMethodIsPay(payMode: 'pay' | 'income' | 'both'): boolean | null {
   if (payMode === 'both') {
@@ -215,7 +206,6 @@ export async function deleteMethod(
   });
 }
 
-// ===== SWAP（並べ替え） =====
 // 対象 2 行が両方 scope 内であることを検証してから入替（他ペアの並びを触らせない）。
 async function loadSwapPair(
   find: (id: Id) => Promise<{ id: Id; sort: number } | null>,

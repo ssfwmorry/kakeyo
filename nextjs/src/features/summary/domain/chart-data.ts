@@ -11,9 +11,7 @@ import type {
 // Recharts は data=[{x, seriesKey: value, ...}] の行配列 + <Pie/Bar dataKey> で描くため、
 // 系列（凡例）情報は別途 series メタとして返す。
 
-// ============================================================
 // 円グラフ（内訳）
-// ============================================================
 
 // 円グラフ 1 スライス（Recharts Pie の data 要素）。fill は行に持たせる（Cell 相当）。
 export type PieSlice = {
@@ -119,9 +117,7 @@ export function buildMethodPie(
   return { slices, list };
 }
 
-// ============================================================
 // 棒グラフ（推移 > 全体）
-// ============================================================
 
 // 12 ヶ月分の 1 行（Recharts Bar の data 要素）。x=月ラベル、pay=支出、payAndIncome=収支。
 export type PayIncomeBarRow = {
@@ -202,9 +198,7 @@ export function buildPayIncomeBar(
   return { rows, sumPay, sumPayAndIncome };
 }
 
-// ============================================================
 // 積み上げ棒（推移 > カテゴリ別・「全て」= カテゴリ別）
-// ============================================================
 
 // 系列メタ（凡例・色・Bar dataKey）。key は type/sub_type の id を文字列化したもの。
 export type StackSeries = {

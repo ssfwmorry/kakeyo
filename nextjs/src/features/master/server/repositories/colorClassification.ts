@@ -13,7 +13,6 @@ export type ColorClassification = {
   name: string;
 };
 
-// READ
 // 全ユーザ共通マスタ。id 昇順で安定させる（色選択 UI の並びを固定）。
 // React cache() で per-request メモ化し、1 レンダリング内の重複 I/O を防ぐ
 // （getSessionData / getReminderList と同方針。setting/note/summary では

@@ -2,10 +2,7 @@ import { z } from 'zod';
 import { entityIdSchema } from '@/lib/shared/domain/entityId';
 import { priceSchema } from '@/lib/shared/domain/price';
 
-// note（記録入力）の record 登録・更新スキーマ（Conform + Zod）。
-// 「1 フォーム = 1 スキーマ = 1 useForm」。userId / pairId は session 由来のため
-// スキーマに含めない（クライアント値を信用しない）。金額は共有 priceSchema を組み込む
-// （素の Number() 禁止・全角/カンマ正規化込み）。日付は YYYY-MM-DD 文字列で受ける。
+// note（記録入力）の record 登録・更新スキーマ。日付は YYYY-MM-DD 文字列で受ける。
 
 // メモは空文字を null に寄せる（任意項目）。
 const optionalMemo = z

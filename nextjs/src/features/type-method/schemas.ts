@@ -2,9 +2,7 @@ import { z } from 'zod';
 import { entityIdSchema } from '@/lib/shared/domain/entityId';
 import { typeMethodLabels } from './labels';
 
-// 設定 CRUD フォームの入力スキーマ（Conform + Zod）。
-// 「1 フォーム = 1 スキーマ = 1 useForm」。userId / pairId は session 由来のため
-// スキーマには含めない（クライアント値を信用しない）。
+// 設定 CRUD フォーム（カテゴリ / サブカテゴリ / 方法）の入力スキーマ。
 
 const { validation } = typeMethodLabels;
 

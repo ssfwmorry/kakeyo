@@ -20,19 +20,9 @@ import {
 } from './demo';
 import * as recordRepo from './repositories/record';
 
-// L2 record サービス層（server-only）。Server Action / Route から呼ぶ入口。
-// 戻りは Result<T, RecordError>（UI 文言は持たない）。取得は withDemoRead、
-// 更新は withDemoWriteVoid でデモ注入（デモは DB へ触れず成功扱い）。
-// userUid / pairId は session から作りクライアント値を信用しない（scope 漏れ防止）。
-
-// FK 制約違反（P2003）を foreignKey へ写す。それ以外は unknown。
 function toDeleteError(error: unknown): RecordError {
   return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
-
-// ============================================================
-// READ
-// ============================================================
 
 // カレンダー用: 期間内 record。start/end は service に Date で渡される。
 export async function getRecordListForRange(
@@ -67,10 +57,6 @@ export async function getPairedRecords(
     return recordRepo.getPairedRecordList(session, yearMonth);
   });
 }
-
-// ============================================================
-// CRUD
-// ============================================================
 
 type UpsertRecordInput = {
   id?: Id;

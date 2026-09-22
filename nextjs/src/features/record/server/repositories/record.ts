@@ -14,16 +14,9 @@ import type {
   SummarizedRecordQuery
 } from '../../types';
 
-// L2 record レーンのリポジトリ層（server-only・被参照の中心）。
-// ★ 全取得系は必ず buildScopeWhere を通す（scope 漏れ = 他ペアのデータ露出＝最重要）。
-// ★ BigInt PK: records.id は Prisma 上 BigInt。境界で Number(row.id) 変換し、
-//   公開する型は id: number（方針確定書 §4.1）。Server→Client を跨ぐ全戻り型で徹底。
-// 取得系はグループ A（Prisma ORM の include/relation）で移植する。集計の
-// CASE WHEN が絡む get_summarized/paired の where 条件は functions.md を壊さず TS で表現する。
-
-// ============================================================
-// 型（INSERT 入力）
-// ============================================================
+// record レーンのリポジトリ層（被参照の中心）。取得系はグループ A（Prisma ORM の
+// include/relation）で移植し、集計の CASE WHEN が絡む get_summarized/paired の where
+// 条件は functions.md を壊さず TS で表現する。
 
 // records への INSERT 入力（L3 の実体化バッチが使う最小の形）。
 // record_type は resolveRecordType 済みの値を渡す前提（呼び出し側が算出する）。
@@ -60,9 +53,7 @@ export type RecordUpsertInput = {
   recordType: RecordType;
 };
 
-// ============================================================
 // 取得系（グループ A: Prisma ORM）
-// ============================================================
 
 // get_record_list / get_summarized_record_list の共通 include。マッパーが読む列だけを
 // select で絞る（method/type の名前＋色名、subType 名、ペア相手の user 名。pair 行自体は
@@ -155,9 +146,7 @@ export async function getPairedRecordList(
   return rows.map((row) => toPairedRecordItem(row, scope.userUid));
 }
 
-// ============================================================
 // 取得系: where 断片ヘルパ（集計 CASE WHEN の移植）
-// ============================================================
 
 // datetime を JST 暦月 [monthStart, nextMonthStart) で絞る。
 // 旧 RPC は to_char(cast(datetime as date),'YYYY-MM')＝DB(JST 運用)のローカル暦月一致。
@@ -214,9 +203,7 @@ function buildSummarizedPairWhere(
   return { AND: [{ userId: userUid }, { pairId: null }] };
 }
 
-// ============================================================
 // 取得系: 行 → 公開 DTO 変換（BigInt→number 境界）
-// ============================================================
 
 // 立替かどうか（個人 record は判定不能のため null。旧 FE 整形踏襲）。
 function toIsInstead(isPair: boolean, recordType: RecordType): boolean | null {
@@ -334,9 +321,7 @@ function toPairedRecordItem(
   };
 }
 
-// ============================================================
 // scope 検証（更新/削除の対象が自分/ペアの行か）
-// ============================================================
 
 // 指定 record が scope 内か。update / delete / settle の対象確認に使う
 // （他ペアの行を触らせない）。datetime は「同月のみ更新可」検証に使う。
@@ -357,10 +342,6 @@ export async function findRecordInScope(
     plannedRecordId: row.plannedRecordId
   };
 }
-
-// ============================================================
-// CRUD
-// ============================================================
 
 // CREATE（まとめ INSERT）。定期実体化（L3 Cron）などから使う被参照 I/F。
 // scope は所有者確定用（現状は追加検証に使わないが、将来の絞り込み拡張の受け口）。

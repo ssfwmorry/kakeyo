@@ -15,10 +15,6 @@ import * as bankRepo from './repositories/bank';
 import type { BankBalanceRow } from './repositories/bank-balance';
 import * as balanceRepo from './repositories/bank-balance';
 
-// L7 bank サービス層。Result<T, BankError> を返す（UI 文言は持たない）。
-// 取得は withDemoRead、更新は withDemoWriteVoid でデモ注入。
-// userId は session（scope）から確定し、クライアント値を信用しない。
-
 // created_at ごとに残高行を 1 スナップショットへ集約する（合計補完の入力形）。
 // 昇順で渡された行をそのまま走査し、同一 JST 日付をまとめる。
 function toSnapshots(rows: BankBalanceRow[]): BalanceSnapshot[] {
@@ -40,7 +36,6 @@ function toSnapshots(rows: BankBalanceRow[]): BalanceSnapshot[] {
   return [...byDate.values()];
 }
 
-// ===== READ（画面用一括取得） =====
 // 口座一覧・残高テーブル・チャート点列をまとめて返す。
 export async function getBankScreenData(
   session: SessionData
@@ -66,7 +61,6 @@ export async function getBankList(session: SessionData): Promise<BankItem[]> {
   );
 }
 
-// ===== BANK CRUD =====
 export async function upsertBank(
   session: SessionData,
   input: { id?: Id; name: string; colorId: Id }
@@ -104,7 +98,6 @@ export async function deleteBank(
   });
 }
 
-// ===== BANK BALANCE =====
 export async function postBankBalances(
   session: SessionData,
   rows: Array<{ bankId: Id; price: number }>

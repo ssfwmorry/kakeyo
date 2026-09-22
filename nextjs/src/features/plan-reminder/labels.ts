@@ -1,6 +1,4 @@
-// plan-reminder feature 固有の UI 文言（feature 内コロケーション）。
-// 全 feature 共通の汎用文言（保存/削除/編集/並べ替え/色・成否通知・汎用エラー）は
-// @/lib/shared/labels（L）に置く。ここは plan/reminder 固有のもののみ。
+// plan-reminder feature 固有の UI 文言。
 
 export const planReminderLabels = {
   // 画面・見出し。

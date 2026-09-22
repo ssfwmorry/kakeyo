@@ -1,6 +1,4 @@
-// record feature 固有の UI 文言・定数（feature 内コロケーション）。
-// 全 feature 共通の汎用文言（保存/削除・成否通知・汎用エラー）は
-// @/lib/shared/labels（L）に置く。ここは record 固有のもののみ。
+// record feature 固有の UI 文言・定数。
 
 export const recordLabels = {
   // 収支トグル。

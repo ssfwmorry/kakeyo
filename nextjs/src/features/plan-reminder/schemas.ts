@@ -7,9 +7,7 @@ import {
 } from './domain/reminder-condition';
 import { planReminderLabels } from './labels';
 
-// L5 各フォームの入力スキーマ（Conform + Zod）。「1 フォーム = 1 スキーマ = 1 useForm」。
-// userId / pairId は session 由来のためスキーマに含めない（クライアント値を信用しない）。
-// FormData は全て文字列で届くため id / 数値は coerce で数値化する。
+// plan / planType / reminder の各フォームの入力スキーマ。
 
 const { validation } = planReminderLabels;
 
@@ -22,7 +20,6 @@ const optionalTrimmedText = z
   .optional()
   .transform((v) => (v === undefined || v === '' ? null : v));
 
-// ===== PLAN TYPE（予定カテゴリ）=====
 export const planTypeUpsertSchema = z.object({
   // デモの負 ID を許容する共有 entityIdSchema（0 のみ拒否）。colorId は実マスタ限定のため positive のまま。
   id: entityIdSchema().optional(),
@@ -38,8 +35,7 @@ export const planTypeUpsertSchema = z.object({
   isPair: z.stringbool()
 });
 
-// ===== PLAN（予定）=====
-// 単日/期間。start <= end を superRefine で検証。planTypeId は任意（null 許容）。
+// 予定 upsert。単日/期間。start <= end を superRefine で検証。planTypeId は任意（null 許容）。
 export const planUpsertSchema = z
   .object({
     id: entityIdSchema().optional(),
@@ -68,8 +64,7 @@ export const planUpsertSchema = z
     }
   });
 
-// ===== REMINDER（定期的な予定）=====
-// condition_type により month/monthDay/baseType の必須が変わるため superRefine で分岐。
+// リマインダー insert。condition_type により month/monthDay/baseType の必須が変わるため superRefine で分岐。
 export const reminderInsertSchema = z
   .object({
     name: z

@@ -43,8 +43,7 @@ export function PlanTypeDialog({
   const [result, action] = useFormAction(upsertPlanTypeAction);
   const [deleteResult, deleteAction] = useFormAction(deletePlanTypeAction);
   const [form, fields] = useForm({
-    // 編集時は現在値をプリフィルする。defaultValue はマウント時に一度だけ取り込まれる
-    // ため、呼び出し元は編集対象ごとに key を変えて本コンポーネントをリマウントすること。
+    // 編集時は現在値をプリフィル（呼び出し元は編集対象ごとに key を変えてリマウントすること）。
     defaultValue: { name: editing?.name },
     lastResult: result?.submission,
     onValidate: ({ formData }) =>

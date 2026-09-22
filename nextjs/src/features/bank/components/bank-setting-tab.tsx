@@ -49,8 +49,7 @@ export function BankSettingTab({ banks, colors }: BankSettingTabProps) {
       </div>
 
       <BankFormDialog
-        // useForm の defaultValue はマウント時に一度だけ取り込まれるため、
-        // 編集対象が変わるたびにリマウントしてプリフィルを効かせる。
+        // 編集対象ごとにリマウントして defaultValue のプリフィルを効かせる。
         key={dialog.kind === 'edit' ? dialog.bank.id : 'new'}
         open={dialog.kind !== 'closed'}
         onOpenChange={(open) =>

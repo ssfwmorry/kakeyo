@@ -24,16 +24,10 @@ import * as planRepo from './repositories/plan';
 import * as planTypeRepo from './repositories/plan-type';
 import * as reminderRepo from './repositories/reminder';
 
-// L5 サービス層。Result<T, PlanReminderError> を返す（UI 文言は持たない）。
-// 取得は withDemoRead、更新は withDemoWriteVoid でデモ注入。
-// userId / pairId は session から作りクライアント値を信用しない。
-
-// FK 制約違反（P2003）を捕捉。それ以外は unknown。
 function toDeleteError(error: unknown): PlanReminderError {
   return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
 
-// ===== READ =====
 export async function getPlanTypeCardList(
   session: SessionData
 ): Promise<GroupedPlanTypeList> {
@@ -67,7 +61,6 @@ export const getReminderList = cache(
   }
 );
 
-// ===== PLAN TYPE CRUD =====
 export async function upsertPlanType(
   session: SessionData,
   input: { id?: Id; name: string; colorId: Id; isPair: boolean }
@@ -141,7 +134,6 @@ export async function swapPlanType(
   });
 }
 
-// ===== PLAN CRUD =====
 export async function upsertPlan(
   session: SessionData,
   input: {
@@ -207,7 +199,6 @@ export async function deletePlan(
   });
 }
 
-// ===== REMINDER =====
 export async function insertReminder(
   session: SessionData,
   input: {

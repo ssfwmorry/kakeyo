@@ -26,10 +26,7 @@ import {
 } from './demo';
 import * as summaryRepo from './repositories/summary';
 
-// L6 summary サービス層（server-only）。Server Component / Server Action から呼ぶ入口。
-// 取得のみのため戻りは Result ではなく直返し（bank の READ サービスに合わせる）。
-// 取得は withDemoRead でデモ注入（デモ時は DB へ触れずモックを返す）。
-// scope（userUid/pairId）は session から確定し、クライアント値を信用しない。
+// summary は取得のみのため、戻りは Result で包まず直返しにする（bank の READ サービスに合わせる）。
 
 // 内訳（カテゴリ別）。横長行を TypeSummaryItem[] へ畳み込む。
 export async function getTypeSummary(

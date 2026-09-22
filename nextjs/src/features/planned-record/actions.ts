@@ -20,10 +20,8 @@ import {
 import * as service from './server/services';
 import type { PlannedRecordError } from './types';
 
-// planned-record（定期）の Server Actions。
-// 保存/削除は成功時に setting へ遷移するため（fe-screens §NOTE）、戻り値の toast では
-// なく setFlashToast + redirect を使う（redirect を挟む通知は flash・§4.2）。
-// swap は遷移しないため FormActionResult.toast + revalidatePath（type-method と同流儀）。
+// planned-record（定期）の Server Actions。保存/削除は成功時に setting へ遷移するため
+// flash 通知、swap は遷移しないため FormActionResult.toast + revalidatePath。
 
 // 定期の保存/削除後の遷移先。旧 note は setting へ戻る。
 // NOTE(レーン跨ぎ): /setting は P5 統合レーンで実装される。それまでこの redirect は

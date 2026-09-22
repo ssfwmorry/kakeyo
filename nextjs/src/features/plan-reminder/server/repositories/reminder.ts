@@ -5,10 +5,9 @@ import { startOfDayJst, toDateStringJst } from '@/lib/shared/domain/date';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
-// L5 reminder / condition リポジトリ。reminder は必ず condition（発生条件）を伴い、
+// reminder / condition リポジトリ。reminder は必ず condition（発生条件）を伴い、
 // 作成・削除・チェックは 2 テーブルにまたがるため $transaction で原子性を担保する
 // （現行 insertReminder / deleteReminder / checkReminder を移植）。
-// 取得系は buildScopeWhere を通す。日付は date.ts 経由（dayjs 直 import 禁止）。
 
 // 画面用の reminder 行（condition と色名を結合）。
 export type ReminderRow = {

@@ -54,7 +54,6 @@ function toResult(
   });
 }
 
-// ===== TYPE =====
 export async function upsertTypeAction(
   _prev: FormActionResult | null,
   formData: FormData
@@ -94,7 +93,6 @@ export async function deleteTypeAction(
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
-// ===== SUB TYPE =====
 export async function upsertSubTypeAction(
   _prev: FormActionResult | null,
   formData: FormData
@@ -128,7 +126,6 @@ export async function deleteSubTypeAction(
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
-// ===== METHOD =====
 export async function upsertMethodAction(
   _prev: FormActionResult | null,
   formData: FormData
@@ -168,7 +165,6 @@ export async function deleteMethodAction(
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
-// ===== SWAP（並べ替え） =====
 // ボタン起動のため Conform を通さず素の Server Action。id は number で受ける。
 export async function swapTypeAction(
   prevId: number,

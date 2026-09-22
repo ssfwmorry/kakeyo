@@ -8,18 +8,12 @@ import { demoMemoList, demoShortCutList } from './demo';
 import * as memoRepo from './repositories/memo';
 import * as shortCutRepo from './repositories/short-cut';
 
-// L8 memo/shortcut サービス層。Result<T, MemoError> を返す（UI 文言は持たない）。
-// 取得は withDemoRead、更新は withDemoWriteVoid でデモ注入。
-// userId / pairId は session（scope）から確定し、クライアント値を信用しない。
-
-// ===== MEMO（TODO）READ =====
 export async function getMemoList(session: SessionData): Promise<MemoItem[]> {
   return withDemoRead(session.isDemo, demoMemoList, () =>
     memoRepo.getMemoList(session)
   );
 }
 
-// ===== MEMO（TODO）CRUD =====
 // TODO 追加。isPair のときはペア共有 TODO。pairId 未設定で isPair は矛盾のため弾く。
 export async function insertMemo(
   session: SessionData,
@@ -48,7 +42,6 @@ export async function deleteMemo(
   });
 }
 
-// ===== SHORT CUT（ショートカット）READ =====
 // 個人専用一覧。作成/削除 API は旧コードに無いため取得のみ提供する。
 export async function getShortCutList(
   session: SessionData

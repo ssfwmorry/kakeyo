@@ -10,16 +10,10 @@ import type {
   PlannedRecordListItem
 } from '../../types';
 
-// L3 planned-record レーンのリポジトリ層（server-only）。
-// ★ 全取得系は必ず buildScopeWhere を通す（scope 漏れ = 他ペアのデータ露出＝最重要）。
-// planned_records.id は serial Int（BigInt ではない）ため id 変換は不要。
-// 取得はグループ A（get_planned_record_list を Prisma ORM の include で移植）、
-// swap はグループ B（swap_planned_record を $transaction の 2 行 sort 入替で移植）。
+// planned-record レーンのリポジトリ層。planned_records.id は serial Int（BigInt でない）
+// ため id 変換は不要。取得はグループ A（get_planned_record_list を Prisma ORM の include で
+// 移植）、swap はグループ B（swap_planned_record を $transaction の 2 行 sort 入替で移植）。
 // 実体化バッチ（post_records・グループ C）は services 側で $queryRaw 移植する。
-
-// ============================================================
-// 型（書き込み入力）
-// ============================================================
 
 // planned_records への書き込みフィールド（user_id/pair_id/record_type は
 // service 層が resolvePlannedRecordOwnership で導出済み）。id 有無で insert/update を分ける。
@@ -36,9 +30,7 @@ export type PlannedRecordUpsertFields = {
   recordType: RecordType;
 };
 
-// ============================================================
 // 取得系（グループ A: Prisma ORM）
-// ============================================================
 
 // get_planned_record_list の include。マッパーが読む列だけ select で絞る
 // （day 名、method/type の名前＋色名、subType 名、立替者の user 名）。
@@ -140,10 +132,6 @@ export async function findPlannedRecordInScope(
   });
 }
 
-// ============================================================
-// CRUD
-// ============================================================
-
 // CREATE。所有列（user_id/pair_id/record_type）は service が導出済み。
 export async function insertPlannedRecord(
   input: PlannedRecordUpsertFields
@@ -204,9 +192,7 @@ export async function deletePlannedRecordById(
   return { ok: true };
 }
 
-// ============================================================
 // SWAP（グループ B: swap_planned_record 相当）
-// ============================================================
 
 // 2 行の sort を入替（旧 RPC swap_planned_record の update ... from 相当を
 // $transaction の 2 update で移植。type-method / plan-reminder の swap と同流儀）。
