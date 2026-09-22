@@ -3,8 +3,8 @@
 import { parseWithZod } from '@conform-to/zod/v4';
 import { redirect } from 'next/navigation';
 import { requireAuth } from '@/features/auth/server/requireAuth';
-import { getPairMode } from '@/lib/server/pair/mode';
 import { setFlashToast } from '@/lib/server/flash';
+import { getPairMode } from '@/lib/server/pair/mode';
 import { startOfDayJst } from '@/lib/shared/domain/date';
 import { L } from '@/lib/shared/labels';
 import {
@@ -60,8 +60,17 @@ export async function upsertRecordAction(
   // ペアモードは Cookie の単一の正から読む（自前で Cookie を読まない・フォーム値も信用しない）。
   const isPair = await getPairMode();
 
-  const { id, date, isPay, isInstead, methodId, typeId, subTypeId, price, memo } =
-    submission.value;
+  const {
+    id,
+    date,
+    isPay,
+    isInstead,
+    methodId,
+    typeId,
+    subTypeId,
+    price,
+    memo
+  } = submission.value;
 
   const result = await service.upsertRecord(session, {
     id,

@@ -23,8 +23,8 @@ import { planReminderLabels } from '../labels';
 import {
   BaseType,
   ConditionType,
-  reminderInsertSchema,
-  ReminderType
+  ReminderType,
+  reminderInsertSchema
 } from '../schemas';
 import { ColorPicker } from './color-picker';
 import { useCloseOnSuccess } from './use-close-on-success';
@@ -133,10 +133,7 @@ export function ReminderDialog({
               onValueChange={(v) => setReminderType(Number(v))}
               className='flex gap-4'
             >
-              <RadioOption
-                value={String(ReminderType.stock)}
-                label={R.keep}
-              />
+              <RadioOption value={String(ReminderType.stock)} label={R.keep} />
               <RadioOption
                 value={String(ReminderType.flow)}
                 label={R.notKeep}
@@ -169,14 +166,8 @@ export function ReminderDialog({
                 onValueChange={(v) => setBaseType(Number(v))}
                 className='flex flex-col gap-1'
               >
-                <RadioOption
-                  value={String(BaseType.now)}
-                  label={R.baseNow}
-                />
-                <RadioOption
-                  value={String(BaseType.date)}
-                  label={R.baseDate}
-                />
+                <RadioOption value={String(BaseType.now)} label={R.baseNow} />
+                <RadioOption value={String(BaseType.date)} label={R.baseDate} />
               </RadioGroup>
               <div className='flex items-center gap-2'>
                 {R.from}

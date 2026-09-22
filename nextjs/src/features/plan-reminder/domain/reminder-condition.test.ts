@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   BaseType,
-  calcNextReminderDate,
-  ConditionType
+  ConditionType,
+  calcNextReminderDate
 } from './reminder-condition';
 
 // 次回リマインド日の計算（純粋関数）の Vitest。現行 checkReminder の newDate 相当。

@@ -1,4 +1,7 @@
 import { planColorHex } from './color';
+import type { PlanRow } from './server/repositories/plan';
+import type { PlanTypeRow } from './server/repositories/plan-type';
+import type { ReminderRow } from './server/repositories/reminder';
 import type {
   GroupedPlanTypeList,
   GroupedReminderList,
@@ -6,9 +9,6 @@ import type {
   PlanTypeCard,
   ReminderItem
 } from './types';
-import type { PlanRow } from './server/repositories/plan';
-import type { PlanTypeRow } from './server/repositories/plan-type';
-import type { ReminderRow } from './server/repositories/reminder';
 
 // 取得系リポジトリの行データを画面用の FE 型に整形する純粋関数群
 // （server-only を含まず Client / Vitest からも import 可能）。

@@ -42,6 +42,9 @@ export function BankFormDialog({
   const [result, action] = useFormAction(upsertBankAction);
   const [deleteResult, deleteAction] = useFormAction(deleteBankAction);
   const [form, fields] = useForm({
+    // 編集時は現在値をプリフィルする。defaultValue はマウント時に一度だけ取り込まれる
+    // ため、呼び出し元は編集対象ごとに key を変えて本コンポーネントをリマウントすること。
+    defaultValue: { name: editing?.name },
     lastResult: result?.submission,
     onValidate: ({ formData }) =>
       parseWithZod(formData, { schema: bankFormSchema })

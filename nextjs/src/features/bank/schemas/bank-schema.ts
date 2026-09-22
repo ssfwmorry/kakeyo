@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { entityIdSchema } from '@/lib/shared/domain/entityId';
 import { bankLabels } from '../labels';
 
 const { validation } = bankLabels;
@@ -11,7 +12,8 @@ const { validation } = bankLabels;
 // Conform は空欄フィールドを送出しないため、編集時のみ id が届く。
 // 空欄時は optional により undefined（＝新規）となる（type-method の id と同型）。
 export const bankFormSchema = z.object({
-  id: z.coerce.number().int().positive().optional(),
+  // デモの負 ID を許容する共有 entityIdSchema（0 のみ拒否）。colorId は実マスタ限定のため positive のまま。
+  id: entityIdSchema().optional(),
   name: z
     .string()
     .trim()
@@ -27,5 +29,5 @@ export type BankFormValue = z.infer<typeof bankFormSchema>;
 
 // 口座の削除。対象 id のみ。
 export const bankDeleteSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: entityIdSchema()
 });

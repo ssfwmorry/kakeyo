@@ -212,6 +212,9 @@ function NoteDetailForm({
     onValidate: ({ formData }) =>
       parseWithZod(formData, { schema: recordUpsertSchema })
   });
+  // 検証エラーの多く（typeId/methodId 等）は hidden フィールドに付くため、
+  // フォーム全体のエラーとしてまとめて可視化する（サイレント失敗の防止）。
+  const errorMessages = [...new Set(Object.values(form.allErrors).flat())];
   return (
     <form
       {...getFormProps(form)}
@@ -243,6 +246,11 @@ function NoteDetailForm({
         inputMode='numeric'
         onChange={(price) => patch({ price })}
       />
+      {errorMessages.length > 0 ? (
+        <p className='text-sm text-red-600' role='alert'>
+          {errorMessages.join(' / ')}
+        </p>
+      ) : null}
       <Button
         type='submit'
         className='flex-1'

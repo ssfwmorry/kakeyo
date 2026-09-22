@@ -6,7 +6,9 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['src/lib/**/*.test.ts']
+    // ドメイン計算テストは lib/ と各 feature の domain/ に置く。feature 側も CI 対象に含める
+    // （server-only は下の alias で空モジュール化されるため間接 import しても通る）。
+    include: ['src/lib/**/*.test.ts', 'src/features/**/*.test.ts']
   },
   resolve: {
     alias: [

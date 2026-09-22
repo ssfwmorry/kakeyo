@@ -30,7 +30,11 @@ type DialogState =
   | { kind: 'create' }
   | { kind: 'edit'; card: PlanTypeCard };
 
-export function PlanTypeTab({ planTypeList, colors, isPair }: PlanTypeTabProps) {
+export function PlanTypeTab({
+  planTypeList,
+  colors,
+  isPair
+}: PlanTypeTabProps) {
   const [isEdit, setIsEdit] = useState(true);
   const [dialog, setDialog] = useState<DialogState>({ kind: 'closed' });
 
@@ -69,6 +73,8 @@ export function PlanTypeTab({ planTypeList, colors, isPair }: PlanTypeTabProps) 
       </div>
 
       <PlanTypeDialog
+        // defaultValue をプリフィルさせるため編集対象ごとにリマウントする。
+        key={dialog.kind === 'edit' ? dialog.card.id : 'new'}
         open={dialog.kind !== 'closed'}
         onOpenChange={(open) =>
           open ? undefined : setDialog({ kind: 'closed' })

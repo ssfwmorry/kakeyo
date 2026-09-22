@@ -43,10 +43,10 @@ export async function findPlanTypeRows(
 export async function findPlanTypeInScope(
   scope: SessionScope,
   id: Id
-): Promise<{ id: Id; sort: number } | null> {
+): Promise<{ id: Id; sort: number; pairId: Id | null } | null> {
   return prisma.planType.findFirst({
     where: { AND: [{ id }, buildScopeWhere(scope)] },
-    select: { id: true, sort: true }
+    select: { id: true, sort: true, pairId: true }
   });
 }
 

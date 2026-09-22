@@ -11,8 +11,8 @@ import {
 } from '@/lib/shared/types/formResult';
 import { recordLabels } from '../labels';
 import {
-  settleRecordsSchema,
-  settlementCreateSchema
+  settlementCreateSchema,
+  settleRecordsSchema
 } from '../schemas/settlement-schema';
 import * as service from '../server/services';
 import type { RecordError } from '../types';
@@ -65,7 +65,10 @@ export async function createSettlementRecordAction(
     price
   });
   revalidatePath(SUMMARY_PATH);
-  return { ...toResult(result, L.snackbar.created), submission: submission.reply() };
+  return {
+    ...toResult(result, L.snackbar.created),
+    submission: submission.reply()
+  };
 }
 
 // 複数 record を精算済みに更新。ids は Conform の配列フィールド（string[]）で届く。

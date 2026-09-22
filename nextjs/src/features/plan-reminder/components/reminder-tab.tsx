@@ -9,7 +9,11 @@ import { L } from '@/lib/shared/labels';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 import { deleteReminderAction } from '../actions';
 import { planColorHex } from '../color';
-import { ConditionType } from '../domain/reminder-condition';
+import {
+  BaseType,
+  ConditionType,
+  ReminderType
+} from '../domain/reminder-condition';
 import { planReminderLabels } from '../labels';
 import type { GroupedReminderList, ReminderItem } from '../types';
 import { ReminderDialog } from './reminder-dialog';
@@ -26,7 +30,11 @@ type ReminderTabProps = {
   isPair: boolean;
 };
 
-export function ReminderTab({ reminderList, colors, isPair }: ReminderTabProps) {
+export function ReminderTab({
+  reminderList,
+  colors,
+  isPair
+}: ReminderTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const items = isPair ? reminderList.pair : reminderList.self;
 
@@ -103,9 +111,11 @@ function ReminderCardView({ reminder }: ReminderCardViewProps) {
         </span>
         <span>
           ・{R.checkKeep}：
-          {reminder.reminderType === 10 ? R.keep : R.notKeep}
+          {reminder.reminderType === ReminderType.stock ? R.keep : R.notKeep}
         </span>
-        <span>・{R.nextPlan}：{describeCondition(reminder)}</span>
+        <span>
+          ・{R.nextPlan}：{describeCondition(reminder)}
+        </span>
       </CardContent>
     </Card>
   );
@@ -114,7 +124,7 @@ function ReminderCardView({ reminder }: ReminderCardViewProps) {
 // 条件の人間可読テキスト（現行 PlanReminder.vue の表示ロジック踏襲）。
 function describeCondition(reminder: ReminderItem): string {
   if (reminder.conditionType === ConditionType.month) {
-    const base = reminder.baseType === 5 ? R.baseNow : R.baseDate;
+    const base = reminder.baseType === BaseType.now ? R.baseNow : R.baseDate;
     return `${base}${R.from}${reminder.month ?? ''}${R.months}`;
   }
   // 月日: 来年の MM-DD。

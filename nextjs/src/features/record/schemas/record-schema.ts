@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { entityIdSchema } from '@/lib/shared/domain/entityId';
 import { priceSchema } from '@/lib/shared/domain/price';
 
 // note（記録入力）の record 登録・更新スキーマ（Conform + Zod）。
@@ -20,28 +21,23 @@ const optionalMemo = z
 
 // record upsert。id 空 = 新規、数値 = 更新。isPay / isInstead / isPair は hidden で送る。
 export const recordUpsertSchema = z.object({
-  id: z.coerce.number().int().positive().optional(),
+  // ID 群はデモの負 ID を許容する共有 entityIdSchema（0 のみ拒否）を使う。
+  id: entityIdSchema().optional(),
   // YYYY-MM-DD（JST の暦日）。startOfDayJst で timestamptz へ変換する。
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日付を選択してください'),
   isPay: z.stringbool(),
   isPair: z.stringbool(),
   isInstead: z.stringbool(),
-  methodId: z.coerce
-    .number({ error: '方法を選択してください' })
-    .int()
-    .positive(),
-  typeId: z.coerce
-    .number({ error: 'カテゴリを選択してください' })
-    .int()
-    .positive(),
-  subTypeId: z.coerce.number().int().positive().optional(),
+  methodId: entityIdSchema('方法を選択してください'),
+  typeId: entityIdSchema('カテゴリを選択してください'),
+  subTypeId: entityIdSchema().optional(),
   price: priceSchema,
   memo: optionalMemo
 });
 
 // 削除（id のみ）。
 export const recordDeleteSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: entityIdSchema()
 });
 
 export type RecordUpsertInput = z.infer<typeof recordUpsertSchema>;

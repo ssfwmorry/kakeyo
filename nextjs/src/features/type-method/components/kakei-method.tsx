@@ -89,6 +89,8 @@ export function KakeiMethod({ methodList, colors, isPair }: KakeiMethodProps) {
       </div>
 
       <MethodDialog
+        // defaultValue をプリフィルさせるため編集対象ごとにリマウントする。
+        key={dialog.kind === 'edit' ? dialog.card.id : 'new'}
         open={dialog.kind !== 'closed'}
         onOpenChange={(open) =>
           open ? undefined : setDialog({ kind: 'closed' })

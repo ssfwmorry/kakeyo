@@ -1,22 +1,16 @@
 import 'server-only';
-import {
-  withDemoRead,
-  withDemoWriteVoid
-} from '@/features/auth/server/demo';
+import { withDemoRead, withDemoWriteVoid } from '@/features/auth/server/demo';
 import { todayJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
 import { Prisma } from '@/prisma/generated/client';
 import {
+  ConditionType,
   calcNextReminderDate,
   ReminderType
 } from '../domain/reminder-condition';
-import {
-  groupPlanTypeList,
-  groupReminderList,
-  toPlanItems
-} from '../grouping';
+import { groupPlanTypeList, groupReminderList, toPlanItems } from '../grouping';
 import type {
   GroupedPlanTypeList,
   GroupedReminderList,
@@ -147,6 +141,12 @@ export async function swapPlanType(
       planTypeRepo.findPlanTypeInScope(session, nextId)
     ]);
     if (!a || !b) {
+      return err('notInScope');
+    }
+    // self(pairId=null) と pair(pairId!=null) を跨いだ入替を禁止する。
+    // 一覧は [{ pairId }, { sort }] 順で、跨ぎ入替は並び順を壊す（Server Action は
+    // 任意の 2 id を受けられるため service で防御する）。
+    if (a.pairId !== b.pairId) {
       return err('notInScope');
     }
     await planTypeRepo.swapPlanTypeSort(a, b);
@@ -300,18 +300,22 @@ export async function checkReminder(
     if (nextDate === null) {
       return err('unknown');
     }
-    // Stock 型のみ「現在の date」を予定として残す（現行 checkReminder 踏襲）。
+    // Stock 型かつ conditionType=MONTH（Nヶ月後指定）のときのみ「現在の date」を
+    // 予定として残す。旧 checkReminder は plan 挿入を else 節（MONTH 側）に置くため、
+    // MONTH_DAY（月日指定）では Stock でも plan を作らない（＝余分な予定を作らない）。
     // 所有列は reminder の所有に合わせる（pairId があればペア、なければ本人）。
-    const plan =
-      target.reminderType === ReminderType.stock
-        ? {
-            userId: target.pairId === null ? session.userUid : null,
-            pairId: target.pairId,
-            date: target.date,
-            name: target.name,
-            memo: target.memo
-          }
-        : null;
+    const isStockMonth =
+      target.reminderType === ReminderType.stock &&
+      target.conditionType === ConditionType.month;
+    const plan = isStockMonth
+      ? {
+          userId: target.pairId === null ? session.userUid : null,
+          pairId: target.pairId,
+          date: target.date,
+          name: target.name,
+          memo: target.memo
+        }
+      : null;
     await reminderRepo.checkReminderUpdate({
       reminderId: target.id,
       nextDate,

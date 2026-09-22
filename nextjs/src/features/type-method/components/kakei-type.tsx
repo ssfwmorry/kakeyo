@@ -47,6 +47,9 @@ export function KakeiType({ typeList, colors, isPair }: KakeiTypeProps) {
 
   const bucket = isPay ? typeList.pay : typeList.income;
   const cards = isPair ? bucket.pair : bucket.self;
+  // 編集対象を先に確定しておく（key によるリマウントと editing 受け渡しで共用）。
+  const editingType = typeDialog.kind === 'edit' ? typeDialog.card : undefined;
+  const editingSub = subDialog.kind === 'edit' ? subDialog.card : undefined;
 
   return (
     <section className='flex flex-col gap-3'>
@@ -95,6 +98,8 @@ export function KakeiType({ typeList, colors, isPair }: KakeiTypeProps) {
       </div>
 
       <TypeDialog
+        // defaultValue をプリフィルさせるため編集対象ごとにリマウントする。
+        key={String(editingType?.id)}
         open={typeDialog.kind !== 'closed'}
         onOpenChange={(open) =>
           open ? undefined : setTypeDialog({ kind: 'closed' })
@@ -102,16 +107,18 @@ export function KakeiType({ typeList, colors, isPair }: KakeiTypeProps) {
         colors={colors}
         isPay={isPay}
         isPair={isPair}
-        editing={typeDialog.kind === 'edit' ? typeDialog.card : undefined}
+        editing={editingType}
       />
       {subDialog.kind !== 'closed' ? (
         <SubTypeDialog
+          // defaultValue をプリフィルさせるため編集対象ごとにリマウントする。
+          key={String(editingSub?.id)}
           open
           onOpenChange={(open) =>
             open ? undefined : setSubDialog({ kind: 'closed' })
           }
           typeId={subDialog.typeId}
-          editing={subDialog.kind === 'edit' ? subDialog.card : undefined}
+          editing={editingSub}
         />
       ) : null}
     </section>

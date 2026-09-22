@@ -6,12 +6,6 @@ import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
 import { Prisma } from '@/prisma/generated/client';
 import { resolveRecordOwnership } from '../domain/record-fields';
-import {
-  demoPairedRecordList,
-  demoRecordList,
-  demoSummarizedRecordList
-} from './demo';
-import * as recordRepo from './repositories/record';
 import type {
   PairedRecordItem,
   RecordError,
@@ -19,6 +13,12 @@ import type {
   SummarizedRecordItem,
   SummarizedRecordQuery
 } from '../types';
+import {
+  demoPairedRecordList,
+  demoRecordList,
+  demoSummarizedRecordList
+} from './demo';
+import * as recordRepo from './repositories/record';
 
 // L2 record サービス層（server-only）。Server Action / Route から呼ぶ入口。
 // 戻りは Result<T, RecordError>（UI 文言は持たない）。取得は withDemoRead、
@@ -197,29 +197,28 @@ export async function settleRecords(
     return err('noTarget');
   }
   return withDemoWriteVoid(session.isDemo, async () => {
-    // 渡された id が全て自分/ペアの行か検証（他ペアの精算を書き換えさせない）。
+    // scope を where に AND した updateMany の件数が id 数と一致することで
+    // 「全て自分/ペアの行」を保証する（他ペアの精算を書き換えさせない）。
     const uniqueIds = [...new Set(ids)];
-    const inScope = await recordRepo.countRecordsInScope(session, uniqueIds);
-    if (inScope !== uniqueIds.length) {
+    const updated = await recordRepo.markRecordsSettled(session, uniqueIds);
+    if (updated !== uniqueIds.length) {
       return err('notInScope');
     }
-    await recordRepo.markRecordsSettled(uniqueIds);
     return ok(undefined);
   });
 }
 
-// record 削除。対象が scope 内か検証してから削除する。
+// record 削除。scope を where に AND した deleteMany で scope 保証を DB 条件に閉じ込める。
 export async function deleteRecord(
   session: SessionData,
   id: Id
 ): Promise<Result<void, RecordError>> {
   return withDemoWriteVoid(session.isDemo, async () => {
-    const target = await recordRepo.findRecordInScope(session, id);
-    if (!target) {
-      return err('notInScope');
-    }
     try {
-      await recordRepo.deleteRecordById(id);
+      const result = await recordRepo.deleteRecordById(session, id);
+      if (!result.ok) {
+        return err('notInScope');
+      }
       return ok(undefined);
     } catch (error) {
       return err(toDeleteError(error));

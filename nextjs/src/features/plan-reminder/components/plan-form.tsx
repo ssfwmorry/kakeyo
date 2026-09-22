@@ -127,14 +127,18 @@ function initialFormState(
   editing: PlanItem | undefined,
   initialDate: string | undefined,
   cards: PlanTypeCard[]
-): { isPeriod: boolean; startDate: string; endDate: string; planTypeId: string } {
+): {
+  isPeriod: boolean;
+  startDate: string;
+  endDate: string;
+  planTypeId: string;
+} {
   if (editing) {
     return {
       isPeriod: editing.startDate !== editing.endDate,
       startDate: editing.startDate,
       endDate: editing.endDate,
-      planTypeId:
-        editing.planTypeId != null ? String(editing.planTypeId) : ''
+      planTypeId: editing.planTypeId != null ? String(editing.planTypeId) : ''
     };
   }
   const fallbackDate = initialDate ?? '';
@@ -169,9 +173,7 @@ function PlanFormFooter({
       ) : (
         <span />
       )}
-      <Button type='submit'>
-        {editing ? L.snackbar.updated : L.snackbar.created}
-      </Button>
+      <Button type='submit'>{L.button.save}</Button>
     </div>
   );
 }

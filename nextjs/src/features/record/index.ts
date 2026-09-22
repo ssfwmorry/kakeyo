@@ -7,9 +7,9 @@
 //
 // 公開するのは Client Component と FE 型（他レーンが戻り型として参照する）のみ。
 
-export { NoteRecordForm } from './components/note-record-form';
-export type { NoteRecordDefault } from './components/note-record-form';
 export { colorHex } from './color';
+export type { NoteRecordDefault } from './components/note-record-form';
+export { NoteRecordForm } from './components/note-record-form';
 export { SETTLEMENT_DISPLAY } from './labels';
 export type {
   PairedRecordItem,

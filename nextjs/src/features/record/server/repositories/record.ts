@@ -1,6 +1,7 @@
 import 'server-only';
 import { prisma } from '@/lib/server/db/client';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
+import { startOfMonthJst, startOfNextMonthJst } from '@/lib/shared/domain/date';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { RecordType } from '@/lib/shared/types/recordType';
@@ -63,14 +64,18 @@ export type RecordUpsertInput = {
 // 取得系（グループ A: Prisma ORM）
 // ============================================================
 
-// get_record_list / get_summarized_record_list の共通 include（method 必須・
-// type/subType/color は任意・pair があるとき user 名を引く）。
+// get_record_list / get_summarized_record_list の共通 include。マッパーが読む列だけを
+// select で絞る（method/type の名前＋色名、subType 名、ペア相手の user 名。pair 行自体は
+// 使わない＝scalar の pairId で判定するため include しない）。他レーンの select 方式と統一。
 const recordInclude = {
-  method: { include: { colorClassification: true } },
-  type: { include: { colorClassification: true } },
-  subType: true,
-  pair: true,
-  user: true
+  method: {
+    select: { name: true, colorClassification: { select: { name: true } } }
+  },
+  type: {
+    select: { name: true, colorClassification: { select: { name: true } } }
+  },
+  subType: { select: { name: true } },
+  user: { select: { name: true } }
 } satisfies Prisma.RecordInclude;
 
 type RecordWithRelations = Prisma.RecordGetPayload<{
@@ -115,6 +120,9 @@ export async function getSummarizedRecordList(
       AND: [
         buildScopeWhere(scope),
         buildSummarizedYearMonthWhere(query.yearMonth),
+        // 旧 SQL は inner join types = type 未設定 record（精算 15 等）を除外する。
+        // is_pay フィルタ頼みの間接除外ではなく、除外意図を明示する。
+        { typeId: { not: null } },
         { isPay: query.isPay },
         buildSummarizedTargetWhere(query),
         buildSummarizedPairWhere(scope.userUid, query)
@@ -151,19 +159,19 @@ export async function getPairedRecordList(
 // 取得系: where 断片ヘルパ（集計 CASE WHEN の移植）
 // ============================================================
 
-// datetime を JST 暦月で絞るのは境界計算が絡むため service 層が [gte,lt] の Date で
-// 渡すのが本来だが、旧 RPC は to_char(datetime,'YYYY-MM') 一致。DB のタイムゾーンに
-// 依存しないよう、ここでは year/month の期間 [monthStart, nextMonthStart) を使う。
+// datetime を JST 暦月 [monthStart, nextMonthStart) で絞る。
+// 旧 RPC は to_char(cast(datetime as date),'YYYY-MM')＝DB(JST 運用)のローカル暦月一致。
+// 保存も startOfDayJst（JST 0:00）で行うため、読み取りも date.ts の JST 月境界に揃える
+// （UTC 境界だと JST 月初/月末の 9 時間分がズレて集計から漏れ/混入する）。
 function buildSummarizedYearMonthWhere(
   yearMonth: string
 ): Prisma.RecordWhereInput {
-  const [yearText, monthText] = yearMonth.split('-');
-  const year = Number(yearText);
-  const month = Number(monthText);
-  // JS の Date(UTC) で月境界を作る（DB の timestamptz と UTC で突合）。
-  const start = new Date(Date.UTC(year, month - 1, 1));
-  const next = new Date(Date.UTC(year, month, 1));
-  return { datetime: { gte: start, lt: next } };
+  return {
+    datetime: {
+      gte: startOfMonthJst(yearMonth),
+      lt: startOfNextMonthJst(yearMonth)
+    }
+  };
 }
 
 // isType による絞り込み対象（type/sub_type or method）。旧 RPC の
@@ -219,7 +227,10 @@ function toIsInstead(isPair: boolean, recordType: RecordType): boolean | null {
 }
 
 // 精算かどうか（個人 record は null）。
-function toIsSettlement(isPair: boolean, recordType: RecordType): boolean | null {
+function toIsSettlement(
+  isPair: boolean,
+  recordType: RecordType
+): boolean | null {
   if (!isPair) {
     return null;
   }
@@ -345,16 +356,6 @@ export async function findRecordInScope(
     datetime: row.datetime,
     plannedRecordId: row.plannedRecordId
   };
-}
-
-// 指定 id 群のうち scope 内の件数を数える（settleRecords の一括対象検証用）。
-export async function countRecordsInScope(
-  scope: SessionScope,
-  ids: Id[]
-): Promise<number> {
-  return prisma.record.count({
-    where: { AND: [{ id: { in: ids } }, buildScopeWhere(scope)] }
-  });
 }
 
 // ============================================================
@@ -485,15 +486,30 @@ export async function insertSettlementRecord(input: {
   });
 }
 
-// UPDATE（一括精算）。scope 内であることは service 層で検証済み前提。
-export async function markRecordsSettled(ids: Id[]): Promise<void> {
-  await prisma.record.updateMany({
-    where: { id: { in: ids } },
+// UPDATE（一括精算）。scope を where に AND し、更新できた件数を返す
+// （bank/memo と同じく scope 保証を mutation の DB 条件に閉じ込める。IDOR 防御）。
+export async function markRecordsSettled(
+  scope: SessionScope,
+  ids: Id[]
+): Promise<number> {
+  const result = await prisma.record.updateMany({
+    where: { AND: [{ id: { in: ids } }, buildScopeWhere(scope)] },
     data: { isSettled: true }
   });
+  return result.count;
 }
 
-// DELETE（1 件）。対象が scope 内であることは service 層で検証済み前提。
-export async function deleteRecordById(id: Id): Promise<void> {
-  await prisma.record.delete({ where: { id } });
+// DELETE（1 件）。scope を where に AND し、削除できたかを返す
+// （bank/memo と同パターン。scope 外の行は count===0 で notFound）。
+export async function deleteRecordById(
+  scope: SessionScope,
+  id: Id
+): Promise<{ ok: true } | { ok: false; error: 'notFound' }> {
+  const result = await prisma.record.deleteMany({
+    where: { AND: [{ id }, buildScopeWhere(scope)] }
+  });
+  if (result.count === 0) {
+    return { ok: false, error: 'notFound' };
+  }
+  return { ok: true };
 }

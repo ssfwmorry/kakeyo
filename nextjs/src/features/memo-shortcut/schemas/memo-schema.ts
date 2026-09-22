@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { entityIdSchema } from '@/lib/shared/domain/entityId';
 import { memoShortcutLabels } from '../labels';
 
 const { validation } = memoShortcutLabels;
@@ -26,7 +27,7 @@ export const memoFormSchema = z.object({
 
 export type MemoFormValue = z.infer<typeof memoFormSchema>;
 
-// TODO 削除。対象 id のみ（int PK）。
+// TODO 削除。対象 id のみ（int PK・デモの負 ID を許容する entityIdSchema）。
 export const memoDeleteSchema = z.object({
-  id: z.coerce.number().int().positive()
+  id: entityIdSchema()
 });

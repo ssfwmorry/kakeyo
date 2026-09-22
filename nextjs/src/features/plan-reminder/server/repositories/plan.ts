@@ -1,7 +1,7 @@
 import 'server-only';
 import { prisma } from '@/lib/server/db/client';
-import { startOfDayJst, toDateStringJst } from '@/lib/shared/domain/date';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
+import { startOfDayJst, toDateStringJst } from '@/lib/shared/domain/date';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
