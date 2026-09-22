@@ -28,24 +28,25 @@ export async function withDemoRead<T>(
 }
 
 // 更新系: デモ時は DB に触れず成功扱い（no-op）、そうでなければ実処理。
-export async function withDemoWrite<T>(
+// E は実処理の失敗分類を透過する（デモ成功時は ok なので E は現れない）。
+export async function withDemoWrite<T, E = string>(
   isDemo: boolean,
   demoResult: T,
-  real: () => Promise<Result<T>>
-): Promise<Result<T>> {
+  real: () => Promise<Result<T, E>>
+): Promise<Result<T, E>> {
   if (isDemo) {
-    return ok(demoResult);
+    return ok<T, E>(demoResult);
   }
   return real();
 }
 
-// 更新系（戻り値なし）: デモ時は no-op で成功。
-export async function withDemoWriteVoid(
+// 更新系（戻り値なし）: デモ時は no-op で成功。E は実処理の失敗分類を透過する。
+export async function withDemoWriteVoid<E = string>(
   isDemo: boolean,
-  real: () => Promise<Result>
-): Promise<Result> {
+  real: () => Promise<Result<void, E>>
+): Promise<Result<void, E>> {
   if (isDemo) {
-    return ok(undefined);
+    return ok<void, E>(undefined);
   }
   return real();
 }
