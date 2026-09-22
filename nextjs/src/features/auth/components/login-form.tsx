@@ -10,7 +10,10 @@ import {
   loginAction,
   resetPasswordAction
 } from '../actions/login-actions';
+import { authLabels } from '../labels';
 import { loginSchema, resetPasswordSchema } from '../schemas/login-schema';
+
+const { appName, field, action } = authLabels;
 
 // login フォーム（Conform + Zod、通知はトースト）。
 // login / reset / demo をそれぞれ独立したフォーム・アクションとして扱う
@@ -37,7 +40,7 @@ export function LoginForm() {
 
   return (
     <div className='flex w-full max-w-sm flex-col gap-8'>
-      <h1 className='text-2xl font-semibold'>かけよ</h1>
+      <h1 className='text-2xl font-semibold'>{appName}</h1>
 
       <form
         {...getFormProps(loginForm)}
@@ -45,19 +48,19 @@ export function LoginForm() {
         className='flex flex-col gap-4'
       >
         <FormField
-          label='メールアドレス'
+          label={field.email}
           field={loginFields.email}
           type='email'
           autoComplete='email'
         />
         <FormField
-          label='パスワード'
+          label={field.password}
           field={loginFields.password}
           type='password'
           autoComplete='current-password'
         />
         <Button type='submit' disabled={isLoggingIn}>
-          ログイン
+          {action.login}
         </Button>
       </form>
 
@@ -67,7 +70,7 @@ export function LoginForm() {
         className='flex flex-col gap-2'
       >
         <FormField
-          label='パスワード再設定（登録メール宛に送信）'
+          label={field.resetPassword}
           field={resetFields.email}
           type='email'
           autoComplete='email'
@@ -78,7 +81,7 @@ export function LoginForm() {
           className='px-0'
           disabled={isResetting}
         >
-          再設定メールを送る
+          {action.sendReset}
         </Button>
       </form>
 
@@ -89,7 +92,7 @@ export function LoginForm() {
           className='w-full'
           disabled={isDemoLoggingIn}
         >
-          デモページを見る
+          {action.demo}
         </Button>
       </form>
     </div>

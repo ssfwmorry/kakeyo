@@ -4,7 +4,10 @@
 
 export const authRoutes = {
   login: '/login',
+  // TODO(別チケット): /note は未実装のため現状デモ/通常ログイン後に 404 になる。
+  // /note 実装時にこのまま有効化。それまでの暫定遷移先が要るなら /bank 等へ差し替える。
   afterLogin: '/note',
+  // TODO(別チケット): /calendar も未実装（app 配下にルートなし）。実装時に有効化。
   // ログイン済みでルート（/）に来たときのホーム。
   home: '/calendar'
 } as const;

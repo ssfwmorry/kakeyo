@@ -7,12 +7,15 @@ import {
   type FormActionResult,
   ToastType
 } from '@/lib/shared/types/formResult';
+import { authLabels } from '../labels';
 import { loginSchema, resetPasswordSchema } from '../schemas/login-schema';
 import {
   sendResetPasswordEmail,
   signInWithPassword
 } from '../server/authActions';
 import { authRoutes } from '../shared/routes';
+
+const { toast } = authLabels;
 
 // login 画面の Server Actions（Conform + Zod、通知はトースト）。
 // 戻り値は FormActionResult（submission=field 検証 / toast=成否通知）。
@@ -37,7 +40,7 @@ export async function loginAction(
       submission: submission.reply(),
       toast: {
         type: ToastType.error,
-        message: 'ログインに失敗しました。入力内容をご確認ください'
+        message: toast.loginFailed
       }
     };
   }
@@ -59,14 +62,14 @@ export async function resetPasswordAction(
   if (error) {
     return {
       submission: submission.reply(),
-      toast: { type: ToastType.error, message: 'メール送信に失敗しました' }
+      toast: { type: ToastType.error, message: toast.resetSendFailed }
     };
   }
   return {
     submission: submission.reply(),
     toast: {
       type: ToastType.success,
-      message: 'パスワード再設定メールを送信しました'
+      message: toast.resetSent
     }
   };
 }
@@ -79,7 +82,7 @@ export async function demoLoginAction(): Promise<FormActionResult> {
     return {
       toast: {
         type: ToastType.error,
-        message: 'デモログインは現在利用できません'
+        message: toast.demoUnavailable
       }
     };
   }
@@ -90,7 +93,7 @@ export async function demoLoginAction(): Promise<FormActionResult> {
   );
   if (error || !user) {
     return {
-      toast: { type: ToastType.error, message: 'デモログインに失敗しました' }
+      toast: { type: ToastType.error, message: toast.demoFailed }
     };
   }
 
