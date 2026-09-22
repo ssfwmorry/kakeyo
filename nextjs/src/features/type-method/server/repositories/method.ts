@@ -1,11 +1,14 @@
 import 'server-only';
+import { prisma } from '@/lib/server/db/client';
+import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
-// L4 method レーンの「被参照 I/F」先置きスタブ（凍結資産の I/F 部分）。
-// L2 record / L6 summary が参照するため型のみ先に確定。中身は L4 が実装する。
+// L4 method レーンの「被参照 I/F」（凍結資産の I/F 部分）。
+// L2 record / L6 summary が参照するため型・シグネチャは固定。
+// 取得系は必ず buildScopeWhere を通す（scope 漏れ = 情報漏洩）。
 
-// is_pay は送金方法（both）の場合 null。
+// is_pay は送金方法（精算 = both）の場合 null。
 export type MethodSummary = {
   id: Id;
   name: string;
@@ -13,14 +16,102 @@ export type MethodSummary = {
   colorClassificationId: Id;
 };
 
-const notImplemented = (name: string) =>
-  new Error(
-    `methodRepository.${name} は L4 エージェントが実装します（I/F スタブ）`
-  );
+// 画面用リッチ取得（services 層）が使う行データ。sort・is_pair 判定用の pairId を含む。
+export type MethodRow = {
+  id: Id;
+  name: string;
+  isPay: boolean | null;
+  sort: number;
+  colorClassificationId: Id;
+  pairId: Id | null;
+};
 
-// READ
+// READ（被参照 I/F）。他レーン用の薄い配列。
 export async function getMethodList(
-  _scope: SessionScope
+  scope: SessionScope
 ): Promise<MethodSummary[]> {
-  throw notImplemented('getMethodList');
+  const rows = await findMethodRows(scope);
+  return rows.map((method) => ({
+    id: method.id,
+    name: method.name,
+    isPay: method.isPay,
+    colorClassificationId: method.colorClassificationId
+  }));
+}
+
+// READ（画面用）。色分け・並べ替え・is_pair 判定に必要な列を含めて返す。
+export async function findMethodRows(
+  scope: SessionScope
+): Promise<MethodRow[]> {
+  const rows = await prisma.method.findMany({
+    where: buildScopeWhere(scope),
+    orderBy: { sort: 'asc' }
+  });
+  return rows.map((method) => ({
+    id: method.id,
+    name: method.name,
+    isPay: method.isPay,
+    sort: method.sort,
+    colorClassificationId: method.colorClassificationId,
+    pairId: method.pairId
+  }));
+}
+
+// scope 検証: 指定 method が scope 内か。swap / delete の対象確認に使う。
+export async function findMethodInScope(
+  scope: SessionScope,
+  id: Id
+): Promise<{ id: Id; sort: number } | null> {
+  return prisma.method.findFirst({
+    where: { AND: [{ id }, buildScopeWhere(scope)] },
+    select: { id: true, sort: true }
+  });
+}
+
+// CREATE / UPDATE
+export async function insertMethod(input: {
+  name: string;
+  isPay: boolean | null;
+  colorClassificationId: Id;
+  userId: string | null;
+  pairId: Id | null;
+}): Promise<void> {
+  await prisma.method.create({
+    data: {
+      name: input.name,
+      isPay: input.isPay,
+      colorClassificationId: input.colorClassificationId,
+      userId: input.userId,
+      pairId: input.pairId
+    }
+  });
+}
+
+export async function updateMethod(input: {
+  id: Id;
+  name: string;
+  colorClassificationId: Id;
+}): Promise<void> {
+  await prisma.method.update({
+    where: { id: input.id },
+    data: {
+      name: input.name,
+      colorClassificationId: input.colorClassificationId
+    }
+  });
+}
+
+export async function deleteMethodById(id: Id): Promise<void> {
+  await prisma.method.delete({ where: { id } });
+}
+
+// SWAP（2 行の sort を入替）。両行が scope 内であることは service 層で検証済み前提。
+export async function swapMethodSort(
+  a: { id: Id; sort: number },
+  b: { id: Id; sort: number }
+): Promise<void> {
+  await prisma.$transaction([
+    prisma.method.update({ where: { id: a.id }, data: { sort: b.sort } }),
+    prisma.method.update({ where: { id: b.id }, data: { sort: a.sort } })
+  ]);
 }

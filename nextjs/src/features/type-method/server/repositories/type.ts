@@ -1,15 +1,14 @@
 import 'server-only';
+import { prisma } from '@/lib/server/db/client';
+import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
-// L4 type/method レーンの「被参照 I/F」先置きスタブ（凍結資産の I/F 部分）。
-// L2 record / L6 summary / L8 shortcut が参照するため、シグネチャと戻り型だけを
-// 先に確定し中身は L4 が実装する。
-// 【L4 実装者へ】型・シグネチャは他レーンの前提。変更が要る場合はオーケストレータへ。
-// 取得系は必ず buildScopeWhere を通すこと。
+// L4 type/method レーンの「被参照 I/F」（凍結資産の I/F 部分）。
+// L2 record / L6 summary / L8 shortcut が参照するため、シグネチャと戻り型は固定。
+// 取得系は必ず buildScopeWhere を通す（scope 漏れ = 情報漏洩）。
 
-// 整形済みカテゴリ（サブカテゴリ・色込み）。詳細な整形（income/pay × self/pair の
-// グルーピング）は L4 で決めるが、他レーンが参照する最小の形をここで固定する。
+// 整形済みカテゴリ（サブカテゴリ・色込み）。他レーンが参照する最小の形。
 export type TypeWithSubTypes = {
   id: Id;
   name: string;
@@ -23,14 +22,161 @@ export type SubTypeSummary = {
   name: string;
 };
 
-const notImplemented = (name: string) =>
-  new Error(
-    `typeRepository.${name} は L4 エージェントが実装します（I/F スタブ）`
-  );
+// 画面用リッチ取得（services 層）が使う行データ。被参照 I/F を太らせないよう
+// ここで公開する。色名・sort・is_pair を含む生に近い行。
+export type TypeRow = {
+  id: Id;
+  name: string;
+  isPay: boolean;
+  sort: number;
+  colorClassificationId: Id;
+  pairId: Id | null;
+  subTypes: SubTypeRow[];
+};
 
-// READ
+export type SubTypeRow = {
+  id: Id;
+  name: string;
+  sort: number;
+};
+
+// READ（被参照 I/F）。他レーン用の薄い配列。sub_type は {id,name} のみに落とす。
 export async function getTypeList(
-  _scope: SessionScope
+  scope: SessionScope
 ): Promise<TypeWithSubTypes[]> {
-  throw notImplemented('getTypeList');
+  const rows = await findTypeRows(scope);
+  return rows.map((type) => ({
+    id: type.id,
+    name: type.name,
+    isPay: type.isPay,
+    colorClassificationId: type.colorClassificationId,
+    subTypes: type.subTypes.map((sub) => ({ id: sub.id, name: sub.name }))
+  }));
+}
+
+// READ（画面用）。色分け・並べ替え・is_pair 判定に必要な列を含めて返す。
+export async function findTypeRows(scope: SessionScope): Promise<TypeRow[]> {
+  const rows = await prisma.type.findMany({
+    where: buildScopeWhere(scope),
+    include: { subTypes: { orderBy: { sort: 'asc' } } },
+    orderBy: { sort: 'asc' }
+  });
+  return rows.map((type) => ({
+    id: type.id,
+    name: type.name,
+    isPay: type.isPay,
+    sort: type.sort,
+    colorClassificationId: type.colorClassificationId,
+    pairId: type.pairId,
+    subTypes: type.subTypes.map((sub) => ({
+      id: sub.id,
+      name: sub.name,
+      sort: sub.sort
+    }))
+  }));
+}
+
+// scope 検証: 指定 type が scope 内か。swap / delete の対象確認に使う。
+export async function findTypeInScope(
+  scope: SessionScope,
+  id: Id
+): Promise<{ id: Id; sort: number } | null> {
+  return prisma.type.findFirst({
+    where: { AND: [{ id }, buildScopeWhere(scope)] },
+    select: { id: true, sort: true }
+  });
+}
+
+// scope 検証: 指定 sub_type の親 type が scope 内か。
+export async function findSubTypeInScope(
+  scope: SessionScope,
+  id: Id
+): Promise<{ id: Id; sort: number } | null> {
+  const sub = await prisma.subType.findFirst({
+    where: { id, type: buildScopeWhere(scope) },
+    select: { id: true, sort: true }
+  });
+  return sub;
+}
+
+// CREATE / UPDATE
+export async function insertType(input: {
+  name: string;
+  isPay: boolean;
+  colorClassificationId: Id;
+  userId: string | null;
+  pairId: Id | null;
+}): Promise<void> {
+  await prisma.type.create({
+    data: {
+      name: input.name,
+      isPay: input.isPay,
+      colorClassificationId: input.colorClassificationId,
+      userId: input.userId,
+      pairId: input.pairId
+    }
+  });
+}
+
+export async function updateType(input: {
+  id: Id;
+  name: string;
+  colorClassificationId: Id;
+}): Promise<void> {
+  await prisma.type.update({
+    where: { id: input.id },
+    data: {
+      name: input.name,
+      colorClassificationId: input.colorClassificationId
+    }
+  });
+}
+
+export async function deleteTypeById(id: Id): Promise<void> {
+  await prisma.type.delete({ where: { id } });
+}
+
+// SUB TYPE CREATE / UPDATE / DELETE
+export async function insertSubType(input: {
+  typeId: Id;
+  name: string;
+}): Promise<void> {
+  await prisma.subType.create({
+    data: { typeId: input.typeId, name: input.name }
+  });
+}
+
+export async function updateSubType(input: {
+  id: Id;
+  name: string;
+}): Promise<void> {
+  await prisma.subType.update({
+    where: { id: input.id },
+    data: { name: input.name }
+  });
+}
+
+export async function deleteSubTypeById(id: Id): Promise<void> {
+  await prisma.subType.delete({ where: { id } });
+}
+
+// SWAP（2 行の sort を入替）。両行が scope 内であることは service 層で検証済み前提。
+export async function swapTypeSort(
+  a: { id: Id; sort: number },
+  b: { id: Id; sort: number }
+): Promise<void> {
+  await prisma.$transaction([
+    prisma.type.update({ where: { id: a.id }, data: { sort: b.sort } }),
+    prisma.type.update({ where: { id: b.id }, data: { sort: a.sort } })
+  ]);
+}
+
+export async function swapSubTypeSort(
+  a: { id: Id; sort: number },
+  b: { id: Id; sort: number }
+): Promise<void> {
+  await prisma.$transaction([
+    prisma.subType.update({ where: { id: a.id }, data: { sort: b.sort } }),
+    prisma.subType.update({ where: { id: b.id }, data: { sort: a.sort } })
+  ]);
 }
