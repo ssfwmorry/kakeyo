@@ -21,6 +21,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { ColorClassification } from '@/features/master';
 import { L } from '@/lib/shared/labels';
 import { insertReminderAction } from '../actions';
+import { dayOptionsForMonth, daysInMonthFixed } from '../domain/month-days';
 import { planReminderLabels } from '../labels';
 import {
   BaseType,
@@ -38,8 +39,6 @@ const { reminder: R, entity } = planReminderLabels;
 
 // 〜ヶ月後の選択肢（1〜12）。月日指定の「月」も同じ 1〜12。
 const MONTH_VALUES = Array.from({ length: 12 }, (_, i) => i + 1);
-// 月日指定の「日」（1〜31。厳密な月末判定はしない＝現行も日数のみ）。
-const DAY_VALUES = Array.from({ length: 31 }, (_, i) => i + 1);
 
 type ReminderDialogProps = {
   open: boolean;
@@ -75,6 +74,18 @@ export function ReminderDialog({
   // 月日 'MM-DD'（monthDay 指定時のみ送る）。
   const monthDay = `${String(monthPart).padStart(2, '0')}-${String(dayPart).padStart(2, '0')}`;
   const isMonth = conditionType === ConditionType.month;
+
+  // 「日」候補は選択中の月に連動させ、存在しない月日（4/31・2/30 等）を選べなくする（旧 DaysByMonth 相当）。
+  const dayOptions = dayOptionsForMonth(monthPart);
+
+  // 月を切り替えたとき、現在の日がその月末を超えていたら末日へ丸める（例: 1/31 → 2 月選択で 2/28）。
+  const changeMonthPart = (nextMonth: number) => {
+    setMonthPart(nextMonth);
+    const lastDay = daysInMonthFixed(nextMonth);
+    if (dayPart > lastDay) {
+      setDayPart(lastDay);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -184,9 +195,7 @@ export function ReminderDialog({
             <div className='flex items-center gap-2'>
               <NativeSelect
                 value={monthPart}
-                onChange={(v) => {
-                  setMonthPart(v);
-                }}
+                onChange={changeMonthPart}
                 options={MONTH_VALUES}
                 label={R.month}
               />
@@ -194,7 +203,7 @@ export function ReminderDialog({
               <NativeSelect
                 value={dayPart}
                 onChange={setDayPart}
-                options={DAY_VALUES}
+                options={dayOptions}
                 label={R.day}
               />
               {R.day}

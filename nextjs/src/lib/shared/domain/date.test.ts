@@ -66,6 +66,32 @@ describe('endOfDayJst', () => {
   });
 });
 
+// C-8: 月末最終秒のレコードが月次範囲（gte startOfMonth .. lt startOfNextMonth）に
+// 取りこぼされないことを、境界の Date 比較で明示的に保証する。
+describe('月次範囲の境界包含（gte..lt）', () => {
+  it('月末 JST 23:59:59.999 のレコードは当月範囲に含まれ、翌月範囲には含まれない', () => {
+    // 2024-02（うるう年）の月末最終ミリ秒 = 2024-02-29 23:59:59.999 JST = 2024-02-29T14:59:59.999Z
+    const monthEnd = endOfDayJst('2024-02-29');
+    const start = startOfMonthJst('2024-02');
+    const nextStart = startOfNextMonthJst('2024-02');
+
+    // 当月範囲 [start, nextStart) に月末最終秒が含まれる（gte かつ lt）。
+    expect(monthEnd.getTime()).toBeGreaterThanOrEqual(start.getTime());
+    expect(monthEnd.getTime()).toBeLessThan(nextStart.getTime());
+
+    // 翌月の下限（= 当月の上限）は当月末最終秒より後（1ms 差で取りこぼさない）。
+    expect(nextStart.getTime() - monthEnd.getTime()).toBe(1);
+  });
+
+  it('翌月初 JST 0:00 ちょうどのレコードは当月に含まれず翌月に含まれる（半開区間の境界）', () => {
+    // 2024-03-01 00:00 JST = 2024-02-29T15:00:00Z（= startOfNextMonthJst('2024-02')）
+    const nextMonthStart = startOfMonthJst('2024-03');
+    const febNextStart = startOfNextMonthJst('2024-02');
+    // 当月上限（lt）に一致するため当月には含まれない一方、翌月の下限（gte）に一致して含まれる。
+    expect(nextMonthStart.getTime()).toBe(febNextStart.getTime());
+  });
+});
+
 describe('dateInMonthJst', () => {
   it('前月の指定日を YYYY-MM-DD で返す（カレンダー範囲の下限）', () => {
     // 2024-03 の前月(2月)21日

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/chart';
 import { fetchSubTypeAction, fetchTypePeriodAction } from '../actions';
 import type { StackShowData } from '../domain/chart-data';
-import { currentYear, yearLabel } from '../domain/period';
+import { currentYear, shiftYear, yearLabel } from '../domain/period';
 import type { TypeChipsByQuadrant } from '../types';
 import { PeriodNav } from './period-nav';
 
@@ -128,12 +128,12 @@ export function SummaryBarType({ isPair, chips }: SummaryBarTypeProps) {
         label={yearLabel(year)}
         disabled={isPending}
         onPrev={() => {
-          const next = year - 1;
+          const next = shiftYear(year, -1);
           setYear(next);
           refetch({ year: next, isPay, typeId: selectedTypeId });
         }}
         onNext={() => {
-          const next = year + 1;
+          const next = shiftYear(year, 1);
           setYear(next);
           refetch({ year: next, isPay, typeId: selectedTypeId });
         }}

@@ -19,7 +19,7 @@ import {
 import { fetchPayIncomeAction } from '../actions';
 import type { PayIncomeShowData } from '../domain/chart-data';
 import { toShowPrefixStr, toShowStr } from '../domain/format';
-import { currentYear, yearLabel } from '../domain/period';
+import { currentYear, shiftYear, yearLabel } from '../domain/period';
 import { PeriodNav } from './period-nav';
 
 // 推移 > 全体タブ（旧 SummaryBar.vue）。年次の月別 支出/収支 棒グラフ + テーブル。
@@ -119,12 +119,12 @@ export function SummaryBar({ isPair, isExistPair }: SummaryBarProps) {
         subtitle={subtitle}
         disabled={isPending}
         onPrev={() => {
-          const next = year - 1;
+          const next = shiftYear(year, -1);
           setYear(next);
           refetch({ year: next, isIncludeInstead });
         }}
         onNext={() => {
-          const next = year + 1;
+          const next = shiftYear(year, 1);
           setYear(next);
           refetch({ year: next, isIncludeInstead });
         }}

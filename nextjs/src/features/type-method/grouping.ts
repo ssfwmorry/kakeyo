@@ -71,6 +71,9 @@ function toMethodGroupKey(isPay: boolean | null): 'pay' | 'income' | 'both' {
 }
 
 // method 行を支払/受取/精算 × self/pair にグルーピングする。
+// 精算（both）はペア共有専用で self は常に空にする（旧 getMethodList の both.self: [] 固定を踏襲）。
+// 個人所有（isPair=false）の精算 method は正常運用では作られないが、旧データ由来のものが
+// あっても self 側へ漏らさない（GroupedMethodList の「both.self は常に空」契約を実装で保証）。
 export function groupMethodList(
   rows: MethodRow[],
   colors: ColorClassification[]
@@ -83,7 +86,13 @@ export function groupMethodList(
   };
   for (const row of rows) {
     const card = toMethodCard(row, colorMap);
-    const bucket = grouped[toMethodGroupKey(row.isPay)];
+    const groupKey = toMethodGroupKey(row.isPay);
+    if (groupKey === 'both') {
+      // 精算は pair 側にのみ寄せる（self は固定で空）。
+      grouped.both.pair.push(card);
+      continue;
+    }
+    const bucket = grouped[groupKey];
     const target = card.isPair ? bucket.pair : bucket.self;
     target.push(card);
   }

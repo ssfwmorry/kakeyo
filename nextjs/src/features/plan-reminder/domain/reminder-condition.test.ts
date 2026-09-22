@@ -69,6 +69,42 @@ describe('calcNextReminderDate', () => {
     expect(result).toBe('2027-02-10');
   });
 
+  it('MONTH + DATE: うるう年は 2/29 まで clamp する（2024/1/31 + 1 ヶ月 = 2/29）', () => {
+    const result = calcNextReminderDate({
+      conditionType: ConditionType.month,
+      month: 1,
+      monthDay: null,
+      baseType: BaseType.date,
+      currentDate: '2024-01-31',
+      today: '2026-09-22'
+    });
+    expect(result).toBe('2024-02-29');
+  });
+
+  it('MONTH + DATE: 平年は 2/28 に clamp（2025/1/31 + 1 ヶ月 = 2/28）', () => {
+    const result = calcNextReminderDate({
+      conditionType: ConditionType.month,
+      month: 1,
+      monthDay: null,
+      baseType: BaseType.date,
+      currentDate: '2025-01-31',
+      today: '2026-09-22'
+    });
+    expect(result).toBe('2025-02-28');
+  });
+
+  it('MONTH + DATE: 100 の倍数年（2100）は平年扱いで 2/28（グレゴリオ暦規則）', () => {
+    const result = calcNextReminderDate({
+      conditionType: ConditionType.month,
+      month: 1,
+      monthDay: null,
+      baseType: BaseType.date,
+      currentDate: '2100-01-31',
+      today: '2026-09-22'
+    });
+    expect(result).toBe('2100-02-28');
+  });
+
   it('必須項目欠落は null', () => {
     expect(
       calcNextReminderDate({

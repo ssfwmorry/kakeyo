@@ -10,7 +10,7 @@ import { SETTLEMENT_DISPLAY } from '../labels';
 
 // record 一覧カード（旧 components/RecordCard.vue の移植・record ドメインの表示部品）。
 // records 明細画面（SummarizedRecordItem）と calendar 日別一覧（RecordListItem）で共用する。
-// 旧の情報密度を復元する: 種別色マーカー(共有アイコン内包)＋種別＞サブ＋定期アイコン、
+// 旧の情報密度を復元する: 種別色マーカー(共有アイコン内包)＋種別ーサブ＋定期アイコン、
 // 方法名(方法色/共有)・相手名、メモ、金額(大・収入は青字・円)。編集は isEnableEdit のみ。
 //
 // 型は両一覧が満たす共通フィールドで受ける（isSettlement は SummarizedRecordItem に無いため
@@ -39,10 +39,11 @@ type RecordCardProps = {
   onEdit?: () => void;
 };
 
-// 種別 ＞ サブ を連結（精算/未設定は '精算' 補完）。旧 typeAndSubtype 相当。
+// 種別 ー サブ を連結（精算/未設定は '精算' 補完）。旧 utils/string.ts の typeAndSubtype
+// に合わせ、一覧カードの区切りは全角長音 ' ー '（旧 RecordCard.vue と同じ表示）にする。
 function typeAndSubType(record: RecordCardItem): string {
   const type = record.typeName ?? '精算';
-  return record.subTypeName ? `${type} ＞ ${record.subTypeName}` : type;
+  return record.subTypeName ? `${type} ー ${record.subTypeName}` : type;
 }
 
 export function RecordCard({ record, onEdit }: RecordCardProps) {
@@ -60,7 +61,7 @@ export function RecordCard({ record, onEdit }: RecordCardProps) {
         !record.isSelf && 'opacity-60'
       )}
     >
-      {/* 上段: 種別色マーカー(共有内包) ＋ 種別＞サブ ＋ 定期アイコン、右に編集 */}
+      {/* 上段: 種別色マーカー(共有内包) ＋ 種別ーサブ ＋ 定期アイコン、右に編集 */}
       <div className='flex items-center justify-between gap-2'>
         <div className='flex items-center gap-2'>
           <ShareBadge

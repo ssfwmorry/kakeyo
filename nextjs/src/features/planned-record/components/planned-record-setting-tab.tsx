@@ -84,7 +84,7 @@ function PlannedRecordCardView({
           <span className='flex flex-col'>
             <span className='text-sm'>
               {item.dayClassificationName}・{item.typeName}
-              {item.subTypeName ? ` ＞ ${item.subTypeName}` : ''}
+              {item.subTypeName ? ` ー ${item.subTypeName}` : ''}
             </span>
             <span className='text-xs text-muted-foreground'>
               {item.memo ?? ''} {amount}
