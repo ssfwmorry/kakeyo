@@ -42,3 +42,6 @@ next-env.d.ts
 
 # prisma generated client
 /prisma/generated/
+
+# screenshots (動作確認用の一時ファイル)
+/.screenshots/
