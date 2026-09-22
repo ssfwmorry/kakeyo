@@ -25,6 +25,13 @@ import { PeriodNav } from './period-nav';
 // 推移 > 全体タブ（旧 SummaryBar.vue）。年次の月別 支出/収支 棒グラフ + テーブル。
 // 収支/支出のみトグルは取得済みデータの表示切替（再取得しない）。立替込みは再取得する。
 
+// 棒グラフの系列設定（props/state に依存しない定数）。ChartContainer が
+// --color-payAndIncome / --color-pay を供給し、Bar が dataKey で切り替える。
+const CHART_CONFIG: ChartConfig = {
+  payAndIncome: { label: '収支', color: '#2196f3' },
+  pay: { label: '支出', color: '#2196f3' }
+};
+
 type SummaryBarProps = {
   isPair: boolean;
   isExistPair: boolean;
@@ -58,10 +65,6 @@ export function SummaryBar({ isPair, isExistPair }: SummaryBarProps) {
   }, [isPair]);
 
   const dataKey = isPayAndIncome ? 'payAndIncome' : 'pay';
-  const config: ChartConfig = {
-    payAndIncome: { label: '収支', color: '#2196f3' },
-    pay: { label: '支出', color: '#2196f3' }
-  };
   const subtitle = isPayAndIncome
     ? `合計: ${toShowPrefixStr(-1 * data.sumPayAndIncome)} 円`
     : `合計: ${toShowStr(data.sumPay)} 円`;
@@ -128,7 +131,7 @@ export function SummaryBar({ isPair, isExistPair }: SummaryBarProps) {
       />
 
       {data.rows.length > 0 ? (
-        <ChartContainer config={config} className='aspect-video w-full'>
+        <ChartContainer config={CHART_CONFIG} className='aspect-video w-full'>
           <BarChart data={data.rows} margin={{ left: 4, right: 4, top: 8 }}>
             <CartesianGrid vertical={false} />
             <XAxis

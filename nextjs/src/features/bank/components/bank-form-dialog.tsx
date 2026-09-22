@@ -3,6 +3,7 @@
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { FormField } from '@/components/form/form-field';
+import { useCloseOnSuccess } from '@/components/form/use-close-on-success';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +20,6 @@ import { bankLabels } from '../labels';
 import { bankFormSchema } from '../schemas/bank-schema';
 import type { BankItem } from '../types';
 import { BankColorPicker } from './bank-color-picker';
-import { useCloseOnSuccess } from './use-close-on-success';
 
 // 口座（bank）の追加・編集ダイアログ（1 フォーム = 1 スキーマ = 1 useForm）。
 // type-method の TypeDialog を手本にする。名前は FormField、色は BankColorPicker。

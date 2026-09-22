@@ -1,10 +1,11 @@
 import 'server-only';
 import { withDemoRead, withDemoWriteVoid } from '@/features/auth/server/demo';
 import { getColorClassificationList } from '@/features/master/server/repositories/colorClassification';
+import { isForeignKeyError } from '@/lib/server/db/errors';
+import { resolveOwner } from '@/lib/server/pair/owner';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
-import { Prisma } from '@/prisma/generated/client';
 import { groupMethodList, groupTypeList } from '../grouping';
 import type {
   GroupedMethodList,
@@ -21,27 +22,7 @@ import * as typeRepo from './repositories/type';
 
 // FK 制約違反（P2003）を捕捉して foreignKey へ写す。それ以外は unknown。
 function toDeleteError(error: unknown): TypeMethodError {
-  if (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === 'P2003'
-  ) {
-    return 'foreignKey';
-  }
-  return 'unknown';
-}
-
-// isPair のとき pairId 必須。個人のとき userId のみ。作成時の所有列を決める。
-function resolveOwner(
-  session: SessionData,
-  isPair: boolean
-): Result<{ userId: string | null; pairId: Id | null }, TypeMethodError> {
-  if (isPair) {
-    if (session.pairId === null) {
-      return err('pairRequired');
-    }
-    return ok({ userId: null, pairId: session.pairId });
-  }
-  return ok({ userId: session.userUid, pairId: null });
+  return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
 
 // ===== READ（画面用リッチ取得） =====

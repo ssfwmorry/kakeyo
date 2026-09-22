@@ -1,0 +1,51 @@
+import 'server-only';
+import { withDemoRead } from '@/features/auth/server/demo';
+import {
+  getPlanList,
+  getReminderList
+} from '@/features/plan-reminder/server/services';
+import { getRecordListForRange } from '@/features/record/server/services';
+import { getMonthSum } from '@/features/summary/server/repositories/summary';
+import type { SessionData } from '@/lib/shared/types/auth';
+import { buildDaySumList } from '../domain/day-sum';
+import { calcCalendarRange } from '../domain/range';
+import type { CalendarMonthData } from '../types';
+
+// calendar 統合レーン所有の取得サービス（server-only・純粋読み取り）。
+// ★方針（移行方針確定書 §7）: 表示から副作用を排除する。旧 updateRange が呼んでいた
+//   postRecords（定期 record の実体化 INSERT）は絶対に呼ばない（定期実体化は Cron に
+//   移譲済み。/api/cron/post-records）。ここは record/plan/reminder/月収支の取得のみ。
+//
+// scope（userUid/pairId）は session から確定し、各サービス/リポジトリが自分/ペアに絞る。
+// getMonthSum は summary services に未公開のため repositories を直 import する
+//   （server-only 実体の直 import は AGENTS の barrel 方針でも server 層間は許容される）。
+
+// ひと月分のカレンダーデータ（日別収支・予定・リマインダー・月収支合計）を取得する。
+export async function getCalendarMonth(
+  session: SessionData,
+  yearMonth: string
+): Promise<CalendarMonthData> {
+  const range = calcCalendarRange(yearMonth);
+
+  const [records, plans, reminderGroups, monthSum] = await Promise.all([
+    getRecordListForRange(session, range.startDate, range.endDate),
+    getPlanList(session, { start: range.startStr, end: range.endStr }),
+    getReminderList(session),
+    // getMonthSum はデモでも実 DB に触れないよう withDemoRead で 0 を返す
+    // （デモは書き込みだけでなく集計も no-op 相当にし副作用/依存を持たせない）。
+    withDemoRead(session.isDemo, 0, () =>
+      getMonthSum(
+        { userUid: session.userUid, pairId: session.pairId },
+        yearMonth
+      )
+    )
+  ]);
+
+  return {
+    yearMonth,
+    monthSum,
+    days: buildDaySumList(records),
+    plans,
+    reminders: reminderGroups.all
+  };
+}

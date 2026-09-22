@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { SwapButton } from '@/components/form/swap-button';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { L } from '@/lib/shared/labels';
@@ -9,7 +10,6 @@ import { swapPlannedRecordAction } from '../actions';
 import { colorHex } from '../color';
 import { plannedRecordLabels } from '../labels';
 import type { GroupedPlannedRecordList, PlannedRecordListItem } from '../types';
-import { SwapButton } from './swap-button';
 
 // 設定「定期」タブ（Nuxt KakeiPlannedRecord.vue 移植）。定期一覧の表示・並べ替えのみを
 // 担い、編集は項目タップで note（定期編集）へ遷移する（fe-screens §SETTING）。

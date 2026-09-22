@@ -1,10 +1,12 @@
 import 'server-only';
+import { cache } from 'react';
 import { withDemoRead, withDemoWriteVoid } from '@/features/auth/server/demo';
+import { isForeignKeyError } from '@/lib/server/db/errors';
+import { resolveOwner } from '@/lib/server/pair/owner';
 import { todayJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
-import { Prisma } from '@/prisma/generated/client';
 import {
   ConditionType,
   calcNextReminderDate,
@@ -28,27 +30,7 @@ import * as reminderRepo from './repositories/reminder';
 
 // FK 制約違反（P2003）を捕捉。それ以外は unknown。
 function toDeleteError(error: unknown): PlanReminderError {
-  if (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === 'P2003'
-  ) {
-    return 'foreignKey';
-  }
-  return 'unknown';
-}
-
-// isPair のとき pairId 必須。個人のとき userId のみ。作成時の所有列を決める。
-function resolveOwner(
-  session: SessionData,
-  isPair: boolean
-): Result<{ userId: string | null; pairId: Id | null }, PlanReminderError> {
-  if (isPair) {
-    if (session.pairId === null) {
-      return err('pairRequired');
-    }
-    return ok({ userId: null, pairId: session.pairId });
-  }
-  return ok({ userId: session.userUid, pairId: null });
+  return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
 
 // ===== READ =====
@@ -71,14 +53,19 @@ export async function getPlanList(
   });
 }
 
-export async function getReminderList(
-  session: SessionData
-): Promise<GroupedReminderList> {
-  return withDemoRead(session.isDemo, demoReminderList, async () => {
-    const rows = await reminderRepo.findReminderRows(session);
-    return groupReminderList(rows);
-  });
-}
+// reminder 一覧は 1 リクエスト内で複数箇所から呼ばれる（共通レイアウトの通知ベル用
+// dueReminders と、setting/calendar の各 page）。getSessionData と同じく React cache()
+// で per-request メモ化し、findReminderRows の DB クエリ二重発行を防ぐ。
+// 呼び出し側の session はいずれも getSessionData（cache 済み）由来の同一参照のため
+// キーが一致してヒットする。
+export const getReminderList = cache(
+  async (session: SessionData): Promise<GroupedReminderList> => {
+    return withDemoRead(session.isDemo, demoReminderList, async () => {
+      const rows = await reminderRepo.findReminderRows(session);
+      return groupReminderList(rows);
+    });
+  }
+);
 
 // ===== PLAN TYPE CRUD =====
 export async function upsertPlanType(

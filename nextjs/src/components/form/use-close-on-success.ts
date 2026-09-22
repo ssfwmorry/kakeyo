@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 
 // 保存/削除の成功（success トースト）でダイアログを閉じる共通フック。
-// bank の各ダイアログ（口座フォーム / 残高登録）が共有する。
+// 各 feature の設定ダイアログ（bank / plan-reminder / type-method …）が共有する。
 export function useCloseOnSuccess(
   result: FormActionResult | null | undefined,
   onOpenChange: (open: boolean) => void

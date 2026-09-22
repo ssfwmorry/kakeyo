@@ -4,6 +4,7 @@ import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { useState } from 'react';
 import { FormField } from '@/components/form/form-field';
+import { useCloseOnSuccess } from '@/components/form/use-close-on-success';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,7 +28,6 @@ import {
   reminderInsertSchema
 } from '../schemas';
 import { ColorPicker } from './color-picker';
-import { useCloseOnSuccess } from './use-close-on-success';
 
 // 定期的な予定（reminder + condition）の作成ダイアログ（Nuxt PlanReminderDialog.vue 移植）。
 // reminder_type（残す/残さない）・condition_type（〜ヶ月後/月日）で必須項目が分岐する。

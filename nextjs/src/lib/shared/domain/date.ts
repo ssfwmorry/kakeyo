@@ -40,6 +40,29 @@ export function startOfDayJst(dateString: string): Date {
   return dayjs.tz(dateString, JST).startOf('day').toDate();
 }
 
+// YYYY-MM-DD（JST の暦日）の、その日の JST 23:59:59.999 に対応する UTC の Date。
+// 期間取得の上限（両端含む gte..lte）に使う（startOfDayJst の対）。
+export function endOfDayJst(dateString: string): Date {
+  return dayjs.tz(dateString, JST).endOf('day').toDate();
+}
+
+// 基準年月（YYYY-MM）から monthOffset ヶ月ずらした月の day 日を YYYY-MM-DD で返す。
+// 「前月 21 日」「翌月 9 日」のようなカレンダー表示範囲端の算出に使う。
+// day が対象月の日数を超える場合は dayjs が翌月へ繰り上げる点に注意（呼び出し側は
+// 実在する日を渡す前提）。
+export function dateInMonthJst(
+  yearMonth: string,
+  monthOffset: number,
+  day: number
+): string {
+  return dayjs
+    .tz(yearMonth, JST)
+    .startOf('month')
+    .add(monthOffset, 'month')
+    .date(day)
+    .format(DATE_FORMAT);
+}
+
 // YYYY-MM（JST の暦月）の月初 0:00 に対応する UTC の Date。集計の期間下限に使う。
 export function startOfMonthJst(yearMonth: string): Date {
   return dayjs.tz(yearMonth, JST).startOf('month').toDate();

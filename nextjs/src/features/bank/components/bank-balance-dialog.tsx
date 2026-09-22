@@ -9,6 +9,7 @@ import {
 } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import type { ComponentProps } from 'react';
+import { useCloseOnSuccess } from '@/components/form/use-close-on-success';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +25,6 @@ import { postBankBalancesAction } from '../actions';
 import { bankLabels } from '../labels';
 import { bankBalanceFormSchema } from '../schemas/bank-balance-schema';
 import type { BankItem } from '../types';
-import { useCloseOnSuccess } from './use-close-on-success';
 
 // 口座残高（bank_balance）の登録ダイアログ。可変行（口座 × 残高）を Conform の
 // 配列フィールド（fields.rows.getFieldList()）で扱う。行追加/削除は Conform の

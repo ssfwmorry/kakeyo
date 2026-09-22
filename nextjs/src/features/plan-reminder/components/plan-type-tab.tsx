@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { SwapButton } from '@/components/form/swap-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import type { ColorClassification } from '@/features/master';
@@ -10,7 +11,6 @@ import { planColorHex } from '../color';
 import { planReminderLabels } from '../labels';
 import type { GroupedPlanTypeList, PlanTypeCard } from '../types';
 import { PlanTypeDialog } from './plan-type-dialog';
-import { SwapButton } from './swap-button';
 
 // 予定カテゴリ設定タブ（Nuxt PlanType.vue 移植）。編集/並べ替えモードを切替え、
 // カテゴリの CRUD ダイアログと並べ替えボタンを束ねる Client Component。

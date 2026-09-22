@@ -3,6 +3,7 @@
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { FormField } from '@/components/form/form-field';
+import { useCloseOnSuccess } from '@/components/form/use-close-on-success';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +18,6 @@ import { deleteSubTypeAction, upsertSubTypeAction } from '../actions';
 import { typeMethodLabels } from '../labels';
 import { subTypeUpsertSchema } from '../schemas';
 import type { SubTypeCard } from '../types';
-import { useCloseOnSuccess } from './use-close-on-success';
 
 // サブカテゴリ upsert / delete ダイアログ（名前のみ・色なし）。
 // 親 type は typeId を hidden で送る。

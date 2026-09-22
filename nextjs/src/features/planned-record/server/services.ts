@@ -5,12 +5,12 @@ import {
   getDayClassificationList
 } from '@/features/master/server/repositories/dayClassification';
 import { prisma } from '@/lib/server/db/client';
+import { isForeignKeyError } from '@/lib/server/db/errors';
 import { schemaSql } from '@/lib/server/db/schema-sql';
 import { todayJst, toYearMonthJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
-import { Prisma } from '@/prisma/generated/client';
 import { resolvePlannedRecordOwnership } from '../domain/planned-record-fields';
 import { enumerateTargetYearMonths } from '../domain/target-year-months';
 import type {
@@ -34,13 +34,7 @@ import * as plannedRecordRepo from './repositories/planned-record';
 // 旧 FE は PostgrestErrorCode.FOREIGN_KEY(23503) 判定で「紐づくデータがあるので
 // 削除できません」を出していた（実体化済み record が planned_record_id で参照する）。
 function toDeleteError(error: unknown): PlannedRecordError {
-  if (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === 'P2003'
-  ) {
-    return 'foreignKey';
-  }
-  return 'unknown';
+  return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
 
 // ============================================================

@@ -3,6 +3,7 @@
 // bank/record にも同等の COLOR_HEX があるが、barrel が公開していない色関数を
 // 他 feature の内部から直接 import するのは所有境界違反のため、summary は自前で持つ
 // （旧 Nuxt の COLOR_CODE を踏襲。精算の 'yellow' を含む）。
+import { SETTLEMENT_DISPLAY } from '@/features/record';
 
 const COLOR_HEX: Record<string, string> = {
   red: '#f44336',
@@ -26,9 +27,10 @@ const COLOR_HEX: Record<string, string> = {
   yellow: '#ffeb3b'
 };
 
-// 精算（type 未設定）の表示名・色。旧 SettlementRecord を踏襲。
-export const SETTLEMENT_COLOR_NAME = 'yellow';
-export const SETTLEMENT_NAME = '精算';
+// 精算（type 未設定）の表示名・色。単一の正は record の SETTLEMENT_DISPLAY
+// （barrel 公開済み）。summary はそこから別名で公開し、'精算'/'yellow' を二重定義しない。
+export const SETTLEMENT_COLOR_NAME = SETTLEMENT_DISPLAY.color;
+export const SETTLEMENT_NAME = SETTLEMENT_DISPLAY.name;
 
 // 色名 → hex。未知の色名／null はグレーにフォールバックする。
 export function colorHex(name: string | null): string {

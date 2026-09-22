@@ -17,6 +17,18 @@ importers:
       '@conform-to/zod':
         specifier: ^1.21.1
         version: 1.21.1(zod@4.6.5)
+      '@fullcalendar/core':
+        specifier: ^6.1.21
+        version: 6.1.21
+      '@fullcalendar/daygrid':
+        specifier: 6.1.21
+        version: 6.1.21(@fullcalendar/core@6.1.21)
+      '@fullcalendar/interaction':
+        specifier: 6.1.21
+        version: 6.1.21(@fullcalendar/core@6.1.21)
+      '@fullcalendar/react':
+        specifier: ^6.1.21
+        version: 6.1.21(@fullcalendar/core@6.1.21)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@prisma/adapter-pg':
         specifier: '7'
         version: 7.10.0
@@ -41,6 +53,9 @@ importers:
       dayjs:
         specifier: ^1.11.23
         version: 1.11.23
+      japanese-holidays:
+        specifier: ^1.0.10
+        version: 1.0.10
       lucide-react:
         specifier: ^1.47.0
         version: 1.47.0(react@19.2.8)
@@ -383,6 +398,26 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fullcalendar/core@6.1.21':
+    resolution: {integrity: sha512-t3u/+sqh3Iq7TWtUnVLcGDUE6OWZh0UD3c04bI/l7lSLAgAKr3kngBmhHiQD1QXpwC8ZN5iNqG7a7gOVixhSKQ==}
+
+  '@fullcalendar/daygrid@6.1.21':
+    resolution: {integrity: sha512-QYb1y40RGYLlOxKpYWg8O+7njEnKnFG8Tt7qjnubJGR35s1phQg67E+81y2TyAbbm59p2JFOCXGDk9t6KDujIA==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.21
+
+  '@fullcalendar/interaction@6.1.21':
+    resolution: {integrity: sha512-WPYpqtljDWmU0Xm2cOtFrLlocgxv7cgkOppj34Q6OUUat8a6Cnd6kYo2JR+irP223PE5lBYHFNp1qh7SIpJc0w==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.21
+
+  '@fullcalendar/react@6.1.21':
+    resolution: {integrity: sha512-TLpmGUd5k/PMdCh8XbeFC9PW9wuGvMms1oCxWgXyjK3EFPXAAd0PLfcvwKdyxoAS5eK1E4RJFkjMHvsYHpimcg==}
+    peerDependencies:
+      '@fullcalendar/core': ~6.1.21
+      react: ^16.7.0 || ^17 || ^18 || ^19
+      react-dom: ^16.7.0 || ^17 || ^18 || ^19
 
   '@hono/node-server@2.1.1':
     resolution: {integrity: sha512-ELuehkj5VCBdgEw9zs+ivkKwyzzUCSQuE96YmiPvn1ECBoZCczbFXJLeEGMTYjphP6gydh4pHMqEYPVMYUVgQg==}
@@ -1941,6 +1976,9 @@ packages:
     resolution: {integrity: sha512-6B3tLtFqtQS4ekarvLVMZ+X+VlvQekbe4taUkf/rhVO3d/h0M2rfARm/pXLcPEsjjMsFgrFgSrhQIxcSVrBz8w==}
     engines: {node: '>=18'}
 
+  japanese-holidays@1.0.10:
+    resolution: {integrity: sha512-OiK5801c432ljumKnQ65TGw6HSEuetU0Fvlz1/BPPPqwxQZ2kPeCy3XHO6q5nf+6zJqIf1fqcpQjWp+/SimO6Q==}
+
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
@@ -2472,6 +2510,9 @@ packages:
   powershell-utils@0.2.1:
     resolution: {integrity: sha512-C+y9x90UElAddDZmV4qOx9W53B61PO7cIqWz2dQsWlwswuq4mr8NEwytdGKboYbQlGZ3awrkTeNvcZiZNHnQ8A==}
     engines: {node: '>=20'}
+
+  preact@10.12.1:
+    resolution: {integrity: sha512-l8386ixSsBdbreOAkqtrwqHwdvR35ID8c3rKPa8lCWuO86dBi32QWHV4vfsZK1utLLFMvw+Z5Ad4XLkZzchscg==}
 
   pretty-ms@9.3.1:
     resolution: {integrity: sha512-HzMy3Geq23nVALD/M2LliU+F+M+gVNsvkQWWqeBZ8HDiCgzo6YPJ/Omrmtq24EFrIsk0a3EkQGEd7bDOo+IhGA==}
@@ -3375,6 +3416,24 @@ snapshots:
       react-dom: 19.2.8(react@19.2.8)
 
   '@floating-ui/utils@0.2.12': {}
+
+  '@fullcalendar/core@6.1.21':
+    dependencies:
+      preact: 10.12.1
+
+  '@fullcalendar/daygrid@6.1.21(@fullcalendar/core@6.1.21)':
+    dependencies:
+      '@fullcalendar/core': 6.1.21
+
+  '@fullcalendar/interaction@6.1.21(@fullcalendar/core@6.1.21)':
+    dependencies:
+      '@fullcalendar/core': 6.1.21
+
+  '@fullcalendar/react@6.1.21(@fullcalendar/core@6.1.21)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@fullcalendar/core': 6.1.21
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
 
   '@hono/node-server@2.1.1(hono@4.13.8)':
     dependencies:
@@ -4771,6 +4830,8 @@ snapshots:
 
   isexe@3.1.5: {}
 
+  japanese-holidays@1.0.10: {}
+
   jiti@2.7.0: {}
 
   jose@6.2.12: {}
@@ -5219,6 +5280,8 @@ snapshots:
   powershell-utils@0.1.0: {}
 
   powershell-utils@0.2.1: {}
+
+  preact@10.12.1: {}
 
   pretty-ms@9.3.1:
     dependencies:

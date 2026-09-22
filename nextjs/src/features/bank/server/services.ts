@@ -50,12 +50,11 @@ export async function getBankScreenData(
       bankRepo.getBankList(session),
       balanceRepo.getBankBalanceList(session)
     ]);
-    const bankItems: BankItem[] = banks;
     const snapshots = toSnapshots(balanceRows);
     return {
-      banks: bankItems,
-      tableRows: buildBalanceTable(bankItems, snapshots),
-      chartPoints: buildBalanceChart(bankItems, snapshots, toDateStringJst)
+      banks,
+      tableRows: buildBalanceTable(banks, snapshots),
+      chartPoints: buildBalanceChart(banks, snapshots, toDateStringJst)
     };
   });
 }

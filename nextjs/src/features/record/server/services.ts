@@ -1,10 +1,10 @@
 import 'server-only';
 import { withDemoRead, withDemoWriteVoid } from '@/features/auth/server/demo';
+import { isForeignKeyError } from '@/lib/server/db/errors';
 import { toYearMonthJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
-import { Prisma } from '@/prisma/generated/client';
 import { resolveRecordOwnership } from '../domain/record-fields';
 import type {
   PairedRecordItem,
@@ -27,13 +27,7 @@ import * as recordRepo from './repositories/record';
 
 // FK 制約違反（P2003）を foreignKey へ写す。それ以外は unknown。
 function toDeleteError(error: unknown): RecordError {
-  if (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === 'P2003'
-  ) {
-    return 'foreignKey';
-  }
-  return 'unknown';
+  return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
 
 // ============================================================

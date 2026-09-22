@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { FlashToast } from '@/components/form/flash-toast';
 import { Toaster } from '@/components/ui/sonner';
+import { SwRegister } from '@/features/pwa/components/sw-register';
 import './globals.css';
 
 const geistSans = Geist({
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         {children}
         <Toaster position='bottom-left' />
         <FlashToast />
+        <SwRegister />
       </body>
     </html>
   );

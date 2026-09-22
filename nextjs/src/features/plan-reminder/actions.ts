@@ -221,6 +221,11 @@ export async function checkReminderAction(
 ): Promise<FormActionResult> {
   const session = await requireAuth();
   const result = await service.checkReminder(session, reminderId);
+  // 設定画面のリマインダー一覧を再検証する。
   revalidatePath(SETTING_PATH);
+  // 消化は共通レイアウトの通知ベル（全 (private) 画面のヘッダに常設）からも起動される。
+  // ベルの件数/一覧は (private)/layout.tsx が取得する dueReminders に依存するため、
+  // layout を再検証して消化結果を反映させる（setPairMode と同じ layout 再検証方式）。
+  revalidatePath('/', 'layout');
   return toResult(result, L.snackbar.updated);
 }

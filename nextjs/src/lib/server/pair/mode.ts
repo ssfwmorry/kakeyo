@@ -14,10 +14,10 @@ import { cookies } from 'next/headers';
 
 const PAIR_MODE_COOKIE = 'pair-mode';
 
-// ペア切替スイッチを出さない（常に個人スコープ）画面。現行 Nuxt の
-// pagesWithoutPair を踏襲（calendar / records / bank は個人専用）。
-// P5 の共通レイアウト統合でスイッチ表示の出し分けに使う。
-export const PAGES_WITHOUT_PAIR = ['calendar', 'records', 'bank'] as const;
+// ペア切替スイッチを出さない画面の単一の正は FE/BE 両用の lib/shared に集約した。
+// 後方互換のためここから再 export する（server 側の既存参照を保つ）。実際の出し分けは
+// 共通レイアウトの pair-mode-switch が PATHS_WITHOUT_PAIR を使って行う。
+export { PAGES_WITHOUT_PAIR } from '@/lib/shared/pair/pages-without-pair';
 
 // 現在のペアモードを Cookie から読む（既定は false = 個人モード。現行踏襲）。
 // Server Component / Server Action / サービス層から呼ぶ。

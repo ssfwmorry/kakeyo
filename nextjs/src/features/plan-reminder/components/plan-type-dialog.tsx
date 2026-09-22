@@ -3,6 +3,7 @@
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { FormField } from '@/components/form/form-field';
+import { useCloseOnSuccess } from '@/components/form/use-close-on-success';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +20,6 @@ import { planReminderLabels } from '../labels';
 import { planTypeUpsertSchema } from '../schemas';
 import type { PlanTypeCard } from '../types';
 import { ColorPicker } from './color-picker';
-import { useCloseOnSuccess } from './use-close-on-success';
 
 // 予定カテゴリ（plan_type）の追加・編集ダイアログ（1 フォーム = 1 スキーマ = 1 useForm）。
 // isPair は hidden で送る（設定タブの現在モード由来。service の scope 検証で担保）。

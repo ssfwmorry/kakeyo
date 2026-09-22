@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { SwapButton } from '@/components/form/swap-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +12,6 @@ import { colorHex } from '../color';
 import { typeMethodLabels } from '../labels';
 import type { GroupedMethodList, MethodCard } from '../types';
 import { MethodDialog, type PayMode } from './method-dialog';
-import { SwapButton } from './swap-button';
 
 // 方法設定タブ。支払/受取/精算の切替、編集/並べ替えモード、方法の CRUD を束ねる。
 // 精算（both）はペア共有モード時のみ選択可（self は常に空）。

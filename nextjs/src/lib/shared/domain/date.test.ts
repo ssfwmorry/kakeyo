@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  dateInMonthJst,
+  endOfDayJst,
   startOfDayJst,
   startOfMonthJst,
   startOfNextMonthJst,
@@ -52,5 +54,30 @@ describe('startOfMonthJst / startOfNextMonthJst', () => {
     expect(startOfNextMonthJst('2024-12').toISOString()).toBe(
       '2024-12-31T15:00:00.000Z'
     );
+  });
+});
+
+describe('endOfDayJst', () => {
+  it('その日の JST 23:59:59.999 を UTC の Date にする', () => {
+    // 2024-01-15 の JST 終端 = 2024-01-15T23:59:59.999 JST = 2024-01-15T14:59:59.999Z
+    expect(endOfDayJst('2024-01-15').toISOString()).toBe(
+      '2024-01-15T14:59:59.999Z'
+    );
+  });
+});
+
+describe('dateInMonthJst', () => {
+  it('前月の指定日を YYYY-MM-DD で返す（カレンダー範囲の下限）', () => {
+    // 2024-03 の前月(2月)21日
+    expect(dateInMonthJst('2024-03', -1, 21)).toBe('2024-02-21');
+  });
+
+  it('翌月の指定日を YYYY-MM-DD で返す（カレンダー範囲の上限）', () => {
+    // 2024-03 の翌月(4月)9日
+    expect(dateInMonthJst('2024-03', 1, 9)).toBe('2024-04-09');
+  });
+
+  it('年をまたぐ（1月の前月は前年12月）', () => {
+    expect(dateInMonthJst('2024-01', -1, 21)).toBe('2023-12-21');
   });
 });

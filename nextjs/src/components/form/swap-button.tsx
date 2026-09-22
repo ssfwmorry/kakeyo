@@ -5,9 +5,9 @@ import { useFormToast } from '@/components/form/use-form-toast';
 import { Button } from '@/components/ui/button';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 
-// 並べ替えボタン。Conform を通さず素の Server Action（swapPlannedRecordAction）を呼ぶ。
-// 結果 toast は useFormToast で発火。useTransition で二重押しを抑止する
-// （type-method / plan-reminder の SwapButton を踏襲）。
+// 並べ替えボタン。Conform を通さず素の Server Action（swap*Action）を呼ぶ。
+// 結果 toast は useFormToast で発火。useTransition で二重押しを抑止する。
+// type-method / plan-reminder / planned-record の各並べ替えで共有する。
 
 type SwapButtonProps = {
   prevId: number;

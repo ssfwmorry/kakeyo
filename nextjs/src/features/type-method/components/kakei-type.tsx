@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { SwapButton } from '@/components/form/swap-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +12,6 @@ import { colorHex } from '../color';
 import { typeMethodLabels } from '../labels';
 import type { GroupedTypeList, SubTypeCard, TypeCard } from '../types';
 import { SubTypeDialog } from './sub-type-dialog';
-import { SwapButton } from './swap-button';
 import { TypeDialog } from './type-dialog';
 
 // カテゴリ設定タブ。支出/収入の切替、編集/並べ替えモード、カテゴリ・サブカテゴリの
