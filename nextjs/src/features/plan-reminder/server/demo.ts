@@ -5,7 +5,7 @@ import type {
   PlanItem
 } from '../types';
 
-// L5 のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
+// plan/reminder のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
 // withDemoRead に渡す。更新系は withDemoWriteVoid で no-op 成功にするため値は不要。
 // id は負値にして実データと衝突させない（type-method の demo と同方針）。
 

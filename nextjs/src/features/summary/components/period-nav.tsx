@@ -3,10 +3,10 @@
 import { MonthJumpPicker } from '@/components/month-jump-picker';
 import { Button } from '@/components/ui/button';
 
-// 月移動 / 年移動の共通ナビ（＜ ラベル ＞）。旧 PaginationBar の移植。
+// 月移動 / 年移動の共通ナビ（＜ ラベル ＞）。
 // 中央に現在の期間ラベル、右にサブタイトル（合計など）を任意で出す。
 // 月ナビでは jumpYearMonth / onJump を渡すと中央ラベルが年月ダイレクトジャンプ
-// （旧 PaginationBar のタイトルタップ→年→月ピッカー）になる（差分リスト B-5）。
+// （タイトルタップ→年→月ピッカー）になる。
 
 type PeriodNavProps = {
   label: string;

@@ -22,8 +22,7 @@ import { toShowPrefixStr, toShowStr } from '../domain/format';
 import { currentYear, shiftYear, yearLabel } from '../domain/period';
 import { PeriodNav } from './period-nav';
 
-// 推移 > 全体タブ（旧 SummaryBar.vue）。年次の月別 支出/収支 棒グラフ + テーブル。
-// 収支/支出のみトグルは取得済みデータの表示切替（再取得しない）。立替込みは再取得する。
+// 収支/支出のみトグルは取得済みデータの表示切替のみで再取得しない。立替込みは再取得する。
 
 // 棒グラフの系列設定（props/state に依存しない定数）。ChartContainer が
 // --color-payAndIncome / --color-pay を供給し、Bar が dataKey で切り替える。
@@ -199,7 +198,7 @@ function cell(active: boolean): string {
     : 'px-3 py-1.5 text-sm';
 }
 
-// 収支の符号で色分け（0=無色 / 正=青 / 負=赤。旧 FE 踏襲）。
+// 収支の符号で色分け（0=無色 / 正=青 / 負=赤）。
 function balanceClass(value: number): string {
   if (value > 0) {
     return 'text-blue-600';

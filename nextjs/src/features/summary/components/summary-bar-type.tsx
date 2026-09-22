@@ -15,9 +15,8 @@ import { currentYear, shiftYear, yearLabel } from '../domain/period';
 import type { TypeChipsByQuadrant } from '../types';
 import { PeriodNav } from './period-nav';
 
-// 推移 > カテゴリ別タブ（旧 SummaryBarType.vue）。
-// チップ「全て」= カテゴリ別 積み上げ棒（getTypeSummaryPeriod）、
-// 特定カテゴリ選択 = サブカテゴリ別 積み上げ棒（getSubTypeSummary）。
+// 推移 > カテゴリ別タブ。
+// チップ「全て」= カテゴリ別の積み上げ棒、特定カテゴリ選択 = サブカテゴリ別の積み上げ棒。
 
 type SummaryBarTypeProps = {
   isPair: boolean;
@@ -60,7 +59,7 @@ export function SummaryBarType({ isPair, chips }: SummaryBarTypeProps) {
     });
   };
 
-  // isPair / isPay 変化時は「全て」にリセットして再取得（旧 resetTypeList 相当）。
+  // isPair / isPay 変化時は「全て」にリセットして再取得。
   // biome-ignore lint/correctness/useExhaustiveDependencies: isPay/isPair のみをトリガにし他は各ハンドラで再取得
   useEffect(() => {
     setSelectedTypeId(null);

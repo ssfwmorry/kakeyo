@@ -21,8 +21,8 @@ import {
 import { GeneralTab } from './general-tab';
 
 // 設定画面の 3 タブ（家計管理 / 予定管理 / その他）を束ねる Client Component。
-// fe-screens §SETTING のタブ構成に従う。各設定タブは各 feature の barrel から import し、
-// データは Server Component（page.tsx）で取得済みのものを props で受け取るだけにする
+// 各設定タブは各 feature の barrel から import し、データは Server Component（page.tsx）で
+// 取得済みのものを props で受け取るだけにする
 // （このコンポーネントは配置とタブ切替のみを担い、fetch もドメインロジックも持たない）。
 
 const settingTabsLabels = {
@@ -65,7 +65,7 @@ export function SettingTabs({
       <TabsContent value='kakei' className='flex flex-col gap-6'>
         <KakeiType typeList={typeList} colors={colors} isPair={isPair} />
         <KakeiMethod methodList={methodList} colors={colors} isPair={isPair} />
-        {/* 口座は非ペア（個人）モード時のみ表示する（fe-screens §SETTING）。 */}
+        {/* 口座は非ペア（個人）モード時のみ表示する。 */}
         {banks !== null && <BankSettingTab banks={banks} colors={colors} />}
         <PlannedRecordSettingTab
           plannedRecordList={plannedRecordList}

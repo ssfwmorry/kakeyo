@@ -6,13 +6,13 @@ import type { Id } from '@/lib/shared/types/id';
 import { Prisma } from '@/prisma/generated/client';
 
 // bank は個人専用テーブル（pair で共有しない）ため buildOwnerScopeWhere を通す。
-// update/delete は updateMany/deleteMany の where に userId を AND して IDOR を塞ぐ
-// （旧 Nuxt の .eq('id') 単独は Prisma が RLS をバイパスするため他人の id で更新/削除できた）。
+// update/delete は Prisma が RLS をバイパスするため、updateMany/deleteMany の where に
+// userId を AND して他人の id での更新/削除（IDOR）を塞ぐ。
 
 // Postgres の外部キー制約違反コード（残高が紐づく口座を削除しようとした等）。
 const FK_VIOLATION_CODE = 'P2003';
 
-// 取得系の戻り（色マスタ込み）。色分け表示に color 名を含める。
+// 色分け表示のため color 名を含める。
 export type BankListItem = {
   id: Id;
   name: string;
@@ -55,7 +55,7 @@ export async function insertBank(
   });
 }
 
-// updateMany + where に owner scope を AND。count===0 は「他人 or 不存在」= notFound。
+// count===0 は「他人の id or 不存在」= notFound。
 export async function updateBank(
   scope: SessionScope,
   input: { id: Id; name: string; colorClassificationId: Id }
@@ -73,8 +73,8 @@ export async function updateBank(
   return { ok: true };
 }
 
-// deleteMany + owner scope を AND。count===0 = notFound。
-// FK 制約（紐づく bank_balances あり）は P2003 を捕捉して foreignKey に分類する。
+// count===0 = notFound。
+// FK 制約違反（紐づく bank_balances あり）は P2003 を捕捉して foreignKey に分類する。
 export async function deleteBank(
   scope: SessionScope,
   id: Id

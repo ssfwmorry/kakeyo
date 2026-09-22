@@ -3,11 +3,9 @@ import type { RecordType } from '@/lib/shared/types/recordType';
 
 // record feature の公開 FE 型。records.id は BigInt だが、ここに現れる id は全て
 // リポジトリ層で Number 済みの number（Id）で、Server→Client を跨いでも落ちない。
-// L6 summary/records は getRecordList / getSummarizedRecordList / getPairedRecordList の
-// 戻り型を @/features/record barrel から参照する。
 
-// get_record_list の 1 行（カレンダー表示用）。旧 RPC の出力を camelCase 化し、
-// id は record_id を採用、type_name の '精算' 補完・isInstead/isSettlement 導出済み。
+// get_record_list の 1 行（カレンダー表示用）。id は record_id を採用、
+// type_name の '精算' 補完・isInstead/isSettlement 導出済み。
 export type RecordListItem = {
   id: Id;
   // 自分の record なら true、共有相手の record なら false。
@@ -35,7 +33,7 @@ export type RecordListItem = {
 };
 
 // get_summarized_record_list の 1 行（records 明細画面用・精算=15 は除外される）。
-// get_record_list とほぼ同形だが isSettlement を持たない（旧 FE 整形に合わせる）。
+// get_record_list とほぼ同形だが isSettlement を持たない。
 export type SummarizedRecordItem = {
   id: Id;
   isSelf: boolean;
@@ -59,7 +57,7 @@ export type SummarizedRecordItem = {
 };
 
 // get_paired_record_list の 1 行（精算画面用）。is_settled 以外は編集不可のため
-// 旧 RPC は id/表示に必要な最小列のみ返す。type_name/色は '精算' 補完済み。
+// id/表示に必要な最小列のみ返す。type_name/色は '精算' 補完済み。
 export type PairedRecordItem = {
   id: Id;
   datetime: Date;
@@ -80,8 +78,7 @@ export type PairedRecordItem = {
 };
 
 // note（記録編集）用: 初期値 1 件（record 1 件分のプリフィル）。新規時は undefined。
-// scope 外・不存在は null（呼び出し側で新規扱いにする）。旧 note.vue setPageRecord の
-// 編集プリフィル項目（id/isPay/date/price/memo/methodId/isInstead/typeId/subTypeId）に対応。
+// scope 外・不存在は null（呼び出し側で新規扱いにする）。
 export type NoteRecordDefault = {
   id: Id;
   isPay: boolean;

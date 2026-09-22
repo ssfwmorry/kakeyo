@@ -1,8 +1,8 @@
 import type { Id } from '@/lib/shared/types/id';
 import type { RecordType } from '@/lib/shared/types/recordType';
 
-// L8 memo/shortcut 画面の FE 型（server-only を含まない。Client Component /
-// barrel / calendar 統合レーン（P5）から利用可能）。
+// memo/shortcut 画面の FE 型（server-only を含まない。Client Component /
+// barrel / calendar 統合レーンから利用可能）。
 
 // TODO（memo）1 件。
 export type MemoItem = {

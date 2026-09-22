@@ -5,12 +5,12 @@ import { startOfDayJst, toDateStringJst } from '@/lib/shared/domain/date';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
-// L5 plan リポジトリ。現行 RPC get_plan_list / upsertPlan / deletePlan を移植。
+// plan リポジトリ（一覧取得 / upsert / 削除）。
 // 取得系は必ず buildScopeWhere を通す。日付（start_date/end_date）は date.ts 経由で
-// 扱う（dayjs 直 import 禁止・方針書 §4）。DB は Date（@db.Date）で保持するため、
+// 扱う。DB は Date（@db.Date）で保持するため、
 // 読み取りは YYYY-MM-DD 文字列へ、書き込みは JST 日付境界の Date へ変換する。
 
-// 画面用の plan 行（plan_type 色・reminder 色を結合。get_plan_list 相当）。
+// 画面用の plan 行（plan_type 色・reminder 色を結合）。
 export type PlanRow = {
   id: Id;
   startDate: string;
@@ -25,7 +25,7 @@ export type PlanRow = {
   isPair: boolean;
 };
 
-// get_plan_list / 単一取得で共通の include（plan_type 色・reminder 色を結合）。
+// 一覧取得 / 単一取得で共通の include（plan_type 色・reminder 色を結合）。
 const planInclude = {
   planType: {
     select: {
@@ -71,7 +71,7 @@ function toPlanRow(row: PlanWithRelations): PlanRow {
   };
 }
 
-// READ。期間（start_date が [start, end] の範囲）で絞る（現行 get_plan_list 踏襲）。
+// READ。期間（start_date が [start, end] の範囲）で絞る。
 export async function findPlanRows(
   scope: SessionScope,
   range: { start: string; end: string }
@@ -139,7 +139,7 @@ export async function insertPlan(input: {
   });
 }
 
-// UPDATE（所有列 user_id/pair_id も現行同様に付け替える＝ペアモード切替に追従）。
+// UPDATE（所有列 user_id/pair_id も付け替える＝ペアモード切替に追従）。
 export async function updatePlan(input: {
   id: Id;
   name: string;

@@ -6,11 +6,10 @@ import type { GroupedPlanTypeList, GroupedReminderList } from '../types';
 import { PlanTypeTab } from './plan-type-tab';
 import { ReminderTab } from './reminder-tab';
 
-// 設定「予定管理」タブ（Nuxt setting.vue の予定管理タブ相当）。
-// 予定カテゴリ（PlanType）とリマインダー（PlanReminder）を縦に並べた 1 タブ分の
-// コンポーネント。setting 画面は他レーンと共有されうるため、統合（P5）が
-// setting page でこのコンポーネントを配置する。ルート page は本レーンでは作らない。
-// データ（一覧・色マスタ・ペアモード）は統合側が server で取得して渡す。
+// 設定「予定管理」タブ。予定カテゴリ（PlanType）とリマインダー（PlanReminder）を
+// 縦に並べた 1 タブ分のコンポーネント。setting 画面は他機能と共有されうるため
+// ルート page は持たず、setting page 側がこのコンポーネントを配置する。
+// データ（一覧・色マスタ・ペアモード）は server で取得して渡す。
 
 type PlanSettingTabProps = {
   planTypeList: GroupedPlanTypeList;

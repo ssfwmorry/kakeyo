@@ -1,14 +1,11 @@
 // カレンダーの年月ナビの純粋計算（'YYYY-MM' の前後移動・表示ラベル）。
-// summary の period.ts と同型の等価計算だが、feature 境界を跨いで依存しないよう
-// calendar 側にも小さく持つ（どちらも server-only を含まない純粋関数）。
+// feature 境界を跨いで依存しないよう calendar 側にも小さく持つ純粋関数。
 
-// サポートする年の範囲（旧 utils/time.ts の PrevYear/NextYear に合わせ 2000〜2099 年）。
 const MIN_YEAR = 2000;
 const MAX_YEAR = 2099;
 
 // 'YYYY-MM' を月単位で delta 移動する（delta は ±整数）。
-// サポート範囲（2000-01〜2099-12）外へは移動せず、範囲端で頭打ちにする
-// （旧はサポート外を alert で拒否していたが、Next では端でクランプして進めない挙動に置換）。
+// サポート範囲（2000-01〜2099-12）外へは移動せず、範囲端でクランプして進めない。
 export function shiftMonth(yearMonth: string, delta: number): string {
   const [yearStr, monthStr] = yearMonth.split('-');
   const total = Number(yearStr) * 12 + (Number(monthStr) - 1) + delta;

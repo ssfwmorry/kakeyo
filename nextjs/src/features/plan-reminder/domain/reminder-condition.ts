@@ -1,7 +1,5 @@
-// reminder / condition のドメイン計算（純粋関数・server-only を含まない・Vitest 対象）。
-// 現行 Nuxt の utils/types/model.ts の enum（ConditionType / BaseType / ReminderType）と
-// checkReminder の「次回日付計算」を移植する。SSR 事故防止のため日付は
-// @/lib/shared/domain/date.ts 経由でのみ扱う（dayjs 直 import 禁止・方針書 §4）。
+// reminder / condition のドメイン計算（純粋関数）。
+// SSR 事故防止のため日付は @/lib/shared/domain/date.ts 経由でのみ扱う（dayjs 直 import 禁止）。
 
 import { toDateStringJst } from '@/lib/shared/domain/date';
 
@@ -26,7 +24,7 @@ export const ReminderType = {
 } as const;
 export type ReminderType = (typeof ReminderType)[keyof typeof ReminderType];
 
-// checkReminder の次回日付計算に渡す条件（DB 由来の condition 行を写したもの）。
+// 次回日付計算に渡す条件（DB 由来の condition 行を写したもの）。
 export type NextDateInput = {
   conditionType: number;
   month: number | null;
@@ -34,11 +32,11 @@ export type NextDateInput = {
   baseType: number | null;
   // reminder.date（base_type=DATE / 現在日付でない基準で使う）。YYYY-MM-DD。
   currentDate: string;
-  // 「今日」（テスト容易性のため注入。未指定なら todayJst を使う想定だが純粋化のため必須）。
+  // 「今日」（純粋化のため呼び出し側で注入必須。テスト容易性も兼ねる）。
   today: string;
 };
 
-// 現行 checkReminder の newDate 計算を純粋関数化。
+// 次回日付を計算する。
 // - MONTH_DAY: 翌年の MM-DD を次回日付にする。
 // - MONTH: 基準（NOW=today / DATE=currentDate）から month ヶ月後。
 // 戻りは YYYY-MM-DD（JST 日付境界）。不正な条件は null（呼び出し側でエラー化）。

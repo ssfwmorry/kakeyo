@@ -11,8 +11,6 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// 共通ボトムナビ（旧 layouts/default.vue の v-footer タブを踏襲）。
-// 5 タブ構成で中央「入力」のみ大きいアイコン（現行の isBig）。
 // アクティブ判定は現在パスとの完全一致（/summary 配下の records 等で誤点灯させない）。
 // 子ルートでの点灯が必要になったら navItems 側に判定を寄せて一般化する。
 
@@ -23,7 +21,6 @@ type NavItem = {
   big?: boolean;
 };
 
-// 遷移先の単一の正。href は実ルート（app 配下）に対応。
 const navItems: NavItem[] = [
   { href: '/calendar', label: 'カレンダー', icon: Calendar },
   { href: '/summary', label: '集計', icon: BarChart3 },

@@ -1,5 +1,5 @@
 // ペア切替スイッチを出さない（常に個人スコープ）画面の単一の正（FE/BE 両用）。
-// 現行 Nuxt の pagesWithoutPair を踏襲（calendar / records / bank は個人専用）。
+// calendar / records / bank は個人専用。
 //
 // server 側（lib/server/pair/mode.ts が再 export）と client 側（共通レイアウトの
 // pair-mode-switch）の双方から参照するため、server-only を付けず lib/shared に置く。

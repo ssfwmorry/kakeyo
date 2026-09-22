@@ -31,7 +31,7 @@ function toDeleteError(error: unknown): PlannedRecordError {
   return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
 
-// 設定「定期」タブ用: 定期一覧を self/pair に振り分けて返す（旧 getPlannedRecordList）。
+// 設定「定期」タブ用: 定期一覧を self/pair に振り分けて返す。
 export async function getPlannedRecordList(
   session: SessionData
 ): Promise<GroupedPlannedRecordList> {
@@ -133,9 +133,9 @@ export async function upsertPlannedRecord(
   });
 }
 
-// 定期の削除。実体化済み record が紐づく場合は FK エラー → foreignKey
-// （旧仕様どおり削除不可。records.planned_record_id は on delete set null ではなく
-// FK 参照が残るため）。scope 外は notInScope。
+// 定期の削除。実体化済み record が紐づく場合は FK エラー → foreignKey で削除不可
+// （records.planned_record_id は on delete set null ではなく FK 参照が残るため）。
+// scope 外は notInScope。
 export async function deletePlannedRecord(
   session: SessionData,
   id: Id
@@ -157,7 +157,7 @@ export async function deletePlannedRecord(
 }
 
 // 並び順の入替。対象 2 行が両方 scope 内であることを検証してから入替
-// （他ペアの並びを触らせない。type-method の swap と同流儀）。
+// （他ペアの並びを触らせない）。
 export async function swapPlannedRecord(
   session: SessionData,
   prevId: Id,
@@ -176,23 +176,19 @@ export async function swapPlannedRecord(
   });
 }
 
-// 実体化バッチ（グループ C: func_post_records の $queryRaw 移植）
+// 実体化バッチ。
 //
-// 旧 useCalendarStore.updateRange は「表示月が現在+7 ヶ月より前なら表示月分を
-// post_records」していた（閲覧駆動・表示コードに副作用 INSERT が混在）。
-// 方針確定書 §7 の再設計により、実体化は Vercel Cron（日次 1 回）からこの
-// サービスだけが行い、表示コードは純粋な読み取りのみとする。
+// 実体化は Vercel Cron（日次 1 回）からこのサービスだけが行い、表示コードは
+// 純粋な読み取りのみとする（表示に副作用 INSERT を混在させない）。
 //
-// SQL は docs/database/functions.md の func_post_records を「そのまま」移植する
-// （CASE WHEN・day_classifications による日付組み立て・updated_at / now() 条件を
-// 一切改変しない。「翻訳」禁止）。Cron 化に伴う差分は次の 2 点のみ:
-//   1. input_user_id によるユーザー絞り込みを除去（全ユーザー対象の日次バッチ。
-//      buildScopeWhere 例外が指示されている唯一の箇所）
-//   2. スキーマ修飾 `develop.` を環境変数のスキーマ名（develop / public）に差し替え
-//      （adapter-pg の schema オプションは ORM クエリのみに効き、$queryRaw の
-//      生 SQL には search_path が適用されないため、明示修飾が必須）
+// SQL は CASE WHEN・day_classifications による日付組み立て・updated_at / now()
+// 条件をそのまま用いる。全ユーザー対象の日次バッチのため、ここは buildScopeWhere を
+// 通さない唯一の箇所（ユーザー絞り込みなし）。
+// スキーマ修飾 `develop.` を環境変数のスキーマ名（develop / public）に差し替えるのは、
+// adapter-pg の schema オプションが ORM クエリにしか効かず、$queryRaw の生 SQL には
+// search_path が適用されないため明示修飾が必須なため。
 
-// 1 ヶ月分の実体化（func_post_records 相当）。挿入行数を返す。
+// 1 ヶ月分の実体化。挿入行数を返す。
 // スキーマ修飾は共有ヘルパ schemaSql()（末尾ドット付き `develop.` を返す）を使う。
 async function insertRecordsFromPlannedRecords(
   yearMonth: string
@@ -260,8 +256,8 @@ async function insertRecordsFromPlannedRecords(
   `;
 }
 
-// 日次バッチの入口（Cron Route 専用）。当月〜7 ヶ月後（旧実装で実体化されえた
-// 全範囲）を月ごとに実体化し、対象月数と挿入行数を返す。
+// 日次バッチの入口（Cron Route 専用）。当月〜7 ヶ月後を月ごとに実体化し、
+// 対象月数と挿入行数を返す。
 // 過去月は SQL の `datetime > now()` 条件で挿入 0 件のため対象に含めない。
 export async function postRecordsForAllUsers(): Promise<{
   months: number;

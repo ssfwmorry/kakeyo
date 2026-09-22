@@ -17,13 +17,12 @@ import { L } from '@/lib/shared/labels';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 import { calendarLabels } from '../labels';
 
-// カレンダー上の予定/リマインダーをクリックしたときに出す詳細カード
-// （旧 components/PlanCard.vue / ReminderCard.vue を統合移植）。
+// カレンダー上の予定/リマインダーをクリックしたときに出す詳細カード。
 // - 予定（通常）: 「編集」で /plan?planId=<id> へ遷移（編集画面で更新/削除する）。
-// - 予定（リマインダー由来 = reminderId あり）: 旧仕様に倣い、その場で削除ボタンを出す
+// - 予定（リマインダー由来 = reminderId あり）: その場で削除ボタンを出す
 //   （編集対象は元のリマインダー側なので、ここでは実体化された plan を消すのみ）。
-// - リマインダー: 表示のみ（旧 ReminderCard もボタン無し）。
-// memo は AutoLinkText で URL を自動リンク化する（旧 v-html autoLink の安全移植）。
+// - リマインダー: 表示のみ（ボタン無し）。
+// memo は AutoLinkText で URL を自動リンク化する。
 
 const { plan: PL, reminder: RM } = calendarLabels.eventDetail;
 
@@ -53,8 +52,8 @@ function PlanCard({
   plan: PlanItem;
   onDeleted: () => void;
 }) {
-  // リマインダー由来（reminderId あり）の plan はカテゴリを持たず、旧仕様では
-  // 編集不可・削除のみ。通常 plan は planTypeId があるので編集導線を出す。
+  // リマインダー由来（reminderId あり）の plan はカテゴリを持たず、編集不可・削除のみ。
+  // 通常 plan は planTypeId があるので編集導線を出す。
   const isFromReminder = plan.reminderId !== null;
   const colorName = plan.planTypeColorName ?? plan.reminderColorName ?? 'grey';
 
@@ -99,8 +98,8 @@ function PlanCard({
   );
 }
 
-// リマインダー由来 plan の削除（旧 deleteReminderPlan 相当）。成功時は
-// deletePlanAction が /calendar へ redirect するため、その場でカレンダーが再取得される。
+// リマインダー由来 plan の削除。成功時は deletePlanAction が /calendar へ
+// redirect するため、その場でカレンダーが再取得される。
 function PlanDeleteButton({
   id,
   onDeleted

@@ -4,8 +4,8 @@ import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
-// L4 type/method レーンの「被参照 I/F」（凍結資産の I/F 部分）。
-// L2 record / L6 summary / L8 shortcut が参照するため、シグネチャと戻り型は固定。
+// type/method レーンの「被参照 I/F」（凍結資産の I/F 部分）。
+// record / summary / shortcut が参照するため、シグネチャと戻り型は固定。
 // 取得系は必ず buildScopeWhere を通す（scope 漏れ = 情報漏洩）。
 
 // 整形済みカテゴリ（サブカテゴリ・色込み）。他レーンが参照する最小の形。

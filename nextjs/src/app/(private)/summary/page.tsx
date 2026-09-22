@@ -33,7 +33,6 @@ export default async function SummaryPage() {
   ]);
 
   const isPair = isExistPair && pairMode;
-  // 精算方法は both.pair（旧 methodList.value = data.both.pair）。
   const settlementMethods = methodList.both.pair.map((method) => ({
     id: method.id,
     name: method.name

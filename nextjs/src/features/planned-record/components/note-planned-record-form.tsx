@@ -27,11 +27,10 @@ import { plannedRecordUpsertSchema } from '../schemas';
 import type { NotePlannedRecordDefault } from '../types';
 
 // note（定期入力）の planned_record 部分の UI（Client Component）。
-// record フォーム（NoteRecordForm）と同構造だが「日付」の代わりに
-// 「毎月何日か（day_classification）」を選ぶ点だけ違う（fe-screens §NOTE）。
-// type/method は @/features/type-method、day は @/features/master の barrel 経由で
-// 受け取る（内部直参照しない）。record_type/所有者導出は Server（service）に委ねる。
-// 編集時の isPair は編集対象の共有状態で固定する（旧 note は編集中の共有切替を禁止）。
+// 「日付」ではなく「毎月何日か（day_classification）」を選ぶ。
+// type/method・day は各 feature の barrel 経由で受け取る（内部直参照しない）。
+// record_type/所有者導出は Server（service）に委ねる。
+// 編集時の isPair は編集対象の共有状態で固定する（編集中の共有切替は禁止）。
 
 type NotePlannedRecordFormProps = {
   typeList: GroupedTypeList;
@@ -42,7 +41,7 @@ type NotePlannedRecordFormProps = {
   editing?: NotePlannedRecordDefault;
 };
 
-// 入力状態（旧 note.vue の ref 群）をまとめて扱うためのローカル型。
+// 入力状態をまとめて扱うためのローカル型。
 type PlannedState = {
   isPay: boolean;
   dayClassificationId: number | null;
@@ -73,7 +72,7 @@ export function NotePlannedRecordForm({
     setState((prev) => ({ ...prev, ...next }));
 
   const view = usePlannedView(typeList, methodList, isPair, state);
-  // 収支/立替の切替時は選択をリセットする（旧 resetInput）。
+  // 収支/立替の切替時は選択をリセットする。
   const resetSelection = () =>
     patch({ typeId: null, subTypeId: null, methodId: null });
 
@@ -285,15 +284,14 @@ function toInitialState(editing?: NotePlannedRecordDefault): PlannedState {
     typeId: editing?.typeId ?? null,
     subTypeId: editing?.subTypeId ?? null,
     methodId: editing?.methodId ?? null,
-    // 立替は既定 ON（旧 note 踏襲）。共有 & 支出のときのみ意味を持つ。
+    // 立替は既定 ON。共有 & 支出のときのみ意味を持つ。
     isInstead: editing?.isInstead ?? true,
     memo: editing?.memo ?? '',
     price: editing?.price === undefined ? '' : String(editing.price)
   };
 }
 
-// 送信可否: 毎月何日か確定・カテゴリ確定・方法選択済み・共有時はメモ必須
-// （旧 note の disabled 条件を planned 用に合わせる）。
+// 送信可否: 毎月何日か確定・カテゴリ確定・方法選択済み・共有時はメモ必須。
 function canSubmit(state: PlannedState, isPair: boolean): boolean {
   if (state.dayClassificationId === null || state.methodId === null) {
     return false;

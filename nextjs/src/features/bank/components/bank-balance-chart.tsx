@@ -14,9 +14,9 @@ import { toManUnit } from '../domain/format';
 import type { BalanceChartPoint, BankItem } from '../types';
 
 // 残高の積み上げ Area チャート（Recharts + shadcn chart）。
-// 色は「口座（エンティティ）」ごとに固定（DB の color_classifications を踏襲）。
+// 色は「口座（エンティティ）」ごとに固定（DB で口座ごとに色分類を持つ）。
 // 系列は口座 = 2 件以上になりうるため legend を常設する。
-// 万単位表示（ConvertManUnit 相当）で軸・ツールチップを読みやすくする。
+// 万単位表示で軸・ツールチップを読みやすくする。
 
 type BankBalanceChartProps = {
   banks: BankItem[];

@@ -6,8 +6,7 @@ import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
 // reminder / condition リポジトリ。reminder は必ず condition（発生条件）を伴い、
-// 作成・削除・チェックは 2 テーブルにまたがるため $transaction で原子性を担保する
-// （現行 insertReminder / deleteReminder / checkReminder を移植）。
+// 作成・削除・チェックは 2 テーブルにまたがるため $transaction で原子性を担保する。
 
 // 画面用の reminder 行（condition と色名を結合）。
 export type ReminderRow = {
@@ -26,8 +25,8 @@ export type ReminderRow = {
   baseType: number | null;
 };
 
-// READ。reminder + condition + color を結合し color_classification_id 昇順で返す
-// （現行 getReminderList 踏襲）。self/pair/all の振り分けは service 層で行う。
+// READ。reminder + condition + color を結合し color_classification_id 昇順で返す。
+// self/pair/all の振り分けは service 層で行う。
 export async function findReminderRows(
   scope: SessionScope
 ): Promise<ReminderRow[]> {
@@ -90,7 +89,7 @@ export async function findReminderInScope(
 }
 
 // CREATE（2 テーブル跨ぎ）。condition を作り、その id で reminder を作る。
-// 現行は逐次 insert だが、片方だけ成功する不整合を防ぐため $transaction にする。
+// 片方だけ成功する不整合を防ぐため $transaction で 2 行をまとめて insert する。
 export async function insertReminderWithCondition(input: {
   name: string;
   reminderType: number;
@@ -131,7 +130,7 @@ export async function insertReminderWithCondition(input: {
 }
 
 // DELETE（2 テーブル跨ぎ）。reminder → condition の順で消す（FK 依存の逆順）。
-// 紐づく plan の reminder_id は FK 制約次第だが、現行同様まず reminder を消す。
+// 紐づく plan の reminder_id は FK 制約次第だが、まず reminder を消す。
 export async function deleteReminderWithCondition(input: {
   reminderId: Id;
   conditionId: Id;
@@ -142,12 +141,12 @@ export async function deleteReminderWithCondition(input: {
   ]);
 }
 
-// CHECK（現行 checkReminder）。次回日付は service 層（ドメイン計算）で算出済みを受ける。
+// CHECK（消化処理）。次回日付は service 層（ドメイン計算）で算出済みを受ける。
 // reminder.date を更新し、Stock 型なら plan を作る（2 テーブル跨ぎ）ため $transaction。
 export async function checkReminderUpdate(input: {
   reminderId: Id;
   nextDate: string;
-  // Stock 型のとき plan を作る（現行 date を start/end に据える）。null なら plan 化しない。
+  // Stock 型のとき plan を作る（その日付を start/end に据える）。null なら plan 化しない。
   plan: {
     userId: string | null;
     pairId: Id | null;

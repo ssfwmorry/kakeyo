@@ -1,14 +1,11 @@
 import type { MetadataRoute } from 'next';
 
-// App Router 標準の PWA マニフェスト（方針書 §6）。
-// 要件は「ホーム画面追加・全画面表示（installable + standalone）」がメイン。
+// App Router 標準の PWA マニフェスト。
+// 要件はホーム画面追加・全画面表示（installable + standalone）。
 // オフラインキャッシュ（next-pwa/Workbox）は採用せず、依存を増やさない。
 //
-// 値は旧 Nuxt（@vite-pwa/nuxt）の manifest 設定を踏襲:
-//   name/short_name: かけよ, theme_color/background_color: #000, lang: ja, display: standalone。
-//
 // icons: 192/512 の通常アイコンと maskable を用意。
-// TODO(icon): public/ の各 icon-*.png は 32x32 の旧素材を拡大した暫定プレースホルダ。
+// TODO(icon): public/ の各 icon-*.png は 32x32 素材を拡大した暫定プレースホルダ。
 //             正式リリース前に高解像度のブランドアイコンへ差し替える。
 export default function manifest(): MetadataRoute.Manifest {
   return {

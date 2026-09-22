@@ -8,7 +8,7 @@ import { insertRecordFromShortcutAction } from '../actions';
 // ショートカット一覧 + ワンタップ記録の統合 Client。
 // 表示は memo-shortcut の公開 ShortcutList をそのまま使い、onSelect で選ばれた
 // ShortCutItem を calendar 所有の Server Action（insertRecordFromShortcutAction）へ
-// FormData で渡して当日記録を作る（record 登録は record ドメインの責務なので L8 では
+// FormData で渡して当日記録を作る（record 登録は record ドメインの責務なので shortcut 側では
 // なく calendar 側の Action が record サービスを呼ぶ = barrel 非公開の upsertRecord を
 // 迂回する正規ルート）。成否トーストは useFormAction が自動発火する。
 

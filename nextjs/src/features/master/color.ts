@@ -1,8 +1,6 @@
-// 色名 → 実 CSS 色（hex）の対応（色マスタ所有 feature = master・純粋関数・FE/BE 両用）。
-// DB の color_classifications.name は Vuetify のマテリアル色名（'red' / 'deep-purple'
-// / ...）で保存される。旧 Nuxt の COLOR_CODE を踏襲し、カード文字色・チャート系列色・
-// 色チップを inline style で描く。色マスタは master の所有物なので hex 対応もここが
-// 単一の正（各 feature で二重定義しない）。barrel から公開して全レーンが共有する。
+// 色名 → 実 CSS 色（hex）の対応。DB の color_classifications.name は Vuetify の
+// マテリアル色名（'red' / 'deep-purple' / ...）で保存され、inline style で描く。
+// hex 対応はここを単一の正とし、各 feature で二重定義しない。
 
 export const COLOR_HEX: Record<string, string> = {
   red: '#f44336',
@@ -29,7 +27,6 @@ export const COLOR_HEX: Record<string, string> = {
 // 未知の色名のフォールバック（グレー）。
 export const FALLBACK_COLOR_HEX = '#9e9e9e';
 
-// 色名 → hex。未知の色名はグレーにフォールバックする。
 export function colorHex(name: string): string {
   return COLOR_HEX[name] ?? FALLBACK_COLOR_HEX;
 }

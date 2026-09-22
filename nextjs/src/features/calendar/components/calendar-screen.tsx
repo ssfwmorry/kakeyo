@@ -25,17 +25,14 @@ import { EventDetail } from './event-detail';
 import { MonthCalendar } from './month-calendar';
 import { ShortcutRecordList } from './shortcut-record-list';
 
-// カレンダー統合画面（ホーム）の Client 統合。旧 pages/calendar.vue 相当。
+// カレンダー統合画面（ホーム）の Client 統合。
 // SSR で解決した初期データ（当月）を受け取り、月移動時のみ Server Action で再取得する。
 // 表示は純粋読み取り（副作用 INSERT なし）。TODO 追加/削除は memo-shortcut の MemoList、
 // ショートカット記録は ShortcutRecordList（calendar 所有 Action）が担う。
 //
-// イベントクリック（旧 showEvent 相当）: plan / reminder をクリックすると EventDetail に
-// 詳細カードを出す。通常 plan は「編集」で /plan?planId= へ、リマインダー由来 plan は
-// その場で削除できる（旧 PlanCard/ReminderCard の導線を移植）。日付クリック・月移動で
-// 選択は解除する（旧: selectedDate 変更時に selectedPlan/Reminder を null 化）。
-//
-// record カードの個別編集遷移は day-record-list 側で /note?RECORD= へ接続済み。
+// イベントクリック: plan / reminder をクリックすると EventDetail に詳細カードを出す。
+// 通常 plan は「編集」で /plan?planId= へ、リマインダー由来 plan はその場で削除できる。
+// 日付クリック・月移動で選択は解除する。
 
 export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
   const [month, setMonth] = useState<CalendarMonthData>(initial.month);
@@ -47,7 +44,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     planId: number | null;
     reminderId: number | null;
   } | null>(null);
-  // 全記録一覧の並び（null=選択日1日表示 / 'desc' or 'asc'=当月全記録）。旧 showAllRecords。
+  // 全記録一覧の並び（null=選択日1日表示 / 'desc' or 'asc'=当月全記録）。
   const [allRecordsOrder, setAllRecordsOrder] = useState<AllRecordsOrder>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -58,7 +55,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
   );
 
   // 選択イベントの実体（plan / reminder）を月データから引く。
-  // イベントは planId か reminderId のどちらかを持つ（events.ts の kind に対応）。
+  // イベントは planId か reminderId のどちらかを持つ。
   const selectedPlan = useMemo(
     () =>
       selectedEvent?.planId == null
@@ -77,8 +74,8 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     [month.reminders, selectedEvent]
   );
 
-  // 当月の全記録（記録のある日のみ・並び順は allRecordsOrder）。旧 showAllRecords 相当。
-  // フィルタ・並べ替えは selectAllRecordDays（純粋関数・Vitest）に集約する。
+  // 当月の全記録（記録のある日のみ・並び順は allRecordsOrder）。
+  // フィルタ・並べ替えは selectAllRecordDays（純粋関数）に集約する。
   const allRecordDays = useMemo(
     () =>
       allRecordsOrder === null
@@ -87,7 +84,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     [allRecordsOrder, month.days, month.yearMonth]
   );
 
-  // 日付を選び直したらイベント詳細・全記録表示は閉じる（旧 showDateRecords の挙動）。
+  // 日付を選び直したらイベント詳細・全記録表示は閉じる。
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(dateStr);
     setSelectedEvent(null);
@@ -101,7 +98,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     setAllRecordsOrder(null);
   };
 
-  // 全記録一覧のトグル（旧: 初回 DESC → 再押下で ASC/DESC を交互）。
+  // 全記録一覧のトグル（初回 DESC → 再押下で ASC/DESC を交互）。
   const toggleAllRecords = () => {
     setSelectedEvent(null);
     setAllRecordsOrder(nextAllRecordsOrder);
@@ -121,7 +118,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
   const move = (delta: number) =>
     handleMonthChange(shiftMonth(month.yearMonth, delta));
 
-  // 左右スワイプで前月/次月へ（旧 calendar のみのタッチ操作。差分リスト B-6）。
+  // 左右スワイプで前月/次月へ。
   // FullCalendar 自体はタッチを日付選択に使うため、カレンダー領域を含む外側のヘッダー
   // コンテナに結線する（グリッド内タップとの競合を避ける）。
   const swipe = useSwipe({
@@ -133,7 +130,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     <div className='mx-auto flex w-full max-w-md flex-col gap-4 p-4'>
       <header className='flex flex-col gap-2'>
         <h1 className='font-bold text-lg'>{calendarLabels.heading.title}</h1>
-        {/* 旧 PaginationBar 相当: 前月/次月 ＋ 中央に年月ジャンプ ＋ 月収支サブタイトル。 */}
+        {/* 前月/次月 ＋ 中央に年月ジャンプ ＋ 月収支サブタイトル。 */}
         <div className='flex items-center justify-between gap-2'>
           <Button
             type='button'
@@ -195,7 +192,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
         >
           {calendarLabels.action.addPlan}
         </Link>
-        {/* 当月の全記録を昇順/降順トグルで一覧（旧 calendar.vue showAllRecords）。 */}
+        {/* 当月の全記録を昇順/降順トグルで一覧。 */}
         <Button
           type='button'
           variant='outline'
@@ -209,7 +206,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
       </div>
 
       {/* 表示は排他: ①全記録一覧（トグル ON） ②イベント詳細（plan/reminder 選択）
-          ③選択日の記録一覧。旧 calendar.vue の showAllRecords / showEvent / showDateRecords。 */}
+          ③選択日の記録一覧。 */}
       {allRecordsOrder !== null ? (
         <AllRecordsList days={allRecordDays} />
       ) : selectedPlan || selectedReminder ? (

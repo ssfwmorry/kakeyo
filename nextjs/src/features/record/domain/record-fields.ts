@@ -2,17 +2,10 @@ import { resolveRecordType } from '@/lib/shared/domain/recordType';
 import type { Id } from '@/lib/shared/types/id';
 import type { RecordType } from '@/lib/shared/types/recordType';
 
-// record の永続化フィールドの導出（純粋関数・record ドメインの核）。
-// 旧 Nuxt upsertRecord の分岐（user_id / pair_id / is_settled / record_type を
-// isPair・isInstead から決める）をここ 1 箇所へ集約する。SQL/Prisma/React に
-// 触れないため単体テスト可能。record_type は resolveRecordType 経由で算出し、
-// 各所で 0/5/10/15 を手書きしない（方針確定書 §record_type）。
-//
-// 旧実装の対応（api/supabase/record.ts upsertRecord）:
-//   user_id    = isPair && !isInstead ? null : userUid
-//   pair_id    = isPair ? pairId : null
-//   is_settled = isPair && isInstead ? false : null
-//   record_type= !isPair ? 0 : isInstead ? 5 : 10
+// record の永続化フィールド（user_id / pair_id / is_settled / record_type）を
+// isPair・isInstead から導出する純粋関数・record ドメインの核。この 1 箇所へ集約し、
+// SQL/Prisma/React に触れないため単体テスト可能。record_type は resolveRecordType
+// 経由で算出し、各所で 0/5/10/15 を手書きしない。
 
 type ResolveRecordOwnershipInput = {
   userUid: string;
@@ -49,8 +42,6 @@ export function resolveRecordOwnership({
 }
 
 // record の「編集可否」を導出する純粋関数（一覧カードの編集導線ガード・機能安全）。
-// 旧 pages/calendar.vue の isEnableEdit（172-175 行）を移植:
-//   isEnableEdit = isSettlement !== true && (isSelf || (isPair && !isInstead))
 // - 精算(isSettlement=true)は編集不可。
 // - 自分の record は編集可。
 // - 共有 record は「非立替（PAIR）」のみ編集可。ペア相手の立替 record は編集不可

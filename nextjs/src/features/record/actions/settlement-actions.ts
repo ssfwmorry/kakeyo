@@ -17,9 +17,9 @@ import {
 import * as service from '../server/services';
 import type { RecordError } from '../types';
 
-// 精算（summary/settlement 画面・L6）の Server Actions。record CRUD は L2 が所有する。
+// 精算（summary/settlement 画面）の Server Actions。record CRUD は record 側が所有する。
 // 精算画面は遷移しないため FormActionResult.toast を使い、revalidatePath で再取得する。
-// NOTE(レーン跨ぎ): /summary は L6 が実装する。ここでは revalidate 先を summary とする。
+// NOTE(レーン跨ぎ): /summary は summary 側が実装する。ここでは revalidate 先を summary とする。
 const SUMMARY_PATH = '/summary';
 
 function errorMessage(error: RecordError): string | undefined {

@@ -23,7 +23,7 @@ export const recordLabels = {
     note: '記録入力'
   },
   empty: {
-    // カテゴリ/方法が未設定のとき note で案内する文言（旧 Nuxt 踏襲）。
+    // カテゴリ/方法が未設定のとき note で案内する文言。
     noTypeMethod: '設定画面でカテゴリと方法を追加してください'
   },
   // record 固有の失敗分類 → 文言。
@@ -34,7 +34,7 @@ export const recordLabels = {
   }
 } as const;
 
-// 精算 record（record_type=15 / type 未設定）の表示名・表示色（旧 SettlementRecord 踏襲）。
+// 精算 record（record_type=15 / type 未設定）の表示名・表示色。
 // 'yellow' はグラフ・色マスタの双方で解決できる特別扱いの色名。
 export const SETTLEMENT_DISPLAY = {
   name: '精算',

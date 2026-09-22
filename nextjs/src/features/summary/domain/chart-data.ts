@@ -6,8 +6,7 @@ import type {
   TypeSummaryPeriodRow
 } from '../types';
 
-// summary 各グラフのデータ整形（純粋関数・FE/BE 両用 = Vitest 対象）。
-// 旧 Nuxt の Chart.js 用 convertShowData を Recharts の「行オブジェクト配列」形式へ移す。
+// summary 各グラフのデータ整形（純粋関数）。
 // Recharts は data=[{x, seriesKey: value, ...}] の行配列 + <Pie/Bar dataKey> で描くため、
 // 系列（凡例）情報は別途 series メタとして返す。
 
@@ -15,7 +14,6 @@ import type {
 
 // 円グラフ 1 スライス（Recharts Pie の data 要素）。fill は行に持たせる（Cell 相当）。
 export type PieSlice = {
-  // 系列名（カテゴリ名 / 方法名）。
   name: string;
   // 金額（負値もありうるが円は絶対量で描くため呼び出し側で符号は扱わない前提）。
   value: number;
@@ -29,7 +27,7 @@ export type PieListRow = {
   name: string;
   // 金額（表示整形前の生値）。フォーマットは表示側で toShowStr を通す。
   value: number;
-  // Vuetify 色トークン名（アバター/文字色用。hex ではない = 旧 FE の list と同じ）。
+  // 色トークン名（アバター/文字色用。hex ではない）。
   colorName: string;
   isPair: boolean;
   pairUserName: string | null;
@@ -47,7 +45,7 @@ export type PieShowData = {
   list: PieListRow[];
 };
 
-// カテゴリ別（TypeSummaryItem[]）→ 円 + 一覧。sum===0 は落とす（旧 FE 踏襲）。
+// カテゴリ別（TypeSummaryItem[]）→ 円 + 一覧。sum===0 は落とす。
 // typeId=null（精算）は id=null のため一覧の「＞」を出さないが行自体は表示する。
 export function buildTypePie(
   items: TypeSummaryItem[],
@@ -152,7 +150,7 @@ const MONTH_KEYS = [
   '12'
 ] as const;
 
-// 先頭ゼロを落とす（'08'→'8'）。旧 ConvertSuppressZero。
+// 先頭ゼロを落とす（'08'→'8'）。
 function suppressZero(month: string): string {
   return month.replace(/^0+/, '');
 }
@@ -298,7 +296,7 @@ export function buildSubTypeStack(
     monthMap.set(key, (monthMap.get(key) ?? 0) + row.sum);
   }
 
-  // 「なし」を先頭に寄せる（旧 FE は「サブカテゴリなし」を最初の dataset にする）。
+  // 「なし」を先頭系列に寄せる。
   const series = [...seriesByKey.values()].sort((a, b) => {
     if (a.key === NULL_KEY) {
       return -1;

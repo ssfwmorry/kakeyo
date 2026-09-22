@@ -5,7 +5,7 @@ import { memoShortcutLabels } from '../labels';
 const { validation } = memoShortcutLabels;
 
 // TODO（memo）フォームの入力スキーマ（Conform + Zod）。
-// memo は最大 30 文字（tables.md memos.memo varchar(30)）。
+// memo は最大 30 文字（DB の varchar(30) 制約）。
 // isPair はチェックボックス由来。Conform/HTML の checkbox は「オン時のみ 'on' を
 // 送出し、オフ時はフィールド自体が届かない」ため optional + 存在＝true とみなす。
 

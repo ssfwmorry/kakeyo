@@ -10,10 +10,7 @@ import type {
   PlannedRecordListItem
 } from '../../types';
 
-// planned-record レーンのリポジトリ層。planned_records.id は serial Int（BigInt でない）
-// ため id 変換は不要。取得はグループ A（get_planned_record_list を Prisma ORM の include で
-// 移植）、swap はグループ B（swap_planned_record を $transaction の 2 行 sort 入替で移植）。
-// 実体化バッチ（post_records・グループ C）は services 側で $queryRaw 移植する。
+// planned_records.id は serial Int（BigInt でない）ため id 変換は不要。
 
 // planned_records への書き込みフィールド（user_id/pair_id/record_type は
 // service 層が resolvePlannedRecordOwnership で導出済み）。id 有無で insert/update を分ける。
@@ -30,9 +27,7 @@ export type PlannedRecordUpsertFields = {
   recordType: RecordType;
 };
 
-// 取得系（グループ A: Prisma ORM）
-
-// get_planned_record_list の include。マッパーが読む列だけ select で絞る
+// マッパーが読む列だけ select で絞る
 // （day 名、method/type の名前＋色名、subType 名、立替者の user 名）。
 const plannedRecordInclude = {
   dayClassification: { select: { name: true } },
@@ -50,9 +45,8 @@ type PlannedRecordWithRelations = Prisma.PlannedRecordGetPayload<{
   include: typeof plannedRecordInclude;
 }>;
 
-// READ: 定期一覧（設定タブ用）。get_planned_record_list を Prisma ORM で移植。
-// 旧 SQL の order by is_pair, sort は「self/pair 分けは service 側のグルーピング、
-// 各グループ内は sort 昇順」に対応する。
+// READ: 定期一覧（設定タブ用）。
+// self/pair の分けは service 側のグルーピングで行い、ここは各グループ内の sort 昇順のみ担う。
 export async function findPlannedRecordRows(
   scope: SessionScope
 ): Promise<PlannedRecordListItem[]> {
@@ -77,7 +71,7 @@ function toPlannedRecordListItem(
     memo: row.memo,
     sort: row.sort,
     isPair,
-    // 旧 RPC は pair_id ありのときのみ users.name を引く（立替者名）。
+    // pair_id ありのときのみ立替者名を引く。
     pairUserName: isPair ? (row.user?.name ?? null) : null,
     dayClassificationId: row.dayClassificationId,
     dayClassificationName: row.dayClassification.name,
@@ -92,9 +86,8 @@ function toPlannedRecordListItem(
   };
 }
 
-// READ: note（定期編集）の初期値 1 件。scope 内でなければ null。
-// isInstead は旧 note の `!!plannedRecord.pairUserName` と等価な
-// 「共有かつ user_id あり（=立替者が特定されている）」で導出する。
+// READ: 定期編集の初期値 1 件。scope 内でなければ null。
+// isInstead は「共有かつ user_id あり（=立替者が特定されている）」で導出する。
 export async function findPlannedRecordForEdit(
   scope: SessionScope,
   id: Id
@@ -176,9 +169,9 @@ export async function updatePlannedRecord(
 }
 
 // DELETE（1 件）。scope を where に AND し、削除できたかを返す
-// （bank/memo/record と同パターン。scope 外の行は count===0 で notFound）。
+// （scope 外の行は count===0 で notFound）。
 // 実体化済み record が紐づく場合は FK 制約違反（P2003）が throw される
-// （呼び出し側 service が foreignKey へ分類する。旧 FE の 23503 判定に対応）。
+// （呼び出し側 service が foreignKey へ分類する）。
 export async function deletePlannedRecordById(
   scope: SessionScope,
   id: Id
@@ -192,10 +185,7 @@ export async function deletePlannedRecordById(
   return { ok: true };
 }
 
-// SWAP（グループ B: swap_planned_record 相当）
-
-// 2 行の sort を入替（旧 RPC swap_planned_record の update ... from 相当を
-// $transaction の 2 update で移植。type-method / plan-reminder の swap と同流儀）。
+// 2 行の sort を $transaction の 2 update で入替。
 // 両行が scope 内であることは service 層で検証済み前提。
 export async function swapPlannedRecordSort(
   a: { id: Id; sort: number },

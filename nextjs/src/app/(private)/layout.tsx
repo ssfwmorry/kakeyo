@@ -9,7 +9,7 @@ import { getPairMode } from '@/lib/server/pair/mode';
 import { todayJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
 
-// 認証必須画面の共有 layout（P5 で共通レイアウトを統合）。
+// 認証必須画面の共有 layout。
 // - 認証ガード（requireAuth。Proxy に加えた多層防御）
 // - 上部バー: リマインダー通知ベル + ペア切替スイッチ（表示条件は各 Client 側）
 // - 下部: 共通ボトムナビ（固定）
@@ -26,8 +26,8 @@ export default async function PrivateLayout({
   const isExistPair = session.pairId !== null;
   const isPair = await getPairMode();
 
-  // 期日を過ぎたリマインダーだけを SSR 側で抽出して通知ベルへ渡す（旧
-  // AppBarNotification の count 相当）。今日の起点は date.ts の todayJst に一本化。
+  // 期日を過ぎたリマインダーだけを SSR 側で抽出して通知ベルへ渡す。
+  // 今日の起点は date.ts の todayJst に一本化。
   const dueReminders = await getDueReminders(session);
 
   return (
@@ -35,7 +35,7 @@ export default async function PrivateLayout({
       <header className='sticky top-0 z-40 flex h-12 items-center justify-between gap-2 border-b bg-background px-4'>
         <ReminderBell dueReminders={dueReminders} />
         <div className='flex items-center gap-2'>
-          {/* デモログイン中の視覚的手がかり（旧 layouts/default.vue の右上「デモ用」ラベル）。 */}
+          {/* デモログイン中の視覚的手がかり。 */}
           {session.isDemo ? (
             <span className='rounded bg-red-600 px-2 py-0.5 font-bold text-white text-xs'>
               デモ用

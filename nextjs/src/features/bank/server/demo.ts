@@ -1,7 +1,7 @@
 import 'server-only';
 import type { BankScreenData } from '../types';
 
-// L7 bank のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
+// bank のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
 // withDemoRead に渡す。更新系は withDemoWriteVoid で no-op 成功にするため値は不要。
 
 export const demoBankScreenData: BankScreenData = {

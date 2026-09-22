@@ -2,12 +2,10 @@
 
 import { useRef } from 'react';
 
-// 左右スワイプ（フリック）を検知する軽量フック（旧 v-touch の代替・calendar 専用）。
-// 旧はカレンダー画面のみ左右スワイプで前月/次月へ移動していた（summary/records には無し）。
+// 左右スワイプ（フリック）を検知する軽量フック。
 // タッチ開始/終了の座標差から横方向の意図的なスワイプのみを拾い、縦スクロールや微小な
 // タップは無視する（横移動が縦移動より大きく、かつ閾値以上のときだけ発火）。
 //
-// 返り値のハンドラをスワイプ対象要素へ spread する（onTouchStart/onTouchEnd）。
 // FullCalendar 自体はタッチを日付選択に使うため、カレンダーグリッドの外側の
 // コンテナに結線して競合を避ける（呼び出し側の責務）。
 
@@ -19,7 +17,7 @@ type SwipeHandlers = {
 type UseSwipeOptions = {
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
-  // 横移動の発火閾値（px）。既定 50。
+  // 横移動の発火閾値（px）。
   threshold?: number;
 };
 

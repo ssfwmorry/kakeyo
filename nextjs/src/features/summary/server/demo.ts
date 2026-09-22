@@ -8,7 +8,7 @@ import type {
   TypeSummaryPeriodRow
 } from '../types';
 
-// L6 summary のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
+// summary のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
 // withDemoRead に渡す。id は負値でダミー（実データと衝突しない number）。
 
 export const demoTypeSummary: TypeSummaryItem[] = [

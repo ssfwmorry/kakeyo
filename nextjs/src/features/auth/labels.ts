@@ -12,9 +12,9 @@ export const authLabels = {
     login: 'ログイン',
     sendReset: '再設定メールを送る',
     demo: 'デモページを見る',
-    // 問い合わせ画面（/inquiry）への導線。旧ドロワーの inquiryItem 相当。
+    // 問い合わせ画面（/inquiry）への導線。
     inquiry: 'お問い合わせ',
-    // 使い方（Notion チュートリアル）への外部リンク。旧 login.vue の goTutorialPage 相当。
+    // 使い方（Notion チュートリアル）への外部リンク。
     tutorial: 'とりせつ'
   },
   toast: {
@@ -30,6 +30,6 @@ export const authLabels = {
   }
 } as const;
 
-// 使い方（とりせつ）の外部リンク先（旧 login.vue goTutorialPage の URL を移植）。
+// 使い方（とりせつ）の外部リンク先。
 export const TUTORIAL_URL =
   'https://incredible-result-9c1.notion.site/245ec170d05c802dacbfd04d2ab22cbf';

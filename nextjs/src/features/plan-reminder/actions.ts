@@ -24,7 +24,7 @@ import {
 import * as service from './server/services';
 import type { PlanReminderError } from './types';
 
-// L5 の Server Actions。
+// plan/reminder の Server Actions。
 // - PLAN（予定入力画面）: 保存/削除後に /calendar へ遷移するため flash トーストを使う。
 // - PLAN TYPE / REMINDER（設定「予定管理」タブ）: 同一画面内更新のため
 //   FormActionResult.toast を使い、保存後 revalidatePath('/setting') で再取得する。
@@ -109,7 +109,7 @@ export async function swapPlanTypeAction(
   return toResult(result, L.snackbar.swapped);
 }
 
-// 保存/削除後は /calendar へ遷移する（現行踏襲）。遷移で戻り値が消えるため
+// 保存/削除後は /calendar へ遷移する。遷移で戻り値が消えるため
 // redirect 直前に setFlashToast で通知を Cookie に載せる（二重発火回避のため toast は返さない）。
 export async function upsertPlanAction(
   _prev: FormActionResult | null,

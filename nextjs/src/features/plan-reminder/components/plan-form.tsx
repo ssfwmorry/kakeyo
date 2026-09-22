@@ -24,11 +24,10 @@ import { planReminderLabels } from '../labels';
 import { planUpsertSchema } from '../schemas';
 import type { GroupedPlanTypeList, PlanItem, PlanTypeCard } from '../types';
 
-// 予定入力画面（/plan）のフォーム（Nuxt pages/plan.vue 移植・1 フォーム = 1 スキーマ）。
-// 単日/期間を「期間指定」チェックで切替え、期間 OFF なら endDate=startDate を送る。
+// 予定入力画面（/plan）のフォーム。単日/期間を「期間指定」チェックで切替え、
+// 期間 OFF なら endDate=startDate を送る。
 // 保存/削除は redirect（/calendar）を挟むため flash トースト。ここでは submission だけ
 // 購読する（成功トーストは遷移先の FlashToast が発火）。
-// startDate は local state で持ち、期間 OFF 時に endDate へ同値を送る。
 
 const { entity, plan: P } = planReminderLabels;
 
@@ -129,8 +128,7 @@ export function PlanForm({
   );
 }
 
-// 新規/編集での初期フォーム状態を導出する純粋ヘルパ（コンポーネント本体の
-// 三項演算の連なりを外に出して認知的複雑度を下げる）。
+// 新規/編集での初期フォーム状態を導出する純粋ヘルパ。
 function initialFormState(
   editing: PlanItem | undefined,
   initialDate: string | undefined,
@@ -236,7 +234,6 @@ function PlanDateSection({
   const periodId = `${startId}-period`;
 
   // hidden の startDate（Conform 連携）は常に維持し、UI はカレンダー選択で更新する。
-  // 旧 pages/plan.vue の v-date-picker（単日 / multiple="range"）を移植（差分リスト B-9）。
   // トリガーの表示ラベル: 期間 ON は「開始 〜 終了」、単日は選択日（未選択はプレースホルダ）。
   const triggerLabel = isPeriod
     ? startDate && endDate
@@ -254,7 +251,6 @@ function PlanDateSection({
 
   return (
     <>
-      {/* Conform 連携の startDate は hidden で常時送る（カレンダーで更新）。 */}
       <input
         id={startId}
         type='hidden'

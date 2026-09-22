@@ -26,7 +26,7 @@ function toDeleteError(error: unknown): RecordError {
   return isForeignKeyError(error) ? 'foreignKey' : 'unknown';
 }
 
-// カレンダー用: 期間内 record。start/end は service に Date で渡される。
+// カレンダー用: 期間内 record。
 export async function getRecordListForRange(
   session: SessionData,
   start: Date,
@@ -61,7 +61,6 @@ export async function getPairedRecords(
 }
 
 // note（記録編集）用: 初期値 1 件。scope 外・不存在は null（呼び出し側が新規扱い）。
-// planned-record 側 getPlannedRecordForEdit と同流儀（withDemoRead でデモは DB 非依存）。
 export async function getRecordForEdit(
   session: SessionData,
   id: Id
@@ -127,7 +126,7 @@ export async function upsertRecord(
     if (!target) {
       return err('notInScope');
     }
-    // 定期由来 record は同月内のみ変更可（旧 note の validateRecordAndShowErrorMsg）。
+    // 定期由来 record は同月内のみ変更可。
     if (
       target.plannedRecordId !== null &&
       toYearMonthJst(target.datetime) !== toYearMonthJst(input.datetime)

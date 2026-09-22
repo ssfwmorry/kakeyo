@@ -4,25 +4,21 @@ import { schemaSql } from '@/lib/server/db/schema-sql';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { PieSummaryQuery, TypeSummaryPeriodQuery } from '../../types';
 
-// L6 summary レーンのリポジトリ層（server-only）。
+// 集計 6 本は record_type 0/5/10/15 分岐・is_pay・精算/立替の非対称処理の
+// CASE WHEN を改変せず $queryRaw で書く（家計の数字ズレを防ぐ最重要ポイント）。
 //
-// ★方針: 集計 6 本は docs/database/functions.md の RPC を「そのまま」$queryRaw で
-//   移植する（record_type 0/5/10/15 分岐・is_pay・精算/立替の非対称処理の CASE WHEN を
-//   一切改変しない = 家計の数字ズレを防ぐ最重要ポイント）。ORM に翻訳しない。
+// スキーマ修飾: adapter-pg の { schema } は $queryRaw の生 SQL に効かないため
+// ${schemaSql()} で develop. / public. を実行時スキーマ名で明示修飾する。
 //
-// ★スキーマ修飾: adapter-pg の { schema } は $queryRaw の生 SQL に効かないため
-//   ${schemaSql()} で develop. / public. を実行時スキーマ名で明示修飾する。
+// scope: records × pairs を left join した 3-way OR
+//     records.user_id = 自分
+//     OR pairs.user1_id = 自分
+//     OR pairs.user2_id = 自分
+//   で自分/ペアの records に限定する。scope.userUid はテンプレート変数
+//   （= バインドパラメータ・SQL インジェクション安全）で渡す。
 //
-// ★scope: 旧 SQL の
-//     records.user_id = input_user_id
-//     OR pairs.user1_id = input_user_id
-//     OR pairs.user2_id = input_user_id
-//   を維持する（pairs を left join した 3-way OR）。input_user_id には
-//   scope.userUid をテンプレート変数（= バインドパラメータ・SQL インジェクション安全）
-//   で渡す。buildScopeWhere（ORM 用）は使わず、旧 RPC と同一の WHERE を保つ。
-//
-// ★数値境界: 集計 sum は $queryRaw では bigint/Decimal で返りうるため、
-//   境界で Number() 変換して number にする（BigInt を Server→Client に漏らさない）。
+// 数値境界: 集計 sum は $queryRaw では bigint/Decimal で返りうるため、
+// 境界で Number() 変換して number にする（BigInt を Server→Client に漏らさない）。
 
 // $queryRaw の bigint/Decimal/number を安全に number へ寄せる。
 function toNumber(
@@ -50,15 +46,12 @@ function toNullableNumber(
   return toNumber(value);
 }
 
-// func_get_month_sum（月の self_sum）
-
 type MonthSumRawRow = {
   year_month: string;
   self_sum: bigint | number | null;
 };
 
-// 月毎の収支集計（self_sum）。旧 func_get_month_sum を移植。
-// 正の値は「収支がマイナス（支出超過）」を意味する（旧仕様）。
+// 月毎の収支集計（self_sum）。正の値は「収支がマイナス（支出超過）」を意味する。
 export async function getMonthSum(
   scope: SessionScope,
   yearMonth: string
@@ -101,8 +94,6 @@ export async function getMonthSum(
   return toNumber(rows[0].self_sum);
 }
 
-// func_get_method_summary（方法別集計）
-
 // リポジトリの公開行は Number() 変換後の形（id/sum は number）。
 export type MethodSummaryRawRow = {
   method_name: string;
@@ -113,15 +104,13 @@ export type MethodSummaryRawRow = {
   sum: number;
 };
 
-// year/month を PieSummaryQuery の yearMonth（'YYYY-MM'）から取り出す。
-// 旧 RPC は input_year / input_month を別引数で受け、内部で `year || '-' || month`
-// に組み立てて to_char 比較する。ここでは分解して同じ文字列比較を再現する。
+// yearMonth（'YYYY-MM'）を year / month に分解する。
 function splitYearMonth(yearMonth: string): { year: string; month: string } {
   const [year, month] = yearMonth.split('-');
   return { year, month };
 }
 
-// 方法別の月次集計。旧 func_get_method_summary を移植。
+// 方法別の月次集計。
 export async function getMethodSummaryRows(
   scope: SessionScope,
   query: PieSummaryQuery
@@ -187,9 +176,7 @@ export async function getMethodSummaryRows(
   }));
 }
 
-// func_get_type_summary（カテゴリ別集計・sub_type 横長行）
-
-// 旧 RPC の 1 行（type × sub_type の展開行。partition by types.id の sum を各行が持つ）。
+// type × sub_type の展開行。各行が partition by types.id の sum を持つ。
 export type TypeSummaryRawRow = {
   type_name: string | null;
   type_id: number | null;
@@ -202,7 +189,6 @@ export type TypeSummaryRawRow = {
 };
 
 // カテゴリ別の月次集計（横長行のまま返す。TS 側で TypeSummaryItem に畳み込む）。
-// 旧 func_get_type_summary を移植。
 export async function getTypeSummaryRows(
   scope: SessionScope,
   query: PieSummaryQuery
@@ -282,16 +268,13 @@ export async function getTypeSummaryRows(
   }));
 }
 
-// func_get_pay_and_income_list（年次 月別 支出/収入）
-
 export type PayAndIncomeRawRow = {
   year_month: string;
   pay_sum: number;
   income_sum: number;
 };
 
-// 年次の月別 支出/収入。旧 func_get_pay_and_income_list を移植。
-// input_is_pair / input_is_include_instead は PieSummaryQuery と同じ意味で受ける。
+// 年次の月別 支出/収入。
 export async function getPayAndIncomeRows(
   scope: SessionScope,
   input: { year: number; isPair: boolean; isIncludeInstead: boolean }
@@ -351,8 +334,6 @@ export async function getPayAndIncomeRows(
   }));
 }
 
-// func_get_type_summary_period（年次カテゴリ別）
-
 export type TypeSummaryPeriodRawRow = {
   year_month: string;
   type_id: number | null;
@@ -361,7 +342,7 @@ export type TypeSummaryPeriodRawRow = {
   sum: number;
 };
 
-// 年次カテゴリ別集計（推移 > カテゴリ別「全て」）。旧 func_get_type_summary_period を移植。
+// 年次カテゴリ別集計（推移 > カテゴリ別「全て」）。
 export async function getTypeSummaryPeriodRows(
   scope: SessionScope,
   query: TypeSummaryPeriodQuery
@@ -423,8 +404,6 @@ export async function getTypeSummaryPeriodRows(
   }));
 }
 
-// func_get_sub_type_summary（年次サブカテゴリ別・カテゴリ選択時）
-
 export type SubTypeSummaryRawRow = {
   year_month: string;
   type_id: number;
@@ -436,14 +415,11 @@ export type SubTypeSummaryRawRow = {
 };
 
 // 年次サブカテゴリ別集計（推移 > カテゴリ別・特定カテゴリ選択時）。
-// 旧 func_get_sub_type_summary を移植。
-// ★scope（セキュリティレビュー対応）: 旧 RPC は input_user_id を受け取らず
-//   「type_id = input_type_id と year のみ」で絞っていた。旧環境は Supabase RLS が
-//   別レイヤで絞っていたが、Prisma 直結（RLS バイパス）の本移行では type_id 一致だけの
-//   暗黙 scope は成立しない（typeId は公開 Server Action にクライアントが渡す値のため、
-//   他ペアの type_id を渡すとそのペアの集計が漏れる IDOR になる）。よって他 5 本の集計と
-//   同じく records × pairs の 3-way OR（user_id=自分 OR pairs.user1_id/user2_id=自分）を
-//   WHERE に明示追加し、DB 条件で自分/ペアの records に限定する。集計値・列は不変。
+// scope: Prisma 直結（RLS バイパス）のため type_id 一致だけでは scope が成立しない
+//   （typeId は公開 Server Action にクライアントが渡す値のため、他ペアの type_id を
+//   渡すとそのペアの集計が漏れる IDOR になる）。他の集計と同じく records × pairs の
+//   3-way OR（user_id=自分 OR pairs.user1_id/user2_id=自分）を WHERE に明示追加し、
+//   DB 条件で自分/ペアの records に限定する。
 export async function getSubTypeSummaryRows(
   scope: SessionScope,
   input: {

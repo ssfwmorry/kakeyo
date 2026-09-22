@@ -11,27 +11,25 @@ import { buildCalendarEvents } from '../domain/events';
 import type { CalendarEvent, CalendarMonthData } from '../types';
 
 // 月次カレンダー（FullCalendar dayGridMonth）の描画のみを担う Client Component。
-// 旧 pages/calendar.vue の calendarOptions を App Router / React アダプタへ読み替え。
 // - 日付クリック（dateClick）→ 親へ YYYY-MM-DD を通知（日別 record 一覧を出す）。
-// - 月移動は親（calendar-screen）の独自ヘッダー（年月ジャンプ含む）に一本化するため
+// - 月移動・年月ジャンプは親（calendar-screen）の独自ヘッダーに一本化するため
 //   FullCalendar 標準ツールバーは非表示（headerToolbar=false）にし、年月は key 再マウントで反映。
-//   → 旧 PaginationBar 同様に年月を 1 箇所へ集約し、標準タイトルとの重複を解消（差分リスト U-4）。
-// - 祝日セルは dayCellClassNames で is-holiday を付与し、globals.css で日付数字を赤字化（B-11）。
+// - 祝日セルは dayCellClassNames で is-holiday を付与し、globals.css で日付数字を赤字化。
 // - plan / reminder のイベントクリック → 親へ種別と id を渡す（EventDetail で編集/削除）。
 //
 // FullCalendar の end は排他的（その日を含まない）ため、複数日 plan は end に +1 日する。
 //
 // 日付整形にここだけ dayjs を直 import する（規約の date.ts 経由の例外）。理由: 扱うのは
 // FullCalendar が返す「ローカル暦日の Date / ms」であり、date.ts の責務（UTC↔JST 境界変換）
-// とは別物。ここで toDateStringJst（tz 変換）を通すと二重変換で日付キーがずれ、サーバ側
-// buildDaySumList が作る dateStr と突き合わない。ローカル暦日の素朴な format のみに用途を限定する。
+// とは別物。ここで tz 変換を通すと二重変換で日付キーがずれ、サーバ側の dateStr と突き合わない。
+// ローカル暦日の素朴な format のみに用途を限定する。
 
 type MonthCalendarProps = {
   data: CalendarMonthData;
   // 選択中の日付（YYYY-MM-DD）。ハイライト等には使わず、親が保持する状態を反映。
   selectedDate: string | null;
   onDateClick: (dateStr: string) => void;
-  // plan / reminder イベントのクリック（段階実装用のフック）。
+  // plan / reminder イベントのクリック。
   onEventClick?: (event: CalendarEvent) => void;
 };
 
@@ -57,7 +55,7 @@ function toEventInput(event: CalendarEvent): EventInput {
       textColor: 'inherit'
     };
   }
-  // plan は塗り、reminder は枠線（旧仕様の踏襲を簡略化）。
+  // plan は塗り、reminder は枠線で区別する。
   if (event.kind === 'plan') {
     return {
       ...base,

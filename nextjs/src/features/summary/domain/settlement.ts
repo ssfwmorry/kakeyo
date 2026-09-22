@@ -1,11 +1,9 @@
 import type { Id } from '@/lib/shared/types/id';
 import { isValidRateIndex, RATE_LIST } from './settlement-rate';
 
-// 精算の按分・差額算出（旧 SummarySettlement.vue の reportedDataByRate /
-// settlementResult / getRecordIdList を純粋関数として移植）。server-only を含まない
-// （Client / Vitest 対象）。DB / React に触れない。
+// 精算の按分・差額算出。純粋関数（DB / React に触れない。Client / Vitest 対象）。
 //
-// 用語（旧踏襲）:
+// 用語:
 // - isMe: その record を「自分」が立て替えたか（ME グループ = true、PARTNER = false）。
 // - rate: 自分が負担すべき割合（RATE_LIST[rateIndex]）。
 // - toBe: 自分が本来負担すべき額 = round(合計 * rate)。
@@ -22,7 +20,7 @@ export type RateAssignment = {
   rateIndex: number;
 };
 
-// レート単位の集計結果（旧 reportedDataByRate の 1 要素 + 表示用 rateIndex）。
+// レート単位の集計結果。
 export type RateReport = {
   rateIndex: number;
   sum: number;
@@ -33,9 +31,8 @@ export type RateReport = {
 
 // 割当を rateIndex ごとに集計する。並びは rateIndex 昇順（表示安定のため）。
 export function summarizeByRate(assignments: RateAssignment[]): RateReport[] {
-  // rateIndex → { sum, asIs } を集計。範囲外の rateIndex は RATE_LIST[i]=undefined で
-  // toBe が NaN になり家計の数字を壊すため、集計前に弾く（UI は 0〜10 しか渡さない前提の
-  // 防御。呼び出し側の不正データでドメイン計算が破綻しないようにする）。
+  // 範囲外の rateIndex は RATE_LIST[i]=undefined で toBe が NaN になり家計の数字を壊すため、
+  // 集計前に弾く（呼び出し側の不正データでドメイン計算が破綻しないための防御）。
   const byIndex = new Map<number, { sum: number; asIs: number }>();
   for (const a of assignments) {
     if (!isValidRateIndex(a.rateIndex)) {
@@ -57,13 +54,13 @@ export function summarizeByRate(assignments: RateAssignment[]): RateReport[] {
     });
 }
 
-// 全レートの差額合計（旧 settlementResult の元になる ret）。
+// 全レートの差額合計。
 // 正 = 自分が相手へ「お渡し」、負 = 相手から「受け取り」、0 = 精算不要。
 export function totalSettlementDiff(reports: RateReport[]): number {
   return reports.reduce((sum, r) => sum + r.diff, 0);
 }
 
-// 精算の向きと金額（旧 settlementResult / endSettlement の isPay=ret>0・price=|ret|）。
+// 精算の向きと金額。
 export type SettlementDirection = {
   // 精算が必要か（diff 合計が 0 なら不要）。
   needed: boolean;
@@ -84,7 +81,7 @@ export function resolveSettlement(
   };
 }
 
-// 精算対象 record の id 一覧（旧 getRecordIdList）。settleRecords へ渡す。
+// 精算対象 record の id 一覧。settleRecords へ渡す。
 export function collectAssignedIds(assignments: RateAssignment[]): Id[] {
   return assignments.map((a) => a.id);
 }

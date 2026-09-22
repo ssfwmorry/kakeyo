@@ -6,9 +6,9 @@ import type {
   PlannedRecordListItem
 } from '../types';
 
-// L3 のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
+// デモ用モックデータ（デモログイン時に DB へ触れず返す）。
 // withDemoRead に渡す。更新系は withDemoWriteVoid で no-op 成功にするため値は不要。
-// id は負値にして実データと衝突させない（他レーンの demo と同方針）。
+// id は負値にして実データと衝突させない。
 
 // note（定期入力）の day 選択肢モック（day_classifications は全ユーザ共通の静的
 // マスタだが、デモは DB へ触れないため実マスタ相当の代表値を返す）。
@@ -90,7 +90,7 @@ function toDemoDefault(item: PlannedRecordListItem): NotePlannedRecordDefault {
     subTypeId: item.subTypeId,
     memo: item.memo,
     price: item.price,
-    // 旧 note の `!!plannedRecord.pairUserName`（共有かつ立替者あり）と同じ導出。
+    // 共有かつ立替者ありのとき isInstead=true。
     isInstead: item.isPair && item.pairUserName !== null,
     isPair: item.isPair
   };

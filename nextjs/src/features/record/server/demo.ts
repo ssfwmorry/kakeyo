@@ -9,7 +9,7 @@ import type {
   SummarizedRecordItem
 } from '../types';
 
-// L2 のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
+// record のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
 // withDemoRead に渡す。更新系は withDemoWriteVoid で no-op 成功にするため値は不要。
 // id は負値でダミー（実データと衝突しない・BigInt→number 済みの number）。
 

@@ -19,12 +19,10 @@ import {
 import * as service from '../server/services';
 import type { RecordError } from '../types';
 
-// note（記録入力）の record 用 Server Actions。保存/削除は成功時に calendar へ遷移する
+// 記録入力の record 用 Server Actions。保存/削除は成功時に calendar へ遷移する
 // ため flash 通知、検証失敗（遷移しない）のみ FormActionResult.toast / submission を返す。
 
-// record 保存/削除後の遷移先。旧 note は calendar に focus 付きで戻る。
-// NOTE(レーン跨ぎ): /calendar は L2/L5/L8 統合レーン（P5 直前）で実装される。
-// それまでこの redirect は 404 になりうる（authRoutes.afterLogin と同じ暫定状態）。
+// record 保存/削除後の遷移先。
 const CALENDAR_PATH = '/calendar';
 
 // service の失敗分類 → ユーザ向け文言。

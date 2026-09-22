@@ -3,9 +3,8 @@ import type { CalendarEvent, CalendarMonthData } from '../types';
 import { formatDaySum } from './format';
 
 // CalendarMonthData → カレンダー表示イベント（純粋関数）。
-// 旧 useCalendarStore.createCalendarEvents の移植。plan / reminder / 日別収支を
-// 素朴な CalendarEvent[] に落とす（FullCalendar の EventInput への最終変換は Client 側）。
-// 祝日は背景描画ではなくセル日付ラベルへ付す方針に変え、イベントとしては出さない
+// plan / reminder / 日別収支を素朴な CalendarEvent[] に落とす（FullCalendar の EventInput への最終変換は Client 側）。
+// 祝日はイベントとしては出さずセル日付ラベルへ付す
 //   （FullCalendar の背景イベントは daygrid で扱いが煩雑なため。祝日名は DaySum が保持）。
 
 // 日別収支ラベル（記録があり合計が非 0/または記録ありのときのみ数字を出す）。

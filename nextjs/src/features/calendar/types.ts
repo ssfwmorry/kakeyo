@@ -11,9 +11,9 @@ import type { Id } from '@/lib/shared/types/id';
 export type DaySum = {
   // JST の YYYY-MM-DD。
   dateStr: string;
-  // 自分視点の当日収支（旧 daySumList の sum）。records が無ければ 0。
+  // 自分視点の当日収支。records が無ければ 0。
   sum: number;
-  // その日の record 一覧（新しい順ではなく取得順のまま。表示側で整える）。
+  // その日の record 一覧（取得順のまま。表示側で整える）。
   records: RecordListItem[];
   // 祝日名（祝日でなければ null）。
   holidayName: string | null;
@@ -23,9 +23,9 @@ export type DaySum = {
 export type CalendarMonthData = {
   // 対象の年月（YYYY-MM）。
   yearMonth: string;
-  // 月の自分視点収支合計（旧 getMonthSum。正なら支出超過）。
+  // 月の自分視点収支合計（正なら支出超過）。
   monthSum: number;
-  // 期間内（前月21日〜翌月9日相当）の日別収支。dateStr をキーにした配列。
+  // 期間内（前月21日〜翌月9日）の日別収支。
   days: DaySum[];
   // 期間内の予定。
   plans: PlanItem[];

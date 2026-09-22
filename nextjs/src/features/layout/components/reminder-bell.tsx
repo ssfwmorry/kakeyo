@@ -15,9 +15,6 @@ import {
 import type { ReminderItem } from '@/features/plan-reminder';
 import { checkReminderAction } from '@/features/plan-reminder/actions';
 
-// リマインダー通知ベル（旧 AppBarNotification を踏襲）。
-// 期日を過ぎたリマインダー（dueReminders）の件数をバッジ表示し、ダイアログで一覧。
-// チェックで消化（checkReminderAction: 次回日付更新 / Stock 型は plan 化）。
 // 期日超過の判定は SSR 側（layout）で todayJst を使って行い、ここには超過分のみ渡す。
 
 export function ReminderBell({
@@ -71,8 +68,7 @@ export function ReminderBell({
                   disabled={isPending}
                   onClick={() => {
                     startTransition(async () => {
-                      // 消化結果の成否トーストを発火する（フォーム標準の
-                      // useFormToast と同じ sonner 経由。失敗を無反応にしない）。
+                      // 消化結果の成否トーストを発火する（失敗を無反応にしない）。
                       // 成功時は checkReminderAction 側の layout 再検証で
                       // dueReminders が再取得され、この一覧からも当該項目が消える。
                       const result = await checkReminderAction(reminder.id);

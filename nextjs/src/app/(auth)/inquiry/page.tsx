@@ -10,7 +10,6 @@ import {
 // inquiry（問い合わせ）画面。未ログインでもアクセス可（proxy.ts の publicPaths に '/inquiry'）。
 // 静的な案内文の表示のみで API 呼び出しなし。認証 layout を持たない (auth) グループに配置し、
 // URL を /inquiry に一致させて publicPaths と整合させている。
-// TODO: 内容差し替え予定（旧 pages/inquiry.vue の暫定文言を流用）。
 
 export default function InquiryPage() {
   return (

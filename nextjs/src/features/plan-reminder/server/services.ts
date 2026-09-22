@@ -292,8 +292,8 @@ export async function checkReminder(
       return err('unknown');
     }
     // Stock 型かつ conditionType=MONTH（Nヶ月後指定）のときのみ「現在の date」を
-    // 予定として残す。旧 checkReminder は plan 挿入を else 節（MONTH 側）に置くため、
-    // MONTH_DAY（月日指定）では Stock でも plan を作らない（＝余分な予定を作らない）。
+    // 予定として残す。MONTH_DAY（月日指定）では Stock でも plan を作らない
+    // （＝余分な予定を作らない）。
     // 所有列は reminder の所有に合わせる（pairId があればペア、なければ本人）。
     const isStockMonth =
       target.reminderType === ReminderType.stock &&

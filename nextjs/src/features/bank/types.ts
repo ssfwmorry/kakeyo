@@ -1,7 +1,7 @@
 import type { Id } from '@/lib/shared/types/id';
 import type { TableRow } from './domain/balance-table';
 
-// L7 bank 画面の FE 型（server-only を含まない。Client Component / barrel から利用可）。
+// bank 画面の FE 型（server-only を含まない。Client Component / barrel から利用可）。
 
 // 口座カード / チャート系列 1 件（色名込み）。
 export type BankItem = {

@@ -6,12 +6,12 @@ import { formatShortcutAmount } from '../domain/format';
 import { memoShortcutLabels } from '../labels';
 import type { ShortCutItem } from '../types';
 
-// L8 ショートカット一覧の Client Component（表示 + ワンタップ選択）。
+// ショートカット一覧の Client Component（表示 + ワンタップ選択）。
 // データ（items）は Server Component（calendar 統合レーン P5）から props で受ける。
-// ★ ショートカットからの記録は record ドメインの upsertRecord で行う（be-api.md）。
-//   L8 は record を所有しないため、ここでは記録処理を持たず onSelect コールバックで
-//   選択されたショートカットを親（P5 の calendar 統合）へ渡す設計にする。
-//   onSelect 未指定なら選択ボタンを出さない（純表示）。
+// ショートカットからの記録は record ドメインの upsertRecord で行う。
+// ショートカットは record を所有しないため、ここでは記録処理を持たず onSelect コールバックで
+// 選択されたショートカットを親（calendar 統合）へ渡す設計にする。
+// onSelect 未指定なら選択ボタンを出さない（純表示）。
 
 type ShortcutListProps = {
   items: ShortCutItem[];

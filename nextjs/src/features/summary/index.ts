@@ -1,7 +1,7 @@
 // summary feature の公開 API（barrel）。
-// ★ server-only（server/services・server/repositories・server/demo・schema-sql）と
+// server-only（server/services・server/repositories・server/demo・schema-sql）と
 //   Server Action（actions.ts・records-actions.ts）は re-export しない
-//   （FE から誤 import されるとビルドが壊れる／ページは直接 import する）。
+//   （ページは直接 import する）。
 // 公開するのは画面本体の Client Component と FE 型のみ。
 
 export { RecordsScreen } from './components/records-screen';

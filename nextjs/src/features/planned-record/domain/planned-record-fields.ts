@@ -2,16 +2,10 @@ import { resolveRecordType } from '@/lib/shared/domain/recordType';
 import type { Id } from '@/lib/shared/types/id';
 import type { RecordType } from '@/lib/shared/types/recordType';
 
-// planned_record の永続化フィールドの導出（純粋関数・planned-record ドメインの核）。
-// 旧 Nuxt upsertPlannedRecord の分岐（user_id / pair_id / record_type を
-// isPair・isInstead から決める）をここ 1 箇所へ集約する。record_type は共有の
-// resolveRecordType 経由で算出し、0/5/10 を手書きしない（方針確定書 §record_type）。
-// records と違い planned_records は is_settled を持たない（実体化時に SQL が導出する）。
-//
-// 旧実装の対応（api/supabase/plannedRecord.ts upsertPlannedRecord）:
-//   user_id    = isPair && !isInstead ? null : userUid
-//   pair_id    = isPair ? pairId : null
-//   record_type= !isPair ? 0 : isInstead ? 5 : 10
+// planned_record の永続化フィールド（user_id / pair_id / record_type）を
+// isPair・isInstead から導出する。record_type は共有の resolveRecordType 経由で
+// 算出し、数値を手書きしない。
+// planned_records は is_settled を持たない（実体化時に SQL が導出する）。
 
 type ResolvePlannedRecordOwnershipInput = {
   userUid: string;

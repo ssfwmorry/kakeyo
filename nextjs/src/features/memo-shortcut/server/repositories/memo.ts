@@ -7,18 +7,15 @@ import type { Id } from '@/lib/shared/types/id';
 // memo は pair 共有テーブル（自分 or ペアの TODO が見える）ため buildScopeWhere を通す。
 // memo の PK は int（BigInt ではない）ので id 変換は不要。
 
-// 取得系の戻り（TODO 1 件）。
 export type MemoListItem = {
   id: Id;
   memo: string;
-  // 自分個人の TODO か（true）、ペア共有の TODO か（false）。UI での区別に使える。
+  // 個人 TODO なら true、ペア共有 TODO なら false。
   isPair: boolean;
 };
 
-// delete の失敗種別（機械可読）。UI 文言はサービス/アクション層で付与する。
 export type MemoDeleteError = 'notFound';
 
-// pair 込み scope で「自分 + ペア」の TODO を取得。id 昇順で安定させる。
 export async function getMemoList(
   scope: SessionScope
 ): Promise<MemoListItem[]> {
@@ -29,14 +26,13 @@ export async function getMemoList(
   return rows.map((row) => ({
     id: row.id,
     memo: row.memo,
-    // pairId が入っている行はペア共有 TODO。
     isPair: row.pairId !== null
   }));
 }
 
-// isPair のとき pair_id、そうでなければ user_id に紐づける（旧 insertMemo の isPair 切替）。
-// isPair だが pairId 未設定（ペア未登録）は呼び出し側でありえない前提だが、
-// 念のため pairId が無ければ個人 TODO として登録する（サービス層で弾く設計）。
+// isPair のとき pair_id、そうでなければ user_id に紐づける。
+// isPair だが pairId 未設定（ペア未登録）は本来サービス層で弾く前提だが、
+// 念のため pairId が無ければ個人 TODO として登録する。
 export async function insertMemo(
   session: SessionData,
   input: { memo: string; isPair: boolean }
@@ -51,7 +47,7 @@ export async function insertMemo(
   });
 }
 
-// ★ deleteMany + scope を AND。count===0 = 他人 or 不存在 = notFound。
+// deleteMany + scope を AND（IDOR 防止）。count===0 = 他人 or 不存在 = notFound。
 export async function deleteMemo(
   scope: SessionScope,
   id: Id

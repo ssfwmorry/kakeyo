@@ -14,12 +14,9 @@ export function colorHex(name: string | null): string {
   return baseColorHex(name ?? SETTLEMENT_COLOR_NAME);
 }
 
-// サブカテゴリ積み上げ棒用の固定色（旧 SummaryBarType の subTypeColors）。
-// type 別の色（color_classifications）とは別系統で、1 カテゴリ内のサブカテゴリを
-// 見分けるための循環パレット。Recharts の fill に直接渡すため hex で持つ
-// （旧 CSS 色名 gold/mediumseagreen/... と同一色の hex 表現）。
-// ★このパレットが「サブカテゴリ色」の単一の正。積み上げ棒の色供給（actions の
-//   buildSubTypeStack）はここから import して使う（値の二重定義を作らない）。
+// サブカテゴリ積み上げ棒用の固定色。type 別の色（color_classifications）とは
+// 別系統で、1 カテゴリ内のサブカテゴリを見分けるための循環パレット。
+// Recharts の fill に直接渡すため hex で持つ。
 export const SUB_TYPE_COLORS = [
   '#ffd700',
   '#3cb371',
@@ -29,7 +26,7 @@ export const SUB_TYPE_COLORS = [
   '#d2691e'
 ] as const;
 
-// 「サブカテゴリなし」系列の色（旧 colorGrey）。
+// 「サブカテゴリなし」系列の色。
 export const NO_SUB_TYPE_COLOR = '#9e9e9e';
 
 export function subTypeColor(index: number): string {

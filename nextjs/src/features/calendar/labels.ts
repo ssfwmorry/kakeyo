@@ -14,7 +14,7 @@ export const calendarLabels = {
     addRecord: '記録＋',
     addPlan: '予定＋',
     editRecord: '記録を編集',
-    // 当月の全記録を一覧表示するトグル（旧 calendar.vue showAllRecords）。
+    // 当月の全記録を一覧表示するトグル。
     showAllRecords: '全ての記録',
     showSelectedDay: '選択日に戻す'
   },

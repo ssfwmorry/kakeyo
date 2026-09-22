@@ -8,18 +8,16 @@ import {
   PopoverTrigger
 } from '@/components/ui/popover';
 
-// 年月ダイレクトジャンプ（旧 components/PaginationBar.vue のタイトルタップ→年→月ピッカー）。
-// 中央ラベルをボタン化し、popover 内で「年グリッド → 月グリッド」の 2 段で任意年月を選ぶ。
-// summary 系 4 画面と calendar で共有する（差分リスト B-5）。値は 'YYYY-MM' で返す。
+// 年月ダイレクトジャンプ。中央ラベルをボタン化し、popover 内で「年グリッド → 月グリッド」の
+// 2 段で任意年月を選ぶ。summary 系 4 画面と calendar で共有する。値は 'YYYY-MM' で返す。
 
 type MonthJumpPickerProps = {
-  // 現在の 'YYYY-MM'（初期選択年に使う）。
+  // 初期選択年に使う。
   yearMonth: string;
-  // 中央に出す表示ラベル（例: '2026年9月'）。
   label: string;
   // 選択が確定したら 'YYYY-MM' を返す。
   onSelect: (yearMonth: string) => void;
-  // 選べる年の範囲（既定 2023〜現在年+1。旧 min=2023 を踏襲）。
+  // 選べる年の範囲（既定 2023〜現在年+1）。
   minYear?: number;
   maxYear?: number;
 };
@@ -74,8 +72,7 @@ export function MonthJumpPicker({
         {label}
       </PopoverTrigger>
       <PopoverContent className='w-64'>
-        {/* 年ピッカー（候補年のチップ一覧。選択中の年を強調）。旧 PaginationBar の
-            年ピッカー相当を、候補が数個のためチップ一列に集約した。 */}
+        {/* 年ピッカー（候補年のチップ一覧。選択中の年を強調）。候補が数個のためチップ一列に集約。 */}
         <div className='mb-2 flex flex-wrap gap-1'>
           {years.map((y) => (
             <Button

@@ -6,14 +6,14 @@ import { getPairId } from './pair';
 import { createSupabaseServerClient } from './supabase';
 import { findUserBySupabaseUid } from './user';
 
-// セッションの取得（凍結資産）。
+// セッションの取得。
 //
 // 【設計の要】認証（誰か）も認可の鍵（pairId）もすべてサーバ側の真偽源から導出し、
 // クライアント Cookie の値は信用しない。
 // - userUid : Supabase UID(UUID) を users.supabase_user_uid で突合し、全 FK のキーで
-//             ある既存 uid(旧 Firebase UID) に変換する（Firebase→Supabase Auth 移行）
+//             ある既存 uid に変換する
 // - email   : getUser()（Supabase サーバ検証済み）
-// - pairId  : userUid(=Firebase uid) から毎回 DB 照会（getPairId）
+// - pairId  : userUid から毎回 DB 照会（getPairId）
 // - isDemo  : email がデモ用資格情報と一致するか
 //
 // pairId/isDemo を署名 Cookie に載せる案は、署名では防げない「別ユーザの Cookie

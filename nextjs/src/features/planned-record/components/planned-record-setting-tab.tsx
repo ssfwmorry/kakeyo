@@ -11,14 +11,13 @@ import { swapPlannedRecordAction } from '../actions';
 import { plannedRecordLabels } from '../labels';
 import type { GroupedPlannedRecordList, PlannedRecordListItem } from '../types';
 
-// 設定「定期」タブ（Nuxt KakeiPlannedRecord.vue 移植）。定期一覧の表示・並べ替えのみを
-// 担い、編集は項目タップで note（定期編集）へ遷移する（fe-screens §SETTING）。
-// setting 画面は他レーンと共有されるため統合（P5）が setting page でこのタブを配置し、
-// データ（一覧・ペアモード）は統合側が server で取得して渡す。ルート page は作らない。
+// 設定「定期」タブ。定期一覧の表示・並べ替えのみを担い、編集は項目タップで
+// note（定期編集）へ遷移する。setting 画面は他レーンと共有されるため setting page が
+// このタブを配置し、データ（一覧・ペアモード）は server で取得して渡す。ルート page は作らない。
 
 type PlannedRecordSettingTabProps = {
   plannedRecordList: GroupedPlannedRecordList;
-  // ペア共有モードか（個人 = false）。getPairMode 由来を server から受ける。
+  // ペア共有モードか（個人 = false）。
   isPair: boolean;
 };
 
@@ -69,7 +68,7 @@ function PlannedRecordCardView({
   isEdit,
   nextId
 }: PlannedRecordCardViewProps) {
-  // 金額は支出/収入の符号を付けて表示（旧一覧の見せ方に合わせる）。
+  // 金額は支出/収入の符号を付けて表示。
   const amount = `${item.isPay ? '-' : '+'}${item.price.toLocaleString()}`;
   return (
     <Card>
@@ -92,7 +91,6 @@ function PlannedRecordCardView({
           </span>
         </span>
         {isEdit ? (
-          // 編集は note（定期編集）へ遷移する（旧: 項目タップ → note）。
           // Button は asChild 非対応のため Link に buttonVariants を当てる。
           <Link
             href={`/note?plannedRecordId=${item.id}`}

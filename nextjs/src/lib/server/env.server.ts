@@ -22,12 +22,12 @@ export const serverEnv = {
   supabaseDatabaseUrl: required('SUPABASE_DATABASE_URL'),
   // 使用する Postgres スキーマ（develop / public）
   supabaseDatabaseSchema: required('SUPABASE_DATABASE_SCHEMA'),
-  // Cookie セッションの署名に使う秘密鍵（P1 認証で使用）
+    // Cookie セッションの署名に使う秘密鍵
   sessionSecret: required('SESSION_SECRET'),
-  // デモログイン用の資格情報（旧 DEMO_USER_EMAIL/PASSWORD）。未設定ならデモ無効。
+  // デモログイン用の資格情報。未設定ならデモ無効。
   demoUserEmail: optional('DEMO_USER_EMAIL'),
   demoUserPassword: optional('DEMO_USER_PASSWORD'),
-  // 定期実体化 Cron（L3）の呼び出し認証に使う秘密。Vercel Cron は
+  // 定期実体化 Cron の呼び出し認証に使う秘密。Vercel Cron は
   // Authorization: Bearer <CRON_SECRET> を付与する。未設定なら Cron を無効化する
   // （認証なしで実体化 INSERT を叩かせない）。
   cronSecret: optional('CRON_SECRET')

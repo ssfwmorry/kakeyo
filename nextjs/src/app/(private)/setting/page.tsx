@@ -14,7 +14,7 @@ import {
 import { getPairMode } from '@/lib/server/pair/mode';
 import { SettingTabs } from './setting-tabs';
 
-// 設定画面（/setting）の薄いルート（Server Component）。fe-screens §SETTING の 3 タブ
+// 設定画面（/setting）の薄いルート（Server Component）。3 タブ
 // （家計管理 / 予定管理 / その他）を束ねる。実装済みの各設定タブ（他 feature の barrel）
 // を SettingTabs（Client）で配置し、必要データは各 feature の server サービスから直接
 // 取得して props で渡す（barrel は server-only を re-export しないため）。

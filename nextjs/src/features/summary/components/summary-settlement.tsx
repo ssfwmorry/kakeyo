@@ -30,19 +30,17 @@ import {
   RATE_LIST
 } from '../domain/settlement-rate';
 
-// 精算タブ（旧 SummarySettlement.vue の中核フローを移植）。
-// ペアの record を ME / PARTNER / COUPLE に分類表示し、未精算の立替 record ごとに
+// 精算タブ。ペアの record を ME / PARTNER / COUPLE に分類表示し、未精算の立替 record ごとに
 // 按分レート（10:0〜0:10）を割り当てる。レート別に「合計/現状/あるべき」を集計し、
-// 差額の総和から自動で「◯◯円のお渡し/受け取り」を提示する（旧 reportedDataByRate /
-// settlementResult）。確定すると精算 record を作成し、対象 record を精算済みにする。
+// 差額の総和から自動で「◯◯円のお渡し/受け取り」を提示する。
+// 確定すると精算 record を作成し、対象 record を精算済みにする。
 //
-// 3 ステップ（旧 step: READY → GOING → DONE）:
+// 3 ステップ:
 //  - READY: record 一覧の確認。「精算をはじめる」でレート割当へ。
 //  - GOING: 未精算立替へレート割当 → 差額を自動算出。「精算内容を確定」で送金入力へ。
 //  - DONE : 精算方法を選び、算出済みの金額・方向で精算 record 作成 + 精算済み化。
 //
-// 金額・方向はレート按分から算出するため手入力しない（旧仕様の自動算出を回復）。
-// 作成/精算は record レーンの既存 Server Action を再利用する（scope は Action 側で担保）。
+// 金額・方向はレート按分から算出するため手入力しない。
 
 type MethodOption = { id: Id; name: string };
 
@@ -50,13 +48,12 @@ type Step = 'ready' | 'going' | 'done';
 
 type SummarySettlementProps = {
   records: PairedRecordItem[];
-  // 精算方法（both.pair）。旧 methodList.value = data.both.pair。
   methods: MethodOption[];
   // 精算対象月（'YYYY-MM'）。作成 record の日付基準。
   yearMonth: string;
 };
 
-// ME / PARTNER / COUPLE のバケツ分け（旧 convertShowData）。
+// ME / PARTNER / COUPLE のバケツ分け。
 function bucketRecords(records: PairedRecordItem[]): {
   me: PairedRecordItem[];
   partner: PairedRecordItem[];
@@ -196,7 +193,7 @@ function ReadyStep({ count, onStart }: { count: number; onStart: () => void }) {
   );
 }
 
-// GOING: 立替ごとのレート割当 + 差額の自動算出（旧 reportedDataByRate / settlementResult）。
+// GOING: 立替ごとのレート割当 + 差額の自動算出。
 function GoingStep({
   settleable,
   rateByRecord,
@@ -402,7 +399,7 @@ function RateSelect({
   );
 }
 
-// レート別の集計（合計 / 現状 / あるべき）。旧 reportedDataByRate の表示。
+// レート別の集計（合計 / 現状 / あるべき）。
 function RateBreakdown({
   reports
 }: {
@@ -429,7 +426,7 @@ function RateBreakdown({
   );
 }
 
-// 差額の自動算出結果（旧 settlementResult）。
+// 差額の自動算出結果。
 function SettlementSummary({
   settlement
 }: {

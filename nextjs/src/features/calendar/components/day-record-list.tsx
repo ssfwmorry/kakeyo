@@ -4,15 +4,12 @@ import { useRouter } from 'next/navigation';
 import { RecordCard, type RecordListItem } from '@/features/record';
 import { calendarLabels } from '../labels';
 
-// 選択した日の record 一覧（旧 pages/calendar.vue の RecordCard 一覧の移植）。
-// 表示は record ドメインの共通 RecordCard に集約（方法色/共有/定期/収入青字/編集ガード）。
-// 編集導線は A-1 で接続済みの /note?RECORD= へ。編集可否（ペア相手の立替は不可・精算は
-// 不可）は RecordCard 内の isEnableEdit が判定し、可のときのみ編集ボタンを出す。
+// 編集可否（ペア相手の立替は不可・精算は不可）は RecordCard 内の isEnableEdit が
+// 判定し、可のときのみ編集ボタンを出す。
 // router は各リストで 1 回だけ取得し（行ごとに useRouter を呼ばない）、onEdit を渡す。
 
 type DayRecordListProps = {
   dateStr: string | null;
-  // その日の record（親が selectedDate に対応する DaySum.records を渡す）。
   records: RecordListItem[];
   holidayName: string | null;
 };
@@ -57,10 +54,9 @@ export function DayRecordList({
   );
 }
 
-// 当月の全記録を日付ごとにまとめて一覧する（旧 calendar.vue showAllRecords 相当）。
 // 親（calendar-screen）が month.days を並べ替え・フィルタして「記録のある日」のみ渡す。
 type AllRecordsListProps = {
-  // 表示する日（{ dateStr, records } の配列。records は 1 件以上・並び順は親が決める）。
+  // records は 1 件以上・並び順は親が決める。
   days: { dateStr: string; records: RecordListItem[] }[];
 };
 

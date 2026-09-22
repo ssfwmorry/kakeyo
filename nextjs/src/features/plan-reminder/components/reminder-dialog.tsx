@@ -30,10 +30,10 @@ import {
   reminderInsertSchema
 } from '../schemas';
 
-// 定期的な予定（reminder + condition）の作成ダイアログ（Nuxt PlanReminderDialog.vue 移植）。
+// 定期的な予定（reminder + condition）の作成ダイアログ。
 // reminder_type（残す/残さない）・condition_type（〜ヶ月後/月日）で必須項目が分岐する。
 // 分岐する数値はローカル state で持ち、hidden input として送出して Conform に渡す。
-// 現行は「追加/削除」のみで編集はないため upsert ではなく insert。
+// 追加/削除のみで編集はないため upsert ではなく insert。
 
 const { reminder: R, entity } = planReminderLabels;
 
@@ -61,7 +61,6 @@ export function ReminderDialog({
   });
   useCloseOnSuccess(result, onOpenChange);
 
-  // 分岐する条件はローカル state で持ち hidden input に載せる。
   const [reminderType, setReminderType] = useState<number>(ReminderType.stock);
   const [conditionType, setConditionType] = useState<number>(
     ConditionType.month
@@ -75,7 +74,7 @@ export function ReminderDialog({
   const monthDay = `${String(monthPart).padStart(2, '0')}-${String(dayPart).padStart(2, '0')}`;
   const isMonth = conditionType === ConditionType.month;
 
-  // 「日」候補は選択中の月に連動させ、存在しない月日（4/31・2/30 等）を選べなくする（旧 DaysByMonth 相当）。
+  // 「日」候補は選択中の月に連動させ、存在しない月日（4/31・2/30 等）を選べなくする。
   const dayOptions = dayOptionsForMonth(monthPart);
 
   // 月を切り替えたとき、現在の日がその月末を超えていたら末日へ丸める（例: 1/31 → 2 月選択で 2/28）。
@@ -229,7 +228,7 @@ export function ReminderDialog({
   );
 }
 
-// ラジオ 1 択（RadioGroupItem に id を振り Label で関連付ける。a11y 対応）。
+// RadioGroupItem に id を振り Label で関連付ける（a11y 対応）。
 function RadioOption({ value, label }: { value: string; label: string }) {
   const id = `radio-${value}-${label}`;
   return (
@@ -242,8 +241,7 @@ function RadioOption({ value, label }: { value: string; label: string }) {
   );
 }
 
-// 数値セレクト（base-ui Select は FormData 連携が煩雑なため、条件分岐値は
-// ローカル state + hidden input に載せる方針。ここは表示用の素の select）。
+// 表示用の素の select。base-ui Select は FormData 連携が煩雑なため使わない。
 type NativeSelectProps = {
   value: number;
   onChange: (value: number) => void;

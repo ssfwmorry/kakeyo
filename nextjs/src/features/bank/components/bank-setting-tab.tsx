@@ -10,10 +10,8 @@ import { bankLabels } from '../labels';
 import type { BankItem } from '../types';
 import { BankFormDialog } from './bank-form-dialog';
 
-// 設定「口座」タブ（Nuxt KakeiBank.vue 移植）。口座カードのグリッドを並べ、各カードの
-// 編集ボタン → BankFormDialog（編集）、「＋追加」→ BankFormDialog（新規）。個人モード
-// 専用データだが、表示可否の最終判定は setting 統合側の責務のため、ここは「渡されたら
-// 表示」に徹する（呼び出し側が個人モード時のみ描画する）。
+// 個人モード専用データだが、表示可否の最終判定は setting 統合側の責務のため、ここは
+// 「渡されたら表示」に徹する（呼び出し側が個人モード時のみ描画する）。
 
 type BankSettingTabProps = {
   banks: BankItem[];

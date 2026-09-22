@@ -10,10 +10,10 @@ import { toManUnit } from '../domain/format';
 import { bankLabels } from '../labels';
 import type { TableRow as BalanceTableRow, BankItem } from '../types';
 
-// 残高履歴テーブル。記録日 × 合計 × 各口座の残高。万単位表示（ConvertManUnit 相当）。
-// 未登録セルは全角スペース付きの '-　' で表示（旧 Nuxt の見た目を踏襲）。
+// 残高履歴テーブル。記録日 × 合計 × 各口座の残高。残高は万単位表示。
+// 未登録セルは幅を揃えるため全角スペース付きの '-　' で表示。
 
-// number|null を万単位表示に整形。null（未登録）は '-　'。
+// null（未登録）は '-　'。
 function formatCell(value: number | null): string {
   if (value === null) {
     return '-　';

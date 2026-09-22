@@ -2,9 +2,9 @@ import 'server-only';
 import type { Result } from '@/lib/shared/types/result';
 import { ok } from '@/lib/shared/types/result';
 
-// デモ注入の土台（凍結資産の骨組み。各ドメインが自分のモックを足す）。
-// 旧 `if (isDemoLogin) return DEMO_DATA...` の散在を解消し、Server 層でデモ判定時に
-// モックを注入する形へ集約する。引数順は 3 関数とも「isDemo → デモ時の値 → 実処理」で統一。
+// デモ注入の土台（各ドメインが自分のモックを足す）。
+// Server 層でデモ判定時にモックを注入する形へ集約する。
+// 引数順は 3 関数とも「isDemo → デモ時の値 → 実処理」で統一。
 //
 // 使い方（各ドメインのサービス層 = 戻りは Result。UI 文言は持たない）:
 //   const list = await withDemoRead(session.isDemo, demoTypeList, () =>

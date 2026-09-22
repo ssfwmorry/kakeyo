@@ -1,6 +1,5 @@
 import type { SessionScope } from '@/lib/shared/types/auth';
 
-// 本移行の心臓（凍結資産）。
 // Prisma は DB 直結で RLS をバイパスするため、ペア家計簿の「自分と共有相手の
 // データだけ見える」制御をアプリ層で保証する。取得系リポジトリは prisma を直接
 // where せず必ず buildScopeWhere / buildOwnerScopeWhere を経由すること。
@@ -8,8 +7,8 @@ import type { SessionScope } from '@/lib/shared/types/auth';
 
 // 多くのテーブル（methods / types / plan_types / records / planned_records /
 // plans / memos / short_cuts / reminders）は user_id と pair_id の "どちらか一方"
-// を持つ。旧 RPC の `user_id = 自分 OR pairs.user1_id/user2_id = 自分` は、pairId が
-// ログイン時に確定済みの本移行では `user_id = 自分 OR pair_id = pairId` に等価。
+// を持つ。pairId はログイン時に確定済みなので `user_id = 自分 OR pair_id = pairId`
+// で「自分 or ペア」を表現できる。
 type UserPairScopedWhere = {
   OR: Array<{ userId: string } | { pairId: number }>;
 };
@@ -27,7 +26,7 @@ export function buildScopeWhere({
   return { OR: or };
 }
 
-// どちらのヘルパを使うかの対応（誤選択は scope 漏れ＝情報漏洩に直結。手順書 §9）:
+// どちらのヘルパを使うかの対応（誤選択は scope 漏れ＝情報漏洩に直結）:
 // - records は pair_id を持ち「自分 or ペア」で見えるべき → buildScopeWhere（pair 込み）
 // - banks / bank_balances / short_cuts は個人専用（pair で共有しない） → buildOwnerScopeWhere
 type OwnerScopedWhere = {

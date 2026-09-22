@@ -3,8 +3,8 @@ import { cache } from 'react';
 import { prisma } from '@/lib/server/db/client';
 import type { Id } from '@/lib/shared/types/id';
 
-// L1 マスタ（color_classification）リポジトリ。
-// 色ピッカーやカードの色分けに使う。L4/L5/L7/L8 が参照する被参照 I/F。
+// マスタ（color_classification）リポジトリ。
+// 色ピッカーやカードの色分けに使う。複数レーンが参照する被参照 I/F。
 // マスタは全ユーザ共通の静的データのため scope 絞り込みは不要。
 
 // color_classifications: 色マスタ（red / pink / ... / black）。

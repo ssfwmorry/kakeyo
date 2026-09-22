@@ -15,7 +15,7 @@ import { memoDeleteSchema, memoFormSchema } from './schemas/memo-schema';
 import * as service from './server/services';
 import type { MemoError } from './types';
 
-// L8 memo（TODO）の Server Actions。bank/type-method を手本に
+// memo（TODO）の Server Actions。bank/type-method を手本に
 // parseWithZod → service（Result）→ toFormResult。
 // TODO は calendar 内の同一画面内更新（遷移なし）のため flash ではなく
 // FormActionResult.toast を使い、保存後 revalidatePath('/calendar') で再取得する。

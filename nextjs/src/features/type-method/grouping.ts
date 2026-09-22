@@ -9,8 +9,7 @@ import type {
 } from './types';
 
 // 画面用グルーピングの純粋関数（server-only を含まない = Vitest 対象）。
-// 旧 Nuxt の getGroupedTypeList / filter(...) を移植し、色名解決 + is_pair 判定 +
-// income/pay × self/pair の振り分けを行う。DB / React に触れない。
+// 色名解決 + is_pair 判定 + income/pay × self/pair の振り分けを行う。DB / React に触れない。
 
 // 色 id → 色名の索引を作る。
 function toColorNameMap(colors: ColorClassification[]): Map<number, string> {
@@ -71,9 +70,9 @@ function toMethodGroupKey(isPay: boolean | null): 'pay' | 'income' | 'both' {
 }
 
 // method 行を支払/受取/精算 × self/pair にグルーピングする。
-// 精算（both）はペア共有専用で self は常に空にする（旧 getMethodList の both.self: [] 固定を踏襲）。
-// 個人所有（isPair=false）の精算 method は正常運用では作られないが、旧データ由来のものが
-// あっても self 側へ漏らさない（GroupedMethodList の「both.self は常に空」契約を実装で保証）。
+// 精算（both）はペア共有専用で self は常に空にする。
+// 個人所有（isPair=false）の精算 method は正常運用では作られないが、混入していても
+// self 側へ漏らさない（GroupedMethodList の「both.self は常に空」契約を実装で保証）。
 export function groupMethodList(
   rows: MethodRow[],
   colors: ColorClassification[]

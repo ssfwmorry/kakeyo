@@ -18,9 +18,7 @@ import { planReminderLabels } from '../labels';
 import type { GroupedReminderList, ReminderItem } from '../types';
 import { ReminderDialog } from './reminder-dialog';
 
-// 定期的な予定（reminder）設定タブ（Nuxt PlanReminder.vue 移植）。
-// 一覧表示 + 削除（確認ダイアログ）+ 「＋」で作成ダイアログ。編集はなし（現行踏襲）。
-// isPair は setting 側のペアモード由来を受け、self/pair を振り分ける。
+// 定期的な予定（reminder）設定タブ。作成と削除のみで編集機能は持たない。
 
 const { reminder: R } = planReminderLabels;
 
@@ -121,12 +119,12 @@ function ReminderCardView({ reminder }: ReminderCardViewProps) {
   );
 }
 
-// 条件の人間可読テキスト（現行 PlanReminder.vue の表示ロジック踏襲）。
+// 条件の人間可読テキストを組み立てる。
 function describeCondition(reminder: ReminderItem): string {
   if (reminder.conditionType === ConditionType.month) {
     const base = reminder.baseType === BaseType.now ? R.baseNow : R.baseDate;
     return `${base}${R.from}${reminder.month ?? ''}${R.months}`;
   }
-  // 月日: 来年の MM-DD。
+  // 月日指定は常に来年の MM-DD として表示する。
   return `${R.nextYearPrefix}${reminder.monthDay ?? ''}`;
 }

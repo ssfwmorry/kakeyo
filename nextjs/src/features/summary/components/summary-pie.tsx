@@ -12,7 +12,7 @@ import { toRecordsSearchParams } from '../records-query';
 import { PeriodNav } from './period-nav';
 import { SummaryPieChart } from './summary-pie-chart';
 
-// 内訳タブ（旧 SummaryPie.vue）。カテゴリ別/方法別の円グラフ + 一覧。
+// 内訳タブ。カテゴリ別/方法別の円グラフ + 一覧。
 // トグル（支出/収入・カテゴリ/方法・立替込み）と月移動で Server Action を再取得する。
 
 type SummaryPieProps = {
@@ -29,7 +29,7 @@ export function SummaryPie({ isPair, isExistPair }: SummaryPieProps) {
   const [yearMonth, setYearMonth] = useState(currentYearMonth);
   const [data, setData] = useState<PieShowData>({ slices: [], list: [] });
 
-  // 立替込みトグルは「ペアあり かつ 個人モード」時のみ意味を持つ（旧 FE 踏襲）。
+  // 立替込みトグルは「ペアあり かつ 個人モード」時のみ意味を持つ。
   const showInsteadToggle = isExistPair && !isPair;
 
   const refetch = (next: {
@@ -50,7 +50,7 @@ export function SummaryPie({ isPair, isExistPair }: SummaryPieProps) {
     });
   };
 
-  // 年月を移動して再取得する（前後移動・年月ジャンプ共通）。records-screen と同型。
+  // 年月を移動して再取得する（前後移動・年月ジャンプ共通）。
   const goYearMonth = (next: string) => {
     setYearMonth(next);
     refetch({ isPay, isType, isIncludeInstead, yearMonth: next });
@@ -83,7 +83,6 @@ export function SummaryPie({ isPair, isExistPair }: SummaryPieProps) {
       isPay,
       isType,
       isPair,
-      // 旧 FE の quirk（isExistPair? true : null）は本移植では意味のある値へ正す:
       // 個人モードで立替込みトグルが出るときはその値、それ以外は false。
       isIncludeInstead: showInsteadToggle ? isIncludeInstead : false,
       yearMonth,

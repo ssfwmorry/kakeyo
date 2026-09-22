@@ -16,7 +16,7 @@ import { TypeDialog } from './type-dialog';
 
 // カテゴリ設定タブ。支出/収入の切替、編集/並べ替えモード、カテゴリ・サブカテゴリの
 // CRUD ダイアログを束ねる Client Component。データは server で取得済みを props で受ける
-// （P5 の setting page が getTypeCardList の結果を渡す）。
+// （setting page が getTypeCardList の結果を渡す）。
 
 type KakeiTypeProps = {
   typeList: GroupedTypeList;

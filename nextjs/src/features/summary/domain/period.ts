@@ -3,13 +3,12 @@ import { toYearMonthJst } from '@/lib/shared/domain/date';
 // 月/年ナビの純粋計算（server-only を含まない = Client / Vitest 双方から使う）。
 // 'YYYY-MM' 文字列と year(number) を、暦を跨いで前後に動かす。
 
-// サポートする年の範囲（旧 utils/time.ts の PrevYear/NextYear に合わせ 2000〜2099 年）。
+// サポートする年の範囲。
 const MIN_YEAR = 2000;
 const MAX_YEAR = 2099;
 
 // 'YYYY-MM' を月単位で delta 移動する（delta は ±整数）。
-// サポート範囲（2000-01〜2099-12）外へは移動せず、範囲端で頭打ちにする
-// （旧はサポート外を alert で拒否していたが、Next では端でクランプして進めない挙動に置換）。
+// サポート範囲（2000-01〜2099-12）外へは移動せず、範囲端で頭打ちにする。
 export function shiftMonth(yearMonth: string, delta: number): string {
   const [yearStr, monthStr] = yearMonth.split('-');
   const year = Number(yearStr);
@@ -25,7 +24,7 @@ export function shiftMonth(yearMonth: string, delta: number): string {
 }
 
 // year を delta 移動する（delta は ±整数）。サポート範囲（2000〜2099）で頭打ちにする。
-// 推移/カテゴリ別の年ナビ（旧 PrevYear/NextYear 相当）で使う。
+// 推移/カテゴリ別の年ナビで使う。
 export function shiftYear(year: number, delta: number): number {
   return Math.min(Math.max(year + delta, MIN_YEAR), MAX_YEAR);
 }
@@ -36,7 +35,6 @@ export function monthLabel(yearMonth: string): string {
   return `${yearStr}年${Number(monthStr)}月`;
 }
 
-// 年の表示ラベル。
 export function yearLabel(year: number): string {
   return `${year}年`;
 }

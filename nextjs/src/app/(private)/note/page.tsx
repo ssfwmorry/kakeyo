@@ -16,14 +16,12 @@ import { parseQueryId } from '@/lib/shared/domain/queryId';
 
 // note 画面（/note）の薄いルート（Server Component）。認証 → カテゴリ/方法一覧・
 // 毎月何日か（day）・ペアモードを並行取得し、Client のフォームに渡すだけ。
-// record（実績）と planned_record（定期）を「記録」「定期」タブで切り替える
-// （fe-screens §NOTE: 同一 UI で record / planned_record を扱う）。
-// 編集導線は 2 系統（旧 note.vue の ?key=RECORD / ?key=PLANNED_RECORD 相当）:
+// record（実績）と planned_record（定期）を「記録」「定期」タブで切り替える。
+// 編集導線は 2 系統:
 //   - ?RECORD=<id>          : records/calendar から。記録タブを初期表示し record 1 件をプリフィル。
 //   - ?plannedRecordId=<id> : setting の定期一覧から。定期タブを初期表示し planned 1 件をプリフィル。
 // 両者が同時に来ることは無い想定だが、来た場合は record を優先する（記録タブ）。
-// type/method/day は被参照 feature の server サービスから取得する
-// （server-only 関数は barrel 経由ではなく server/* を直接 import する）。
+// server-only 関数は barrel 経由ではなく server/* を直接 import する。
 
 export default async function NotePage({
   searchParams

@@ -1,6 +1,6 @@
 import type { Id } from '@/lib/shared/types/id';
 
-// L4 画面（設定）用の FE 型。被参照 I/F（repositories の *Summary）とは別に、
+// 画面（設定）用の FE 型。被参照 I/F（repositories の *Summary）とは別に、
 // 色名・is_pair・income/pay × self/pair グルーピングを含む画面専用の形をここに置く。
 // server-only を含まないため Client Component / Vitest から import 可能。
 

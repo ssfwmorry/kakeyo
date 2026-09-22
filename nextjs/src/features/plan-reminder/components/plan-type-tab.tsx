@@ -12,16 +12,12 @@ import { planReminderLabels } from '../labels';
 import type { GroupedPlanTypeList, PlanTypeCard } from '../types';
 import { PlanTypeDialog } from './plan-type-dialog';
 
-// 予定カテゴリ設定タブ（Nuxt PlanType.vue 移植）。編集/並べ替えモードを切替え、
-// カテゴリの CRUD ダイアログと並べ替えボタンを束ねる Client Component。
-// データは server で取得済みを props で受ける（setting 統合 page が渡す）。
-// isPair は setting 側のペアモードで振り分け済みのリストを渡す前提だが、
-// 表示のため self/pair 両方を持つ list を受け取り、ここで振り分ける。
+// self/pair 両方を持つ list を受け取り、isPair でここで振り分けて表示する。
 
 type PlanTypeTabProps = {
   planTypeList: GroupedPlanTypeList;
   colors: ColorClassification[];
-  // ペア共有モードか（個人 = false）。getPairMode 由来を server から受ける。
+  // ペア共有モードか（個人 = false）。
   isPair: boolean;
 };
 

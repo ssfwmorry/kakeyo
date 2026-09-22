@@ -19,14 +19,12 @@ import type {
   SummarizedRecordQuery
 } from '../../types';
 
-// record レーンのリポジトリ層（被参照の中心）。取得系はグループ A（Prisma ORM の
-// include/relation）で移植し、集計の CASE WHEN が絡む get_summarized/paired の where
-// 条件は functions.md を壊さず TS で表現する。
+// record レーンのリポジトリ層。
 
-// records への INSERT 入力（L3 の実体化バッチが使う最小の形）。
+// records への INSERT 入力（定期実体化バッチが使う最小の形）。
 // record_type は resolveRecordType 済みの値を渡す前提（呼び出し側が算出する）。
 // userId は record_type=10（PAIR/共有財布）の planned_record 実体化で null が入りうる
-// ため string | null（実 DB / schema.prisma とも user_id は nullable。★L3 申し送り）。
+// ため string | null（user_id は nullable）。
 export type RecordInsertInput = {
   userId: string | null;
   pairId: Id | null;
@@ -58,11 +56,9 @@ export type RecordUpsertInput = {
   recordType: RecordType;
 };
 
-// 取得系（グループ A: Prisma ORM）
-
-// get_record_list / get_summarized_record_list の共通 include。マッパーが読む列だけを
-// select で絞る（method/type の名前＋色名、subType 名、ペア相手の user 名。pair 行自体は
-// 使わない＝scalar の pairId で判定するため include しない）。他レーンの select 方式と統一。
+// 取得系の共通 include。マッパーが読む列だけを select で絞る（method/type の名前＋色名、
+// subType 名、ペア相手の user 名。pair 行自体は使わない＝scalar の pairId で判定するため
+// include しない）。
 const recordInclude = {
   method: {
     select: { name: true, colorClassification: { select: { name: true } } }
@@ -88,7 +84,7 @@ function isPairRecord(row: RecordWithRelations): boolean {
   return row.pairId !== null;
 }
 
-// READ: 期間内 record（カレンダー用）。get_record_list を Prisma ORM で移植。
+// READ: 期間内 record（カレンダー用）。
 // datetime は [start, end]（両端含む）で絞る。scope は自分 or ペア。
 export async function getRecordList(
   scope: SessionScope,
@@ -105,8 +101,8 @@ export async function getRecordList(
   return rows.map((row) => toRecordListItem(row, scope.userUid));
 }
 
-// READ: 条件検索 record（records 明細画面用）。get_summarized_record_list を移植。
-// 精算(15)は取得されない（旧 RPC 仕様）。ペア関係 × 立替込みの分岐は where で表現する。
+// READ: 条件検索 record（records 明細画面用）。
+// 精算(15)は取得されない。ペア関係 × 立替込みの分岐は where で表現する。
 export async function getSummarizedRecordList(
   scope: SessionScope,
   query: SummarizedRecordQuery
@@ -116,8 +112,8 @@ export async function getSummarizedRecordList(
       AND: [
         buildScopeWhere(scope),
         buildSummarizedYearMonthWhere(query.yearMonth),
-        // 旧 SQL は inner join types = type 未設定 record（精算 15 等）を除外する。
-        // is_pay フィルタ頼みの間接除外ではなく、除外意図を明示する。
+        // type 未設定 record（精算 15 等）を除外する。is_pay フィルタ頼みの間接除外では
+        // なく、除外意図を明示する。
         { typeId: { not: null } },
         { isPay: query.isPay },
         buildSummarizedTargetWhere(query),
@@ -130,8 +126,8 @@ export async function getSummarizedRecordList(
   return rows.map((row) => toSummarizedRecordItem(row, scope.userUid));
 }
 
-// READ: ペアの record（精算画面用）。get_paired_record_list を移植。
-// pair_id を持つ record のみ（inner join pairs 相当）。scope で自分のペアに限定。
+// READ: ペアの record（精算画面用）。
+// pair_id を持つ record のみ。scope で自分のペアに限定。
 export async function getPairedRecordList(
   scope: SessionScope,
   yearMonth: string
@@ -140,7 +136,6 @@ export async function getPairedRecordList(
     where: {
       AND: [
         buildScopeWhere(scope),
-        // 旧 RPC は pairs を inner join = pair_id 必須。
         { pairId: { not: null } },
         buildSummarizedYearMonthWhere(yearMonth)
       ]
@@ -151,10 +146,9 @@ export async function getPairedRecordList(
   return rows.map((row) => toPairedRecordItem(row, scope.userUid));
 }
 
-// 取得系: where 断片ヘルパ（集計 CASE WHEN の移植）
+// 取得系: where 断片ヘルパ
 
 // datetime を JST 暦月 [monthStart, nextMonthStart) で絞る。
-// 旧 RPC は to_char(cast(datetime as date),'YYYY-MM')＝DB(JST 運用)のローカル暦月一致。
 // 保存も startOfDayJst（JST 0:00）で行うため、読み取りも date.ts の JST 月境界に揃える
 // （UTC 境界だと JST 月初/月末の 9 時間分がズレて集計から漏れ/混入する）。
 function buildSummarizedYearMonthWhere(
@@ -168,8 +162,7 @@ function buildSummarizedYearMonthWhere(
   };
 }
 
-// isType による絞り込み対象（type/sub_type or method）。旧 RPC の
-// input_is_type / input_id / input_sub_type_id を移植。
+// isType による絞り込み対象（type/sub_type or method）。
 function buildSummarizedTargetWhere(
   query: SummarizedRecordQuery
 ): Prisma.RecordWhereInput {
@@ -182,7 +175,7 @@ function buildSummarizedTargetWhere(
   return { typeId: query.id };
 }
 
-// ペア関係 × 立替込みの絞り込み（旧 RPC の 4 分岐 CASE を移植）。
+// ペア関係 × 立替込みの絞り込み（4 分岐）。
 // - pair && include   : pair_id あり（共有全部）
 // - pair && !include   : pair_id あり かつ record_type in (10,15)（立替を除く）
 // - !pair && include   : 自分の user_id（個人＋自分の立替＋精算）
@@ -210,7 +203,7 @@ function buildSummarizedPairWhere(
 
 // 取得系: 行 → 公開 DTO 変換（BigInt→number 境界）
 
-// 立替かどうか（個人 record は判定不能のため null。旧 FE 整形踏襲）。
+// 立替かどうか（個人 record は判定不能のため null）。
 function toIsInstead(isPair: boolean, recordType: RecordType): boolean | null {
   if (!isPair) {
     return null;
@@ -264,7 +257,7 @@ function toRecordListItem(
     subTypeName: row.subType?.name ?? null,
     typeColorClassificationName: row.type?.colorClassification.name ?? null,
     isPair,
-    // 旧 RPC は pair_id ありのとき records.user 名を引く（立替者名）。
+    // pair_id ありのとき records.user 名を引く（立替者名）。
     pairUserName: isPair ? (row.user?.name ?? null) : null,
     isInstead: toIsInstead(isPair, recordType),
     isSettlement: toIsSettlement(isPair, recordType)
@@ -349,18 +342,16 @@ export async function findRecordInScope(
 }
 
 // READ: note（記録編集）の初期値 1 件。scope 内でなければ null。
-// 旧 note.vue setPageRecord の編集プリフィルに対応する（id/isPay/date/price/memo/
-// methodId/isInstead/typeId/subTypeId）。isInstead は旧 note の `!!pairUserName` と
-// 等価な「共有かつ user_id あり（=立替者が特定されている）」で導出する
+// isInstead は「共有かつ user_id あり（=立替者が特定されている）」で導出する
 // （findPlannedRecordForEdit と同流儀）。datetime は JST 暦日（YYYY-MM-DD）へ丸める。
 export async function findRecordForEdit(
   scope: SessionScope,
   id: Id
 ): Promise<NoteRecordDefault | null> {
   const row = await prisma.record.findFirst({
-    // 精算 record（record_type=15・is_pay=null・type なし）は記録タブで編集できない
-    // （旧 note.vue も精算は編集導線に乗らない）。UI 前提をデータ層でも保証し、
-    // ?RECORD=<精算id> の直打ちで壊れた編集フォームが開くのを防ぐ。
+    // 精算 record（record_type=15・is_pay=null・type なし）は記録タブで編集できない。
+    // UI 前提をデータ層でも保証し、?RECORD=<精算id> の直打ちで壊れた編集フォームが
+    // 開くのを防ぐ。
     where: {
       AND: [
         { id },
@@ -388,7 +379,7 @@ export async function findRecordForEdit(
   };
 }
 
-// CREATE（まとめ INSERT）。定期実体化（L3 Cron）などから使う被参照 I/F。
+// CREATE（まとめ INSERT）。定期実体化（Cron）などから使う。
 // scope は所有者確定用（現状は追加検証に使わないが、将来の絞り込み拡張の受け口）。
 export async function insertRecords(
   _scope: SessionScope,
@@ -415,11 +406,9 @@ export async function insertRecords(
   });
 }
 
-// CREATE / UPDATE は Prisma ORM で行う。records.user_id は実 DB（develop/public）で
-//   nullable であり schema.prisma も String?（nullable）に確定済みのため、PAIR
-//   （record_type=10・共有かつ非立替）record の user_id=null を型付き create/update で
-//   そのまま書ける（旧 Nuxt upsertRecord / get_record_list の left join と整合）。
-//   所有列（user_id/pair_id/is_settled/record_type）は service が resolveRecordOwnership 済み。
+// records.user_id は nullable のため、PAIR（record_type=10・共有かつ非立替）record の
+//   user_id=null を型付き create/update でそのまま書ける。所有列（user_id/pair_id/
+//   is_settled/record_type）は service が resolveRecordOwnership 済み。
 
 // CREATE（1 件）。note の新規登録。所有列は service が resolveRecordOwnership 済み。
 export async function insertRecord(input: RecordUpsertInput): Promise<void> {
@@ -513,7 +502,7 @@ export async function insertSettlementRecord(input: {
 }
 
 // UPDATE（一括精算）。scope を where に AND し、更新できた件数を返す
-// （bank/memo と同じく scope 保証を mutation の DB 条件に閉じ込める。IDOR 防御）。
+// （scope 保証を mutation の DB 条件に閉じ込める。IDOR 防御）。
 export async function markRecordsSettled(
   scope: SessionScope,
   ids: Id[]
@@ -526,7 +515,7 @@ export async function markRecordsSettled(
 }
 
 // DELETE（1 件）。scope を where に AND し、削除できたかを返す
-// （bank/memo と同パターン。scope 外の行は count===0 で notFound）。
+// （scope 外の行は count===0 で notFound）。
 export async function deleteRecordById(
   scope: SessionScope,
   id: Id

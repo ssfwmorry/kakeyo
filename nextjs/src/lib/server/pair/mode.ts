@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 // ペアモード（共有 ON/OFF）の単一の正（凍結資産）。
 //
 // 「見えるデータのスコープが変わる切替」なので、両方のデータを持って出し分けず、
-// Cookie に状態を持ち、トグルで再 fetch する（方針確定書 §8）。状態とデータが
+// Cookie に状態を持ち、トグルで再 fetch する。状態とデータが
 // 1:1 対応し責務が明快になる。全レーンはこのモジュール経由でモードを読む
 // （Cookie 名・既定値・再検証を各レーンで発明させない）。
 //
@@ -19,7 +19,7 @@ const PAIR_MODE_COOKIE = 'pair-mode';
 // 共通レイアウトの pair-mode-switch が PATHS_WITHOUT_PAIR を使って行う。
 export { PAGES_WITHOUT_PAIR } from '@/lib/shared/pair/pages-without-pair';
 
-// 現在のペアモードを Cookie から読む（既定は false = 個人モード。現行踏襲）。
+// 現在のペアモードを Cookie から読む（既定は false = 個人モード）。
 // Server Component / Server Action / サービス層から呼ぶ。
 export async function getPairMode(): Promise<boolean> {
   const cookieStore = await cookies();

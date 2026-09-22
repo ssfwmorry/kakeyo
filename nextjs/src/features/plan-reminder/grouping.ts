@@ -46,7 +46,7 @@ export function toPlanItems(rows: PlanRow[]): PlanItem[] {
   }));
 }
 
-// reminder 行 → self/pair/all 振り分け（現行 getReminderList 踏襲）。
+// reminder 行 → self/pair/all 振り分け。
 export function groupReminderList(rows: ReminderRow[]): GroupedReminderList {
   const items: ReminderItem[] = rows.map((row) => ({
     id: row.id,

@@ -4,13 +4,11 @@ import { buildOwnerScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
-// L7 bank 残高履歴（bank_balances）リポジトリ（server-only）。
 // bank_balances は user_id 列を持たない（price + created_at の履歴テーブル）。
 // そのため所有者絞り込みは親 bank 経由で行う: where { bank: buildOwnerScopeWhere(scope) }。
-// ★ 個人専用（pair で共有しない）のため buildScopeWhere ではなく buildOwnerScopeWhere。
+// 個人専用（pair で共有しない）のため buildScopeWhere ではなく buildOwnerScopeWhere。
 
-// 履歴の遡及期間（5 年）。旧 Nuxt の変数名は ago2Years だが実体は 5 年だったため
-// 正しく 5 年で移植する（マジックナンバーを避けて定数化）。
+// 履歴の遡及期間（5 年）。
 const HISTORY_YEARS = 5;
 
 // 取得系の 1 行（整形前の生に近い形）。合計補完は domain/balance-table が行う。
@@ -44,9 +42,9 @@ export async function getBankBalanceList(
   }));
 }
 
-// ★ 挿入前に、渡された bankId が全て自分の口座か検証する（他人の口座に残高を
-//   差し込ませない）。検証対象の id だけを in で絞って count し、ユニークな
-//   bankId 数と一致すれば全て自分の口座（全所有口座を引かずに済む）。
+// 挿入前に、渡された bankId が全て自分の口座か検証する（他人の口座に残高を
+// 差し込ませない）。検証対象の id だけを in で絞って count し、ユニークな
+// bankId 数と一致すれば全て自分の口座（全所有口座を引かずに済む）。
 export async function insertBankBalances(
   scope: SessionScope,
   rows: Array<{ bankId: Id; price: number }>

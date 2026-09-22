@@ -12,9 +12,7 @@ import { fetchSummarizedRecordsAction } from '../records-actions';
 import type { RecordsQuery } from '../records-query';
 import { PeriodNav } from './period-nav';
 
-// records 明細画面（旧 pages/records.vue）。summary（内訳）から遷移した条件の record 一覧。
-// 月移動 / 合計表示 / record カード → note 編集遷移 / ＜ で summary へ戻る。
-// records は個人専用扱い（ペア切替は出さない・PAGES_WITHOUT_PAIR）。
+// summary（内訳）から遷移した条件の record 一覧。records は個人専用扱いのためペア切替は出さない。
 
 type RecordsScreenProps = {
   query: RecordsQuery;
@@ -29,7 +27,6 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
 
   const total = records.reduce((sum, r) => sum + r.price, 0);
 
-  // 指定の年月へ移動して再取得する（前後移動・年月ジャンプ共通）。
   const goYearMonth = (next: string) => {
     setYearMonth(next);
     startTransition(async () => {
@@ -42,10 +39,8 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
   };
   const move = (delta: number) => goYearMonth(shiftMonth(yearMonth, delta));
 
-  // 日付ごとにグルーピング（降順で来る前提）。
   const groups = groupByDate(records);
 
-  // 見出し（支出/収入 カテゴリ or 支払/受取 方法）。
   const heading = query.isType
     ? query.isPay
       ? '支出カテゴリ'
@@ -124,7 +119,7 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
 
 type DateGroup = { date: string; records: SummarizedRecordItem[] };
 
-// datetime を JST 日付でグルーピング（入力は降順前提。出現順を保つ）。
+// datetime を JST 日付でグルーピング。入力の出現順（降順前提）を保つ。
 function groupByDate(records: SummarizedRecordItem[]): DateGroup[] {
   const groups: DateGroup[] = [];
   const indexByDate = new Map<string, number>();

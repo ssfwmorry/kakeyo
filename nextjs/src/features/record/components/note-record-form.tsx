@@ -41,7 +41,7 @@ type NoteRecordFormProps = {
   editing?: NoteRecordDefault;
 };
 
-// 入力状態（旧 note.vue の ref 群）をまとめて扱うためのローカル型。
+// 入力状態をまとめて扱うためのローカル型。
 type NoteState = {
   isPay: boolean;
   date: string;
@@ -67,7 +67,7 @@ export function NoteRecordForm({
     setState((prev) => ({ ...prev, ...next }));
 
   const view = useNoteView(typeList, methodList, isPair, state);
-  // 収支/立替の切替時は選択をリセットする（旧 resetInput）。
+  // 収支/立替の切替時は選択をリセットする。
   const resetSelection = () =>
     patch({ typeId: null, subTypeId: null, methodId: null });
 
@@ -271,14 +271,14 @@ function toInitialState(editing?: NoteRecordDefault): NoteState {
     typeId: editing?.typeId ?? null,
     subTypeId: editing?.subTypeId ?? null,
     methodId: editing?.methodId ?? null,
-    // 立替は既定 ON（旧 note 踏襲）。共有 & 支出のときのみ意味を持つ。
+    // 立替は既定 ON。共有 & 支出のときのみ意味を持つ。
     isInstead: editing?.isInstead ?? true,
     memo: editing?.memo ?? '',
     price: editing?.price === undefined ? '' : String(editing.price)
   };
 }
 
-// 送信可否: カテゴリ確定・方法選択済み・共有時はメモ必須（旧 note の disabled 条件）。
+// 送信可否: カテゴリ確定・方法選択済み・共有時はメモ必須。
 function canSubmit(state: NoteState, isPair: boolean): boolean {
   if (state.methodId === null) {
     return false;

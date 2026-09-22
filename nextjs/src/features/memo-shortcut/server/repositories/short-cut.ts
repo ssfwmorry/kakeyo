@@ -7,11 +7,9 @@ import type { RecordType } from '@/lib/shared/types/recordType';
 
 // short_cut は個人専用テーブル（pair で共有しない）ため取得は buildOwnerScopeWhere
 // （buildScopeWhere ではない）を通す。short_cuts.id は BigInt のため境界で Number 変換する。
-// 旧 Nuxt に作成/削除 API は無く（be-api.md）、本レーンは一覧取得のみ。記録自体は
-// record ドメインの upsertRecord が担う。
+// 本レーンは一覧取得のみ（作成/削除なし）。記録自体は record ドメインの upsertRecord が担う。
 
 // ショートカット 1 件（type/sub_type/method・color 名を結合済み）。
-// price は Int（金額）。record_type は records と同様の分類。
 export type ShortCutListItem = {
   id: Id;
   isPay: boolean;
@@ -24,12 +22,10 @@ export type ShortCutListItem = {
   typeName: string;
   // type の色名（ショートカットカードの色分けに使う）。
   colorName: string;
-  // サブカテゴリは任意。未設定なら null。
   subTypeId: Id | null;
   subTypeName: string | null;
 };
 
-// type/method/subType を include し、type 経由で color 名を取り出す。id 昇順で安定させる。
 export async function getShortCutList(
   scope: SessionScope
 ): Promise<ShortCutListItem[]> {
@@ -49,7 +45,7 @@ export async function getShortCutList(
     orderBy: { id: 'asc' }
   });
   return rows.map((row) => ({
-    // ★ BigInt → number の境界変換。ここでしか BigInt を露出させない。
+    // BigInt → number の境界変換。ここでしか BigInt を露出させない。
     id: Number(row.id),
     isPay: row.isPay,
     price: row.price,

@@ -2,7 +2,7 @@ import 'server-only';
 import { RecordType } from '@/lib/shared/types/recordType';
 import type { MemoItem, ShortCutItem } from '../types';
 
-// L8 memo/shortcut のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
+// memo/shortcut のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
 // withDemoRead に渡す。更新系は withDemoWriteVoid で no-op 成功にするため値は不要。
 // id は実データと衝突しないよう負値にする（bank/type-method のデモに倣う）。
 

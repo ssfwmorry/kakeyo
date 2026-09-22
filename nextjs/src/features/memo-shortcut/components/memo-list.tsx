@@ -12,7 +12,7 @@ import { memoShortcutLabels } from '../labels';
 import { memoFormSchema } from '../schemas/memo-schema';
 import type { MemoItem } from '../types';
 
-// L8 TODO（memo）一覧 + 追加 + 削除の Client Component。
+// TODO（memo）一覧 + 追加 + 削除の Client Component。
 // bank の各フォームを手本に「1 フォーム = 1 スキーマ = 1 useForm」。
 // データ（items）は Server Component（calendar 統合レーン P5）から props で受ける。
 // hasPair=false のときは「ペアと共有」チェックを出さない（共有 TODO を作れない）。

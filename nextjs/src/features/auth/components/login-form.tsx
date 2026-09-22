@@ -16,11 +16,8 @@ import { loginSchema, resetPasswordSchema } from '../schemas/login-schema';
 
 const { appName, field, action } = authLabels;
 
-// login フォーム（Conform + Zod、通知はトースト）。
-// login / reset / demo をそれぞれ独立したフォーム・アクションとして扱う
-// （1 フォーム = 1 スキーマ = 1 useForm）。新規登録は現行 UI 非表示のため置かない。
-// 成否通知は useFormAction（useActionState + useFormToast）が action 結果の
-// toast を受けて自動発火する（購読宣言をフォームごとに書かない）。
+// login / reset / demo をそれぞれ独立したフォーム・アクションとして扱う。
+// 新規登録は UI 非表示のため置かない。
 
 export function LoginForm() {
   const [loginResult, login, isLoggingIn] = useFormAction(loginAction);
@@ -98,14 +95,14 @@ export function LoginForm() {
       </form>
 
       <div className='flex flex-col items-center gap-2'>
-        {/* 問い合わせ導線（旧ドロワーの inquiryItem 相当・未ログインでも到達可）。 */}
+        {/* 問い合わせ導線（未ログインでも到達可）。 */}
         <Link
           href='/inquiry'
           className='text-muted-foreground text-sm underline'
         >
           {action.inquiry}
         </Link>
-        {/* 使い方（とりせつ）への外部リンク（旧 login.vue の goTutorialPage 相当）。 */}
+        {/* 使い方（とりせつ）への外部リンク。 */}
         <a
           href={TUTORIAL_URL}
           target='_blank'

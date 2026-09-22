@@ -1,7 +1,6 @@
 import type { Id } from '@/lib/shared/types/id';
 
-// 内訳一覧「＞」→ /records 遷移のクエリ組み立て/読み取り（旧 RECORDS_QUERY_PARAM を
-// URL 検索パラメータに載せ替えたもの・方針書 §8: useRouterParamStore 廃止）。
+// 内訳一覧「＞」→ /records 遷移のクエリ組み立て/読み取り。
 // server-only を含まない純粋関数 = Client / records ページ双方から使う。
 
 // records 明細画面が必要とする全パラメータ（get_summarized_record_list の input +
@@ -21,7 +20,6 @@ export type RecordsQuery = {
   pairUserName: string | null;
 };
 
-// RecordsQuery → URLSearchParams（/records?... へ渡す）。
 export function toRecordsSearchParams(query: RecordsQuery): URLSearchParams {
   const params = new URLSearchParams();
   params.set('id', String(query.id));

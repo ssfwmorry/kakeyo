@@ -1,6 +1,6 @@
 import type { Id } from '@/lib/shared/types/id';
 
-// L5 plan / reminder 画面の FE 型（server-only を含まない。
+// plan / reminder 画面の FE 型（server-only を含まない。
 // Client Component / barrel / Vitest から利用可）。
 // 被参照 I/F（repositories 側の *Row）とは別に、色名・is_pair・self/pair
 // グルーピングを含む画面専用の形をここに置く。
@@ -52,7 +52,7 @@ export type ReminderItem = {
   baseType: number | null;
 };
 
-// 自分/ペア/全件に振り分けた reminder 一覧（現行 getReminderList の self/pair/all を踏襲）。
+// 自分/ペア/全件に振り分けた reminder 一覧（self/pair/all）。
 export type GroupedReminderList = {
   self: ReminderItem[];
   pair: ReminderItem[];

@@ -1,9 +1,9 @@
 import type { Id } from '@/lib/shared/types/id';
 
 // summary feature の公開 FE 型（server-only を含まない = Client / Vitest 用）。
-// 集計 RPC（グループ C）の出力を camelCase 化した形。id は int（BigInt を含まない）。
+// id は int（BigInt を含まない）。
 
-// get_type_summary の 1 カテゴリ分（sub_type 行を subTypes に畳み込み済み。旧 FE 整形踏襲）。
+// sub_type 行を subTypes に畳み込み済みのカテゴリ 1 件。
 // typeId=null は精算 record（type 未設定）の集計行。
 export type TypeSummaryItem = {
   typeId: Id | null;
@@ -33,14 +33,14 @@ export type MethodSummaryItem = {
   sum: number;
 };
 
-// get_pay_and_income_list の 1 行（登録がない月は返らない）。
+// 登録がない月は返らない。
 export type PayAndIncomeItem = {
   yearMonth: string;
   paySum: number;
   incomeSum: number;
 };
 
-// get_type_summary_period の 1 行。typeId=null は精算 record の集計行。
+// typeId=null は精算 record の集計行。
 export type TypeSummaryPeriodRow = {
   yearMonth: string;
   typeId: Id | null;
@@ -49,8 +49,7 @@ export type TypeSummaryPeriodRow = {
   sum: number;
 };
 
-// get_sub_type_summary 相当の 1 行（月 × サブカテゴリの合計）。
-// subTypeId=null は「サブカテゴリなし」の合計。
+// 月 × サブカテゴリの合計。subTypeId=null は「サブカテゴリなし」の合計。
 export type SubTypeSummaryRow = {
   yearMonth: string;
   subTypeId: Id | null;
@@ -72,7 +71,7 @@ export type TypeSummaryPeriodQuery = {
   year: number;
 };
 
-// 推移 > カテゴリ別のチップ（カテゴリ選択）。getTypeCardList を平坦化して作る。
+// 推移 > カテゴリ別のチップ（カテゴリ選択）。
 // isPay × isPair の組で表示するカテゴリが変わるため、4 象限分を保持する。
 export type TypeChip = {
   typeId: Id;
@@ -80,8 +79,7 @@ export type TypeChip = {
   colorName: string;
 };
 
-// isPay × isPair の 4 象限に振り分けたカテゴリチップ（getTypeChips の戻り・props で
-// 受け渡す形の単一の正）。services / demo / summary-screen / summary-bar-type で共有する。
+// isPay × isPair の 4 象限に振り分けたカテゴリチップ。
 export type TypeChipsByQuadrant = {
   pay: { self: TypeChip[]; pair: TypeChip[] };
   income: { self: TypeChip[]; pair: TypeChip[] };

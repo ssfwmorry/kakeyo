@@ -11,14 +11,12 @@ import { buildDaySumList } from '../domain/day-sum';
 import { calcCalendarRange } from '../domain/range';
 import type { CalendarMonthData } from '../types';
 
-// calendar 統合レーン所有の取得サービス（server-only・純粋読み取り）。
-// ★方針（移行方針確定書 §7）: 表示から副作用を排除する。旧 updateRange が呼んでいた
-//   postRecords（定期 record の実体化 INSERT）は絶対に呼ばない（定期実体化は Cron に
-//   移譲済み。/api/cron/post-records）。ここは record/plan/reminder/月収支の取得のみ。
+// calendar の取得サービス（server-only・純粋読み取り）。
+// 表示から副作用を排除するため、定期 record の実体化 INSERT（postRecords）は絶対に呼ばない
+//   （定期実体化は Cron に移譲済み。/api/cron/post-records）。ここは record/plan/reminder/月収支の取得のみ。
 //
 // scope（userUid/pairId）は session から確定し、各サービス/リポジトリが自分/ペアに絞る。
-// getMonthSum は summary services に未公開のため repositories を直 import する
-//   （server-only 実体の直 import は AGENTS の barrel 方針でも server 層間は許容される）。
+// getMonthSum は summary services に未公開のため repositories を直 import する。
 
 // ひと月分のカレンダーデータ（日別収支・予定・リマインダー・月収支合計）を取得する。
 export async function getCalendarMonth(

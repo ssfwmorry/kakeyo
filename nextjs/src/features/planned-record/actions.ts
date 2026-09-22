@@ -23,9 +23,8 @@ import type { PlannedRecordError } from './types';
 // planned-record（定期）の Server Actions。保存/削除は成功時に setting へ遷移するため
 // flash 通知、swap は遷移しないため FormActionResult.toast + revalidatePath。
 
-// 定期の保存/削除後の遷移先。旧 note は setting へ戻る。
-// NOTE(レーン跨ぎ): /setting は P5 統合レーンで実装される。それまでこの redirect は
-// 404 になりうる（record レーンの /calendar と同じ暫定状態）。
+// 定期の保存/削除後の遷移先。
+// /setting は未実装のため、それまでこの redirect は 404 になりうる（暫定状態）。
 const SETTING_PATH = '/setting';
 
 // service の失敗分類 → ユーザ向け文言。
@@ -100,7 +99,7 @@ export async function upsertPlannedRecordAction(
 }
 
 // 定期の削除。成功→flash + setting 遷移、失敗→toast 返却
-// （実体化済み record が紐づく場合は FK エラー文言。旧 note の 23503 分岐踏襲）。
+// （実体化済み record が紐づく場合は FK エラー文言）。
 export async function deletePlannedRecordAction(
   _prev: FormActionResult | null,
   formData: FormData
@@ -131,8 +130,7 @@ export async function deletePlannedRecordAction(
   redirect(SETTING_PATH);
 }
 
-// 並べ替え（設定タブ）。ボタン起動のため Conform を通さず素の Server Action
-// （type-method の swap*Action と同流儀）。
+// 並べ替え（設定タブ）。ボタン起動のため Conform を通さず素の Server Action。
 export async function swapPlannedRecordAction(
   prevId: number,
   nextId: number

@@ -20,9 +20,8 @@ import {
 } from './domain/chart-data';
 import * as service from './server/services';
 
-// L6 summary 画面のデータ取得 Server Actions（取得のみ・フォーム送信ではない）。
-// Client のタブが年月/トグル/カテゴリ選択を変えるたびに useTransition から呼び、
-// 整形済みのグラフデータ（PieShowData / PayIncomeShowData / StackShowData）を受け取る。
+// summary 画面のデータ取得 Server Actions（取得のみ・フォーム送信ではない）。
+// Client のタブが年月/トグル/カテゴリ選択を変えるたびに呼ばれ、整形済みのグラフデータを返す。
 
 // 内訳（カテゴリ別 or 方法別）の円 + 一覧を返す。
 export async function fetchPieAction(input: {
@@ -88,10 +87,8 @@ export async function fetchTypePeriodAction(input: {
 }
 
 // 推移 > カテゴリ別（特定カテゴリ選択時 = 年次サブカテゴリ別 積み上げ棒）を返す。
-// subTypeNameById はチップから来ないため、ここでは subTypeId の表示名を
-// service（getSubTypeSummary）では返さない設計上、簡易ラベル（'サブ#id'）で補う。
-// 旧 FE は sub_types 名を別途引いていたが、本移植は積み上げの見分けが目的のため
-// サブカテゴリ名は凡例で id ベースの安定ラベルを使う（数字ズレには影響しない）。
+// service（getSubTypeSummary）はサブカテゴリ名を返さないため、凡例は id ベースの
+// 安定ラベル（'サブ#id'）で補う（積み上げの見分けが目的で、集計値には影響しない）。
 export async function fetchSubTypeAction(input: {
   year: number;
   typeId: number;
@@ -106,7 +103,6 @@ export async function fetchSubTypeAction(input: {
     input.year,
     (subTypeId) =>
       subTypeId === null ? 'サブカテゴリなし' : `サブ${subTypeId}`,
-    // 色は color.ts のパレットを単一の正として使う（値の二重定義を作らない）。
     subTypeColor,
     NO_SUB_TYPE_COLOR,
     'サブカテゴリなし'
