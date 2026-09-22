@@ -1,0 +1,122 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useFormToast } from '@/components/form/use-form-toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import type { ColorClassification } from '@/features/master';
+import { L } from '@/lib/shared/labels';
+import type { FormActionResult } from '@/lib/shared/types/formResult';
+import { deleteReminderAction } from '../actions';
+import { planColorHex } from '../color';
+import { ConditionType } from '../domain/reminder-condition';
+import { planReminderLabels } from '../labels';
+import type { GroupedReminderList, ReminderItem } from '../types';
+import { ReminderDialog } from './reminder-dialog';
+
+// 定期的な予定（reminder）設定タブ（Nuxt PlanReminder.vue 移植）。
+// 一覧表示 + 削除（確認ダイアログ）+ 「＋」で作成ダイアログ。編集はなし（現行踏襲）。
+// isPair は setting 側のペアモード由来を受け、self/pair を振り分ける。
+
+const { reminder: R } = planReminderLabels;
+
+type ReminderTabProps = {
+  reminderList: GroupedReminderList;
+  colors: ColorClassification[];
+  isPair: boolean;
+};
+
+export function ReminderTab({ reminderList, colors, isPair }: ReminderTabProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const items = isPair ? reminderList.pair : reminderList.self;
+
+  return (
+    <section className='flex flex-col gap-3'>
+      <h2 className='text-base font-medium'>
+        {planReminderLabels.heading.reminder}
+      </h2>
+
+      {items.map((reminder) => (
+        <ReminderCardView key={reminder.id} reminder={reminder} />
+      ))}
+
+      <div className='flex justify-end'>
+        <Button type='button' onClick={() => setDialogOpen(true)}>
+          ＋
+        </Button>
+      </div>
+
+      <ReminderDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        colors={colors}
+        isPair={isPair}
+      />
+    </section>
+  );
+}
+
+type ReminderCardViewProps = {
+  reminder: ReminderItem;
+};
+
+function ReminderCardView({ reminder }: ReminderCardViewProps) {
+  const [isPending, startTransition] = useTransition();
+  const [result, setResult] = useState<FormActionResult | null>(null);
+  useFormToast(result);
+
+  const handleDelete = () => {
+    if (!window.confirm(R.deleteConfirm)) {
+      return;
+    }
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('id', String(reminder.id));
+      setResult(await deleteReminderAction(null, formData));
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader className='flex-row items-center justify-between gap-2'>
+        <span className='flex items-center gap-2'>
+          <span
+            className='inline-block size-5 rounded-full'
+            style={{ backgroundColor: planColorHex(reminder.colorName) }}
+          />
+          {reminder.name}
+        </span>
+        <Button
+          type='button'
+          size='sm'
+          variant='ghost'
+          disabled={isPending}
+          onClick={handleDelete}
+        >
+          {L.button.delete}
+        </Button>
+      </CardHeader>
+      <CardContent className='flex flex-col gap-1 text-sm'>
+        {reminder.memo ? <span>・{reminder.memo}</span> : null}
+        <span>
+          ・{planReminderLabels.entity.date}：{reminder.date}
+        </span>
+        <span>
+          ・{R.checkKeep}：
+          {reminder.reminderType === 10 ? R.keep : R.notKeep}
+        </span>
+        <span>・{R.nextPlan}：{describeCondition(reminder)}</span>
+      </CardContent>
+    </Card>
+  );
+}
+
+// 条件の人間可読テキスト（現行 PlanReminder.vue の表示ロジック踏襲）。
+function describeCondition(reminder: ReminderItem): string {
+  if (reminder.conditionType === ConditionType.month) {
+    const base = reminder.baseType === 5 ? R.baseNow : R.baseDate;
+    return `${base}${R.from}${reminder.month ?? ''}${R.months}`;
+  }
+  // 月日: 来年の MM-DD。
+  return `${R.nextYearPrefix}${reminder.monthDay ?? ''}`;
+}
