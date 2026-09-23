@@ -4,7 +4,7 @@ import {
   getPlanForEdit,
   getPlanTypeCardList
 } from '@/features/plan-reminder/server/services';
-import { getPairMode } from '@/lib/server/pair/mode';
+import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { parseQueryId } from '@/lib/shared/domain/queryId';
 
 // 予定入力画面（/plan）の薄いルート（Server Component）。認証 → 予定カテゴリ一覧 +
@@ -20,16 +20,16 @@ export default async function PlanPage({ searchParams }: PlanPageProps) {
   const session = await requireAuth();
   const { date, planId } = await searchParams;
   const editingId = parseQueryId(planId);
-  const [planTypeList, pairMode, editing] = await Promise.all([
+  const [planTypeList, currentPairMode, editing] = await Promise.all([
     getPlanTypeCardList(session),
-    getPairMode(),
+    getEffectivePairMode(session),
     editingId === null
       ? Promise.resolve(null)
       : getPlanForEdit(session, editingId)
   ]);
   // 編集時は対象 plan 自身の共有区分を使う（カテゴリ候補 self/pair を対象に合わせる）。
   // 新規時は現在のペアモード（pairId が無ければ個人固定）に従う。
-  const isPair = editing ? editing.isPair : session.pairId !== null && pairMode;
+  const isPair = editing ? editing.isPair : currentPairMode;
 
   return (
     <PlanScreen

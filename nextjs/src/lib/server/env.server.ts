@@ -13,7 +13,7 @@ function required(key: string): string {
   return value;
 }
 
-// 任意の環境変数を読む（未設定なら undefined）。デモ資格情報など必須でないもの向け。
+// 任意の環境変数を読む（未設定なら undefined）。
 function optional(key: string): string | undefined {
   return process.env[key] || undefined;
 }
@@ -22,11 +22,8 @@ export const serverEnv = {
   supabaseDatabaseUrl: required('SUPABASE_DATABASE_URL'),
   // 使用する Postgres スキーマ（develop / public）
   supabaseDatabaseSchema: required('SUPABASE_DATABASE_SCHEMA'),
-  // Cookie セッションの署名に使う秘密鍵
+  // 署名付きデモ Cookie の HMAC 鍵
   sessionSecret: required('SESSION_SECRET'),
-  // デモログイン用の資格情報。未設定ならデモ無効。
-  demoUserEmail: optional('DEMO_USER_EMAIL'),
-  demoUserPassword: optional('DEMO_USER_PASSWORD'),
   // 定期実体化 Cron の呼び出し認証に使う秘密。Vercel Cron は
   // Authorization: Bearer <CRON_SECRET> を付与する。未設定なら Cron を無効化する
   // （認証なしで実体化 INSERT を叩かせない）。

@@ -1,7 +1,7 @@
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import type { BankItem } from '@/features/bank';
 import { getBankList } from '@/features/bank/server/services';
-import { getColorClassificationList } from '@/features/master/server/repositories/colorClassification';
+import { getColorClassifications } from '@/features/master/server/services';
 import {
   getPlanTypeCardList,
   getReminderList
@@ -11,7 +11,7 @@ import {
   getMethodCardList,
   getTypeCardList
 } from '@/features/type-method/server/services';
-import { getPairMode } from '@/lib/server/pair/mode';
+import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { SettingTabs } from './setting-tabs';
 
 // 設定画面（/setting）の薄いルート（Server Component）。3 タブ
@@ -23,9 +23,7 @@ import { SettingTabs } from './setting-tabs';
 
 export default async function SettingPage() {
   const session = await requireAuth();
-  const pairMode = await getPairMode();
-  // pairId が無ければ共有モードに関わらず個人スコープ固定（既存 page 群と同じ判定）。
-  const isPair = session.pairId !== null && pairMode;
+  const isPair = await getEffectivePairMode(session);
 
   // 口座（KakeiBank）は個人モード専用のため、ペア時は取得せず null にしてタブ内で非表示。
   const [
@@ -42,7 +40,7 @@ export default async function SettingPage() {
     getPlannedRecordList(session),
     getPlanTypeCardList(session),
     getReminderList(session),
-    getColorClassificationList(),
+    getColorClassifications(session),
     isPair ? Promise.resolve<BankItem[] | null>(null) : getBankList(session)
   ]);
 

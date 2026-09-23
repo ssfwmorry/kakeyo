@@ -10,6 +10,7 @@ import { useFormAction } from '@/components/form/use-form-action';
 import { IconOpenInNew } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DemoMode } from '@/features/demo';
 import { L } from '@/lib/shared/labels';
 import {
   demoLoginAction,
@@ -19,7 +20,7 @@ import {
 import { authLabels, TUTORIAL_URL } from '../labels';
 import { loginSchema, resetPasswordSchema } from '../schemas/login-schema';
 
-const { appName, field, action } = authLabels;
+const { appName, field, action, demo } = authLabels;
 
 // login / reset / demo をそれぞれ独立したフォーム・アクションとして扱う。
 // 新規登録は UI 非表示のため置かない。
@@ -27,10 +28,14 @@ const { appName, field, action } = authLabels;
 // フォームは白カードに収め、パスワード再設定は常時表示ではなく
 // ボタンで切り替わる別モードにする（常設だと画面が雑多になる）。
 // パスワード欄には表示/伏字トグルを出す（入力ミスの確認手段）。
+//
+// デモは「デモページを見る」→ 同じ画面内でアカウント種別（ペアあり / ペアなし）を選ぶ
+// 2 段階。別ページへ遷移せず、選択カードをカードの下に出し分ける。
 
 export function LoginForm() {
   // 'login' = 通常ログイン / 'reset' = パスワード再設定。
   const [mode, setMode] = useState<'login' | 'reset'>('login');
+  const [isSelectingDemo, setIsSelectingDemo] = useState(false);
 
   const [loginResult, login, isLoggingIn] = useFormAction(loginAction);
   const [loginForm, loginFields] = useForm({
@@ -46,7 +51,12 @@ export function LoginForm() {
       parseWithZod(formData, { schema: resetPasswordSchema })
   });
 
-  const [, demoLogin, isDemoLoggingIn] = useFormAction(() => demoLoginAction());
+  const [, demoPairLogin, isDemoPairLoggingIn] = useFormAction(() =>
+    demoLoginAction(DemoMode.pair)
+  );
+  const [, demoSoloLogin, isDemoSoloLoggingIn] = useFormAction(() =>
+    demoLoginAction(DemoMode.solo)
+  );
 
   return (
     <div className='flex w-full max-w-sm flex-col gap-6'>
@@ -112,15 +122,14 @@ export function LoginForm() {
 
       {/* デモ／とりせつはカードの外に横並びで置く。 */}
       <div className='flex gap-3'>
-        <form action={demoLogin} className='flex-1'>
-          <SubmitButton
-            isPending={isDemoLoggingIn}
-            variant='outline'
-            className='w-full'
-          >
-            {action.demo}
-          </SubmitButton>
-        </form>
+        <Button
+          type='button'
+          variant='outline'
+          className='flex-1'
+          onClick={() => setIsSelectingDemo(true)}
+        >
+          {action.demo}
+        </Button>
         <a
           href={TUTORIAL_URL}
           target='_blank'
@@ -131,6 +140,49 @@ export function LoginForm() {
           <IconOpenInNew className='size-3.5' />
         </a>
       </div>
+
+      {isSelectingDemo ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-center text-base'>
+              {demo.selectTitle}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className='flex flex-col gap-3'>
+            <p className='text-center text-muted-foreground text-xs'>
+              {demo.selectHint}
+            </p>
+            <form action={demoPairLogin}>
+              <SubmitButton
+                isPending={isDemoPairLoggingIn}
+                variant='outline'
+                className='w-full'
+              >
+                {demo.pair}
+              </SubmitButton>
+            </form>
+            <form action={demoSoloLogin}>
+              <SubmitButton
+                isPending={isDemoSoloLoggingIn}
+                variant='outline'
+                className='w-full'
+              >
+                {demo.solo}
+              </SubmitButton>
+            </form>
+            <div className='flex justify-center'>
+              <Button
+                type='button'
+                variant='link'
+                size='sm'
+                onClick={() => setIsSelectingDemo(false)}
+              >
+                {L.button.cancel}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className='flex justify-center'>
         {/* 問い合わせ導線（未ログインでも到達可）。 */}

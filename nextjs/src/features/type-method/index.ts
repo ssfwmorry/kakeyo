@@ -1,5 +1,5 @@
 // type-method feature の公開 API（barrel）。
-// server-only（repositories / services / actions / demo）は re-export しない。
+// server-only（repositories / services / actions）は re-export しない。
 // 公開するのは設定タブの Client Component と FE 型のみ。
 // setting 統合は getTypeCardList / getMethodCardList を
 // @/features/type-method/server/services から直接 import して使う。

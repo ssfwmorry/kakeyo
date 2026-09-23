@@ -1,5 +1,5 @@
 // record feature の公開 API（barrel）。
-// server-only を含むモジュール（server/repositories・server/services・server/demo）は
+// server-only を含むモジュール（server/repositories・server/services）は
 //   re-export しない。
 //   summary/records は取得系サービスを @/features/record/server/services から、
 //   定期 Cron は insertRecords / RecordInsertInput を

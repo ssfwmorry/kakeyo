@@ -1,5 +1,5 @@
 import 'server-only';
-import { withDemoRead } from '@/features/auth/server/demo';
+import { withDemoRead } from '@/features/demo/server/inject';
 import {
   getPlanList,
   getReminderList
@@ -33,8 +33,8 @@ export async function getCalendarMonth(
   const days = buildDaySumList(records);
 
   const monthSum = await withDemoRead(
-    session.isDemo,
-    sumMonthFromDays(days, yearMonth),
+    session,
+    () => sumMonthFromDays(days, yearMonth),
     () =>
       getMonthSum(
         { userUid: session.userUid, pairId: session.pairId },

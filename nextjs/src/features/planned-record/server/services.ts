@@ -1,5 +1,7 @@
 import 'server-only';
-import { withDemoRead, withDemoWriteVoid } from '@/features/auth/server/demo';
+import { withDemoRead, withDemoWriteVoid } from '@/features/demo/server/inject';
+import * as demoMaster from '@/features/demo/server/queries/master';
+import * as demoPlannedRecord from '@/features/demo/server/queries/planned-record';
 import {
   type DayClassification,
   getDayClassificationList
@@ -18,11 +20,6 @@ import type {
   NotePlannedRecordDefault,
   PlannedRecordError
 } from '../types';
-import {
-  demoDayClassifications,
-  demoGroupedPlannedRecordList,
-  findDemoPlannedRecordDefault
-} from './demo';
 import * as plannedRecordRepo from './repositories/planned-record';
 
 // 削除失敗を分類する。実体化済み record が planned_record_id で参照している場合、
@@ -36,8 +33,8 @@ export async function getPlannedRecordList(
   session: SessionData
 ): Promise<GroupedPlannedRecordList> {
   return withDemoRead(
-    session.isDemo,
-    demoGroupedPlannedRecordList,
+    session,
+    () => demoPlannedRecord.getPlannedRecordList(session),
     async () => {
       const rows = await plannedRecordRepo.findPlannedRecordRows(session);
       return {
@@ -55,8 +52,10 @@ export async function getPlannedRecordList(
 export async function getDayClassifications(
   session: SessionData
 ): Promise<DayClassification[]> {
-  return withDemoRead(session.isDemo, demoDayClassifications, () =>
-    getDayClassificationList()
+  return withDemoRead(
+    session,
+    () => demoMaster.getDayClassificationList(),
+    () => getDayClassificationList()
   );
 }
 
@@ -65,8 +64,10 @@ export async function getPlannedRecordForEdit(
   session: SessionData,
   id: Id
 ): Promise<NotePlannedRecordDefault | null> {
-  return withDemoRead(session.isDemo, findDemoPlannedRecordDefault(id), () =>
-    plannedRecordRepo.findPlannedRecordForEdit(session, id)
+  return withDemoRead(
+    session,
+    () => demoPlannedRecord.getPlannedRecordForEdit(session, id),
+    () => plannedRecordRepo.findPlannedRecordForEdit(session, id)
   );
 }
 
@@ -115,7 +116,7 @@ export async function upsertPlannedRecord(
     recordType: ownership.recordType
   };
 
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     if (input.id === undefined) {
       await plannedRecordRepo.insertPlannedRecord(fields);
       return ok(undefined);
@@ -140,7 +141,7 @@ export async function deletePlannedRecord(
   session: SessionData,
   id: Id
 ): Promise<Result<void, PlannedRecordError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     try {
       const result = await plannedRecordRepo.deletePlannedRecordById(
         session,
@@ -163,7 +164,7 @@ export async function swapPlannedRecord(
   prevId: Id,
   nextId: Id
 ): Promise<Result<void, PlannedRecordError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const [a, b] = await Promise.all([
       plannedRecordRepo.findPlannedRecordInScope(session, prevId),
       plannedRecordRepo.findPlannedRecordInScope(session, nextId)

@@ -16,7 +16,7 @@ public スキーマのDBに書き込みをするときは必ずユーザの許�
 
 - **scope（情報漏洩防止の要）**: 全リポジトリの取得系は `buildScopeWhere`（pair 共有テーブル）/ `buildOwnerScopeWhere`（個人専用テーブル。`records`/`short_cuts`/`bank` 等）を必ず通す。更新・削除は Prisma が RLS をバイパスするため、`updateMany`/`deleteMany` の where に scope を AND して IDOR を塞ぐ（`count===0` = scope 外/不存在）。
 - **セッション由来のスコープ**: `userUid` / `pairId` は `getSessionData()`（サーバ真偽源。`getSessionData` は React `cache()` で per-request メモ化）から確定し、クライアント値・フォーム値を信用しない。ペアモード（共有 ON/OFF）は `getPairMode`（Cookie の単一の正）から読み、自前で Cookie を読まない。
-- **デモ注入**: サービス層は取得を `withDemoRead`、更新を `withDemoWriteVoid` に通す（デモは実 DB へ触れず、取得=モック / 更新=no-op 成功）。集計もデモでは DB に触れない。
+- **デモ注入**: サービス層は取得を `withDemoRead(session, () => demoX.getY(session), real)`、更新を `withDemoWriteVoid` に通す（`@/features/demo/server/inject`。デモは実 DB へ触れず、取得=デモ dataset の射影 / 更新=no-op 成功）。デモ側は thunk で渡し、非デモの実リクエストでモックを組み立てない。デモデータは `features/demo/server/dataset/*`（実 DB のテーブル構成を写した正規化データ。参照は `types.food.id` のようにキー経由・id と名前を複製しない）に置き、各 feature の DTO への射影は `features/demo/server/queries/<feature>.ts`（実リポジトリと同名の関数）に置く。solo / pair の出し分けは `dataset/scope.ts` の可視判定（`buildScopeWhere` 相当）だけで行い、feature ごとに solo 用・pair 用のリストを手で組まない。集計値は手書きせず record から導出する。
 - **サービス層の戻り値**: サービス/リポジトリは `Result<T, E>`（UI 文言を持たない機械可読な失敗分類）を返し、Server Action が `toFormResult` で `FormActionResult` に変換して文言を付ける。Prisma の FK 制約違反（P2003）は `foreignKey` へ写し、それ以外は `unknown` に分類する。
 - **BigInt PK 境界**: `records` / `short_cuts` の PK は Prisma 上 `BigInt`。`JSON.stringify` で落ちるため、リポジトリ/サービスの境界で `Number(row.id)` へ変換し、Server→Client を跨ぐ公開型は常に `id: number`（`Id`）にする（方針確定書 §4.1）。
 - **金額・日付**: 金額は共有 `priceSchema`（`lib/shared/domain/price.ts`。全角/カンマ正規化 + 非負整数）を経由し、素の `Number()` を使わない（§4.2）。日付は `lib/shared/domain/date.ts` の関数経由でのみ扱い、`dayjs` を直 import しない（extend 未適用インスタンス事故と SSR の JST 境界ズレの防止・§4）。
@@ -28,7 +28,7 @@ public スキーマのDBに書き込みをするときは必ずユーザの許�
 
 画面まわりの変更をしたら、実際にアプリを起動して画面を目視で確認する。確認時はスクリーンショットを撮って一時保存し、画像を Read で開いて自分でも表示崩れ・文言・データ表示を確認すること（HTTP ステータスや HTML だけで済ませない）。
 
-- **起動**: `pnpm build && pnpm start`（本番ビルド）で `http://localhost:3000` を立てる。DB は `.env` の接続先（リモート Supabase の `develop` スキーマ）を指すため、**書き込み系の確認はデモログインで行う**（デモは Server 層で no-op になり実 DB に副作用を与えない。§上記の「public スキーマへの書き込みは許可制」とも整合）。
+- **起動**: `pnpm build && pnpm start`（本番ビルド）で `http://localhost:3000` を立てる。DB は `.env` の接続先（リモート Supabase の `develop` スキーマ）を指すため、**書き込み系の確認はデモログインで行う**（デモは Server 層で no-op になり実 DB に副作用を与えない。§上記の「public スキーマへの書き込みは許可制」とも整合）。実データでの確認は `.env` 末尾コメントの動作確認用ユーザで通常ログインする（デモとは別物）。
 - **保存先**: スクリーンショットは `nextjs/.screenshots/` に連番＋画面名（例 `01-login.png` / `02-bank.png`）で保存する。`.screenshots/` は `.gitignore` 済み（コミットしない一時確認用）。
-- **認証必須画面（`(private)` 配下: bank / setting / calendar 等）**: 未認証で開くと proxy が `/login` にリダイレクトするため、そのままでは中身を撮れない。**Playwright MCP でデモログインボタンをクリック → 遷移 → スクショ**の順で撮る（Playwright MCP は `mico-eng-basic` プラグインが提供する `playwright` サーバーを使う。プロジェクトの `.mcp.json` には定義しない＝プラグイン版に一本化。ツールが未登録ならセッション再起動で反映される）。単純な headless Chrome スクショはログイン導線を辿れないので login 画面止まりになる。
+- **認証必須画面（`(private)` 配下: bank / setting / calendar 等）**: 未認証で開くと proxy が `/login` にリダイレクトするため、そのままでは中身を撮れない。**Playwright MCP で「デモページを見る」→「ペアありアカウント」or「ペアなしアカウント」をクリック → 遷移 → スクショ**の順で撮る（デモは署名付き Cookie のみで成立し Supabase Auth・DB に触れない。ペアあり/なしはログイン時に確定し、`session.pairId` の有無として各画面に効く）（Playwright MCP は `mico-eng-basic` プラグインが提供する `playwright` サーバーを使う。プロジェクトの `.mcp.json` には定義しない＝プラグイン版に一本化。ツールが未登録ならセッション再起動で反映される）。単純な headless Chrome スクショはログイン導線を辿れないので login 画面止まりになる。
 - 確認後、一時ファイルが不要になったら `.screenshots/` は削除してよい。

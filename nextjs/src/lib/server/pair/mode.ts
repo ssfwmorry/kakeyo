@@ -5,6 +5,7 @@ import {
   PAIR_SCOPED_PATHS,
   PATHS_WITHOUT_PAIR
 } from '@/lib/shared/pair/pages-without-pair';
+import type { SessionData } from '@/lib/shared/types/auth';
 
 // ペアモード（共有 ON/OFF）の単一の正（凍結資産）。
 //
@@ -26,6 +27,15 @@ export { PAGES_WITHOUT_PAIR } from '@/lib/shared/pair/pages-without-pair';
 export async function getPairMode(): Promise<boolean> {
   const cookieStore = await cookies();
   return cookieStore.get(PAIR_MODE_COOKIE)?.value === 'true';
+}
+
+// 画面のスコープ判定に使う実効ペアモード。pairId が無いユーザは Cookie に関わらず個人スコープ固定
+// （ペア解消やアカウント切替後に残った ON が、空の pair 側を指すのを防ぐ）。
+// 切替スイッチ自体の表示状態が要る layout だけは生の getPairMode を使う。
+export async function getEffectivePairMode(
+  session: Pick<SessionData, 'pairId'>
+): Promise<boolean> {
+  return session.pairId !== null && (await getPairMode());
 }
 
 // ペアモードを設定する。トグルの Server Action から呼ぶ。

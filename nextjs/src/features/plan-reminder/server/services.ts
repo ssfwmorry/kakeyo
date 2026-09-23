@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
-import { withDemoRead, withDemoWriteVoid } from '@/features/auth/server/demo';
+import { withDemoRead, withDemoWriteVoid } from '@/features/demo/server/inject';
+import * as demoPlanReminder from '@/features/demo/server/queries/plan-reminder';
 import { isForeignKeyError } from '@/lib/server/db/errors';
 import { resolveOwner } from '@/lib/server/pair/owner';
 import { todayJst } from '@/lib/shared/domain/date';
@@ -19,7 +20,6 @@ import type {
   PlanItem,
   PlanReminderError
 } from '../types';
-import { demoPlanList, demoPlanTypeList, demoReminderList } from './demo';
 import * as planRepo from './repositories/plan';
 import * as planTypeRepo from './repositories/plan-type';
 import * as reminderRepo from './repositories/reminder';
@@ -31,20 +31,28 @@ function toDeleteError(error: unknown): PlanReminderError {
 export async function getPlanTypeCardList(
   session: SessionData
 ): Promise<GroupedPlanTypeList> {
-  return withDemoRead(session.isDemo, demoPlanTypeList, async () => {
-    const rows = await planTypeRepo.findPlanTypeRows(session);
-    return groupPlanTypeList(rows);
-  });
+  return withDemoRead(
+    session,
+    () => demoPlanReminder.getPlanTypeCardList(session),
+    async () => {
+      const rows = await planTypeRepo.findPlanTypeRows(session);
+      return groupPlanTypeList(rows);
+    }
+  );
 }
 
 export async function getPlanList(
   session: SessionData,
   range: { start: string; end: string }
 ): Promise<PlanItem[]> {
-  return withDemoRead(session.isDemo, demoPlanList, async () => {
-    const rows = await planRepo.findPlanRows(session, range);
-    return toPlanItems(rows);
-  });
+  return withDemoRead(
+    session,
+    () => demoPlanReminder.getPlanList(session, range),
+    async () => {
+      const rows = await planRepo.findPlanRows(session, range);
+      return toPlanItems(rows);
+    }
+  );
 }
 
 // plan 編集画面（/plan?planId=）のプリフィル用に plan 1 件を取得する。
@@ -54,9 +62,10 @@ export async function getPlanForEdit(
   session: SessionData,
   id: Id
 ): Promise<PlanItem | null> {
-  const demo = demoPlanList.find((plan) => plan.id === id) ?? null;
-  return withDemoRead(session.isDemo, demo, () =>
-    planRepo.findPlanForEdit(session, id)
+  return withDemoRead(
+    session,
+    () => demoPlanReminder.getPlanForEdit(session, id),
+    () => planRepo.findPlanForEdit(session, id)
   );
 }
 
@@ -67,10 +76,14 @@ export async function getPlanForEdit(
 // キーが一致してヒットする。
 export const getReminderList = cache(
   async (session: SessionData): Promise<GroupedReminderList> => {
-    return withDemoRead(session.isDemo, demoReminderList, async () => {
-      const rows = await reminderRepo.findReminderRows(session);
-      return groupReminderList(rows);
-    });
+    return withDemoRead(
+      session,
+      () => demoPlanReminder.getReminderList(session),
+      async () => {
+        const rows = await reminderRepo.findReminderRows(session);
+        return groupReminderList(rows);
+      }
+    );
   }
 );
 
@@ -82,7 +95,7 @@ export async function upsertPlanType(
   if (!owner.ok) {
     return owner;
   }
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     if (input.id === undefined) {
       await planTypeRepo.insertPlanType({
         name: input.name,
@@ -109,7 +122,7 @@ export async function deletePlanType(
   session: SessionData,
   id: Id
 ): Promise<Result<void, PlanReminderError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const target = await planTypeRepo.findPlanTypeInScope(session, id);
     if (!target) {
       return err('notInScope');
@@ -128,7 +141,7 @@ export async function swapPlanType(
   prevId: Id,
   nextId: Id
 ): Promise<Result<void, PlanReminderError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const [a, b] = await Promise.all([
       planTypeRepo.findPlanTypeInScope(session, prevId),
       planTypeRepo.findPlanTypeInScope(session, nextId)
@@ -163,7 +176,7 @@ export async function upsertPlan(
   if (!owner.ok) {
     return owner;
   }
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     if (input.id === undefined) {
       await planRepo.insertPlan({
         name: input.name,
@@ -198,7 +211,7 @@ export async function deletePlan(
   session: SessionData,
   id: Id
 ): Promise<Result<void, PlanReminderError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const target = await planRepo.findPlanInScope(session, id);
     if (!target) {
       return err('notInScope');
@@ -233,7 +246,7 @@ export async function insertReminder(
   if (!owner.ok) {
     return owner;
   }
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     await reminderRepo.insertReminderWithCondition({
       name: input.name,
       reminderType: input.reminderType,
@@ -252,7 +265,7 @@ export async function deleteReminder(
   session: SessionData,
   reminderId: Id
 ): Promise<Result<void, PlanReminderError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     // scope 内か検証し、削除に必要な condition_id もここで得る。
     const target = await reminderRepo.findReminderInScope(session, reminderId);
     if (!target) {
@@ -275,7 +288,7 @@ export async function checkReminder(
   session: SessionData,
   reminderId: Id
 ): Promise<Result<void, PlanReminderError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const target = await reminderRepo.findReminderInScope(session, reminderId);
     if (!target) {
       return err('notInScope');

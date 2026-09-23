@@ -1,5 +1,6 @@
 import 'server-only';
-import { withDemoRead, withDemoWriteVoid } from '@/features/auth/server/demo';
+import { withDemoRead, withDemoWriteVoid } from '@/features/demo/server/inject';
+import * as demoRecord from '@/features/demo/server/queries/record';
 import { isForeignKeyError } from '@/lib/server/db/errors';
 import { toYearMonthJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
@@ -14,12 +15,6 @@ import type {
   SummarizedRecordItem,
   SummarizedRecordQuery
 } from '../types';
-import {
-  demoPairedRecordList,
-  demoRecordList,
-  findDemoRecordDefault,
-  findDemoSummarizedRecords
-} from './demo';
 import * as recordRepo from './repositories/record';
 
 function toDeleteError(error: unknown): RecordError {
@@ -32,8 +27,10 @@ export async function getRecordListForRange(
   start: Date,
   end: Date
 ): Promise<RecordListItem[]> {
-  return withDemoRead(session.isDemo, demoRecordList, () =>
-    recordRepo.getRecordList(session, start, end)
+  return withDemoRead(
+    session,
+    () => demoRecord.getRecordListForRange(session, start, end),
+    () => recordRepo.getRecordList(session, start, end)
   );
 }
 
@@ -42,22 +39,29 @@ export async function getSummarizedRecords(
   session: SessionData,
   query: SummarizedRecordQuery
 ): Promise<SummarizedRecordItem[]> {
-  return withDemoRead(session.isDemo, findDemoSummarizedRecords(query), () =>
-    recordRepo.getSummarizedRecordList(session, query)
+  return withDemoRead(
+    session,
+    () => demoRecord.getSummarizedRecords(session, query),
+    () => recordRepo.getSummarizedRecordList(session, query)
   );
 }
 
 // 精算画面用: ペアの record。ペア未設定なら空（個人に精算相手はいない）。
+// solo デモも共有 record を持たないため空になる（デモ側で pairId を見て出し分ける）。
 export async function getPairedRecords(
   session: SessionData,
   yearMonth: string
 ): Promise<PairedRecordItem[]> {
-  return withDemoRead(session.isDemo, demoPairedRecordList, async () => {
-    if (session.pairId === null) {
-      return [];
+  return withDemoRead(
+    session,
+    () => demoRecord.getPairedRecords(session, yearMonth),
+    async () => {
+      if (session.pairId === null) {
+        return [];
+      }
+      return recordRepo.getPairedRecordList(session, yearMonth);
     }
-    return recordRepo.getPairedRecordList(session, yearMonth);
-  });
+  );
 }
 
 // note（記録編集）用: 初期値 1 件。scope 外・不存在は null（呼び出し側が新規扱い）。
@@ -65,8 +69,10 @@ export async function getRecordForEdit(
   session: SessionData,
   id: Id
 ): Promise<NoteRecordDefault | null> {
-  return withDemoRead(session.isDemo, findDemoRecordDefault(id), () =>
-    recordRepo.findRecordForEdit(session, id)
+  return withDemoRead(
+    session,
+    () => demoRecord.getRecordForEdit(session, id),
+    () => recordRepo.findRecordForEdit(session, id)
   );
 }
 
@@ -116,7 +122,7 @@ export async function upsertRecord(
     recordType: ownership.recordType
   };
 
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     if (input.id === undefined) {
       await recordRepo.insertRecord(fields);
       return ok(undefined);
@@ -156,7 +162,7 @@ export async function createSettlementRecord(
   }
   const pairId = session.pairId;
 
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     // 支払は自分が負担者。受取は相手が負担者（相手を pairs から引く）。
     let userId = session.userUid;
     if (!input.isPay) {
@@ -188,7 +194,7 @@ export async function settleRecords(
   if (ids.length === 0) {
     return err('noTarget');
   }
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     // scope を where に AND した updateMany の件数が id 数と一致することで
     // 「全て自分/ペアの行」を保証する（他ペアの精算を書き換えさせない）。
     const uniqueIds = [...new Set(ids)];
@@ -205,7 +211,7 @@ export async function deleteRecord(
   session: SessionData,
   id: Id
 ): Promise<Result<void, RecordError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     try {
       const result = await recordRepo.deleteRecordById(session, id);
       if (!result.ok) {

@@ -19,12 +19,18 @@ export const authLabels = {
     // 使い方（Notion チュートリアル）への外部リンク。
     tutorial: 'とりせつ'
   },
+  // デモのアカウント種別選択（「デモページを見る」押下後に同じ画面で出す）。
+  demo: {
+    selectTitle: 'デモアカウントを選択',
+    selectHint: 'デモでは登録・変更内容は保存されません',
+    pair: 'ペアありアカウント',
+    solo: 'ペアなしアカウント'
+  },
   toast: {
     loginFailed: 'ログインに失敗しました。入力内容をご確認ください',
     resetSendFailed: 'メール送信に失敗しました',
     resetSent: 'パスワード再設定メールを送信しました',
-    demoUnavailable: 'デモログインは現在利用できません',
-    demoFailed: 'デモログインに失敗しました'
+    demoUnavailable: 'デモログインは現在利用できません'
   },
   validation: {
     emailFormat: 'メールアドレスの形式が正しくありません',

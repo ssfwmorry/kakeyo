@@ -1,5 +1,5 @@
 // plan-reminder feature の公開 API（barrel）。
-// server-only（repositories / services / actions / demo）は re-export しない。
+// server-only（repositories / services / actions）は re-export しない。
 // 公開するのは画面 Client Component と FE 型のみ。
 // - plan 画面ルート（app/(private)/plan/page.tsx）が PlanScreen を使う。
 // - setting 統合は PlanSettingTab を配置し、データは

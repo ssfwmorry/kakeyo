@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { setFlashToast } from '@/lib/server/flash';
-import { getPairMode } from '@/lib/server/pair/mode';
+import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { L } from '@/lib/shared/labels';
 import {
   type FormActionResult,
@@ -121,7 +121,7 @@ export async function upsertPlanAction(
   }
   const session = await requireAuth();
   // ペアモードは Cookie 由来（自前で Cookie を読まない）。所有列は service で決める。
-  const isPair = session.pairId !== null && (await getPairMode());
+  const isPair = await getEffectivePairMode(session);
   const { id, name, startDate, endDate, planTypeId, memo } = submission.value;
   const result = await service.upsertPlan(session, {
     id,
@@ -172,7 +172,7 @@ export async function insertReminderAction(
     return { submission: submission.reply() };
   }
   const session = await requireAuth();
-  const isPair = session.pairId !== null && (await getPairMode());
+  const isPair = await getEffectivePairMode(session);
   const {
     name,
     colorId,

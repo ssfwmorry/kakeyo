@@ -5,7 +5,7 @@ import {
   getMemoList,
   getShortCutList
 } from '@/features/memo-shortcut/server/services';
-import { getPairMode } from '@/lib/server/pair/mode';
+import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { todayJst, toYearMonthJst } from '@/lib/shared/domain/date';
 
 // カレンダー統合画面（ホーム / P5）の薄いルート（Server Component）。
@@ -17,11 +17,11 @@ export default async function CalendarPage() {
   const today = todayJst();
   const yearMonth = toYearMonthJst(new Date());
 
-  const [month, memos, shortcuts, pairMode] = await Promise.all([
+  const [month, memos, shortcuts, isPair] = await Promise.all([
     getCalendarMonth(session, yearMonth),
     getMemoList(session),
     getShortCutList(session),
-    getPairMode()
+    getEffectivePairMode(session)
   ]);
 
   const hasPair = session.pairId !== null;
@@ -33,8 +33,7 @@ export default async function CalendarPage() {
         memos,
         shortcuts,
         hasPair,
-        // ペア未設定なら共有モードは常に false（個人スコープ固定）。
-        isPair: hasPair && pairMode,
+        isPair,
         today
       }}
     />

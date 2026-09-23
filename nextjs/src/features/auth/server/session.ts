@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
-import { serverEnv } from '@/lib/server/env.server';
 import type { SessionData } from '@/lib/shared/types/auth';
+import { readDemoMode, toDemoSessionData } from './demoCookie';
 import { getPairId } from './pair';
 import { createSupabaseServerClient } from './supabase';
 import { findUserBySupabaseUid } from './user';
@@ -14,9 +14,11 @@ import { findUserBySupabaseUid } from './user';
 //             ある既存 uid に変換する
 // - email   : getClaims()（署名検証済み JWT のクレーム）
 // - pairId  : userUid から毎回 DB 照会（getPairId）
-// - isDemo  : email がデモ用資格情報と一致するか
+// - isDemo  : 署名付きデモ Cookie の有無（demoCookie.ts）
 //
-// pairId/isDemo を署名 Cookie に載せる案は、署名では防げない「別ユーザの Cookie
+// 【デモ】先頭でデモ Cookie を検証し、有効なら固定 SessionData を早期 return する
+// （userUid / pairId は mode から一意に決まり、Supabase 往復も DB 照会も 0 回）。
+// pairId/isDemo を通常ユーザの署名 Cookie に載せる案は、署名では防げない「別ユーザの Cookie
 // 残存による帰属ずれ（A の pairId が B のセッションに引きずられ他ペア露出）」の
 // ため不採用。pair は 1 ユーザ 1 件と軽量で毎回照会しても実害はない。
 //
@@ -39,6 +41,11 @@ import { findUserBySupabaseUid } from './user';
 // React cache() で per-request メモ化し、1 レンダリング内の重複 I/O
 // （JWT 検証 + DB 2 クエリ）を 1 回に畳む。
 export const getSessionData = cache(async (): Promise<SessionData | null> => {
+  const demoMode = await readDemoMode();
+  if (demoMode) {
+    return toDemoSessionData(demoMode);
+  }
+
   const supabase = await createSupabaseServerClient();
 
   // getClaims() は「成功」「エラー」「セッション無し（data も error も null）」の
@@ -50,7 +57,7 @@ export const getSessionData = cache(async (): Promise<SessionData | null> => {
 
   const { claims } = data;
   // email は Custom Access Token Hook で落とせるため型上 optional。
-  // 本アプリはデモ判定に email を使うので、欠けていればログイン不可として扱う。
+  // 欠けていればログイン不可として扱う。
   const email = claims.email;
   if (!email) {
     return null;
@@ -69,16 +76,6 @@ export const getSessionData = cache(async (): Promise<SessionData | null> => {
     userUid: appUser.uid,
     email,
     pairId,
-    isDemo: isDemoEmail(email)
+    isDemo: false
   };
 });
-
-// デモユーザか否かは Supabase 認証済み email から一意に決まる。
-// 資格情報が未設定（デモ無効環境）なら常に false。
-function isDemoEmail(email: string): boolean {
-  const demoEmail = serverEnv.demoUserEmail;
-  if (!demoEmail) {
-    return false;
-  }
-  return email.toLowerCase() === demoEmail.toLowerCase();
-}

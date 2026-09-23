@@ -1,5 +1,6 @@
 import 'server-only';
-import { withDemoRead, withDemoWriteVoid } from '@/features/auth/server/demo';
+import { withDemoRead, withDemoWriteVoid } from '@/features/demo/server/inject';
+import * as demoTypeMethod from '@/features/demo/server/queries/type-method';
 import { getColorClassificationList } from '@/features/master/server/repositories/colorClassification';
 import { isForeignKeyError } from '@/lib/server/db/errors';
 import { resolveOwner } from '@/lib/server/pair/owner';
@@ -12,7 +13,6 @@ import type {
   GroupedTypeList,
   TypeMethodError
 } from '../types';
-import { demoGroupedMethodList, demoGroupedTypeList } from './demo';
 import * as methodRepo from './repositories/method';
 import * as typeRepo from './repositories/type';
 
@@ -23,25 +23,33 @@ function toDeleteError(error: unknown): TypeMethodError {
 export async function getTypeCardList(
   session: SessionData
 ): Promise<GroupedTypeList> {
-  return withDemoRead(session.isDemo, demoGroupedTypeList, async () => {
-    const [rows, colors] = await Promise.all([
-      typeRepo.findTypeRows(session),
-      getColorClassificationList()
-    ]);
-    return groupTypeList(rows, colors);
-  });
+  return withDemoRead(
+    session,
+    () => demoTypeMethod.getTypeCardList(session),
+    async () => {
+      const [rows, colors] = await Promise.all([
+        typeRepo.findTypeRows(session),
+        getColorClassificationList()
+      ]);
+      return groupTypeList(rows, colors);
+    }
+  );
 }
 
 export async function getMethodCardList(
   session: SessionData
 ): Promise<GroupedMethodList> {
-  return withDemoRead(session.isDemo, demoGroupedMethodList, async () => {
-    const [rows, colors] = await Promise.all([
-      methodRepo.findMethodRows(session),
-      getColorClassificationList()
-    ]);
-    return groupMethodList(rows, colors);
-  });
+  return withDemoRead(
+    session,
+    () => demoTypeMethod.getMethodCardList(session),
+    async () => {
+      const [rows, colors] = await Promise.all([
+        methodRepo.findMethodRows(session),
+        getColorClassificationList()
+      ]);
+      return groupMethodList(rows, colors);
+    }
+  );
 }
 
 export async function upsertType(
@@ -58,7 +66,7 @@ export async function upsertType(
   if (!owner.ok) {
     return owner;
   }
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     if (input.id === undefined) {
       await typeRepo.insertType({
         name: input.name,
@@ -87,7 +95,7 @@ export async function deleteType(
   session: SessionData,
   id: Id
 ): Promise<Result<void, TypeMethodError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const target = await typeRepo.findTypeInScope(session, id);
     if (!target) {
       return err('notInScope');
@@ -105,7 +113,7 @@ export async function upsertSubType(
   session: SessionData,
   input: { id?: Id; typeId: Id; name: string }
 ): Promise<Result<void, TypeMethodError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     if (input.id === undefined) {
       // 親 type が scope 内か検証してから作成する。
       const parent = await typeRepo.findTypeInScope(session, input.typeId);
@@ -128,7 +136,7 @@ export async function deleteSubType(
   session: SessionData,
   id: Id
 ): Promise<Result<void, TypeMethodError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const target = await typeRepo.findSubTypeInScope(session, id);
     if (!target) {
       return err('notInScope');
@@ -164,7 +172,7 @@ export async function upsertMethod(
   if (!owner.ok) {
     return owner;
   }
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     if (input.id === undefined) {
       await methodRepo.insertMethod({
         name: input.name,
@@ -192,7 +200,7 @@ export async function deleteMethod(
   session: SessionData,
   id: Id
 ): Promise<Result<void, TypeMethodError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const target = await methodRepo.findMethodInScope(session, id);
     if (!target) {
       return err('notInScope');
@@ -226,7 +234,7 @@ export async function swapType(
   prevId: Id,
   nextId: Id
 ): Promise<Result<void, TypeMethodError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const pair = await loadSwapPair(
       (id) => typeRepo.findTypeInScope(session, id),
       prevId,
@@ -245,7 +253,7 @@ export async function swapSubType(
   prevId: Id,
   nextId: Id
 ): Promise<Result<void, TypeMethodError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const pair = await loadSwapPair(
       (id) => typeRepo.findSubTypeInScope(session, id),
       prevId,
@@ -264,7 +272,7 @@ export async function swapMethod(
   prevId: Id,
   nextId: Id
 ): Promise<Result<void, TypeMethodError>> {
-  return withDemoWriteVoid(session.isDemo, async () => {
+  return withDemoWriteVoid(session, async () => {
     const pair = await loadSwapPair(
       (id) => methodRepo.findMethodInScope(session, id),
       prevId,

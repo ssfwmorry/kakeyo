@@ -25,6 +25,28 @@ export type BalanceSnapshot = {
   prices: Record<string, number>;
 };
 
+// bank_balances の行（created_at 昇順）を、created_at ごとに 1 スナップショットへ集約する。
+// Map は挿入順を保持するため、rows の登場順がそのまま維持される。
+// グループ化キーは元の createdAt（同一 timestamp が同じ登録操作）。
+export function toBalanceSnapshots(
+  rows: Array<{ bankId: Id; price: number; createdAt: Date }>
+): BalanceSnapshot[] {
+  const byDate = new Map<string, BalanceSnapshot>();
+  for (const row of rows) {
+    const key = row.createdAt.toISOString();
+    const existing = byDate.get(key);
+    if (existing) {
+      existing.prices[String(row.bankId)] = row.price;
+      continue;
+    }
+    byDate.set(key, {
+      createdAt: row.createdAt,
+      prices: { [String(row.bankId)]: row.price }
+    });
+  }
+  return [...byDate.values()];
+}
+
 // bankPrices は banks と同じ並び（null は未登録＝「-」表示）。
 export type TableRow = {
   createdDate: string;

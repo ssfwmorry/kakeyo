@@ -2,7 +2,7 @@
 
 import { parseWithZod } from '@conform-to/zod/v4';
 import { redirect } from 'next/navigation';
-import { serverEnv } from '@/lib/server/env.server';
+import { type DemoMode, isDemoMode } from '@/features/demo';
 import {
   type FormActionResult,
   ToastType
@@ -13,6 +13,7 @@ import {
   sendResetPasswordEmail,
   signInWithPassword
 } from '../server/authActions';
+import { clearDemoSession, setDemoSession } from '../server/demoCookie';
 import { authRoutes } from '../shared/routes';
 
 const { toast } = authLabels;
@@ -45,6 +46,8 @@ export async function loginAction(
     };
   }
 
+  // デモ Cookie が残っていると getSessionData がデモを優先するため、実ログインで破棄する。
+  await clearDemoSession();
   redirect(authRoutes.afterLogin);
 }
 
@@ -74,11 +77,12 @@ export async function resetPasswordAction(
   };
 }
 
-// デモログイン。フォーム入力を持たないため env の資格情報で直接ログインする。
-// isDemo 判定は getSessionData が email で行う。失敗はトーストで通知。
-export async function demoLoginAction(): Promise<FormActionResult> {
-  const { demoUserEmail, demoUserPassword } = serverEnv;
-  if (!demoUserEmail || !demoUserPassword) {
+// デモログイン。署名付きデモ Cookie をセットして遷移するだけ。
+// mode はクライアント由来のため isDemoMode で検証してから使う。
+export async function demoLoginAction(
+  mode: DemoMode
+): Promise<FormActionResult> {
+  if (!isDemoMode(mode)) {
     return {
       toast: {
         type: ToastType.error,
@@ -87,15 +91,6 @@ export async function demoLoginAction(): Promise<FormActionResult> {
     };
   }
 
-  const { user, error } = await signInWithPassword(
-    demoUserEmail,
-    demoUserPassword
-  );
-  if (error || !user) {
-    return {
-      toast: { type: ToastType.error, message: toast.demoFailed }
-    };
-  }
-
+  await setDemoSession(mode);
   redirect(authRoutes.afterLogin);
 }

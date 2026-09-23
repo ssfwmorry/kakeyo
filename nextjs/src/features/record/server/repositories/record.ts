@@ -10,6 +10,11 @@ import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { RecordType } from '@/lib/shared/types/recordType';
 import type { Prisma } from '@/prisma/generated/client';
+import {
+  toDisplayTypeName,
+  toIsInstead,
+  toIsSettlement
+} from '../../domain/record-fields';
 import { SETTLEMENT_DISPLAY } from '../../labels';
 import type {
   NoteRecordDefault,
@@ -202,36 +207,6 @@ function buildSummarizedPairWhere(
 }
 
 // 取得系: 行 → 公開 DTO 変換（BigInt→number 境界）
-
-// 立替かどうか（個人 record は判定不能のため null）。
-function toIsInstead(isPair: boolean, recordType: RecordType): boolean | null {
-  if (!isPair) {
-    return null;
-  }
-  return recordType === RecordType.instead;
-}
-
-// 精算かどうか（個人 record は null）。
-function toIsSettlement(
-  isPair: boolean,
-  recordType: RecordType
-): boolean | null {
-  if (!isPair) {
-    return null;
-  }
-  return recordType === RecordType.settlement;
-}
-
-// type 名の表示補完（type 未設定 or 精算は '精算'）。
-function toDisplayTypeName(
-  typeName: string | null,
-  recordType: RecordType
-): string | null {
-  if (typeName === null || recordType === RecordType.settlement) {
-    return SETTLEMENT_DISPLAY.name;
-  }
-  return typeName;
-}
 
 function toRecordListItem(
   row: RecordWithRelations,
