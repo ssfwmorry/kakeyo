@@ -10,7 +10,6 @@ const { validation } = bankLabels;
 
 // 1 行分。price は priceSchema（全角/カンマ正規化 + 非負整数）＋ 0 より大きいことを要求。
 const balanceRowSchema = z.object({
-  // デモの負 ID を許容する共有 entityIdSchema（0 のみ拒否）。
   bankId: entityIdSchema(validation.bankRequired),
   price: priceSchema.refine((n) => n > 0, {
     message: validation.priceMin

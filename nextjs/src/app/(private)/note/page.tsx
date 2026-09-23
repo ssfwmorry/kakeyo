@@ -61,7 +61,7 @@ export default async function NotePage({
     !editingRecord && editingPlannedRecord ? 'planned' : 'record';
 
   return (
-    <main className='mx-auto flex w-full max-w-md flex-col gap-6 p-4'>
+    <main className='flex flex-col gap-6 p-4'>
       <Tabs defaultValue={defaultTab}>
         <TabsList className='grid w-full grid-cols-2'>
           <TabsTrigger value='record'>記録</TabsTrigger>

@@ -21,7 +21,6 @@ const optionalTrimmedText = z
   .transform((v) => (v === undefined || v === '' ? null : v));
 
 export const planTypeUpsertSchema = z.object({
-  // デモの負 ID を許容する共有 entityIdSchema（0 のみ拒否）。colorId は実マスタ限定のため positive のまま。
   id: entityIdSchema().optional(),
   name: z
     .string()
@@ -46,7 +45,7 @@ export const planUpsertSchema = z
       .max(30, validation.planNameMax),
     startDate: z.string().min(1, validation.dateRequired),
     endDate: z.string().min(1, validation.dateRequired),
-    // 空文字/未送出は「カテゴリなし」= null に写す。ID は entityIdSchema（デモの負 ID 許容）。
+    // 空文字/未送出は「カテゴリなし」= null に写す。
     planTypeId: z
       .union([entityIdSchema(), z.literal('')])
       .optional()

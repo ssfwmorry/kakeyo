@@ -125,8 +125,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* body はアプリ面の「外側」。スマホ幅を超える領域（PC 表示時の余白）を薄いグレーにし、
+     (private)/layout.tsx の shell（bg-background）を浮かせて見せる。
+     スマホ幅では shell が全面を覆うので、この色は見えない。 */
   body {
-    @apply bg-background text-foreground;
+    @apply bg-muted text-foreground;
   }
   html {
     @apply font-sans;

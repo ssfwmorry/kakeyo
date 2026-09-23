@@ -6,12 +6,10 @@ import type {
   PlannedRecordListItem
 } from '../types';
 
-// デモ用モックデータ（デモログイン時に DB へ触れず返す）。
-// withDemoRead に渡す。更新系は withDemoWriteVoid で no-op 成功にするため値は不要。
-// id は負値にして実データと衝突させない。
+// planned-record のデモ用モックデータ。
+// typeId / methodId と名前・色は type-method の demo.ts に合わせる。
 
-// note（定期入力）の day 選択肢モック（day_classifications は全ユーザ共通の静的
-// マスタだが、デモは DB へ触れないため実マスタ相当の代表値を返す）。
+// day 選択肢は全ユーザ共通の静的マスタだが、デモは DB へ触れないため実マスタと同じ値を持つ。
 export const demoDayClassifications: DayClassification[] = [
   { id: 1, name: '毎月 1 日', value: 1 },
   { id: 2, name: '毎月 10 日', value: 10 },
@@ -22,7 +20,7 @@ export const demoDayClassifications: DayClassification[] = [
 export const demoGroupedPlannedRecordList: GroupedPlannedRecordList = {
   self: [
     {
-      id: -1,
+      id: 1,
       isSelf: true,
       isPay: true,
       price: 80000,
@@ -32,17 +30,17 @@ export const demoGroupedPlannedRecordList: GroupedPlannedRecordList = {
       pairUserName: null,
       dayClassificationId: 1,
       dayClassificationName: '毎月 1 日',
-      methodId: -1,
+      methodId: 3,
       methodName: '銀行引落',
-      methodColorClassificationName: 'indigo',
-      typeId: -2,
+      methodColorClassificationName: 'blue-grey',
+      typeId: 4,
       typeName: '住居',
       typeColorClassificationName: 'brown',
       subTypeId: null,
       subTypeName: null
     },
     {
-      id: -2,
+      id: 2,
       isSelf: true,
       isPay: false,
       price: 250000,
@@ -52,12 +50,12 @@ export const demoGroupedPlannedRecordList: GroupedPlannedRecordList = {
       pairUserName: null,
       dayClassificationId: 4,
       dayClassificationName: '毎月 25 日',
-      methodId: -1,
-      methodName: '銀行引落',
-      methodColorClassificationName: 'indigo',
-      typeId: -3,
+      methodId: 4,
+      methodName: '銀行振込',
+      methodColorClassificationName: 'teal',
+      typeId: 5,
       typeName: '給与',
-      typeColorClassificationName: 'green',
+      typeColorClassificationName: 'teal',
       subTypeId: null,
       subTypeName: null
     }

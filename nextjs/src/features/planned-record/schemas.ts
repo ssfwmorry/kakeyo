@@ -21,7 +21,6 @@ const optionalMemo = z
 // planned_record upsert。id 空 = 新規、数値 = 更新。isPay / isInstead / isPair は
 // hidden で送る（isPair の正は Server Action が Cookie から読む）。
 export const plannedRecordUpsertSchema = z.object({
-  // ID 群はデモの負 ID を許容する共有 entityIdSchema（0 のみ拒否）を使う。
   id: entityIdSchema().optional(),
   dayClassificationId: entityIdSchema(plannedRecordLabels.error.dayRequired),
   isPay: z.stringbool(),

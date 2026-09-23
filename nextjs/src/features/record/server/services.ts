@@ -17,8 +17,8 @@ import type {
 import {
   demoPairedRecordList,
   demoRecordList,
-  demoSummarizedRecordList,
-  findDemoRecordDefault
+  findDemoRecordDefault,
+  findDemoSummarizedRecords
 } from './demo';
 import * as recordRepo from './repositories/record';
 
@@ -42,7 +42,7 @@ export async function getSummarizedRecords(
   session: SessionData,
   query: SummarizedRecordQuery
 ): Promise<SummarizedRecordItem[]> {
-  return withDemoRead(session.isDemo, demoSummarizedRecordList, () =>
+  return withDemoRead(session.isDemo, findDemoSummarizedRecords(query), () =>
     recordRepo.getSummarizedRecordList(session, query)
   );
 }

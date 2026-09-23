@@ -31,7 +31,13 @@ export default async function PrivateLayout({
     // 画面ぴったりの縦フレックス（h-dvh）。これで main が「上部バーとボトムナビを
     // 除いた残り」という確定した高さを持ち、カレンダー画面が h-full で 1 画面に収まる。
     // 中身が長い画面は main 側が overflow-y-auto でスクロールする。
-    <div className='flex h-dvh flex-col'>
+    //
+    // 幅はスマホ専用（max-w-md = 448px）。このアプリはスマホ幅だけを設計対象にしており、
+    // PC で開いたときは shell ごと中央に寄せ、外側は body の bg-muted（globals.css）で
+    // 地を変えてアプリ面を浮かせる。sm 以上では左右の境界線で輪郭も出す。
+    // 幅の制限は shell 1 箇所で持ち、各画面（page / *-screen）は max-w を持たない。
+    // header・main・ボトムナビが同じ幅に揃うのはこの構造による。
+    <div className='mx-auto flex h-dvh w-full max-w-md flex-col bg-background sm:border-x'>
       {/* オフライン告知。h-dvh の縦フレックスの一員として header の上に積む
           （ラッパーで囲むと main へ渡る高さの連鎖が変わるため囲まない）。
           非表示時は null を返すので通常時のレイアウトには影響しない。 */}

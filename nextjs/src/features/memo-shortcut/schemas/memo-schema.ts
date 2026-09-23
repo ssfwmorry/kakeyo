@@ -27,7 +27,7 @@ export const memoFormSchema = z.object({
 
 export type MemoFormValue = z.infer<typeof memoFormSchema>;
 
-// TODO 削除。対象 id のみ（int PK・デモの負 ID を許容する entityIdSchema）。
+// TODO 削除。対象 id のみ。
 export const memoDeleteSchema = z.object({
   id: entityIdSchema()
 });

@@ -52,7 +52,7 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
       : '受取方法';
 
   return (
-    <main className='mx-auto flex w-full max-w-md flex-col gap-3 p-4'>
+    <main className='flex flex-col gap-3 p-4'>
       {/* 上部にブルーグレーの色帯ヘッダを敷き、右に絞り込み中のカテゴリを枠付きカードで
           出す。帯もカードも無いと「今どの絞り込みを見ているか」の手がかりが弱い。 */}
       <div className='-mx-4 -mt-4 flex items-center justify-between gap-2 bg-slate-200 px-4 py-2 dark:bg-slate-700'>

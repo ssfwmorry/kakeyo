@@ -28,6 +28,8 @@ import {
 // fixed だとスクロール領域の最終行に被り、本文側が被り分の padding を自前で持つ
 // 必要が出る（実際 main が pb-20 を持っていた）。フレックス子にすれば main の
 // flex-1 が自動でナビ分を差し引く。
+// 横幅も同じ理由で shell に従う（shell 側が max-w-md で中央寄せしているので、
+// ここで独自に幅を絞らない。絞ると header や本文と列幅がずれる）。
 
 type NavItem = {
   href: string;
@@ -49,7 +51,7 @@ export function BottomNav() {
 
   return (
     <nav className='shrink-0 border-t bg-background'>
-      <ul className='mx-auto flex max-w-screen-sm items-stretch'>
+      <ul className='flex items-stretch'>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;

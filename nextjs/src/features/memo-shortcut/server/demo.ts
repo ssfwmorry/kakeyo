@@ -2,42 +2,42 @@ import 'server-only';
 import { RecordType } from '@/lib/shared/types/recordType';
 import type { MemoItem, ShortCutItem } from '../types';
 
-// memo/shortcut のデモ用モックデータ（デモログイン時に DB へ触れず返す）。
-// withDemoRead に渡す。更新系は withDemoWriteVoid で no-op 成功にするため値は不要。
-// id は実データと衝突しないよう負値にする（bank/type-method のデモに倣う）。
+// memo/shortcut のデモ用モックデータ。
+// typeId / subTypeId / methodId と名前・色は type-method の demo.ts に合わせる。
+// 個人（solo）前提のため isPair / recordType は個人固定。
 
 export const demoMemoList: MemoItem[] = [
-  { id: -1, memo: '牛乳を買う', isPair: false },
-  { id: -2, memo: '電気代を振り込む', isPair: true }
+  { id: 1, memo: '牛乳を買う', isPair: false },
+  { id: 2, memo: '電気代を振り込む', isPair: false }
 ];
 
 export const demoShortCutList: ShortCutItem[] = [
   {
-    id: -1,
+    id: 1,
     isPay: true,
     price: 500,
     memo: 'ランチ',
     recordType: RecordType.self,
-    methodId: -1,
+    methodId: 1,
     methodName: '現金',
-    typeId: -1,
+    typeId: 1,
     typeName: '食費',
     colorName: 'orange',
-    subTypeId: null,
-    subTypeName: null
+    subTypeId: 1,
+    subTypeName: '外食'
   },
   {
-    id: -2,
+    id: 2,
     isPay: true,
-    price: 1200,
-    memo: null,
-    recordType: RecordType.pair,
-    methodId: -2,
-    methodName: 'クレジット',
-    typeId: -2,
-    typeName: '日用品',
+    price: 200,
+    memo: '電車',
+    recordType: RecordType.self,
+    methodId: 1,
+    methodName: '現金',
+    typeId: 3,
+    typeName: '交通費',
     colorName: 'blue',
-    subTypeId: -1,
-    subTypeName: '消耗品'
+    subTypeId: null,
+    subTypeName: null
   }
 ];

@@ -44,7 +44,7 @@ export function SummaryScreen({
   const [trend, setTrend] = useState<string>(TREND.total);
 
   return (
-    <main className='mx-auto flex w-full max-w-md flex-col gap-4 p-4'>
+    <main className='flex flex-col gap-4 p-4'>
       <h1 className='font-bold text-lg'>集計</h1>
       <Tabs value={outer} onValueChange={setOuter}>
         <TabsList className='w-full'>

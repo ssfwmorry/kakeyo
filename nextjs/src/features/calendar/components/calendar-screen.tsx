@@ -143,7 +143,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     // 画面いっぱいの縦フレックス。グリッドが余りを食い、下半分だけがスクロールする。
     // h-full ではなく min-h-full（グリッドの下限を割る低い画面では中身が縦に溢れる。
     // h-full だと溢れ分が切れるので、min-h-full にして main 側にスクロールさせる）。
-    <div className='mx-auto flex min-h-full w-full max-w-md flex-col gap-2 px-4 pt-2 pb-1'>
+    <div className='flex min-h-full flex-col gap-2 px-4 pt-2 pb-1'>
       {/* 前月/次月・年月ジャンプ・月収支を 1 行に畳む（見出し h1 は持たない）。 */}
       <header className='flex shrink-0 items-center gap-2'>
         <Button

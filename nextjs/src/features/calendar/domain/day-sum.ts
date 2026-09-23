@@ -39,3 +39,12 @@ export function buildDaySumList(records: RecordListItem[]): DaySum[] {
   }
   return [...map.values()].sort((a, b) => a.dateStr.localeCompare(b.dateStr));
 }
+
+// 日別収支から対象月（YYYY-MM）の合計を出す。デモの月収支は DB 集計（getMonthSum）を
+// 呼べないため、モック record から組んだ日別収支を同じ符号規則で足し上げて代用する
+// （selfSignedPrice と getMonthSum の SQL は同じ「自分視点の符号」を採る）。
+export function sumMonthFromDays(days: DaySum[], yearMonth: string): number {
+  return days
+    .filter((day) => day.dateStr.startsWith(`${yearMonth}-`))
+    .reduce((total, day) => total + day.sum, 0);
+}

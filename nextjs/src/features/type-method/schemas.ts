@@ -8,7 +8,6 @@ const { validation } = typeMethodLabels;
 
 // カテゴリ upsert。id 空文字 = 新規、数値 = 更新。isPay / isPair は hidden で送る。
 export const typeUpsertSchema = z.object({
-  // デモの負 ID を許容する共有 entityIdSchema（0 のみ拒否）。colorId は実マスタ限定のため positive のまま。
   id: entityIdSchema().optional(),
   name: z.string().min(1, validation.typeNameRequired).max(10),
   colorId: z.coerce

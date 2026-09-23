@@ -19,10 +19,13 @@ export const bankLabels = {
     addBalance: '残高追加',
     addRow: '＋行追加',
     register: '登録',
-    removeRow: 'この行を削除'
+    removeRow: 'この行を削除',
+    goSetting: '設定で口座を登録する'
   },
   empty: {
-    balanceHistory: '残高履歴を追加してください'
+    balanceHistory: '残高履歴を追加してください',
+    // 口座マスタは設定画面（家計管理タブ）で管理するため、未登録時はそこへ誘導する。
+    noBank: '口座が登録されていません'
   },
   error: {
     // 横断 L.error.notFound は「対象が見つかりません」で文言が異なるため、

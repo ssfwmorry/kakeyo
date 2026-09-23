@@ -7,7 +7,7 @@ import {
 import { getRecordListForRange } from '@/features/record/server/services';
 import { getMonthSum } from '@/features/summary/server/repositories/summary';
 import type { SessionData } from '@/lib/shared/types/auth';
-import { buildDaySumList } from '../domain/day-sum';
+import { buildDaySumList, sumMonthFromDays } from '../domain/day-sum';
 import { calcCalendarRange } from '../domain/range';
 import type { CalendarMonthData } from '../types';
 
@@ -25,24 +25,27 @@ export async function getCalendarMonth(
 ): Promise<CalendarMonthData> {
   const range = calcCalendarRange(yearMonth);
 
-  const [records, plans, reminderGroups, monthSum] = await Promise.all([
+  const [records, plans, reminderGroups] = await Promise.all([
     getRecordListForRange(session, range.startDate, range.endDate),
     getPlanList(session, { start: range.startStr, end: range.endStr }),
-    getReminderList(session),
-    // getMonthSum はデモでも実 DB に触れないよう withDemoRead で 0 を返す
-    // （デモは書き込みだけでなく集計も no-op 相当にし副作用/依存を持たせない）。
-    withDemoRead(session.isDemo, 0, () =>
+    getReminderList(session)
+  ]);
+  const days = buildDaySumList(records);
+
+  const monthSum = await withDemoRead(
+    session.isDemo,
+    sumMonthFromDays(days, yearMonth),
+    () =>
       getMonthSum(
         { userUid: session.userUid, pairId: session.pairId },
         yearMonth
       )
-    )
-  ]);
+  );
 
   return {
     yearMonth,
     monthSum,
-    days: buildDaySumList(records),
+    days,
     plans,
     reminders: reminderGroups.all
   };
