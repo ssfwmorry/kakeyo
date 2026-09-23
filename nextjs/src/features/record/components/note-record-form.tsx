@@ -4,6 +4,7 @@ import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { useMemo, useState } from 'react';
 import { PriceKeypad } from '@/components/form/price-keypad';
+import { SubmitButton } from '@/components/form/submit-button';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,7 +42,6 @@ type NoteRecordFormProps = {
   editing?: NoteRecordDefault;
 };
 
-// 入力状態をまとめて扱うためのローカル型。
 type NoteState = {
   isPay: boolean;
   date: string;
@@ -67,7 +67,6 @@ export function NoteRecordForm({
     setState((prev) => ({ ...prev, ...next }));
 
   const view = useNoteView(typeList, methodList, isPair, state);
-  // 収支/立替の切替時は選択をリセットする。
   const resetSelection = () =>
     patch({ typeId: null, subTypeId: null, methodId: null });
 
@@ -104,7 +103,6 @@ export function NoteRecordForm({
   );
 }
 
-// 状態から表示に必要な派生値をまとめて算出する（本体の複雑度を下げる）。
 type NoteView = {
   types: TypeCard[];
   methods: MethodCard[];
@@ -148,7 +146,6 @@ function useNoteView(
   };
 }
 
-// カテゴリ/サブカテゴリの選択エリア（未選択=グリッド、選択済=サマリ）。
 function NoteSelectionArea({
   view,
   subTypeId,
@@ -195,7 +192,7 @@ function NoteDetailForm({
   methods: MethodCard[];
   patch: (next: Partial<NoteState>) => void;
 }) {
-  const [result, action] = useFormAction(upsertRecordAction);
+  const [result, action, isPending] = useFormAction(upsertRecordAction);
   const [form] = useForm({
     lastResult: result?.submission,
     onValidate: ({ formData }) =>
@@ -237,18 +234,17 @@ function NoteDetailForm({
           {errorMessages.join(' / ')}
         </p>
       ) : null}
-      <Button
-        type='submit'
+      <SubmitButton
+        isPending={isPending}
         className='flex-1'
         disabled={!canSubmit(state, isPair)}
       >
-        {editing ? recordLabels.action.update : recordLabels.action.create}
-      </Button>
+        {editing ? L.button.update : L.button.create}
+      </SubmitButton>
     </form>
   );
 }
 
-// 削除フォーム（編集時のみ・別 form）。成功時は redirect するため戻り値は届かない。
 function NoteDeleteForm({ id }: { id: number }) {
   const [deleteResult, deleteAction] = useFormAction(deleteRecordAction);
   return (
@@ -263,7 +259,6 @@ function NoteDeleteForm({ id }: { id: number }) {
   );
 }
 
-// 初期状態を編集対象から組む（新規は既定値）。
 function toInitialState(editing?: NoteRecordDefault): NoteState {
   return {
     isPay: editing?.isPay ?? true,
@@ -271,7 +266,7 @@ function toInitialState(editing?: NoteRecordDefault): NoteState {
     typeId: editing?.typeId ?? null,
     subTypeId: editing?.subTypeId ?? null,
     methodId: editing?.methodId ?? null,
-    // 立替は既定 ON。共有 & 支出のときのみ意味を持つ。
+    // 立替は既定 ON。
     isInstead: editing?.isInstead ?? true,
     memo: editing?.memo ?? '',
     price: editing?.price === undefined ? '' : String(editing.price)
@@ -285,8 +280,6 @@ function canSubmit(state: NoteState, isPair: boolean): boolean {
   }
   return !isPair || state.memo.trim() !== '';
 }
-
-// ===== 子コンポーネント（複雑度を分割） =====
 
 function NoteHeader({
   isPay,

@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import { MonthJumpPicker } from '@/components/month-jump-picker';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { useSwipe } from '@/components/use-swipe';
 import { MemoList } from '@/features/memo-shortcut';
+import type { PlanItem, ReminderItem } from '@/features/plan-reminder';
+import { formatDateLabelJst } from '@/lib/shared/domain/date';
 import { getCalendarMonthAction } from '../actions';
 import {
   type AllRecordsOrder,
@@ -17,9 +20,10 @@ import { calendarLabels } from '../labels';
 import type {
   CalendarEvent,
   CalendarInitialData,
-  CalendarMonthData
+  CalendarMonthData,
+  DaySum
 } from '../types';
-import { useSwipe } from '../use-swipe';
+
 import { AllRecordsList, DayRecordList } from './day-record-list';
 import { EventDetail } from './event-detail';
 import { MonthCalendar } from './month-calendar';
@@ -33,6 +37,13 @@ import { ShortcutRecordList } from './shortcut-record-list';
 // イベントクリック: plan / reminder をクリックすると EventDetail に詳細カードを出す。
 // 通常 plan は「編集」で /plan?planId= へ、リマインダー由来 plan はその場で削除できる。
 // 日付クリック・月移動で選択は解除する。
+//
+// 高さ設計: この画面だけは縦スクロールを極力起こさない（月グリッド・記録・TODO・
+// ショートカットが 1 画面に載るため）。そのために
+//  - ページ見出し h1 は持たない（ボトムナビが「カレンダー」を名乗っている）
+//  - 月ナビと月収支を 1 行に畳む
+//  - 月グリッドは flex-1 で残りの高さを食い、下の記録一覧側がスクロールする
+//  - TODO は見出しなしの chip 帯にして、記録＋/予定＋ の行のトグルで開閉する
 
 export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
   const [month, setMonth] = useState<CalendarMonthData>(initial.month);
@@ -46,6 +57,8 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
   } | null>(null);
   // 全記録一覧の並び（null=選択日1日表示 / 'desc' or 'asc'=当月全記録）。
   const [allRecordsOrder, setAllRecordsOrder] = useState<AllRecordsOrder>(null);
+  // TODO chip 帯の開閉。既定は開（TODO を見るのに 1 タップ要らない）。
+  const [isTodoOpen, setIsTodoOpen] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   // 選択日の DaySum（records / holiday）を月データから引く。
@@ -127,48 +140,52 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
   });
 
   return (
-    <div className='mx-auto flex w-full max-w-md flex-col gap-4 p-4'>
-      <header className='flex flex-col gap-2'>
-        <h1 className='font-bold text-lg'>{calendarLabels.heading.title}</h1>
-        {/* 前月/次月 ＋ 中央に年月ジャンプ ＋ 月収支サブタイトル。 */}
-        <div className='flex items-center justify-between gap-2'>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={() => move(-1)}
-            disabled={isPending}
-            aria-label='前月'
-          >
-            ＜
-          </Button>
-          <div className='flex flex-col items-center'>
-            <MonthJumpPicker
-              yearMonth={month.yearMonth}
-              label={monthLabel(month.yearMonth)}
-              onSelect={handleMonthChange}
-            />
-            <span className='text-muted-foreground text-xs'>
-              {calendarLabels.heading.monthSum}：
-              {formatMonthSum(month.monthSum)} 円
-            </span>
-          </div>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={() => move(1)}
-            disabled={isPending}
-            aria-label='次月'
-          >
-            ＞
-          </Button>
-        </div>
+    // 画面いっぱいの縦フレックス。グリッドが余りを食い、下半分だけがスクロールする。
+    // h-full ではなく min-h-full（グリッドの下限を割る低い画面では中身が縦に溢れる。
+    // h-full だと溢れ分が切れるので、min-h-full にして main 側にスクロールさせる）。
+    <div className='mx-auto flex min-h-full w-full max-w-md flex-col gap-2 px-4 pt-2 pb-1'>
+      {/* 前月/次月・年月ジャンプ・月収支を 1 行に畳む（見出し h1 は持たない）。 */}
+      <header className='flex shrink-0 items-center gap-2'>
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => move(-1)}
+          disabled={isPending}
+          aria-label='前月'
+        >
+          ＜
+        </Button>
+        <MonthJumpPicker
+          yearMonth={month.yearMonth}
+          label={monthLabel(month.yearMonth)}
+          onSelect={handleMonthChange}
+        />
+        <Button
+          type='button'
+          variant='ghost'
+          size='icon-sm'
+          onClick={() => move(1)}
+          disabled={isPending}
+          aria-label='次月'
+        >
+          ＞
+        </Button>
+        <span className='ml-auto text-muted-foreground text-xs'>
+          {calendarLabels.heading.monthSum} {formatMonthSum(month.monthSum)} 円
+        </span>
       </header>
 
+      {/* 月グリッド。flex-1 で残りの高さを食う。
+          min-h は FullCalendar の行が潰れない下限。FullCalendar は 1 週の行に
+          約 58px の下限を持ち、これを割ると縮まずに末尾の週をはみ出させる。
+          最長の月（6 週）でも切れないよう 6 × 58 + 曜日ヘッダ 25 ≒ 373px を確保する。
+          height='100%' の FullCalendar は箱が足りないとスクロールせず末尾の週を
+          切り落とすため、下限を割るくらい画面が低いときは flex-1 を諦めてこの
+          高さを確保し、代わりに main 側を縦スクロールさせる。 */}
       <div
         data-pending={isPending}
-        className='data-[pending=true]:opacity-60'
+        className='min-h-[373px] flex-1 shrink-0 data-[pending=true]:opacity-60'
         onTouchStart={swipe.onTouchStart}
         onTouchEnd={swipe.onTouchEnd}
       >
@@ -180,56 +197,148 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
         />
       </div>
 
-      <div className='flex items-center gap-2'>
+      {/* カレンダー直下の主操作行。横幅を等分した「押せる面」を並べ、記録＋/予定＋を
+          塗り・TODO を outline にして主従を付ける（auto 幅で左に寄せると主従が読めない）。
+          全記録の並び替えトグルはここには置かず、操作対象である記録一覧の見出し側に
+          持たせている（対象の隣で ↑/↓ の状態が読めるため）。 */}
+      <div className='grid shrink-0 grid-cols-3 gap-2'>
+        {/* TODO 帯の開閉。TODO セクションの名乗りも兼ねる
+            （chip 帯側は見出しを持たない）。件数は開けば数えられるので出さない。 */}
+        <Button
+          type='button'
+          variant={isTodoOpen ? 'secondary' : 'outline'}
+          onClick={() => setIsTodoOpen((prev) => !prev)}
+          aria-expanded={isTodoOpen}
+          aria-controls='calendar-todo'
+        >
+          {calendarLabels.action.todo}
+          <span aria-hidden='true'>{isTodoOpen ? '▴' : '▾'}</span>
+        </Button>
         {/* note は日付クエリを受け取らないためプレーンに遷移する（記録の初期日付
-            プリフィルは note 側の受け口が無く TODO）。 */}
-        <Link href='/note' className={buttonVariants({ variant: 'default' })}>
+            プリフィルは note 側に受け口が無いため未対応）。 */}
+        <Link
+          href='/note'
+          className={buttonVariants({
+            variant: 'default',
+            className: 'w-full'
+          })}
+        >
           {calendarLabels.action.addRecord}
         </Link>
         <Link
           href={selectedDate ? `/plan?date=${selectedDate}` : '/plan'}
-          className={buttonVariants({ variant: 'default' })}
+          className={buttonVariants({
+            variant: 'default',
+            className: 'w-full'
+          })}
         >
           {calendarLabels.action.addPlan}
         </Link>
+      </div>
+
+      {isTodoOpen ? (
+        <div id='calendar-todo' className='shrink-0'>
+          <MemoList items={initial.memos} hasPair={initial.hasPair} />
+        </div>
+      ) : null}
+
+      {/* 下半分（記録・ショートカット）だけがスクロールする。 */}
+      <div className='flex min-h-24 flex-col gap-3 overflow-y-auto'>
+        <RecordsPane
+          allRecordsOrder={allRecordsOrder}
+          allRecordDays={allRecordDays}
+          selectedDate={selectedDate}
+          selectedDay={selectedDay}
+          selectedPlan={selectedPlan}
+          selectedReminder={selectedReminder}
+          onToggleAllRecords={toggleAllRecords}
+          onCloseEvent={() => setSelectedEvent(null)}
+        />
+
+        {initial.shortcuts.length > 0 ? (
+          <ShortcutRecordList items={initial.shortcuts} />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+// 記録の表示エリア（見出し + 全記録トグル + 本体）。本体の中身は排他:
+// ①全記録一覧（トグル ON） ②イベント詳細（plan/reminder 選択） ③選択日の記録一覧。
+// 状態は持たず、親から渡された選択結果を並べるだけ。
+function RecordsPane({
+  allRecordsOrder,
+  allRecordDays,
+  selectedDate,
+  selectedDay,
+  selectedPlan,
+  selectedReminder,
+  onToggleAllRecords,
+  onCloseEvent
+}: {
+  allRecordsOrder: AllRecordsOrder;
+  allRecordDays: { dateStr: string; records: DaySum['records'] }[];
+  selectedDate: string | null;
+  selectedDay: DaySum | null;
+  selectedPlan: PlanItem | null;
+  selectedReminder: ReminderItem | null;
+  onToggleAllRecords: () => void;
+  onCloseEvent: () => void;
+}) {
+  const isAllRecords = allRecordsOrder !== null;
+
+  return (
+    <>
+      <div className='flex items-center gap-2'>
+        <h2 className='font-bold text-sm'>
+          {recordsHeading(allRecordsOrder, selectedDate)}
+        </h2>
         {/* 当月の全記録を昇順/降順トグルで一覧。 */}
         <Button
           type='button'
-          variant='outline'
-          size='sm'
+          variant={isAllRecords ? 'secondary' : 'ghost'}
+          size='xs'
           className='ml-auto'
-          onClick={toggleAllRecords}
-          aria-pressed={allRecordsOrder !== null}
+          onClick={onToggleAllRecords}
+          aria-pressed={isAllRecords}
         >
           {allRecordsLabel(allRecordsOrder)}
         </Button>
       </div>
 
-      {/* 表示は排他: ①全記録一覧（トグル ON） ②イベント詳細（plan/reminder 選択）
-          ③選択日の記録一覧。 */}
-      {allRecordsOrder !== null ? (
-        <AllRecordsList days={allRecordDays} />
-      ) : selectedPlan || selectedReminder ? (
+      {isAllRecords ? <AllRecordsList days={allRecordDays} /> : null}
+
+      {!isAllRecords && (selectedPlan || selectedReminder) ? (
         <EventDetail
           plan={selectedPlan}
           reminder={selectedReminder}
-          onClose={() => setSelectedEvent(null)}
+          onClose={onCloseEvent}
         />
-      ) : (
+      ) : null}
+
+      {!(isAllRecords || selectedPlan || selectedReminder) ? (
         <DayRecordList
           dateStr={selectedDate}
           records={selectedDay?.records ?? []}
           holidayName={selectedDay?.holidayName ?? null}
         />
-      )}
-
-      <MemoList items={initial.memos} hasPair={initial.hasPair} />
-
-      {initial.shortcuts.length > 0 ? (
-        <ShortcutRecordList items={initial.shortcuts} />
       ) : null}
-    </div>
+    </>
   );
+}
+
+// 記録一覧の見出し。全記録トグル ON なら月見出し、選択日があればその日付、
+// どちらでもなければ汎用の「記録」。
+function recordsHeading(
+  order: AllRecordsOrder,
+  selectedDate: string | null
+): string {
+  if (order !== null) {
+    return calendarLabels.heading.monthRecords;
+  }
+  return selectedDate === null
+    ? calendarLabels.heading.dayRecords
+    : formatDateLabelJst(selectedDate);
 }
 
 // 全記録トグルのボタン文言（OFF=通常 / 降順=↓ / 昇順=↑）。

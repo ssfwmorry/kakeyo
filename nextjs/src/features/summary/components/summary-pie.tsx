@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
+import { useSwipe } from '@/components/use-swipe';
 import { fetchPieAction } from '../actions';
 import { colorHex } from '../color';
 import type { PieListRow, PieShowData } from '../domain/chart-data';
@@ -61,6 +62,12 @@ export function SummaryPie({ isPair, isExistPair }: SummaryPieProps) {
   useEffect(() => {
     refetch({ isPay, isType, isIncludeInstead, yearMonth });
   }, [isPair]);
+
+  // 左右スワイプで前月/翌月へ。
+  const swipe = useSwipe({
+    onSwipeLeft: () => goYearMonth(shiftMonth(yearMonth, 1)),
+    onSwipeRight: () => goYearMonth(shiftMonth(yearMonth, -1))
+  });
 
   const total = data.list.reduce((sum, row) => sum + row.value, 0);
   const subtitle =
@@ -149,14 +156,16 @@ export function SummaryPie({ isPair, isExistPair }: SummaryPieProps) {
         onNext={() => goYearMonth(shiftMonth(yearMonth, 1))}
       />
 
-      <SummaryPieChart slices={data.slices} />
+      <div onTouchStart={swipe.onTouchStart} onTouchEnd={swipe.onTouchEnd}>
+        <SummaryPieChart slices={data.slices} />
+      </div>
 
       {data.list.length === 0 ? (
         <p className='py-8 text-center text-muted-foreground text-sm'>
           表示するデータがありません
         </p>
       ) : (
-        <ul className='flex flex-col gap-1'>
+        <ul className='flex flex-col gap-2'>
           {data.list.map((row) => (
             <PieListItem
               key={`${isType ? 't' : 'm'}-${row.id}-${row.name}`}
@@ -170,7 +179,11 @@ export function SummaryPie({ isPair, isExistPair }: SummaryPieProps) {
   );
 }
 
-// 内訳一覧の 1 行（カテゴリ/方法 + サブカテゴリ）。＞は id>=0（typeId/methodId が正）のみ。
+// 内訳一覧の 1 件（カテゴリ/方法 + サブカテゴリ）。＞は id>=0（typeId/methodId が正）のみ。
+//
+// グルーピング: カテゴリとその内訳を 1 枚のカードに収める。サブカテゴリに独立した枠線を
+// 与えるとカテゴリと同列の兄弟に見えて親子関係が読めないため、枠線はカード外周の 1 本だけに
+// し、内側は区切り線 + インデントで階層を示す。
 function PieListItem({
   row,
   onGo
@@ -178,23 +191,27 @@ function PieListItem({
   row: PieListRow;
   onGo: (row: PieListRow, sub: { id: number; name: string } | null) => void;
 }) {
+  const hasSubs = row.subs.length > 0;
+
   return (
-    <li>
-      <div className='flex items-center gap-2 rounded-md border p-2'>
+    <li className='overflow-hidden rounded-md border'>
+      <div className='flex items-center gap-2 p-2'>
         <span
           aria-hidden
           className='inline-block size-3 shrink-0 rounded-full'
           style={{ backgroundColor: colorHex(row.colorName) }}
         />
-        <span className='flex-1 truncate text-sm'>
+        <span className='flex-1 truncate font-medium text-sm'>
           {row.isPair && row.pairUserName ? (
-            <span className='mr-1 text-muted-foreground text-xs'>
+            <span className='mr-1 font-normal text-muted-foreground text-xs'>
               {row.pairUserName}
             </span>
           ) : null}
           {row.name}
         </span>
-        <span className='text-sm tabular-nums'>{toShowStr(row.value)} 円</span>
+        <span className='font-medium text-sm tabular-nums'>
+          {toShowStr(row.value)} 円
+        </span>
         {row.id >= 0 ? (
           <Button
             type='button'
@@ -209,17 +226,18 @@ function PieListItem({
           <span className='w-9' />
         )}
       </div>
-      {row.subs.length > 0 ? (
-        <ul className='mt-1 ml-5 flex flex-col gap-1'>
+      {hasSubs ? (
+        // サブカテゴリはカード内側。左の縦罫と淡い地でカテゴリの内訳であることを示す。
+        <ul className='border-t bg-muted/30'>
           {row.subs.map((sub) => (
             <li
               key={`sub-${sub.id}`}
-              className='flex items-center gap-2 rounded-md border border-dashed p-2'
+              className='flex items-center gap-2 border-border/60 border-b py-1.5 pr-2 pl-7 last:border-b-0'
             >
               <span className='flex-1 truncate text-muted-foreground text-sm'>
                 {sub.name}
               </span>
-              <span className='text-sm tabular-nums'>
+              <span className='text-muted-foreground text-sm tabular-nums'>
                 {toShowStr(sub.value)} 円
               </span>
               <Button

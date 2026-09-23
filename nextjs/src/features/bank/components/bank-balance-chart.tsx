@@ -10,7 +10,11 @@ import {
   ChartTooltipContent
 } from '@/components/ui/chart';
 import { colorHex } from '@/features/master';
-import { toManUnit } from '../domain/format';
+import {
+  toAxisMonthLabel,
+  toManUnit,
+  toTooltipDateLabel
+} from '../domain/format';
 import type { BalanceChartPoint, BankItem } from '../types';
 
 // 残高の積み上げ Area チャート（Recharts + shadcn chart）。
@@ -40,16 +44,22 @@ export function BankBalanceChart({ banks, points }: BankBalanceChartProps) {
     <ChartContainer config={config} className='aspect-video w-full'>
       <AreaChart data={points} margin={{ left: 4, right: 4, top: 8 }}>
         <CartesianGrid vertical={false} />
+        {/* 軸は年月まで（日まで出すとスマホ幅で 1 本しか入らない）。
+            日付の精度はツールチップの見出しで担保する。 */}
         <XAxis
           dataKey='date'
           tickLine={false}
           axisLine={false}
           tickMargin={8}
           minTickGap={24}
+          tickFormatter={toAxisMonthLabel}
         />
         <ChartTooltip
           content={
             <ChartTooltipContent
+              labelFormatter={(_label, payload) =>
+                toTooltipDateLabel(String(payload?.[0]?.payload?.date ?? ''))
+              }
               formatter={(value) => `${toManUnit(Number(value))}万`}
             />
           }

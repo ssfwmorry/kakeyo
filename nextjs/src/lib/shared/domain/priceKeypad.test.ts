@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { MAX_PRICE } from './price';
 import { popDigit, pushDigit, pushDoubleZero } from './priceKeypad';
 
-// 旧 NotePrice.vue のテンキー押下ロジックと同値であることを保護する。
+// テンキー押下ロジックの挙動を固定する。
 // 上限は MAX_PRICE の「未満」（実質 9,999,999 円）。
 
 describe('pushDigit', () => {

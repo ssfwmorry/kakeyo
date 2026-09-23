@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { RecordType } from '@/lib/shared/types/recordType';
 import { resolveRecordEditable, resolveRecordOwnership } from './record-fields';
 
-// record の所有者・精算フラグ・record_type 導出の単体テスト（旧 upsertRecord 分岐）。
+// record の所有者・精算フラグ・record_type 導出の単体テスト。
 // ※ 現行 vitest.config.mts の include は src/lib/** のためこのファイルはデフォルト
 //   実行対象外だが、ドメイン分岐の意図を固定する回帰テストとして併置する。
 

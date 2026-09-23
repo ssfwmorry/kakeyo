@@ -42,7 +42,7 @@ export async function deleteMemo(
   });
 }
 
-// 個人専用一覧。作成/削除 API は旧コードに無いため取得のみ提供する。
+// 個人専用一覧。作成/削除は提供せず取得のみ。
 export async function getShortCutList(
   session: SessionData
 ): Promise<ShortCutItem[]> {

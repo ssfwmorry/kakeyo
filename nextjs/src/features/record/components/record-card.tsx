@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
-import { Pencil, Repeat } from 'lucide-react';
+import { IconPencil, IconUpdate } from '@/components/icons';
 import { ShareBadge } from '@/components/share-badge';
 import { colorHex } from '@/features/master';
 import { L } from '@/lib/shared/labels';
@@ -70,7 +70,7 @@ export function RecordCard({ record, onEdit }: RecordCardProps) {
           <span className='flex items-center gap-1 text-sm'>
             {typeAndSubType(record)}
             {isShowPlannedIcon ? (
-              <Repeat
+              <IconUpdate
                 className='size-3.5 text-muted-foreground'
                 aria-label='定期'
               />
@@ -84,7 +84,7 @@ export function RecordCard({ record, onEdit }: RecordCardProps) {
             className='shrink-0 text-muted-foreground hover:text-foreground'
             onClick={onEdit}
           >
-            <Pencil className='size-4' />
+            <IconPencil className='size-4' />
           </button>
         ) : null}
       </div>

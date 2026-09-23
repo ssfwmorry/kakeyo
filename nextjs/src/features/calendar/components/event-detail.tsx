@@ -1,9 +1,10 @@
 'use client';
 
-import { Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
+import { ConfirmDialog } from '@/components/form/confirm-dialog';
 import { useFormToast } from '@/components/form/use-form-toast';
+import { ShareBadge } from '@/components/share-badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { colorHex } from '@/features/master';
@@ -59,14 +60,14 @@ function PlanCard({
 
   return (
     <Card>
-      <CardHeader className='flex-row items-center justify-between gap-2'>
+      <CardHeader layout='row'>
         <span className='flex items-center gap-2'>
-          <span
-            className='inline-flex size-6 items-center justify-center rounded-full text-white'
-            style={{ backgroundColor: colorHex(colorName) }}
-          >
-            {plan.isPair ? <Share2 className='size-3.5' /> : null}
-          </span>
+          <ShareBadge
+            colorHex={colorHex(colorName)}
+            isPair={plan.isPair}
+            shape='square'
+            className='size-6'
+          />
           <span className='font-medium'>{plan.name}</span>
         </span>
         {plan.planTypeName ? (
@@ -113,9 +114,6 @@ function PlanDeleteButton({
   useFormToast(result);
 
   const handleDelete = () => {
-    if (!window.confirm(PL.deleteConfirm)) {
-      return;
-    }
     startTransition(async () => {
       const formData = new FormData();
       formData.set('id', String(id));
@@ -127,29 +125,34 @@ function PlanDeleteButton({
   };
 
   return (
-    <Button
-      type='button'
-      size='sm'
-      variant='destructive'
-      disabled={isPending}
-      onClick={handleDelete}
-    >
-      {L.button.delete}
-    </Button>
+    <ConfirmDialog
+      trigger={
+        <Button
+          type='button'
+          size='sm'
+          variant='destructive'
+          disabled={isPending}
+        >
+          {L.button.delete}
+        </Button>
+      }
+      title={PL.deleteConfirm}
+      onConfirm={handleDelete}
+    />
   );
 }
 
 function ReminderCard({ reminder }: { reminder: ReminderItem }) {
   return (
     <Card>
-      <CardHeader className='flex-row items-center justify-between gap-2'>
+      <CardHeader layout='row'>
         <span className='flex items-center gap-2'>
-          <span
-            className='inline-flex size-6 items-center justify-center rounded-full text-white'
-            style={{ backgroundColor: colorHex(reminder.colorName) }}
-          >
-            {reminder.isPair ? <Share2 className='size-3.5' /> : null}
-          </span>
+          <ShareBadge
+            colorHex={colorHex(reminder.colorName)}
+            isPair={reminder.isPair}
+            shape='square'
+            className='size-6'
+          />
           <span className='font-medium'>{reminder.name}</span>
         </span>
         <span className='text-muted-foreground text-xs'>{RM.badge}</span>

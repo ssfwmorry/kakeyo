@@ -10,10 +10,6 @@ export const plannedRecordLabels = {
     income: '収入'
   },
   instead: '立替',
-  action: {
-    create: '登録',
-    update: '変更'
-  },
   field: {
     day: '毎月何日か',
     method: '方法',

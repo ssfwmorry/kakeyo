@@ -179,7 +179,11 @@ function PlanFormFooter({
       ) : (
         <span />
       )}
-      <Button type='submit'>{L.button.save}</Button>
+      {/* 主ボタンは新規=登録 / 編集=変更で出し分ける（常に「保存」だと今どちらを
+          しているかが読めない）。 */}
+      <Button type='submit'>
+        {editing ? L.button.update : L.button.create}
+      </Button>
     </div>
   );
 }

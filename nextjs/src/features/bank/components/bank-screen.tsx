@@ -35,7 +35,9 @@ export function BankScreen({
   const [balanceOpen, setBalanceOpen] = useState(false);
 
   return (
-    <div className='flex flex-col gap-6'>
+    // 他画面（calendar / summary / records）と同じページ枠。これが無いと
+    // チャートと残高テーブルだけが画面端まで張り出し、ボタン類との左右が揃わない。
+    <main className='mx-auto flex w-full max-w-md flex-col gap-6 p-4'>
       <BankBalanceChart banks={banks} points={chartPoints} />
 
       <div className='flex justify-end'>
@@ -57,6 +59,6 @@ export function BankScreen({
         onOpenChange={setBalanceOpen}
         banks={banks}
       />
-    </div>
+    </main>
   );
 }

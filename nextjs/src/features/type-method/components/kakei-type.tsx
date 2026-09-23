@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { SwapButton } from '@/components/form/swap-button';
+import { IconArrowDown, IconArrowRight, IconPencil } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -144,7 +145,7 @@ function TypeCardView({
 }: TypeCardViewProps) {
   return (
     <Card>
-      <CardHeader className='flex-row items-center justify-between gap-2'>
+      <CardHeader layout='row'>
         <span className='flex items-center gap-2'>
           <span
             className='inline-block size-5 rounded-full'
@@ -153,8 +154,14 @@ function TypeCardView({
           {card.name}
         </span>
         {isEdit ? (
-          <Button type='button' size='sm' variant='ghost' onClick={onEditType}>
-            {L.button.edit}
+          <Button
+            type='button'
+            size='icon'
+            variant='ghost'
+            aria-label={L.button.edit}
+            onClick={onEditType}
+          >
+            <IconPencil className='size-4' />
           </Button>
         ) : nextId !== undefined ? (
           <SwapButton
@@ -162,7 +169,7 @@ function TypeCardView({
             nextId={nextId}
             action={swapTypeAction}
             label={typeMethodLabels.swap.down}
-            icon='↓'
+            icon={<IconArrowDown className='size-4' />}
           />
         ) : null}
       </CardHeader>
@@ -173,11 +180,12 @@ function TypeCardView({
             {isEdit ? (
               <Button
                 type='button'
-                size='sm'
+                size='icon'
                 variant='ghost'
+                aria-label={L.button.edit}
                 onClick={() => onEditSub(sub)}
               >
-                {L.button.edit}
+                <IconPencil className='size-4' />
               </Button>
             ) : card.subTypes[index + 1] ? (
               <SwapButton
@@ -185,7 +193,7 @@ function TypeCardView({
                 nextId={card.subTypes[index + 1].id}
                 action={swapSubTypeAction}
                 label={typeMethodLabels.swap.next}
-                icon='→'
+                icon={<IconArrowRight className='size-4' />}
               />
             ) : null}
           </div>

@@ -19,12 +19,26 @@ function Card({
   );
 }
 
-function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
+function CardHeader({
+  className,
+  layout = 'grid',
+  ...props
+}: React.ComponentProps<'div'> & {
+  // 'grid'（既定）= CardTitle/CardDescription/CardAction を格子で組む標準形。
+  // 'row' = 「見出し ＋ 右端に操作ボタン 1 つ」の 1 行ヘッダ。呼び出し側で
+  // className に flex を書いて grid を打ち消すと CardAction 用の grid クラスが
+  // 死んだまま残り、6 箇所で同じ打ち消し文字列を繰り返すことになるため
+  // variant にした（この形はマスタ一覧のカードで頻出）。
+  layout?: 'grid' | 'row';
+}) {
   return (
     <div
       data-slot='card-header'
       className={cn(
-        'group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)',
+        'group/card-header @container/card-header items-start gap-1 rounded-t-xl px-(--card-spacing) [.border-b]:pb-(--card-spacing)',
+        layout === 'row'
+          ? 'flex flex-row items-center justify-between gap-2'
+          : 'grid auto-rows-min has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]',
         className
       )}
       {...props}

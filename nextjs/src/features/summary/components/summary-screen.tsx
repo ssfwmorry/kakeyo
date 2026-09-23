@@ -1,6 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  IconAnalytics,
+  IconCash,
+  IconChartBar,
+  IconChartPie,
+  IconShape
+} from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { PairedRecordItem } from '@/features/record';
 import type { Id } from '@/lib/shared/types/id';
@@ -41,10 +48,19 @@ export function SummaryScreen({
       <h1 className='font-bold text-lg'>集計</h1>
       <Tabs value={outer} onValueChange={setOuter}>
         <TabsList className='w-full'>
-          <TabsTrigger value={OUTER.pie}>内訳</TabsTrigger>
-          <TabsTrigger value={OUTER.trend}>推移</TabsTrigger>
+          <TabsTrigger value={OUTER.pie}>
+            <IconChartPie className='size-4' aria-hidden />
+            内訳
+          </TabsTrigger>
+          <TabsTrigger value={OUTER.trend}>
+            <IconChartBar className='size-4' aria-hidden />
+            推移
+          </TabsTrigger>
           {isExistPair ? (
-            <TabsTrigger value={OUTER.settlement}>精算</TabsTrigger>
+            <TabsTrigger value={OUTER.settlement}>
+              <IconCash className='size-4' aria-hidden />
+              精算
+            </TabsTrigger>
           ) : null}
         </TabsList>
 
@@ -55,8 +71,14 @@ export function SummaryScreen({
         <TabsContent value={OUTER.trend}>
           <Tabs value={trend} onValueChange={setTrend}>
             <TabsList className='w-full'>
-              <TabsTrigger value={TREND.total}>全体</TabsTrigger>
-              <TabsTrigger value={TREND.type}>カテゴリ別</TabsTrigger>
+              <TabsTrigger value={TREND.total}>
+                <IconAnalytics className='size-4' aria-hidden />
+                全体
+              </TabsTrigger>
+              <TabsTrigger value={TREND.type}>
+                <IconShape className='size-4' aria-hidden />
+                カテゴリ別
+              </TabsTrigger>
             </TabsList>
             <TabsContent value={TREND.total}>
               <SummaryBar isPair={isPair} isExistPair={isExistPair} />

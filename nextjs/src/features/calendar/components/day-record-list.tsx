@@ -2,11 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { RecordCard, type RecordListItem } from '@/features/record';
+import { formatDateLabelJst } from '@/lib/shared/domain/date';
 import { calendarLabels } from '../labels';
 
 // 編集可否（ペア相手の立替は不可・精算は不可）は RecordCard 内の isEnableEdit が
 // 判定し、可のときのみ編集ボタンを出す。
 // router は各リストで 1 回だけ取得し（行ごとに useRouter を呼ばない）、onEdit を渡す。
+//
+// 日付見出しは親（calendar-screen）が全記録トグルと同じ行に出すため、ここでは持たない
+// （祝日名だけは日付と不可分なのでリスト側の先頭に残す）。
 
 type DayRecordListProps = {
   dateStr: string | null;
@@ -26,14 +30,11 @@ export function DayRecordList({
 
   return (
     <section className='flex flex-col gap-2'>
-      <h2 className='flex items-center gap-2 font-bold text-lg'>
-        {dateStr}
-        {holidayName ? (
-          <span className='rounded bg-red-100 px-1.5 py-0.5 text-red-700 text-xs'>
-            {holidayName}
-          </span>
-        ) : null}
-      </h2>
+      {holidayName ? (
+        <span className='w-fit rounded bg-red-100 px-1.5 py-0.5 text-red-700 text-xs'>
+          {holidayName}
+        </span>
+      ) : null}
 
       {records.length === 0 ? (
         <p className='text-muted-foreground text-sm'>
@@ -73,7 +74,9 @@ export function AllRecordsList({ days }: AllRecordsListProps) {
     <section className='flex flex-col gap-3'>
       {days.map((day) => (
         <div key={day.dateStr} className='flex flex-col gap-1'>
-          <p className='text-muted-foreground text-xs'>{day.dateStr}</p>
+          <p className='text-muted-foreground text-xs'>
+            {formatDateLabelJst(day.dateStr)}
+          </p>
           {day.records.map((record) => (
             <RecordCard
               key={record.id}

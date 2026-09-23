@@ -3,10 +3,10 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
 // JST 日付境界のドメイン計算（凍結資産・日付の単一の正）。
-// 旧「Date に +9h して toISOString で切る」独自 JST 変換は廃止。SSR ではサーバ
+// 「Date に +9h して toISOString で切る」独自 JST 変換は使わない。SSR ではサーバ
 // （Vercel は UTC）とクライアントで時刻がズレるため、dayjs の utc/timezone で
 // Asia/Tokyo を明示し日付境界（YYYY-MM-DD）で一貫して扱う。
-// 「今日」は全機能の起点なので、各レーンは自前で日付変換せずここを経由する。
+// 「今日」は全機能の起点なので、自前で日付変換せずここを経由する。
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -71,4 +71,11 @@ export function startOfMonthJst(yearMonth: string): Date {
 // YYYY-MM（JST の暦月）の翌月初 0:00 に対応する UTC の Date。集計の期間上限（未満）に使う。
 export function startOfNextMonthJst(yearMonth: string): Date {
   return dayjs.tz(yearMonth, JST).add(1, 'month').startOf('month').toDate();
+}
+
+// 'YYYY-MM-DD' → 'M月D日'。日別見出しの表示整形。
+// 生の ISO 文字列を見出しに出すと日本語 UI として不自然なため、表示側はこれを通す。
+export function formatDateLabelJst(dateStr: string): string {
+  const [, month, day] = dateStr.split('-');
+  return `${Number(month)}月${Number(day)}日`;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import {
   type ChartConfig,
   ChartContainer,
@@ -16,10 +16,16 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
+import { useSwipe } from '@/components/use-swipe';
 import { fetchPayIncomeAction } from '../actions';
 import type { PayIncomeShowData } from '../domain/chart-data';
 import { toShowPrefixStr, toShowStr } from '../domain/format';
 import { currentYear, shiftYear, yearLabel } from '../domain/period';
+import {
+  AMOUNT_Y_AXIS_PROPS,
+  formatTooltipAmount,
+  MONTH_X_AXIS_PROPS
+} from './chart-axes';
 import { PeriodNav } from './period-nav';
 
 // 収支/支出のみトグルは取得済みデータの表示切替のみで再取得しない。立替込みは再取得する。
@@ -62,6 +68,19 @@ export function SummaryBar({ isPair, isExistPair }: SummaryBarProps) {
   useEffect(() => {
     refetch({ year, isIncludeInstead });
   }, [isPair]);
+
+  // 年の移動（矢印・スワイプの共通経路）。
+  const moveYear = (delta: number) => {
+    const next = shiftYear(year, delta);
+    setYear(next);
+    refetch({ year: next, isIncludeInstead });
+  };
+
+  // 左右スワイプで前年/翌年へ。
+  const swipe = useSwipe({
+    onSwipeLeft: () => moveYear(1),
+    onSwipeRight: () => moveYear(-1)
+  });
 
   const dataKey = isPayAndIncome ? 'payAndIncome' : 'pay';
   const subtitle = isPayAndIncome
@@ -117,42 +136,30 @@ export function SummaryBar({ isPair, isExistPair }: SummaryBarProps) {
         label={yearLabel(year)}
         subtitle={subtitle}
         disabled={isPending}
-        onPrev={() => {
-          const next = shiftYear(year, -1);
-          setYear(next);
-          refetch({ year: next, isIncludeInstead });
-        }}
-        onNext={() => {
-          const next = shiftYear(year, 1);
-          setYear(next);
-          refetch({ year: next, isIncludeInstead });
-        }}
+        onPrev={() => moveYear(-1)}
+        onNext={() => moveYear(1)}
       />
 
       {data.rows.length > 0 ? (
-        <ChartContainer config={CHART_CONFIG} className='aspect-video w-full'>
-          <BarChart data={data.rows} margin={{ left: 4, right: 4, top: 8 }}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey='month'
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  formatter={(value) => `${Number(value).toLocaleString()} 円`}
-                />
-              }
-            />
-            <Bar
-              dataKey={dataKey}
-              fill={`var(--color-${dataKey})`}
-              radius={2}
-            />
-          </BarChart>
-        </ChartContainer>
+        <div onTouchStart={swipe.onTouchStart} onTouchEnd={swipe.onTouchEnd}>
+          <ChartContainer config={CHART_CONFIG} className='aspect-video w-full'>
+            <BarChart data={data.rows} margin={{ left: 4, right: 4, top: 8 }}>
+              <CartesianGrid vertical={false} />
+              <XAxis {...MONTH_X_AXIS_PROPS} />
+              <YAxis {...AMOUNT_Y_AXIS_PROPS} />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent formatter={formatTooltipAmount} />
+                }
+              />
+              <Bar
+                dataKey={dataKey}
+                fill={`var(--color-${dataKey})`}
+                radius={2}
+              />
+            </BarChart>
+          </ChartContainer>
+        </div>
       ) : (
         <p className='py-8 text-center text-muted-foreground text-sm'>
           表示するデータがありません

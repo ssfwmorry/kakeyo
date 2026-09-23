@@ -6,7 +6,9 @@ export const calendarLabels = {
     title: 'カレンダー',
     monthSum: '月の収支',
     // 日付未選択時の記録一覧見出し。
-    dayRecords: '記録'
+    dayRecords: '記録',
+    // 全記録トグル ON のときの記録一覧見出し。
+    monthRecords: 'この月の記録'
   },
   action: {
     prevMonth: '前の月',
@@ -14,6 +16,8 @@ export const calendarLabels = {
     addRecord: '記録＋',
     addPlan: '予定＋',
     editRecord: '記録を編集',
+    // 記録＋/予定＋ の行に並ぶ TODO 帯の開閉トグル。
+    todo: 'TODO',
     // 当月の全記録を一覧表示するトグル。
     showAllRecords: '全ての記録',
     showSelectedDay: '選択日に戻す'

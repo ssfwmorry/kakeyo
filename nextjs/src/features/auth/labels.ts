@@ -11,6 +11,8 @@ export const authLabels = {
   action: {
     login: 'ログイン',
     sendReset: '再設定メールを送る',
+    // 再設定モードへ切り替える導線（戻る側は汎用の L.button.cancel を使う）。
+    showReset: 'パスワード再設定',
     demo: 'デモページを見る',
     // 問い合わせ画面（/inquiry）への導線。
     inquiry: 'お問い合わせ',

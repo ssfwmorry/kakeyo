@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { dayOptionsForMonth, daysInMonthFixed } from './month-days';
 
-// 旧 DaysByMonth 相当（うるう年非考慮＝2 月は 28 固定）の検証。
+// 月ごとの日数（うるう年非考慮＝2 月は 28 固定）の検証。
 
 describe('daysInMonthFixed', () => {
   it('大の月は 31 日', () => {
@@ -16,7 +16,7 @@ describe('daysInMonthFixed', () => {
     }
   });
 
-  it('2 月は常に 28 日（うるう年非考慮＝旧仕様）', () => {
+  it('2 月は常に 28 日（うるう年非考慮）', () => {
     expect(daysInMonthFixed(2)).toBe(28);
   });
 

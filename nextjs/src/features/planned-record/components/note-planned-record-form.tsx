@@ -4,6 +4,7 @@ import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { useMemo, useState } from 'react';
 import { PriceKeypad } from '@/components/form/price-keypad';
+import { SubmitButton } from '@/components/form/submit-button';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,7 +42,6 @@ type NotePlannedRecordFormProps = {
   editing?: NotePlannedRecordDefault;
 };
 
-// 入力状態をまとめて扱うためのローカル型。
 type PlannedState = {
   isPay: boolean;
   dayClassificationId: number | null;
@@ -72,7 +72,6 @@ export function NotePlannedRecordForm({
     setState((prev) => ({ ...prev, ...next }));
 
   const view = usePlannedView(typeList, methodList, isPair, state);
-  // 収支/立替の切替時は選択をリセットする。
   const resetSelection = () =>
     patch({ typeId: null, subTypeId: null, methodId: null });
 
@@ -108,7 +107,6 @@ export function NotePlannedRecordForm({
   );
 }
 
-// 状態から表示に必要な派生値をまとめて算出する（本体の複雑度を下げる）。
 type PlannedView = {
   types: TypeCard[];
   methods: MethodCard[];
@@ -152,7 +150,6 @@ function usePlannedView(
   };
 }
 
-// カテゴリ/サブカテゴリの選択エリア（未選択=グリッド、選択済=サマリ）。
 function PlannedSelectionArea({
   view,
   subTypeId,
@@ -201,7 +198,7 @@ function PlannedDetailForm({
   dayClassifications: DayClassification[];
   patch: (next: Partial<PlannedState>) => void;
 }) {
-  const [result, action] = useFormAction(upsertPlannedRecordAction);
+  const [result, action, isPending] = useFormAction(upsertPlannedRecordAction);
   const [form] = useForm({
     lastResult: result?.submission,
     onValidate: ({ formData }) =>
@@ -248,20 +245,17 @@ function PlannedDetailForm({
           {errorMessages.join(' / ')}
         </p>
       ) : null}
-      <Button
-        type='submit'
+      <SubmitButton
+        isPending={isPending}
         className='flex-1'
         disabled={!canSubmit(state, isPair)}
       >
-        {editing
-          ? plannedRecordLabels.action.update
-          : plannedRecordLabels.action.create}
-      </Button>
+        {editing ? L.button.update : L.button.create}
+      </SubmitButton>
     </form>
   );
 }
 
-// 削除フォーム（編集時のみ・別 form）。成功時は redirect するため戻り値は届かない。
 function PlannedDeleteForm({ id }: { id: number }) {
   const [deleteResult, deleteAction] = useFormAction(deletePlannedRecordAction);
   return (
@@ -276,7 +270,6 @@ function PlannedDeleteForm({ id }: { id: number }) {
   );
 }
 
-// 初期状態を編集対象から組む（新規は既定値）。
 function toInitialState(editing?: NotePlannedRecordDefault): PlannedState {
   return {
     isPay: editing?.isPay ?? true,
@@ -284,7 +277,7 @@ function toInitialState(editing?: NotePlannedRecordDefault): PlannedState {
     typeId: editing?.typeId ?? null,
     subTypeId: editing?.subTypeId ?? null,
     methodId: editing?.methodId ?? null,
-    // 立替は既定 ON。共有 & 支出のときのみ意味を持つ。
+    // 立替は既定 ON。
     isInstead: editing?.isInstead ?? true,
     memo: editing?.memo ?? '',
     price: editing?.price === undefined ? '' : String(editing.price)
@@ -298,8 +291,6 @@ function canSubmit(state: PlannedState, isPair: boolean): boolean {
   }
   return !isPair || state.memo.trim() !== '';
 }
-
-// ===== 子コンポーネント（複雑度を分割） =====
 
 function PlannedHeader({
   isPay,

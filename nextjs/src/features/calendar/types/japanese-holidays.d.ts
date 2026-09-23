@@ -4,7 +4,7 @@
 // （lib/shared/domain を汚さず、型宣言を calendar feature 内にコロケーションする狙い）。
 declare module 'japanese-holidays' {
   // 指定日が祝日ならその名称、そうでなければ undefined を返す。
-  // 旧実装（GetHolidayName）が使う唯一の関数。
+  // 祝日名の取得に使う唯一の関数。
   export function isHolidayAt(date: Date): string | undefined;
   const JapaneseHolidays: {
     isHolidayAt(date: Date): string | undefined;

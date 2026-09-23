@@ -1,7 +1,9 @@
 'use client';
 
+import { cn } from 'cn';
 import { useEffect, useState, useTransition } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { IconCheck } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   type ChartConfig,
@@ -13,6 +15,11 @@ import { fetchSubTypeAction, fetchTypePeriodAction } from '../actions';
 import type { StackShowData } from '../domain/chart-data';
 import { currentYear, shiftYear, yearLabel } from '../domain/period';
 import type { TypeChipsByQuadrant } from '../types';
+import {
+  AMOUNT_Y_AXIS_PROPS,
+  formatTooltipAmount,
+  MONTH_X_AXIS_PROPS
+} from './chart-axes';
 import { PeriodNav } from './period-nav';
 
 // 推移 > カテゴリ別タブ。
@@ -101,7 +108,9 @@ export function SummaryBarType({ isPair, chips }: SummaryBarTypeProps) {
         </Button>
       </div>
 
-      <div className='flex flex-wrap gap-1.5'>
+      {/* カテゴリが増えても縦に伸びないよう、折り返さず横スクロールさせる。
+          選択中はチェックマークを付ける（塗りだけだと選択状態が読み取りにくい）。 */}
+      <div className='-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1'>
         <ChipButton
           active={selectedTypeId === null}
           onClick={() => {
@@ -140,22 +149,27 @@ export function SummaryBarType({ isPair, chips }: SummaryBarTypeProps) {
 
       {data.series.length > 0 ? (
         <>
+          {/* 凡例はグラフの上に置く。 */}
+          <ul className='flex flex-wrap gap-x-4 gap-y-1'>
+            {data.series.map((s) => (
+              <li key={s.key} className='flex items-center gap-1.5 text-xs'>
+                <span
+                  aria-hidden
+                  className='inline-block size-3 rounded-sm'
+                  style={{ backgroundColor: s.color }}
+                />
+                {s.label}
+              </li>
+            ))}
+          </ul>
           <ChartContainer config={config} className='aspect-video w-full'>
             <BarChart data={data.rows} margin={{ left: 4, right: 4, top: 8 }}>
               <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey='month'
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-              />
+              <XAxis {...MONTH_X_AXIS_PROPS} />
+              <YAxis {...AMOUNT_Y_AXIS_PROPS} />
               <ChartTooltip
                 content={
-                  <ChartTooltipContent
-                    formatter={(value) =>
-                      `${Number(value).toLocaleString()} 円`
-                    }
-                  />
+                  <ChartTooltipContent formatter={formatTooltipAmount} />
                 }
               />
               {data.series.map((s) => (
@@ -169,18 +183,6 @@ export function SummaryBarType({ isPair, chips }: SummaryBarTypeProps) {
               ))}
             </BarChart>
           </ChartContainer>
-          <ul className='flex flex-wrap gap-x-4 gap-y-1'>
-            {data.series.map((s) => (
-              <li key={s.key} className='flex items-center gap-1.5 text-xs'>
-                <span
-                  aria-hidden
-                  className='inline-block size-3 rounded-sm'
-                  style={{ backgroundColor: s.color }}
-                />
-                {s.label}
-              </li>
-            ))}
-          </ul>
         </>
       ) : (
         <p className='py-8 text-center text-muted-foreground text-sm'>
@@ -204,12 +206,13 @@ function ChipButton({
     <button
       type='button'
       onClick={onClick}
-      className={
-        active
-          ? 'rounded-full bg-primary px-3 py-1 text-primary-foreground text-xs'
-          : 'rounded-full border px-3 py-1 text-xs'
-      }
+      aria-pressed={active}
+      className={cn(
+        'flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs',
+        active ? 'bg-primary text-primary-foreground' : 'border'
+      )}
     >
+      {active ? <IconCheck className='size-3' aria-hidden /> : null}
       {label}
     </button>
   );

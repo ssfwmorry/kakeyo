@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { useState, useTransition } from 'react';
 import { useFormToast } from '@/components/form/use-form-toast';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,8 @@ type SwapButtonProps = {
   nextId: number;
   action: (prevId: number, nextId: number) => Promise<FormActionResult>;
   label: string;
-  icon: string;
+  // アイコン要素（共通定義 Icons の矢印を渡す。文字グリフは使わない）。
+  icon: ReactNode;
 };
 
 export function SwapButton({

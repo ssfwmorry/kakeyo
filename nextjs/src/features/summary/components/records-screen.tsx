@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { IconChevronLeft } from '@/components/icons';
+import { ShareBadge } from '@/components/share-badge';
 import { Button } from '@/components/ui/button';
 import { RecordCard, type SummarizedRecordItem } from '@/features/record';
-import { toDateStringJst } from '@/lib/shared/domain/date';
+import { formatDateLabelJst, toDateStringJst } from '@/lib/shared/domain/date';
 import { colorHex } from '../color';
 import { toShowStr } from '../domain/format';
 import { monthLabel, shiftMonth } from '../domain/period';
@@ -51,35 +53,42 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
 
   return (
     <main className='mx-auto flex w-full max-w-md flex-col gap-3 p-4'>
-      <div className='flex items-center justify-between gap-2'>
+      {/* 上部にブルーグレーの色帯ヘッダを敷き、右に絞り込み中のカテゴリを枠付きカードで
+          出す。帯もカードも無いと「今どの絞り込みを見ているか」の手がかりが弱い。 */}
+      <div className='-mx-4 -mt-4 flex items-center justify-between gap-2 bg-slate-200 px-4 py-2 dark:bg-slate-700'>
         <Button
           type='button'
-          variant='outline'
+          variant='ghost'
           size='sm'
           onClick={() => router.push('/summary')}
           aria-label='集計へ戻る'
         >
-          ＜
+          <IconChevronLeft className='size-4' aria-hidden />
         </Button>
-        <div className='flex items-center gap-2'>
-          <span
-            aria-hidden
-            className='inline-block size-3 rounded-full'
-            style={{ backgroundColor: colorHex(query.colorName) }}
-          />
-          <span className='text-sm'>
-            {query.pairUserName ? (
-              <span className='mr-1 text-muted-foreground text-xs'>
-                {query.pairUserName}
-              </span>
-            ) : null}
-            {query.name}
+        <div className='flex min-w-0 flex-col items-end gap-0.5'>
+          <span className='text-muted-foreground text-xs'>{heading}</span>
+          {/* カテゴリ名カード（色マーカー＋共有アイコン＋名前）。 */}
+          <div className='flex min-w-0 items-center gap-2 rounded-md border bg-background px-2 py-1'>
+            <ShareBadge
+              colorHex={colorHex(query.colorName)}
+              isPair={query.isPair}
+              className='size-4'
+            />
+            <span className='truncate text-sm'>
+              {query.pairUserName ? (
+                <span className='mr-1 text-muted-foreground text-xs'>
+                  {query.pairUserName}
+                </span>
+              ) : null}
+              {query.name}
+            </span>
+          </div>
+          {/* 立替込み/自分のみ（絞り込み条件として明示する）。 */}
+          <span className='text-muted-foreground text-xs'>
+            {query.isIncludeInstead ? '立替込み' : '自分のみ'}
           </span>
         </div>
-        <span className='w-9' />
       </div>
-
-      <p className='text-muted-foreground text-xs'>{heading}</p>
 
       <PeriodNav
         label={monthLabel(yearMonth)}
@@ -99,7 +108,9 @@ export function RecordsScreen({ query, initialRecords }: RecordsScreenProps) {
         <div className='flex flex-col gap-3'>
           {groups.map((group) => (
             <div key={group.date} className='flex flex-col gap-1'>
-              <p className='text-muted-foreground text-xs'>{group.date}</p>
+              <p className='text-muted-foreground text-xs'>
+                {formatDateLabelJst(group.date)}
+              </p>
               {group.records.map((record) => (
                 <RecordCard
                   key={record.id}

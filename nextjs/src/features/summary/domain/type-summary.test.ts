@@ -52,7 +52,7 @@ describe('foldTypeSummary', () => {
     expect(items[0].subTypes).toEqual([]);
   });
 
-  it('(c) subTypeSum===0 の行は nest しない（旧 FE 踏襲）', () => {
+  it('(c) subTypeSum===0 の行は nest しない', () => {
     const items = foldTypeSummary([
       row({
         typeId: 3,

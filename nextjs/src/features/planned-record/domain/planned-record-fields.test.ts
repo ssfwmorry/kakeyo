@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { RecordType } from '@/lib/shared/types/recordType';
 import { resolvePlannedRecordOwnership } from './planned-record-fields';
 
-// 旧 Nuxt upsertPlannedRecord の user_id / pair_id / record_type 分岐との等価性を固定する。
+// user_id / pair_id / record_type の分岐を固定する。
 
 const userUid = 'user-uid-0000000000000000000';
 const pairId = 10;
@@ -19,7 +19,7 @@ describe('resolvePlannedRecordOwnership', () => {
     ).toEqual({ userId: userUid, pairId: null, recordType: RecordType.self });
   });
 
-  it('個人は isInstead が true でも SELF のまま（旧実装踏襲）', () => {
+  it('個人は isInstead が true でも SELF のまま', () => {
     expect(
       resolvePlannedRecordOwnership({
         userUid,

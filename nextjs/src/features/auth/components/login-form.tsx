@@ -3,9 +3,14 @@
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import Link from 'next/link';
+import { useState } from 'react';
 import { FormField } from '@/components/form/form-field';
+import { SubmitButton } from '@/components/form/submit-button';
 import { useFormAction } from '@/components/form/use-form-action';
+import { IconOpenInNew } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { L } from '@/lib/shared/labels';
 import {
   demoLoginAction,
   loginAction,
@@ -18,8 +23,15 @@ const { appName, field, action } = authLabels;
 
 // login / reset / demo をそれぞれ独立したフォーム・アクションとして扱う。
 // 新規登録は UI 非表示のため置かない。
+//
+// フォームは白カードに収め、パスワード再設定は常時表示ではなく
+// ボタンで切り替わる別モードにする（常設だと画面が雑多になる）。
+// パスワード欄には表示/伏字トグルを出す（入力ミスの確認手段）。
 
 export function LoginForm() {
+  // 'login' = 通常ログイン / 'reset' = パスワード再設定。
+  const [mode, setMode] = useState<'login' | 'reset'>('login');
+
   const [loginResult, login, isLoggingIn] = useFormAction(loginAction);
   const [loginForm, loginFields] = useForm({
     lastResult: loginResult?.submission,
@@ -37,64 +49,90 @@ export function LoginForm() {
   const [, demoLogin, isDemoLoggingIn] = useFormAction(() => demoLoginAction());
 
   return (
-    <div className='flex w-full max-w-sm flex-col gap-8'>
-      <h1 className='text-2xl font-semibold'>{appName}</h1>
+    <div className='flex w-full max-w-sm flex-col gap-6'>
+      <Card>
+        <CardHeader>
+          <CardTitle className='text-center text-xl'>{appName}</CardTitle>
+        </CardHeader>
+        <CardContent className='flex flex-col gap-4'>
+          {mode === 'login' ? (
+            <form
+              {...getFormProps(loginForm)}
+              action={login}
+              className='flex flex-col gap-4'
+            >
+              <FormField
+                label={field.email}
+                field={loginFields.email}
+                type='email'
+                autoComplete='email'
+              />
+              <FormField
+                label={field.password}
+                field={loginFields.password}
+                type='password'
+                autoComplete='current-password'
+                revealable
+              />
+              <SubmitButton isPending={isLoggingIn}>
+                {action.login}
+              </SubmitButton>
+            </form>
+          ) : (
+            <form
+              {...getFormProps(resetForm)}
+              action={reset}
+              className='flex flex-col gap-4'
+            >
+              <FormField
+                label={field.resetPassword}
+                field={resetFields.email}
+                type='email'
+                autoComplete='email'
+              />
+              <SubmitButton isPending={isResetting}>
+                {action.sendReset}
+              </SubmitButton>
+            </form>
+          )}
 
-      <form
-        {...getFormProps(loginForm)}
-        action={login}
-        className='flex flex-col gap-4'
-      >
-        <FormField
-          label={field.email}
-          field={loginFields.email}
-          type='email'
-          autoComplete='email'
-        />
-        <FormField
-          label={field.password}
-          field={loginFields.password}
-          type='password'
-          autoComplete='current-password'
-        />
-        <Button type='submit' disabled={isLoggingIn}>
-          {action.login}
-        </Button>
-      </form>
+          {/* モード切替（再設定へ / ログインへ戻る）。 */}
+          <div className='flex justify-center'>
+            <Button
+              type='button'
+              variant='link'
+              size='sm'
+              onClick={() => setMode(mode === 'login' ? 'reset' : 'login')}
+            >
+              {mode === 'login' ? action.showReset : L.button.cancel}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      <form
-        {...getFormProps(resetForm)}
-        action={reset}
-        className='flex flex-col gap-2'
-      >
-        <FormField
-          label={field.resetPassword}
-          field={resetFields.email}
-          type='email'
-          autoComplete='email'
-        />
-        <Button
-          type='submit'
-          variant='link'
-          className='px-0'
-          disabled={isResetting}
+      {/* デモ／とりせつはカードの外に横並びで置く。 */}
+      <div className='flex gap-3'>
+        <form action={demoLogin} className='flex-1'>
+          <SubmitButton
+            isPending={isDemoLoggingIn}
+            variant='outline'
+            className='w-full'
+          >
+            {action.demo}
+          </SubmitButton>
+        </form>
+        <a
+          href={TUTORIAL_URL}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='flex flex-1 items-center justify-center gap-1 rounded-md border px-3 py-2 text-sm'
         >
-          {action.sendReset}
-        </Button>
-      </form>
+          {action.tutorial}
+          <IconOpenInNew className='size-3.5' />
+        </a>
+      </div>
 
-      <form action={demoLogin}>
-        <Button
-          type='submit'
-          variant='outline'
-          className='w-full'
-          disabled={isDemoLoggingIn}
-        >
-          {action.demo}
-        </Button>
-      </form>
-
-      <div className='flex flex-col items-center gap-2'>
+      <div className='flex justify-center'>
         {/* 問い合わせ導線（未ログインでも到達可）。 */}
         <Link
           href='/inquiry'
@@ -102,15 +140,6 @@ export function LoginForm() {
         >
           {action.inquiry}
         </Link>
-        {/* 使い方（とりせつ）への外部リンク。 */}
-        <a
-          href={TUTORIAL_URL}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='text-muted-foreground text-sm underline'
-        >
-          {action.tutorial}
-        </a>
       </div>
     </div>
   );

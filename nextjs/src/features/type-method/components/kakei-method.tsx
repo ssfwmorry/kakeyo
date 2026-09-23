@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { SwapButton } from '@/components/form/swap-button';
+import { IconArrowRight, IconPencil } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -117,8 +118,14 @@ function MethodCardView({ card, isEdit, nextId, onEdit }: MethodCardViewProps) {
       <CardContent className='flex items-center justify-between gap-2 p-3'>
         <span style={{ color: colorHex(card.colorName) }}>{card.name}</span>
         {isEdit ? (
-          <Button type='button' size='sm' variant='ghost' onClick={onEdit}>
-            {L.button.edit}
+          <Button
+            type='button'
+            size='icon'
+            variant='ghost'
+            aria-label={L.button.edit}
+            onClick={onEdit}
+          >
+            <IconPencil className='size-4' />
           </Button>
         ) : nextId !== undefined ? (
           <SwapButton
@@ -126,7 +133,7 @@ function MethodCardView({ card, isEdit, nextId, onEdit }: MethodCardViewProps) {
             nextId={nextId}
             action={swapMethodAction}
             label={typeMethodLabels.swap.next}
-            icon='→'
+            icon={<IconArrowRight className='size-4' />}
           />
         ) : null}
       </CardContent>

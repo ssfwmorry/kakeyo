@@ -8,6 +8,9 @@ import { colorHex } from '@/features/master';
 // 色ピッカー（フォーム共通）。FormField はテキスト系専用のため、色は hidden input +
 // 色ボタングリッドで表現する。選択中の colorId を hidden input に載せて Conform の
 // colorId フィールドに渡す。type-method / plan-reminder / bank の各フォームが共有する。
+//
+// 並びは 6 列固定グリッド、選択中は色の上に「●」を重ねる
+// （折り返し＋枠線だと色数が変わるたび行構成が動き、枠線は淡色で見分けにくい）。
 
 type ColorPickerProps = {
   name: string;
@@ -31,7 +34,7 @@ export function ColorPicker({
     <div className='flex flex-col gap-2'>
       <Label>{label}</Label>
       <input type='hidden' name={name} value={selected ?? ''} readOnly />
-      <div className='flex flex-wrap gap-2'>
+      <div className='grid grid-cols-6 gap-2'>
         {colors.map((color) => {
           const isSelected = color.id === selected;
           return (
@@ -41,12 +44,11 @@ export function ColorPicker({
               aria-label={color.name}
               aria-pressed={isSelected}
               onClick={() => setSelected(color.id)}
-              className='size-7 rounded-full border-2 transition'
-              style={{
-                backgroundColor: colorHex(color.name),
-                borderColor: isSelected ? '#111827' : 'transparent'
-              }}
-            />
+              className='flex size-9 items-center justify-center rounded-md text-white'
+              style={{ backgroundColor: colorHex(color.name) }}
+            >
+              {isSelected ? <span aria-hidden>●</span> : null}
+            </button>
           );
         })}
       </div>

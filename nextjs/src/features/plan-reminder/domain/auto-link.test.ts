@@ -39,14 +39,14 @@ describe('toLinkSegments', () => {
     expect(toLinkSegments('https://a.test')[0]?.isUrl).toBe(true);
   });
 
-  it('ftp など http(s) 以外はリンク化しない（旧正規表現踏襲）', () => {
+  it('ftp など http(s) 以外はリンク化しない', () => {
     expect(toLinkSegments('ftp://a.test')).toEqual([
       { text: 'ftp://a.test', isUrl: false }
     ]);
   });
 
-  it('URL は空白までを 1 つのリンクとして貪欲に取り込む（旧仕様踏襲）', () => {
-    // 旧 /(https?:\/\/[^\s]+)/g は末尾の句読点も URL に含める。
+  it('URL は空白までを 1 つのリンクとして貪欲に取り込む', () => {
+    // /(https?:\/\/[^\s]+)/g は末尾の句読点も URL に含める。
     expect(toLinkSegments('https://example.com/path?q=1。')[0]).toEqual({
       text: 'https://example.com/path?q=1。',
       isUrl: true

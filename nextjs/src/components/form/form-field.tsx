@@ -1,7 +1,9 @@
 'use client';
 
 import { type FieldMetadata, getInputProps } from '@conform-to/react';
-import type { ComponentProps } from 'react';
+import { cn } from 'cn';
+import { type ComponentProps, useState } from 'react';
+import { IconEye, IconEyeOff } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -30,6 +32,9 @@ type FormFieldProps = {
   type?: InputType;
   autoComplete?: ComponentProps<'input'>['autoComplete'];
   placeholder?: string;
+  // type='password' のとき、入力欄の右端に表示/伏字の目玉トグルを出す
+  // （入力欄の内側末尾に置くアイコン）。
+  revealable?: boolean;
 };
 
 export function FormField({
@@ -37,17 +42,42 @@ export function FormField({
   field,
   type = 'text',
   autoComplete,
-  placeholder
+  placeholder,
+  revealable = false
 }: FormFieldProps) {
-  const inputProps = getInputProps(field, { type });
+  const [isRevealed, setIsRevealed] = useState(false);
+  // トグルは password のときだけ意味を持つ。表示中は type='text' に切り替える。
+  const isToggleShown = revealable && type === 'password';
+  const inputProps = getInputProps(field, {
+    type: isToggleShown && isRevealed ? 'text' : type
+  });
+
   return (
     <div className='flex flex-col gap-2'>
       <Label htmlFor={inputProps.id}>{label}</Label>
-      <Input
-        {...inputProps}
-        autoComplete={autoComplete}
-        placeholder={placeholder}
-      />
+      <div className='relative'>
+        <Input
+          {...inputProps}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          className={cn(isToggleShown && 'pr-10')}
+        />
+        {isToggleShown ? (
+          <button
+            type='button'
+            aria-label={isRevealed ? 'パスワードを隠す' : 'パスワードを表示'}
+            aria-pressed={isRevealed}
+            className='-translate-y-1/2 absolute top-1/2 right-3 text-muted-foreground hover:text-foreground'
+            onClick={() => setIsRevealed((prev) => !prev)}
+          >
+            {isRevealed ? (
+              <IconEyeOff className='size-4' />
+            ) : (
+              <IconEye className='size-4' />
+            )}
+          </button>
+        ) : null}
+      </div>
       {field.errors ? (
         <p id={field.errorId} className='text-sm text-red-600' role='alert'>
           {field.errors.join(' / ')}

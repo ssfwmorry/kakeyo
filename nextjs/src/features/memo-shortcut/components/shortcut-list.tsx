@@ -1,17 +1,20 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { colorHex } from '@/features/master';
 import { formatShortcutAmount } from '../domain/format';
 import { memoShortcutLabels } from '../labels';
 import type { ShortCutItem } from '../types';
 
 // ショートカット一覧の Client Component（表示 + ワンタップ選択）。
-// データ（items）は Server Component（calendar 統合レーン P5）から props で受ける。
+// データ（items）は Server Component から props で受ける。
 // ショートカットからの記録は record ドメインの upsertRecord で行う。
 // ショートカットは record を所有しないため、ここでは記録処理を持たず onSelect コールバックで
 // 選択されたショートカットを親（calendar 統合）へ渡す設計にする。
 // onSelect 未指定なら選択ボタンを出さない（純表示）。
+//
+// 見た目は: 左端に種別色の帯を立て、2 カラムで
+// 並べる（1 カラムの色ドット行だと画面が縦に伸び、色の手がかりも弱い）。
+// カード全体がワンタップ記録のボタンになる（onSelect あり時）。
 
 type ShortcutListProps = {
   items: ShortCutItem[];
@@ -31,49 +34,62 @@ export function ShortcutList({ items, onSelect }: ShortcutListProps) {
           {memoShortcutLabels.empty.shortcut}
         </p>
       ) : (
-        <ul className='flex flex-col gap-2'>
+        <ul className='grid grid-cols-2 gap-2'>
           {items.map((item) => (
-            <li
-              key={item.id}
-              className='flex items-center justify-between gap-2 rounded-md border px-3 py-2'
-            >
-              <span className='flex items-center gap-2'>
-                <span
-                  aria-hidden='true'
-                  className='inline-block size-3 shrink-0 rounded-full'
-                  style={{ backgroundColor: colorHex(item.colorName) }}
-                />
-                <span className='flex flex-col'>
-                  <span className='text-sm'>
-                    {item.typeName}
-                    {item.subTypeName ? ` / ${item.subTypeName}` : ''}
-                    {` · ${item.methodName}`}
-                  </span>
-                  {item.memo ? (
-                    <span className='text-muted-foreground text-xs'>
-                      {item.memo}
-                    </span>
-                  ) : null}
-                </span>
-              </span>
-              <span className='flex items-center gap-2'>
-                <span className='font-medium text-sm'>
-                  {formatShortcutAmount(item.price, item.isPay)}
-                </span>
-                {onSelect ? (
-                  <Button
-                    type='button'
-                    size='sm'
-                    onClick={() => onSelect(item)}
-                  >
-                    {memoShortcutLabels.action.add}
-                  </Button>
-                ) : null}
-              </span>
+            <li key={item.id}>
+              <ShortcutCard item={item} onSelect={onSelect} />
             </li>
           ))}
         </ul>
       )}
     </section>
+  );
+}
+
+// ショートカット 1 件のカード（左端に種別色の帯）。onSelect があればカードごと
+// ボタンにして 1 タップで記録する。
+function ShortcutCard({
+  item,
+  onSelect
+}: {
+  item: ShortCutItem;
+  onSelect?: (item: ShortCutItem) => void;
+}) {
+  const body = (
+    <>
+      <span
+        aria-hidden='true'
+        className='w-1.5 shrink-0 rounded-l-md'
+        style={{ backgroundColor: colorHex(item.colorName) }}
+      />
+      <span className='flex min-w-0 flex-1 flex-col gap-0.5 py-2 pr-2 pl-1.5 text-left'>
+        <span className='truncate text-sm'>
+          {item.typeName}
+          {item.subTypeName ? ` / ${item.subTypeName}` : ''}
+        </span>
+        <span className='truncate text-muted-foreground text-xs'>
+          {item.methodName}
+          {item.memo ? ` · ${item.memo}` : ''}
+        </span>
+        <span className='text-right font-medium text-sm'>
+          {formatShortcutAmount(item.price, item.isPay)}
+        </span>
+      </span>
+    </>
+  );
+
+  const className = 'flex w-full items-stretch rounded-md border';
+
+  return onSelect ? (
+    <button
+      type='button'
+      className={className}
+      aria-label={`${item.typeName} を${memoShortcutLabels.action.add}`}
+      onClick={() => onSelect(item)}
+    >
+      {body}
+    </button>
+  ) : (
+    <div className={className}>{body}</div>
   );
 }

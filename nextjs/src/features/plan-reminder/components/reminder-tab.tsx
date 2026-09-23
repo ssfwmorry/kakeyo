@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { ConfirmDialog } from '@/components/form/confirm-dialog';
 import { useFormToast } from '@/components/form/use-form-toast';
+import { IconTrash } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { ColorClassification } from '@/features/master';
@@ -72,9 +74,6 @@ function ReminderCardView({ reminder }: ReminderCardViewProps) {
   useFormToast(result);
 
   const handleDelete = () => {
-    if (!window.confirm(R.deleteConfirm)) {
-      return;
-    }
     startTransition(async () => {
       const formData = new FormData();
       formData.set('id', String(reminder.id));
@@ -84,7 +83,7 @@ function ReminderCardView({ reminder }: ReminderCardViewProps) {
 
   return (
     <Card>
-      <CardHeader className='flex-row items-center justify-between gap-2'>
+      <CardHeader layout='row'>
         <span className='flex items-center gap-2'>
           <span
             className='inline-block size-5 rounded-full'
@@ -92,15 +91,21 @@ function ReminderCardView({ reminder }: ReminderCardViewProps) {
           />
           {reminder.name}
         </span>
-        <Button
-          type='button'
-          size='sm'
-          variant='ghost'
-          disabled={isPending}
-          onClick={handleDelete}
-        >
-          {L.button.delete}
-        </Button>
+        <ConfirmDialog
+          trigger={
+            <Button
+              type='button'
+              size='icon'
+              variant='ghost'
+              aria-label={L.button.delete}
+              disabled={isPending}
+            >
+              <IconTrash className='size-4 text-destructive' />
+            </Button>
+          }
+          title={R.deleteConfirm}
+          onConfirm={handleDelete}
+        />
       </CardHeader>
       <CardContent className='flex flex-col gap-1 text-sm'>
         {reminder.memo ? <span>・{reminder.memo}</span> : null}

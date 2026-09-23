@@ -22,7 +22,7 @@ export const serverEnv = {
   supabaseDatabaseUrl: required('SUPABASE_DATABASE_URL'),
   // 使用する Postgres スキーマ（develop / public）
   supabaseDatabaseSchema: required('SUPABASE_DATABASE_SCHEMA'),
-    // Cookie セッションの署名に使う秘密鍵
+  // Cookie セッションの署名に使う秘密鍵
   sessionSecret: required('SESSION_SECRET'),
   // デモログイン用の資格情報。未設定ならデモ無効。
   demoUserEmail: optional('DEMO_USER_EMAIL'),

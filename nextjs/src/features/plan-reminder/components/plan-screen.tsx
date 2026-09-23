@@ -22,7 +22,7 @@ export function PlanScreen({
   initialDate
 }: PlanScreenProps) {
   return (
-    <div className='flex flex-col gap-4 p-4'>
+    <div className='mx-auto flex w-full max-w-md flex-col gap-4 p-4'>
       <h1 className='text-lg font-medium'>{planReminderLabels.heading.plan}</h1>
       <PlanForm
         planTypeList={planTypeList}

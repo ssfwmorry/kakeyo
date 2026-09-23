@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { SwapButton } from '@/components/form/swap-button';
+import { IconArrowDown, IconPencil } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import type { ColorClassification } from '@/features/master';
@@ -98,7 +99,7 @@ function PlanTypeCardView({
 }: PlanTypeCardViewProps) {
   return (
     <Card>
-      <CardHeader className='flex-row items-center justify-between gap-2'>
+      <CardHeader layout='row'>
         <span className='flex items-center gap-2'>
           <span
             className='inline-block size-5 rounded-full'
@@ -107,8 +108,14 @@ function PlanTypeCardView({
           {card.name}
         </span>
         {isEdit ? (
-          <Button type='button' size='sm' variant='ghost' onClick={onEdit}>
-            {L.button.edit}
+          <Button
+            type='button'
+            size='icon'
+            variant='ghost'
+            aria-label={L.button.edit}
+            onClick={onEdit}
+          >
+            <IconPencil className='size-4' />
           </Button>
         ) : nextId !== undefined ? (
           <SwapButton
@@ -116,7 +123,7 @@ function PlanTypeCardView({
             nextId={nextId}
             action={swapPlanTypeAction}
             label={planReminderLabels.swap.down}
-            icon='↓'
+            icon={<IconArrowDown className='size-4' />}
           />
         ) : null}
       </CardHeader>

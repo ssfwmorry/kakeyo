@@ -16,9 +16,9 @@ const publicPaths = new Set<string>([authRoutes.login, inquiryPath]);
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const { user, response } = await getUserInProxy(request);
+  const { claims, response } = await getUserInProxy(request);
   // undefined を誤ってログイン扱いしないよう != null で null/undefined 両方を弾く。
-  const isLoggedIn = user != null;
+  const isLoggedIn = claims != null;
 
   if (!isLoggedIn) {
     if (publicPaths.has(pathname)) {

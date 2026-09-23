@@ -4,7 +4,7 @@ import { groupMethodList } from './grouping';
 import type { MethodRow } from './server/repositories/method';
 
 // method グルーピングの純粋関数テスト。特に「精算（both）は pair 専用で self は常に空」
-// という GroupedMethodList の契約（旧 getMethodList の both.self: [] 固定）を保護する。
+// という GroupedMethodList の契約（both.self は常に []）を保護する。
 
 const COLORS: ColorClassification[] = [
   { id: 1, name: 'red' },
@@ -50,7 +50,7 @@ describe('groupMethodList', () => {
   });
 
   it('個人所有（isPair=false）の精算 method でも both.self には入れず both.pair に寄せる', () => {
-    // 旧データ由来の異常データ（user_id 付きの精算 method）を想定。
+    // 異常データ（user_id 付きの精算 method）を想定。
     // 契約「both.self は常に空」を実装で保証する。
     const result = groupMethodList(
       [methodRow({ id: 6, isPay: null, pairId: null })],

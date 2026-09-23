@@ -1,8 +1,8 @@
 'use client';
 
-import { Bell, Check } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { IconBell, IconCheck } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,7 +37,7 @@ export function ReminderBell({
           />
         }
       >
-        <Bell className='size-5' />
+        <IconBell className='size-5' />
         {count > 0 && (
           <Badge className='-right-2 -top-2 absolute size-4 justify-center rounded-full p-0 text-[10px]'>
             {count}
@@ -79,7 +79,7 @@ export function ReminderBell({
                   }}
                   aria-label='消化'
                 >
-                  <Check className='size-4' />
+                  <IconCheck className='size-4' />
                 </Button>
               </li>
             ))}

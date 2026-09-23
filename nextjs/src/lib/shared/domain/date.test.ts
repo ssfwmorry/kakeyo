@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   dateInMonthJst,
   endOfDayJst,
+  formatDateLabelJst,
   startOfDayJst,
   startOfMonthJst,
   startOfNextMonthJst,
@@ -66,7 +67,7 @@ describe('endOfDayJst', () => {
   });
 });
 
-// C-8: 月末最終秒のレコードが月次範囲（gte startOfMonth .. lt startOfNextMonth）に
+// 月末最終秒のレコードが月次範囲（gte startOfMonth .. lt startOfNextMonth）に
 // 取りこぼされないことを、境界の Date 比較で明示的に保証する。
 describe('月次範囲の境界包含（gte..lt）', () => {
   it('月末 JST 23:59:59.999 のレコードは当月範囲に含まれ、翌月範囲には含まれない', () => {
@@ -105,5 +106,19 @@ describe('dateInMonthJst', () => {
 
   it('年をまたぐ（1月の前月は前年12月）', () => {
     expect(dateInMonthJst('2024-01', -1, 21)).toBe('2023-12-21');
+  });
+});
+
+describe('formatDateLabelJst', () => {
+  it('YYYY-MM-DD を M月D日 に整形する', () => {
+    expect(formatDateLabelJst('2024-03-09')).toBe('3月9日');
+  });
+
+  it('ゼロ埋めを落として 1 桁で出す（01→1）', () => {
+    expect(formatDateLabelJst('2024-01-01')).toBe('1月1日');
+  });
+
+  it('2 桁の月日はそのまま出す', () => {
+    expect(formatDateLabelJst('2024-12-31')).toBe('12月31日');
   });
 });

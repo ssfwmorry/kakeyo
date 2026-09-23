@@ -8,6 +8,8 @@ export const memoShortcutLabels = {
   action: {
     addTodo: 'TODO を追加',
     add: '追加',
+    // ＋ chip から開いた入力欄を閉じる。
+    cancelAdd: '追加をやめる',
     removeTodo: 'この TODO を削除',
     sharePair: 'ペアと共有'
   },
@@ -15,7 +17,8 @@ export const memoShortcutLabels = {
     todo: 'やることを入力'
   },
   empty: {
-    todo: 'TODO はありません',
+    // 0 件のときは chip 帯の ＋ 自体がこの文言を名乗る（別に空表示を置かない）。
+    todo: 'やることを追加',
     shortcut: 'ショートカットはありません'
   },
   error: {

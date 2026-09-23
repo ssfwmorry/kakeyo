@@ -6,3 +6,18 @@
 export function toManUnit(value: number): number {
   return Math.round(value / 1000) / 10;
 }
+
+// 残高チャートの X 軸ラベル。点は YYYY-MM-DD だが、軸に日まで並べると
+// スマホ幅ではラベルが 1 本しか入らない。軸は年月に畳み、日はツールチップで見せる。
+export function toAxisMonthLabel(dateStr: string): string {
+  const [year, month] = dateStr.split('-');
+  if (!(year && month)) {
+    return dateStr;
+  }
+  return `${year}/${month}`;
+}
+
+// ツールチップの見出し。軸が年月までなので、日はここで補う。
+export function toTooltipDateLabel(dateStr: string): string {
+  return dateStr.replaceAll('-', '/');
+}

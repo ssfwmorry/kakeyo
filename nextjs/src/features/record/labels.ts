@@ -8,11 +8,6 @@ export const recordLabels = {
   },
   // 立替チェック。
   instead: '立替',
-  // 登録/変更ボタン。
-  action: {
-    create: '登録',
-    update: '変更'
-  },
   // プレースホルダ。
   placeholder: {
     memo: 'メモ',

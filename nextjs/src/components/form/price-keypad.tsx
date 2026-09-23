@@ -1,6 +1,6 @@
 'use client';
 
-import { Delete, X } from 'lucide-react';
+import { IconBackspace, IconClose } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -54,7 +54,7 @@ export function PriceKeypad({
             className='mr-auto text-muted-foreground hover:text-foreground'
             onClick={() => emit(0)}
           >
-            <X className='size-4' />
+            <IconClose className='size-4' />
           </button>
         ) : null}
         <span className='font-medium text-xl tabular-nums'>
@@ -102,7 +102,7 @@ export function PriceKeypad({
           aria-label='一桁削除'
           onClick={() => emit(popDigit(current))}
         >
-          <Delete className='size-5' />
+          <IconBackspace className='size-5' />
         </Button>
       </div>
     </div>

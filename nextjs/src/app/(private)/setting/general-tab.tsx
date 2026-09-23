@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import { useTransition } from 'react';
+import { ConfirmDialog } from '@/components/form/confirm-dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { logoutAction } from './logout-action';
 
 // 現状はログアウトのみ。アカウント削除は UI 非表示・Supabase Auth 側の
 // 退会フロー未確定のため省略する。
-// TODO: アカウント削除の UI と Server Action（Supabase Auth ユーザ削除 +
-// 関連データの扱い）を実装する。
 
 const generalLabels = {
   heading: 'アカウント',
@@ -22,9 +21,6 @@ export function GeneralTab() {
   const [isPending, startTransition] = useTransition();
 
   const handleLogout = () => {
-    if (!window.confirm(generalLabels.logoutConfirm)) {
-      return;
-    }
     startTransition(() => {
       // redirect を投げる Server Action。遷移で画面が離れるため戻り値は扱わない。
       void logoutAction();
@@ -37,14 +33,16 @@ export function GeneralTab() {
 
       <Card>
         <CardContent className='flex flex-col items-start gap-3'>
-          <Button
-            type='button'
-            variant='destructive'
-            disabled={isPending}
-            onClick={handleLogout}
-          >
-            {generalLabels.logout}
-          </Button>
+          <ConfirmDialog
+            trigger={
+              <Button type='button' variant='destructive' disabled={isPending}>
+                {generalLabels.logout}
+              </Button>
+            }
+            title={generalLabels.logoutConfirm}
+            confirmLabel={generalLabels.logout}
+            onConfirm={handleLogout}
+          />
           <Link
             href='/inquiry'
             className={buttonVariants({ variant: 'link', className: 'px-0' })}

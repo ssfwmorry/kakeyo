@@ -7,7 +7,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  /* 日本語は OS フォント（layout.tsx 参照）。英数字と日本語で字面が割れないよう、
+     どの端末でどの書体になるかをここで明示して固定する。 */
+  --font-sans:
+    system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic UI", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);

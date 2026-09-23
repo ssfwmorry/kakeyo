@@ -14,6 +14,8 @@ import type { CalendarEvent, CalendarMonthData } from '../types';
 // - 日付クリック（dateClick）→ 親へ YYYY-MM-DD を通知（日別 record 一覧を出す）。
 // - 月移動・年月ジャンプは親（calendar-screen）の独自ヘッダーに一本化するため
 //   FullCalendar 標準ツールバーは非表示（headerToolbar=false）にし、年月は key 再マウントで反映。
+// - 高さは height='100%'（親が flex-1 で与えた高さに従う）。height='auto' だと週数 5/6 で
+//   グリッドが伸び縮みして下の記録一覧の位置が月ごとに動くうえ、6 週の月で画面からはみ出す。
 // - 祝日セルは dayCellClassNames で is-holiday を付与し、globals.css で日付数字を赤字化。
 // - plan / reminder のイベントクリック → 親へ種別と id を渡す（EventDetail で編集/削除）。
 //
@@ -105,7 +107,8 @@ export function MonthCalendar({
       initialView='dayGridMonth'
       initialDate={initialDate}
       locale='ja'
-      height='auto'
+      // 親（flex-1 の箱）の高さに従う。週数によらず下端が揃う。
+      height='100%'
       fixedWeekCount={false}
       selectable={false}
       // 月移動・年月ジャンプは親の独自ヘッダーに一本化するため標準ツールバーは出さない。

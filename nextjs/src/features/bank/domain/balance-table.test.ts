@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type BankColumn, buildBalanceTable } from './balance-table';
 
-// bank 残高テーブルの合計補完ロジック（旧 getTableData）の Vitest。
+// bank 残高テーブルの合計補完ロジックの Vitest。
 // server-only を含まない純粋関数のみ対象。
 
 const banks: BankColumn[] = [
