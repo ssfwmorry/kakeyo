@@ -12,7 +12,7 @@ public スキーマのDBに書き込みをするときは必ずユーザの許�
 
 ## 横断コーディング規約（全 feature 共通・コード内には再掲しない）
 
-以下は移行方針確定書 / 移行手順書で凍結済みの全体ルール。各 feature のコードに同じ説明を書かず、ここを唯一の正とする（判断に迷ったら該当ソースの実装を読む）。
+以下は Next.js 移行時に確定・凍結した全体ルール（移行計画書は移行完了に伴い削除済み。残作業は `migration-plan/残タスク.md`）。各 feature のコードに同じ説明を書かず、ここを唯一の正とする（判断に迷ったら該当ソースの実装を読む）。
 
 - **scope（情報漏洩防止の要）**: 全リポジトリの取得系は `buildScopeWhere`（pair 共有テーブル）/ `buildOwnerScopeWhere`（個人専用テーブル。`records`/`short_cuts`/`bank` 等）を必ず通す。更新・削除は Prisma が RLS をバイパスするため、`updateMany`/`deleteMany` の where に scope を AND して IDOR を塞ぐ（`count===0` = scope 外/不存在）。
 - **セッション由来のスコープ**: `userUid` / `pairId` は `getSessionData()`（サーバ真偽源。`getSessionData` は React `cache()` で per-request メモ化）から確定し、クライアント値・フォーム値を信用しない。ペアモード（共有 ON/OFF）は `getPairMode`（Cookie の単一の正）から読み、自前で Cookie を読まない。
