@@ -7,13 +7,14 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { useSwipe } from '@/components/use-swipe';
 import { MemoList } from '@/features/memo-shortcut';
 import type { PlanItem, ReminderItem } from '@/features/plan-reminder';
-import { formatDateLabelJst } from '@/lib/shared/domain/date';
+import { formatDateWithWeekdayJst } from '@/lib/shared/domain/date';
 import { getCalendarMonthAction } from '../actions';
 import {
   type AllRecordsOrder,
   nextAllRecordsOrder,
   selectAllRecordDays
 } from '../domain/all-records';
+import { selectDayPlans, selectDayReminders } from '../domain/day-events';
 import { formatMonthSum } from '../domain/format';
 import { monthLabel, shiftMonth } from '../domain/period';
 import { calendarLabels } from '../labels';
@@ -24,8 +25,8 @@ import type {
   DaySum
 } from '../types';
 
+import { DayPlanList } from './day-plan-list';
 import { AllRecordsList, DayRecordList } from './day-record-list';
-import { EventDetail } from './event-detail';
 import { MonthCalendar } from './month-calendar';
 import { ShortcutRecordList } from './shortcut-record-list';
 
@@ -34,31 +35,25 @@ import { ShortcutRecordList } from './shortcut-record-list';
 // 表示は純粋読み取り（副作用 INSERT なし）。TODO 追加/削除は memo-shortcut の MemoList、
 // ショートカット記録は ShortcutRecordList（calendar 所有 Action）が担う。
 //
-// イベントクリック: plan / reminder をクリックすると EventDetail に詳細カードを出す。
-// 通常 plan は「編集」で /plan?planId= へ、リマインダー由来 plan はその場で削除できる。
-// 日付クリック・月移動で選択は解除する。
+// この画面の仕事は 3 つ: 予定を確かめる・TODO を足す・記録を残す。上から順に
+//  1. 月グリッド: 日ごとの収支と予定バーを一望する。日付やバーを押すと下の日パネルが
+//     その日に切り替わる。
+//  2. 追加導線: 「記録を追加」「予定を追加」。
+//  3. TODO 帯（MemoList）。
+//  4. 日パネル: 選択日の予定（全文）と記録。見出し右の「全ての記録」で当月の全記録一覧に
+//     切り替わる。
 //
-// 高さ設計: この画面だけは縦スクロールを極力起こさない（月グリッド・記録・TODO・
-// ショートカットが 1 画面に載るため）。そのために
-//  - ページ見出し h1 は持たない（ボトムナビが「カレンダー」を名乗っている）
-//  - 月ナビと月収支を 1 行に畳む
-//  - 月グリッドは flex-1 で残りの高さを食い、下の記録一覧側がスクロールする
-//  - TODO は見出しなしの chip 帯にして、記録＋/予定＋ の行のトグルで開閉する
+// 高さ設計: 各セクションは内容の高さで積み、固定枠や内側スクロールは持たない
+// （画面に収まらない分は main 側のスクロールに任せる）。
+// ページ見出し h1 は持たない（ボトムナビが「カレンダー」を名乗っている）。
 
 export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
   const [month, setMonth] = useState<CalendarMonthData>(initial.month);
   const [selectedDate, setSelectedDate] = useState<string | null>(
     initial.today
   );
-  // クリックされたイベントの参照 id（plan / reminder）。両 null なら詳細カード非表示。
-  const [selectedEvent, setSelectedEvent] = useState<{
-    planId: number | null;
-    reminderId: number | null;
-  } | null>(null);
-  // 全記録一覧の並び（null=選択日1日表示 / 'desc' or 'asc'=当月全記録）。
+  // 全記録一覧の並び（null=選択日の日パネル / 'desc' or 'asc'=当月全記録）。
   const [allRecordsOrder, setAllRecordsOrder] = useState<AllRecordsOrder>(null);
-  // TODO chip 帯の開閉。既定は開（TODO を見るのに 1 タップ要らない）。
-  const [isTodoOpen, setIsTodoOpen] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   // 選択日の DaySum（records / holiday）を月データから引く。
@@ -67,24 +62,18 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     [month.days, selectedDate]
   );
 
-  // 選択イベントの実体（plan / reminder）を月データから引く。
-  // イベントは planId か reminderId のどちらかを持つ。
-  const selectedPlan = useMemo(
+  // 選択日にかかる予定・リマインダー（純粋関数で絞る）。
+  const dayPlans = useMemo(
     () =>
-      selectedEvent?.planId == null
-        ? null
-        : (month.plans.find((plan) => plan.id === selectedEvent.planId) ??
-          null),
-    [month.plans, selectedEvent]
+      selectedDate === null ? [] : selectDayPlans(month.plans, selectedDate),
+    [month.plans, selectedDate]
   );
-  const selectedReminder = useMemo(
+  const dayReminders = useMemo(
     () =>
-      selectedEvent?.reminderId == null || selectedEvent.planId != null
-        ? null
-        : (month.reminders.find(
-            (reminder) => reminder.id === selectedEvent.reminderId
-          ) ?? null),
-    [month.reminders, selectedEvent]
+      selectedDate === null
+        ? []
+        : selectDayReminders(month.reminders, selectedDate),
+    [month.reminders, selectedDate]
   );
 
   // 当月の全記録（記録のある日のみ・並び順は allRecordsOrder）。
@@ -97,33 +86,25 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     [allRecordsOrder, month.days, month.yearMonth]
   );
 
-  // 日付を選び直したらイベント詳細・全記録表示は閉じる。
+  // 日付を選び直したら全記録表示は閉じる。
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(dateStr);
-    setSelectedEvent(null);
     setAllRecordsOrder(null);
   };
 
-  // plan / reminder クリック → 詳細カードを開き、選択日をイベント日に寄せる。
-  const handleEventClick = (event: CalendarEvent) => {
-    setSelectedDate(event.start);
-    setSelectedEvent({ planId: event.planId, reminderId: event.reminderId });
-    setAllRecordsOrder(null);
-  };
+  // plan / reminder のバーを押したら、押したセルの日を選ぶ（日パネルに全文が出る）。
+  const handleEventClick = (_event: CalendarEvent, clickedDate: string) =>
+    handleDateClick(clickedDate);
 
   // 全記録一覧のトグル（初回 DESC → 再押下で ASC/DESC を交互）。
-  const toggleAllRecords = () => {
-    setSelectedEvent(null);
-    setAllRecordsOrder(nextAllRecordsOrder);
-  };
+  const toggleAllRecords = () => setAllRecordsOrder(nextAllRecordsOrder);
 
   const handleMonthChange = (yearMonth: string) => {
     startTransition(async () => {
       const next = await getCalendarMonthAction(yearMonth);
       setMonth(next);
-      // 月が変わったら選択日・イベント詳細・全記録表示をクリアする（前月の選択を持ち越さない）。
+      // 月が変わったら選択日・全記録表示をクリアする（前月の選択を持ち越さない）。
       setSelectedDate(null);
-      setSelectedEvent(null);
       setAllRecordsOrder(null);
     });
   };
@@ -132,7 +113,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
     handleMonthChange(shiftMonth(month.yearMonth, delta));
 
   // 左右スワイプで前月/次月へ。
-  // FullCalendar 自体はタッチを日付選択に使うため、カレンダー領域を含む外側のヘッダー
+  // FullCalendar 自体はタッチを日付選択に使うため、カレンダー領域を含む外側の
   // コンテナに結線する（グリッド内タップとの競合を避ける）。
   const swipe = useSwipe({
     onSwipeLeft: () => move(1),
@@ -140,19 +121,17 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
   });
 
   return (
-    // 画面いっぱいの縦フレックス。グリッドが余りを食い、下半分だけがスクロールする。
-    // h-full ではなく min-h-full（グリッドの下限を割る低い画面では中身が縦に溢れる。
-    // h-full だと溢れ分が切れるので、min-h-full にして main 側にスクロールさせる）。
-    <div className='flex min-h-full flex-col gap-2 px-4 pt-2 pb-1'>
-      {/* 前月/次月・年月ジャンプ・月収支を 1 行に畳む（見出し h1 は持たない）。 */}
-      <header className='flex shrink-0 items-center gap-2'>
+    <div className='flex flex-col gap-3 px-4 pt-2 pb-4'>
+      {/* 前月/次月・年月ジャンプ・月収支を 1 行に畳む（見出し h1 は持たない）。
+          月収支はこの行で唯一の数字なので、ラベルより一段強く出す。 */}
+      <header className='flex items-center gap-1'>
         <Button
           type='button'
           variant='ghost'
           size='icon-sm'
           onClick={() => move(-1)}
           disabled={isPending}
-          aria-label='前月'
+          aria-label={calendarLabels.action.prevMonth}
         >
           ＜
         </Button>
@@ -167,25 +146,23 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
           size='icon-sm'
           onClick={() => move(1)}
           disabled={isPending}
-          aria-label='次月'
+          aria-label={calendarLabels.action.nextMonth}
         >
           ＞
         </Button>
-        <span className='ml-auto text-muted-foreground text-xs'>
-          {calendarLabels.heading.monthSum} {formatMonthSum(month.monthSum)} 円
+        <span className='ml-auto flex items-baseline gap-1.5'>
+          <span className='text-muted-foreground text-xs'>
+            {calendarLabels.heading.monthSum}
+          </span>
+          <span className='font-medium text-sm tabular-nums'>
+            {formatMonthSum(month.monthSum)} 円
+          </span>
         </span>
       </header>
 
-      {/* 月グリッド。flex-1 で残りの高さを食う。
-          min-h は FullCalendar の行が潰れない下限。FullCalendar は 1 週の行に
-          約 58px の下限を持ち、これを割ると縮まずに末尾の週をはみ出させる。
-          最長の月（6 週）でも切れないよう 6 × 58 + 曜日ヘッダ 25 ≒ 373px を確保する。
-          height='100%' の FullCalendar は箱が足りないとスクロールせず末尾の週を
-          切り落とすため、下限を割るくらい画面が低いときは flex-1 を諦めてこの
-          高さを確保し、代わりに main 側を縦スクロールさせる。 */}
       <div
         data-pending={isPending}
-        className='min-h-[373px] flex-1 shrink-0 data-[pending=true]:opacity-60'
+        className='data-[pending=true]:opacity-60'
         onTouchStart={swipe.onTouchStart}
         onTouchEnd={swipe.onTouchEnd}
       >
@@ -197,102 +174,62 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
         />
       </div>
 
-      {/* カレンダー直下の主操作行。横幅を等分した「押せる面」を並べ、記録＋/予定＋を
-          塗り・TODO を outline にして主従を付ける（auto 幅で左に寄せると主従が読めない）。
-          全記録の並び替えトグルはここには置かず、操作対象である記録一覧の見出し側に
-          持たせている（対象の隣で ↑/↓ の状態が読めるため）。 */}
-      <div className='grid shrink-0 grid-cols-3 gap-2'>
-        {/* TODO 帯の開閉。TODO セクションの名乗りも兼ねる
-            （chip 帯側は見出しを持たない）。件数は開けば数えられるので出さない。 */}
-        <Button
-          type='button'
-          variant={isTodoOpen ? 'secondary' : 'outline'}
-          onClick={() => setIsTodoOpen((prev) => !prev)}
-          aria-expanded={isTodoOpen}
-          aria-controls='calendar-todo'
-        >
-          {calendarLabels.action.todo}
-          <span aria-hidden='true'>{isTodoOpen ? '▴' : '▾'}</span>
-        </Button>
-        {/* note は日付クエリを受け取らないためプレーンに遷移する（記録の初期日付
-            プリフィルは note 側に受け口が無いため未対応）。 */}
-        <Link
-          href='/note'
-          className={buttonVariants({
-            variant: 'default',
-            className: 'w-full'
-          })}
-        >
-          {calendarLabels.action.addRecord}
-        </Link>
-        <Link
-          href={selectedDate ? `/plan?date=${selectedDate}` : '/plan'}
-          className={buttonVariants({
-            variant: 'default',
-            className: 'w-full'
-          })}
-        >
-          {calendarLabels.action.addPlan}
-        </Link>
-      </div>
+      {/* 追加導線。グリッドの直下に固定で置き、下の帯やリストの長さに左右されない。 */}
+      <AddLinks selectedDate={selectedDate} />
 
-      {isTodoOpen ? (
-        <div id='calendar-todo' className='shrink-0'>
-          <MemoList items={initial.memos} hasPair={initial.hasPair} />
-        </div>
+      <MemoList items={initial.memos} hasPair={initial.hasPair} />
+
+      <DayPane
+        allRecordsOrder={allRecordsOrder}
+        allRecordDays={allRecordDays}
+        selectedDate={selectedDate}
+        selectedDay={selectedDay}
+        plans={dayPlans}
+        reminders={dayReminders}
+        onToggleAllRecords={toggleAllRecords}
+      />
+
+      {initial.shortcuts.length > 0 ? (
+        <ShortcutRecordList items={initial.shortcuts} />
       ) : null}
-
-      {/* 下半分（記録・ショートカット）だけがスクロールする。 */}
-      <div className='flex min-h-24 flex-col gap-3 overflow-y-auto'>
-        <RecordsPane
-          allRecordsOrder={allRecordsOrder}
-          allRecordDays={allRecordDays}
-          selectedDate={selectedDate}
-          selectedDay={selectedDay}
-          selectedPlan={selectedPlan}
-          selectedReminder={selectedReminder}
-          onToggleAllRecords={toggleAllRecords}
-          onCloseEvent={() => setSelectedEvent(null)}
-        />
-
-        {initial.shortcuts.length > 0 ? (
-          <ShortcutRecordList items={initial.shortcuts} />
-        ) : null}
-      </div>
     </div>
   );
 }
 
-// 記録の表示エリア（見出し + 全記録トグル + 本体）。本体の中身は排他:
-// ①全記録一覧（トグル ON） ②イベント詳細（plan/reminder 選択） ③選択日の記録一覧。
+// 日パネル（見出し行 + 本体）。本体は排他:
+// ①全記録一覧（トグル ON） ②選択日の予定＋記録。
 // 状態は持たず、親から渡された選択結果を並べるだけ。
-function RecordsPane({
+function DayPane({
   allRecordsOrder,
   allRecordDays,
   selectedDate,
   selectedDay,
-  selectedPlan,
-  selectedReminder,
-  onToggleAllRecords,
-  onCloseEvent
+  plans,
+  reminders,
+  onToggleAllRecords
 }: {
   allRecordsOrder: AllRecordsOrder;
   allRecordDays: { dateStr: string; records: DaySum['records'] }[];
   selectedDate: string | null;
   selectedDay: DaySum | null;
-  selectedPlan: PlanItem | null;
-  selectedReminder: ReminderItem | null;
+  plans: PlanItem[];
+  reminders: ReminderItem[];
   onToggleAllRecords: () => void;
-  onCloseEvent: () => void;
 }) {
   const isAllRecords = allRecordsOrder !== null;
 
   return (
-    <>
+    <section className='flex flex-col gap-2'>
       <div className='flex items-center gap-2'>
         <h2 className='font-bold text-sm'>
-          {recordsHeading(allRecordsOrder, selectedDate)}
+          {paneHeading(allRecordsOrder, selectedDate)}
         </h2>
+        {/* 祝日名は日付と不可分なので見出しの隣に添える。 */}
+        {!isAllRecords && selectedDay?.holidayName ? (
+          <span className='rounded bg-red-100 px-1.5 py-0.5 text-red-700 text-xs'>
+            {selectedDay.holidayName}
+          </span>
+        ) : null}
         {/* 当月の全記録を昇順/降順トグルで一覧。 */}
         <Button
           type='button'
@@ -306,30 +243,72 @@ function RecordsPane({
         </Button>
       </div>
 
-      {isAllRecords ? <AllRecordsList days={allRecordDays} /> : null}
-
-      {!isAllRecords && (selectedPlan || selectedReminder) ? (
-        <EventDetail
-          plan={selectedPlan}
-          reminder={selectedReminder}
-          onClose={onCloseEvent}
-        />
-      ) : null}
-
-      {!(isAllRecords || selectedPlan || selectedReminder) ? (
-        <DayRecordList
-          dateStr={selectedDate}
+      {isAllRecords ? (
+        <AllRecordsList days={allRecordDays} />
+      ) : (
+        <DayBody
+          selectedDate={selectedDate}
           records={selectedDay?.records ?? []}
-          holidayName={selectedDay?.holidayName ?? null}
+          plans={plans}
+          reminders={reminders}
         />
+      )}
+    </section>
+  );
+}
+
+// 選択日の予定＋記録。空表示は子リストに任せず、予定も記録も無いときだけここで 1 行出す。
+function DayBody({
+  selectedDate,
+  records,
+  plans,
+  reminders
+}: {
+  selectedDate: string | null;
+  records: DaySum['records'];
+  plans: PlanItem[];
+  reminders: ReminderItem[];
+}) {
+  const isEmpty =
+    plans.length === 0 && reminders.length === 0 && records.length === 0;
+  return (
+    <>
+      <DayPlanList plans={plans} reminders={reminders} />
+      <DayRecordList records={records} />
+      {selectedDate !== null && isEmpty ? (
+        <p className='text-muted-foreground text-sm'>
+          {calendarLabels.empty.day}
+        </p>
       ) : null}
     </>
   );
 }
 
-// 記録一覧の見出し。全記録トグル ON なら月見出し、選択日があればその日付、
+// 追加導線。選択日があれば初期日付として渡す（月移動直後など未選択なら日付なしで遷移）。
+// 毎日使う「記録」を塗り、「予定」は枠線にして主従を付ける。
+function AddLinks({ selectedDate }: { selectedDate: string | null }) {
+  const query = selectedDate ? `?date=${selectedDate}` : '';
+  return (
+    <div className='grid grid-cols-2 gap-2'>
+      <Link
+        href={`/note${query}`}
+        className={buttonVariants({ variant: 'default' })}
+      >
+        ＋ {calendarLabels.action.addRecord}
+      </Link>
+      <Link
+        href={`/plan${query}`}
+        className={buttonVariants({ variant: 'default' })}
+      >
+        ＋ {calendarLabels.action.addPlan}
+      </Link>
+    </div>
+  );
+}
+
+// 日パネルの見出し。全記録トグル ON なら月見出し、選択日があればその日付（曜日付き）、
 // どちらでもなければ汎用の「記録」。
-function recordsHeading(
+function paneHeading(
   order: AllRecordsOrder,
   selectedDate: string | null
 ): string {
@@ -338,7 +317,7 @@ function recordsHeading(
   }
   return selectedDate === null
     ? calendarLabels.heading.dayRecords
-    : formatDateLabelJst(selectedDate);
+    : formatDateWithWeekdayJst(selectedDate);
 }
 
 // 全記録トグルのボタン文言（OFF=通常 / 降順=↓ / 昇順=↑）。

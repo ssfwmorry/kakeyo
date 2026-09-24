@@ -1,11 +1,12 @@
 import type { RecordListItem } from '@/features/record';
-import { toDateStringJst } from '@/lib/shared/domain/date';
+import { listDatesJst, toDateStringJst } from '@/lib/shared/domain/date';
 import { getHolidayName } from '@/lib/shared/domain/holiday';
 import type { DaySum } from '../types';
 import { resolveDisplayIsPay } from './record-sign';
 
 // カレンダーの日別収支を組み立てるドメイン純粋関数（server/client 双方から使える）。
-// 祝日名は JST 暦日に対して引く。
+// 記録の無い日も含めて表示範囲の全日を作る（記録のある日だけだと、記録の無い祝日に
+// 祝日名が付かずグリッドで赤くならない）。祝日名は JST 暦日に対して引く。
 
 // 1 record の「自分視点の符号付き金額」を出す。
 // - 支払方向は resolveDisplayIsPay に集約（精算/null は isSelf）。表示側の符号と同じ関数を
@@ -19,19 +20,30 @@ function selfSignedPrice(record: RecordListItem): number {
   return record.isSelf || record.isSettlement === true ? recordPrice : 0;
 }
 
-// dateStr は JST 暦日。
-export function buildDaySumList(records: RecordListItem[]): DaySum[] {
+function emptyDay(dateStr: string): DaySum {
+  return {
+    dateStr,
+    sum: 0,
+    records: [],
+    holidayName: getHolidayName(dateStr)
+  };
+}
+
+// range は表示範囲（両端含む YYYY-MM-DD）。範囲内の全日を日付昇順で返す。
+// 範囲外の日付を持つ record が混じっていても、その日を末尾に足して落とさない。
+export function buildDaySumList(
+  records: RecordListItem[],
+  range: { startStr: string; endStr: string }
+): DaySum[] {
   const map = new Map<string, DaySum>();
+  for (const dateStr of listDatesJst(range.startStr, range.endStr)) {
+    map.set(dateStr, emptyDay(dateStr));
+  }
   for (const record of records) {
     const dateStr = toDateStringJst(record.datetime);
     let day = map.get(dateStr);
     if (!day) {
-      day = {
-        dateStr,
-        sum: 0,
-        records: [],
-        holidayName: getHolidayName(dateStr)
-      };
+      day = emptyDay(dateStr);
       map.set(dateStr, day);
     }
     day.records.push(record);

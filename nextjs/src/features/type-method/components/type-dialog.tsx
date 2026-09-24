@@ -15,7 +15,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import type { ColorClassification } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { dialogTitle, L } from '@/lib/shared/labels';
 import { deleteTypeAction, upsertTypeAction } from '../actions';
 import { typeMethodLabels } from '../labels';
 import { typeUpsertSchema } from '../schemas';
@@ -60,7 +60,12 @@ export function TypeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{typeMethodLabels.entity.typeName}</DialogTitle>
+          <DialogTitle>
+            {dialogTitle(
+              typeMethodLabels.dialogEntity.type,
+              editing !== undefined
+            )}
+          </DialogTitle>
         </DialogHeader>
         <form
           {...getFormProps(form)}
@@ -81,6 +86,7 @@ export function TypeDialog({
             name='colorId'
             label={L.button.color}
             colors={colors}
+            shape='circle'
             defaultColorId={editing?.colorClassificationId}
             errors={fields.colorId.errors}
             errorId={fields.colorId.errorId}

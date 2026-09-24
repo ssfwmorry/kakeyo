@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
-// JST 日付境界のドメイン計算（凍結資産・日付の単一の正）。
+// JST 日付境界のドメイン計算（日付の単一の正）。
 // 「Date に +9h して toISOString で切る」独自 JST 変換は使わない。SSR ではサーバ
 // （Vercel は UTC）とクライアントで時刻がズレるため、dayjs の utc/timezone で
 // Asia/Tokyo を明示し日付境界（YYYY-MM-DD）で一貫して扱う。
@@ -78,4 +78,26 @@ export function startOfNextMonthJst(yearMonth: string): Date {
 export function formatDateLabelJst(dateStr: string): string {
   const [, month, day] = dateStr.split('-');
   return `${Number(month)}月${Number(day)}日`;
+}
+
+// startStr〜endStr（両端含む・YYYY-MM-DD）の暦日を昇順で列挙する。
+// 逆順（end < start）なら空配列。
+export function listDatesJst(startStr: string, endStr: string): string[] {
+  const dates: string[] = [];
+  let cursor = dayjs(startStr);
+  const end = dayjs(endStr);
+  while (!cursor.isAfter(end, 'day')) {
+    dates.push(cursor.format(DATE_FORMAT));
+    cursor = cursor.add(1, 'day');
+  }
+  return dates;
+}
+
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const;
+
+// 'YYYY-MM-DD' → 'M月D日(曜)'。
+// 暦日は JST の文字列そのものなので、tz 変換を挟まず暦日として曜日を引く。
+export function formatDateWithWeekdayJst(dateStr: string): string {
+  const weekday = WEEKDAY_LABELS[dayjs(dateStr).day()];
+  return `${formatDateLabelJst(dateStr)}(${weekday})`;
 }

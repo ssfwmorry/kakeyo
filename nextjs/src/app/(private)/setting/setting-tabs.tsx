@@ -56,7 +56,7 @@ export function SettingTabs({
 }: SettingTabsProps) {
   return (
     <Tabs defaultValue='kakei' className='flex flex-col gap-4 p-4'>
-      <TabsList>
+      <TabsList className='w-full'>
         <TabsTrigger value='kakei'>{settingTabsLabels.kakei}</TabsTrigger>
         <TabsTrigger value='plan'>{settingTabsLabels.plan}</TabsTrigger>
         <TabsTrigger value='general'>{settingTabsLabels.general}</TabsTrigger>

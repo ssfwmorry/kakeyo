@@ -2,22 +2,24 @@
 
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
+import { DeleteButton } from '@/components/form/delete-button';
+import { MethodRow } from '@/components/form/method-row';
 import { PriceKeypad } from '@/components/form/price-keypad';
 import { SubmitButton } from '@/components/form/submit-button';
+import { TextInputRow } from '@/components/form/text-input-row';
 import { useFormAction } from '@/components/form/use-form-action';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { IconMemo, IconUpdate } from '@/components/icons';
+import { SectionHeading } from '@/components/section-heading';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { DayClassification } from '@/features/master';
-import { colorHex } from '@/features/master';
 import type {
   GroupedMethodList,
   GroupedTypeList,
-  MethodCard,
-  SubTypeCard,
-  TypeCard
+  MethodCard
 } from '@/features/type-method';
+import { TypeSelectionArea, useTypeSelection } from '@/features/type-method';
 import { L } from '@/lib/shared/labels';
 import {
   deletePlannedRecordAction,
@@ -37,7 +39,8 @@ type NotePlannedRecordFormProps = {
   typeList: GroupedTypeList;
   methodList: GroupedMethodList;
   dayClassifications: DayClassification[];
-  // 現在の共有モード（Cookie 由来。Server から渡す）。新規時に使う。
+  // 共有モード。Server が解決済みの値を渡す（新規は Cookie のモード、編集は
+  // 対象自身の共有区分）。
   isPair: boolean;
   editing?: NotePlannedRecordDefault;
 };
@@ -60,32 +63,51 @@ export function NotePlannedRecordForm({
   typeList,
   methodList,
   dayClassifications,
-  isPair: currentPairMode,
+  isPair,
   editing
 }: NotePlannedRecordFormProps) {
-  // 編集時は編集対象の共有状態で固定、新規時は現在のペアモードを使う。
-  const isPair = editing ? editing.isPair : currentPairMode;
   const [state, setState] = useState<PlannedState>(() =>
     toInitialState(editing)
   );
   const patch = (next: Partial<PlannedState>) =>
     setState((prev) => ({ ...prev, ...next }));
 
-  const view = usePlannedView(typeList, methodList, isPair, state);
+  // 共有トグルは画面を再マウントせず isPair だけ差し替えるため、旧モードのカテゴリ・
+  // 方法が残る。render 中に前回値と比べて捨てる（effect では 1 フレーム残る）。
+  // 編集時の isPair は editing 固定なので、これが効くのは実質新規のときだけ。
+  const [prevIsPair, setPrevIsPair] = useState(isPair);
+  if (prevIsPair !== isPair) {
+    setPrevIsPair(isPair);
+    setState((prev) => ({
+      ...prev,
+      typeId: null,
+      subTypeId: null,
+      methodId: null,
+      isInstead: true
+    }));
+  }
+
+  const view = useTypeSelection(typeList, methodList, isPair, state);
   const resetSelection = () =>
     patch({ typeId: null, subTypeId: null, methodId: null });
 
   return (
     <div className='flex flex-col gap-6'>
+      {/* この画面に定期を示すタブが無いので、見出しが唯一の現在地の手がかりになる。 */}
+      <SectionHeading icon={IconUpdate} as='h1' mutedIcon>
+        {plannedRecordLabels.heading.plannedRecord}
+      </SectionHeading>
+
       <PlannedHeader
         isPay={state.isPay}
         onPayChange={(isPay) => patch({ isPay })}
         onReset={resetSelection}
       />
 
-      <PlannedSelectionArea
+      <TypeSelectionArea
         view={view}
         subTypeId={state.subTypeId}
+        emptyMessage={plannedRecordLabels.empty.noTypeMethod}
         onSelectType={(typeId) => patch({ typeId, subTypeId: null })}
         onSelectSubType={(subTypeId) => patch({ subTypeId })}
         onReset={resetSelection}
@@ -102,83 +124,14 @@ export function NotePlannedRecordForm({
         />
       ) : null}
 
-      {editing ? <PlannedDeleteForm id={editing.id} /> : null}
-    </div>
-  );
-}
-
-type PlannedView = {
-  types: TypeCard[];
-  methods: MethodCard[];
-  selectedType: TypeCard | null;
-  subTypes: SubTypeCard[];
-  hasSubType: boolean;
-  isTypeChosen: boolean;
-  showSubTypeGrid: boolean;
-};
-
-function usePlannedView(
-  typeList: GroupedTypeList,
-  methodList: GroupedMethodList,
-  isPair: boolean,
-  state: PlannedState
-): PlannedView {
-  const payKey = state.isPay ? 'pay' : 'income';
-  const ownerKey = isPair ? 'pair' : 'self';
-  const types = typeList[payKey][ownerKey];
-  // 方法は立替時は自分の方法（self）、共有非立替は pair の方法。
-  const methods =
-    methodList[payKey][isPair && !state.isInstead ? 'pair' : 'self'];
-  const selectedType = useMemo(
-    () => types.find((type) => type.id === state.typeId) ?? null,
-    [types, state.typeId]
-  );
-  const subTypes = selectedType?.subTypes ?? [];
-  const hasSubType = subTypes.length > 0;
-  const isTypeChosen =
-    state.typeId !== null && (!hasSubType || state.subTypeId !== null);
-  const showSubTypeGrid =
-    state.typeId !== null && hasSubType && state.subTypeId === null;
-  return {
-    types,
-    methods,
-    selectedType,
-    subTypes,
-    hasSubType,
-    isTypeChosen,
-    showSubTypeGrid
-  };
-}
-
-function PlannedSelectionArea({
-  view,
-  subTypeId,
-  onSelectType,
-  onSelectSubType,
-  onReset
-}: {
-  view: PlannedView;
-  subTypeId: number | null;
-  onSelectType: (typeId: number) => void;
-  onSelectSubType: (subTypeId: number) => void;
-  onReset: () => void;
-}) {
-  return (
-    <>
-      {view.isTypeChosen ? (
-        <ChosenTypeSummary
-          selectedType={view.selectedType}
-          subTypes={view.subTypes}
-          subTypeId={subTypeId}
-          onReset={onReset}
+      {editing && view.isTypeChosen ? (
+        <DeleteButton
+          id={editing.id}
+          action={deletePlannedRecordAction}
+          description={plannedRecordLabels.confirm.delete}
         />
-      ) : (
-        <TypeGrid types={view.types} onSelect={onSelectType} />
-      )}
-      {view.showSubTypeGrid ? (
-        <SubTypeGrid subTypes={view.subTypes} onSelect={onSelectSubType} />
       ) : null}
-    </>
+    </div>
   );
 }
 
@@ -222,6 +175,9 @@ function PlannedDetailForm({
       <MethodRow
         methods={methods}
         methodId={state.methodId}
+        label={plannedRecordLabels.field.method}
+        insteadLabel={plannedRecordLabels.instead}
+        emptyMessage={plannedRecordLabels.empty.noMethod}
         showInstead={isPair && state.isPay}
         isInstead={state.isInstead}
         onMethodChange={(methodId) => patch({ methodId })}
@@ -231,6 +187,7 @@ function PlannedDetailForm({
       <TextInputRow
         id='planned-memo'
         label={plannedRecordLabels.field.memo}
+        icon={IconMemo}
         value={state.memo}
         placeholder={plannedRecordLabels.placeholder.memo}
         onChange={(memo) => patch({ memo })}
@@ -247,25 +204,12 @@ function PlannedDetailForm({
       ) : null}
       <SubmitButton
         isPending={isPending}
-        className='flex-1'
+        size='lg'
+        className='h-12 w-full text-base'
         disabled={!canSubmit(state, isPair)}
       >
         {editing ? L.button.update : L.button.create}
       </SubmitButton>
-    </form>
-  );
-}
-
-function PlannedDeleteForm({ id }: { id: number }) {
-  const [deleteResult, deleteAction] = useFormAction(deletePlannedRecordAction);
-  return (
-    <form action={deleteAction}>
-      <input type='hidden' name='id' value={id} readOnly />
-      <Button type='submit' variant='destructive' className='w-full'>
-        {L.button.delete}
-      </Button>
-      {/* 失敗時のみ toast が発火する（成功は redirect で消える）。 */}
-      <span className='sr-only'>{deleteResult?.toast?.message ?? ''}</span>
     </form>
   );
 }
@@ -306,106 +250,19 @@ function PlannedHeader({
     onReset();
   };
   return (
-    <div className='flex gap-2'>
-      <Button
-        type='button'
-        variant={isPay ? 'default' : 'outline'}
-        onClick={() => choose(true)}
-      >
-        {plannedRecordLabels.payToggle.pay}
-      </Button>
-      <Button
-        type='button'
-        variant={!isPay ? 'default' : 'outline'}
-        onClick={() => choose(false)}
-      >
-        {plannedRecordLabels.payToggle.income}
-      </Button>
-    </div>
-  );
-}
-
-function TypeGrid({
-  types,
-  onSelect
-}: {
-  types: TypeCard[];
-  onSelect: (typeId: number) => void;
-}) {
-  if (types.length === 0) {
-    return (
-      <p className='text-center text-sm text-muted-foreground'>
-        {plannedRecordLabels.empty.noTypeMethod}
-      </p>
-    );
-  }
-  return (
-    <div className='grid grid-cols-4 gap-3'>
-      {types.map((type) => (
-        <button
-          key={type.id}
-          type='button'
-          className='flex flex-col items-center gap-1'
-          onClick={() => onSelect(type.id)}
-        >
-          <span
-            className='size-12 rounded-full'
-            style={{ backgroundColor: colorHex(type.colorName) }}
-          />
-          <span className='text-xs'>{type.name}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function ChosenTypeSummary({
-  selectedType,
-  subTypes,
-  subTypeId,
-  onReset
-}: {
-  selectedType: TypeCard | null;
-  subTypes: SubTypeCard[];
-  subTypeId: number | null;
-  onReset: () => void;
-}) {
-  const subName =
-    subTypeId === null
-      ? ''
-      : ` ＞ ${subTypes.find((sub) => sub.id === subTypeId)?.name ?? ''}`;
-  return (
-    <button
-      type='button'
-      className='self-start text-sm text-muted-foreground underline'
-      onClick={onReset}
+    <Tabs
+      value={isPay ? 'pay' : 'income'}
+      onValueChange={(value) => choose(value === 'pay')}
     >
-      {selectedType?.name}
-      {subName}（選び直す）
-    </button>
-  );
-}
-
-function SubTypeGrid({
-  subTypes,
-  onSelect
-}: {
-  subTypes: SubTypeCard[];
-  onSelect: (subTypeId: number) => void;
-}) {
-  return (
-    <div className='grid grid-cols-3 gap-2'>
-      {subTypes.map((sub) => (
-        <Button
-          key={sub.id}
-          type='button'
-          variant='secondary'
-          onClick={() => onSelect(sub.id)}
-        >
-          {sub.name}
-        </Button>
-      ))}
-    </div>
+      <TabsList className='h-9'>
+        <TabsTrigger value='pay' className='px-4'>
+          {plannedRecordLabels.payToggle.pay}
+        </TabsTrigger>
+        <TabsTrigger value='income' className='px-4'>
+          {plannedRecordLabels.payToggle.income}
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
   );
 }
 
@@ -438,87 +295,6 @@ function DayRow({
           </option>
         ))}
       </select>
-    </div>
-  );
-}
-
-function MethodRow({
-  methods,
-  methodId,
-  showInstead,
-  isInstead,
-  onMethodChange,
-  onInsteadChange
-}: {
-  methods: MethodCard[];
-  methodId: number | null;
-  showInstead: boolean;
-  isInstead: boolean;
-  onMethodChange: (methodId: number | null) => void;
-  onInsteadChange: (isInstead: boolean) => void;
-}) {
-  return (
-    <div className='flex items-end gap-4'>
-      <div className='flex flex-1 flex-col gap-1'>
-        <Label htmlFor='planned-method'>
-          {plannedRecordLabels.field.method}
-        </Label>
-        <select
-          id='planned-method'
-          value={methodId ?? ''}
-          onChange={(event) =>
-            onMethodChange(
-              event.target.value === '' ? null : Number(event.target.value)
-            )
-          }
-          className={selectClassName}
-        >
-          <option value=''>
-            {plannedRecordLabels.placeholder.selectMethod}
-          </option>
-          {methods.map((method) => (
-            <option key={method.id} value={method.id}>
-              {method.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {showInstead ? (
-        <label className='flex items-center gap-2 pb-2 text-sm'>
-          <input
-            type='checkbox'
-            checked={isInstead}
-            onChange={(event) => onInsteadChange(event.target.checked)}
-          />
-          {plannedRecordLabels.instead}
-        </label>
-      ) : null}
-    </div>
-  );
-}
-
-function TextInputRow({
-  id,
-  label,
-  value,
-  placeholder,
-  onChange
-}: {
-  id: string;
-  label: string;
-  value: string;
-  placeholder: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className='flex flex-col gap-1'>
-      <Label htmlFor={id}>{label}</Label>
-      <Input
-        id={id}
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
-      />
     </div>
   );
 }

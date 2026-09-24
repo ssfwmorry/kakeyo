@@ -4,7 +4,7 @@ import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
-// method レーンの「被参照 I/F」（凍結資産の I/F 部分）。
+// method レーンの「被参照 I/F」。
 // record / summary が参照するため型・シグネチャは固定。
 // 取得系は必ず buildScopeWhere を通す（scope 漏れ = 情報漏洩）。
 

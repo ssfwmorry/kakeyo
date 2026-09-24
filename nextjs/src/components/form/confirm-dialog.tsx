@@ -31,6 +31,11 @@ type ConfirmDialogProps = {
   description?: string;
   // 実行ボタンの文言。既定は「削除」。
   confirmLabel?: string;
+  // 本文を持つ確認は 'sm'（2 列フッタ）に寄せる。
+  size?: 'default' | 'sm';
+  // ダイアログの中では削除が主操作なので塗りつぶす。共通の destructive は淡い塗り
+  // （画面上では副次操作）なので、主操作として見せたいときだけ実体の赤を当てる。
+  solidConfirm?: boolean;
   onConfirm: () => void;
 };
 
@@ -39,6 +44,8 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel = L.button.delete,
+  size = 'default',
+  solidConfirm = false,
   onConfirm
 }: ConfirmDialogProps) {
   const [open, setOpen] = useState(false);
@@ -46,7 +53,7 @@ export function ConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger render={trigger} />
-      <AlertDialogContent>
+      <AlertDialogContent size={size}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description ? (
@@ -57,6 +64,11 @@ export function ConfirmDialog({
           <AlertDialogCancel>{L.button.cancel}</AlertDialogCancel>
           <AlertDialogAction
             variant='destructive'
+            className={
+              solidConfirm
+                ? 'bg-destructive text-white hover:bg-destructive/90'
+                : undefined
+            }
             onClick={() => {
               setOpen(false);
               onConfirm();

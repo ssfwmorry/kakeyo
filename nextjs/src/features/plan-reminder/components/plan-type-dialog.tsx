@@ -15,7 +15,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import type { ColorClassification } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { dialogTitle, L } from '@/lib/shared/labels';
 import { deletePlanTypeAction, upsertPlanTypeAction } from '../actions';
 import { planReminderLabels } from '../labels';
 import { planTypeUpsertSchema } from '../schemas';
@@ -57,7 +57,12 @@ export function PlanTypeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{planReminderLabels.entity.planTypeName}</DialogTitle>
+          <DialogTitle>
+            {dialogTitle(
+              planReminderLabels.dialogEntity.planType,
+              editing !== undefined
+            )}
+          </DialogTitle>
         </DialogHeader>
         <form
           {...getFormProps(form)}

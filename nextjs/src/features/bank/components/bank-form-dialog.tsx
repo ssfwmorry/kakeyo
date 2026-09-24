@@ -15,7 +15,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import type { ColorClassification } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { dialogTitle, L } from '@/lib/shared/labels';
 import { deleteBankAction, upsertBankAction } from '../actions';
 import { bankLabels } from '../labels';
 import { bankFormSchema } from '../schemas/bank-schema';
@@ -56,7 +56,9 @@ export function BankFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{bankLabels.heading.bankName}</DialogTitle>
+          <DialogTitle>
+            {dialogTitle(bankLabels.dialogEntity.bank, editing !== undefined)}
+          </DialogTitle>
         </DialogHeader>
         <form
           {...getFormProps(form)}
@@ -67,7 +69,7 @@ export function BankFormDialog({
             <input type='hidden' name='id' value={editing.id} readOnly />
           ) : null}
           <FormField
-            label={bankLabels.heading.bankName}
+            label={bankLabels.field.bankName}
             field={fields.name}
             key={editing?.id ?? 'new'}
           />

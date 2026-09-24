@@ -45,7 +45,6 @@ export function SummaryScreen({
 
   return (
     <main className='flex flex-col gap-4 p-4'>
-      <h1 className='font-bold text-lg'>集計</h1>
       <Tabs value={outer} onValueChange={setOuter}>
         <TabsList className='w-full'>
           <TabsTrigger value={OUTER.pie}>

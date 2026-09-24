@@ -1,14 +1,18 @@
 'use client';
 
+import { cn } from 'cn';
+
 import { useState } from 'react';
+import { AddButton } from '@/components/form/add-button';
 import { SwapButton } from '@/components/form/swap-button';
-import { IconArrowRight, IconPencil } from '@/components/icons';
+import { IconArrowDown, IconCreditCard, IconPencil } from '@/components/icons';
+import { SectionHeading } from '@/components/section-heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { ColorClassification } from '@/features/master';
 import { colorHex } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { addLabel, L } from '@/lib/shared/labels';
 import { swapMethodAction } from '../actions';
 import { typeMethodLabels } from '../labels';
 import type { GroupedMethodList, MethodCard } from '../types';
@@ -38,7 +42,10 @@ export function KakeiMethod({ methodList, colors, isPair }: KakeiMethodProps) {
 
   return (
     <section className='flex flex-col gap-3'>
-      <div className='flex items-center gap-3'>
+      <SectionHeading icon={IconCreditCard}>
+        {typeMethodLabels.heading.method}
+      </SectionHeading>
+      <div className='flex items-center justify-between gap-3'>
         <Tabs
           value={payMode}
           onValueChange={(value) => setPayMode(value as PayMode)}
@@ -67,7 +74,9 @@ export function KakeiMethod({ methodList, colors, isPair }: KakeiMethodProps) {
         </Button>
       </div>
 
-      <div className='grid grid-cols-2 gap-2'>
+      {/* 閲覧中は名前が短いので 2 列に畳む。並べ替え中だけ 1 列に戻し、
+          「下と入れ替え」が見た目どおり真下の行を指すようにする。 */}
+      <div className={cn('grid gap-2', isEdit ? 'grid-cols-2' : 'grid-cols-1')}>
         {cards.map((card, index) => (
           <MethodCardView
             key={card.id}
@@ -79,15 +88,11 @@ export function KakeiMethod({ methodList, colors, isPair }: KakeiMethodProps) {
         ))}
       </div>
 
-      <div className='flex justify-end'>
-        <Button
-          type='button'
-          disabled={payMode === 'both' && !isPair}
-          onClick={() => setDialog({ kind: 'create' })}
-        >
-          ＋
-        </Button>
-      </div>
+      <AddButton
+        label={addLabel(typeMethodLabels.dialogEntity.method[payMode])}
+        disabled={payMode === 'both' && !isPair}
+        onClick={() => setDialog({ kind: 'create' })}
+      />
 
       <MethodDialog
         // defaultValue をプリフィルさせるため編集対象ごとにリマウントする。
@@ -132,8 +137,8 @@ function MethodCardView({ card, isEdit, nextId, onEdit }: MethodCardViewProps) {
             prevId={card.id}
             nextId={nextId}
             action={swapMethodAction}
-            label={typeMethodLabels.swap.next}
-            icon={<IconArrowRight className='size-4' />}
+            label={typeMethodLabels.swap.down}
+            icon={<IconArrowDown className='size-4' />}
           />
         ) : null}
       </CardContent>

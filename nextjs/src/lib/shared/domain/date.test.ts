@@ -3,6 +3,8 @@ import {
   dateInMonthJst,
   endOfDayJst,
   formatDateLabelJst,
+  formatDateWithWeekdayJst,
+  listDatesJst,
   startOfDayJst,
   startOfMonthJst,
   startOfNextMonthJst,
@@ -120,5 +122,30 @@ describe('formatDateLabelJst', () => {
 
   it('2 桁の月日はそのまま出す', () => {
     expect(formatDateLabelJst('2024-12-31')).toBe('12月31日');
+  });
+});
+
+describe('formatDateWithWeekdayJst', () => {
+  it('M月D日(曜) に整形する', () => {
+    // 2026-09-23 は水曜日。
+    expect(formatDateWithWeekdayJst('2026-09-23')).toBe('9月23日(水)');
+    // 2026-01-04 は日曜日（ゼロ埋めを外す）。
+    expect(formatDateWithWeekdayJst('2026-01-04')).toBe('1月4日(日)');
+  });
+});
+
+describe('listDatesJst', () => {
+  it('両端を含む暦日を昇順で列挙する（月跨ぎ）', () => {
+    expect(listDatesJst('2026-08-30', '2026-09-02')).toEqual([
+      '2026-08-30',
+      '2026-08-31',
+      '2026-09-01',
+      '2026-09-02'
+    ]);
+  });
+
+  it('同日なら 1 件、逆順なら空', () => {
+    expect(listDatesJst('2026-09-21', '2026-09-21')).toEqual(['2026-09-21']);
+    expect(listDatesJst('2026-09-22', '2026-09-21')).toEqual([]);
   });
 });

@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { publicEnv } from '@/lib/shared/env';
 
-// Supabase Auth のサーバクライアント（凍結資産）。
+// Supabase Auth のサーバクライアント。
 // Cookie の読み書きは next/headers の cookies() に委譲する。
 // ユーザの真偽の源は auth.getClaims()（非対称鍵の JWT をローカル署名検証）であり、
 // Cookie の中身をそのまま信用しない。

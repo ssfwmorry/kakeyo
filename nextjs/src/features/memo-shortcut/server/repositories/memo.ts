@@ -10,7 +10,7 @@ import type { Id } from '@/lib/shared/types/id';
 export type MemoListItem = {
   id: Id;
   memo: string;
-  // 個人 TODO なら true、ペア共有 TODO なら false。
+  // ペア共有 TODO なら true、個人 TODO なら false。
   isPair: boolean;
 };
 

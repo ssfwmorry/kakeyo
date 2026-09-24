@@ -1,13 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { AddButton } from '@/components/form/add-button';
 import { SwapButton } from '@/components/form/swap-button';
-import { IconArrowDown, IconPencil } from '@/components/icons';
+import { IconArrowDown, IconPencil, IconShape } from '@/components/icons';
+import { SectionHeading } from '@/components/section-heading';
+import { ShareBadge } from '@/components/share-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import type { ColorClassification } from '@/features/master';
 import { colorHex } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { addLabel, L } from '@/lib/shared/labels';
 import { swapPlanTypeAction } from '../actions';
 import { planReminderLabels } from '../labels';
 import type { GroupedPlanTypeList, PlanTypeCard } from '../types';
@@ -40,9 +43,9 @@ export function PlanTypeTab({
   return (
     <section className='flex flex-col gap-3'>
       <div className='flex items-center justify-between'>
-        <h2 className='text-base font-medium'>
+        <SectionHeading icon={IconShape}>
           {planReminderLabels.heading.planType}
-        </h2>
+        </SectionHeading>
         <Button
           type='button'
           size='sm'
@@ -63,11 +66,10 @@ export function PlanTypeTab({
         />
       ))}
 
-      <div className='flex justify-end'>
-        <Button type='button' onClick={() => setDialog({ kind: 'create' })}>
-          ＋
-        </Button>
-      </div>
+      <AddButton
+        label={addLabel(planReminderLabels.dialogEntity.planType)}
+        onClick={() => setDialog({ kind: 'create' })}
+      />
 
       <PlanTypeDialog
         // defaultValue をプリフィルさせるため編集対象ごとにリマウントする。
@@ -101,9 +103,10 @@ function PlanTypeCardView({
     <Card>
       <CardHeader layout='row'>
         <span className='flex items-center gap-2'>
-          <span
-            className='inline-block size-5 rounded-full'
-            style={{ backgroundColor: colorHex(card.colorName) }}
+          <ShareBadge
+            colorHex={colorHex(card.colorName)}
+            isPair={card.isPair}
+            shape='square'
           />
           {card.name}
         </span>

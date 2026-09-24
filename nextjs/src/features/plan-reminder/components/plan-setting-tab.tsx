@@ -1,6 +1,5 @@
 'use client';
 
-import { Separator } from '@/components/ui/separator';
 import type { ColorClassification } from '@/features/master';
 import type { GroupedPlanTypeList, GroupedReminderList } from '../types';
 import { PlanTypeTab } from './plan-type-tab';
@@ -31,7 +30,6 @@ export function PlanSettingTab({
         colors={colors}
         isPair={isPair}
       />
-      <Separator />
       <ReminderTab
         reminderList={reminderList}
         colors={colors}

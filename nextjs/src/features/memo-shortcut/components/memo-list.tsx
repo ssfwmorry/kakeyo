@@ -17,8 +17,8 @@ import type { MemoItem } from '../types';
 //
 // カレンダー画面は縦がきつい（1 画面に月グリッド・記録・TODO・ショートカットが載る）。
 // そのため TODO は「1 件 = 1 カード行」ではなく chip の帯にして折り返し、常時開いていた
-// 追加フォームも ＋ chip を押したときだけ開く。見出しは持たない（親が帯ごと開閉する
-// トグルを持ち、そこが TODO の名乗りを兼ねる）。
+// 追加フォームも「＋ TODO を追加」chip を押したときだけ開く。見出しは持たない
+// （この chip が帯の名乗りを兼ねる。0 件でも同じ chip だけが並ぶ）。
 // 追加成功後は revalidatePath('/calendar') で items が更新されるため、フォームを
 // 閉じて次の入力に備える。
 
@@ -44,12 +44,9 @@ export function MemoList({ items, hasPair }: MemoListProps) {
         <button
           type='button'
           onClick={() => setIsAdding(true)}
-          aria-label={memoShortcutLabels.action.addTodo}
           className='inline-flex h-7 items-center gap-1 rounded-full border border-dashed px-2.5 text-muted-foreground text-xs hover:border-solid hover:text-foreground'
         >
-          {items.length === 0
-            ? memoShortcutLabels.empty.todo
-            : memoShortcutLabels.action.add}
+          ＋ {memoShortcutLabels.action.addTodo}
         </button>
       )}
     </div>

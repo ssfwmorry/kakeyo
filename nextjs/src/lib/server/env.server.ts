@@ -1,6 +1,6 @@
 import 'server-only';
 
-// サーバ専用の環境変数（凍結資産）。DB URL / セッション秘密鍵など。
+// サーバ専用の環境変数。DB URL / セッション秘密鍵など。
 // server-only により Client Component から import するとビルドが失敗し、
 // クライアントバンドルへの秘密混入を機械的に防ぐ。
 

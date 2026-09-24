@@ -29,8 +29,8 @@ export default async function PrivateLayout({
 
   return (
     // 画面ぴったりの縦フレックス（h-dvh）。これで main が「上部バーとボトムナビを
-    // 除いた残り」という確定した高さを持ち、カレンダー画面が h-full で 1 画面に収まる。
-    // 中身が長い画面は main 側が overflow-y-auto でスクロールする。
+    // 除いた残り」という確定した高さを持ち、上部バーとボトムナビが常に固定される。
+    // 各画面は内容の高さで積み、はみ出す分は main 側が overflow-y-auto でスクロールする。
     //
     // 幅はスマホ専用（max-w-md = 448px）。このアプリはスマホ幅だけを設計対象にしており、
     // PC で開いたときは shell ごと中央に寄せ、外側は body の bg-muted（globals.css）で

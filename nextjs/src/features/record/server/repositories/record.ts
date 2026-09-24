@@ -350,7 +350,8 @@ export async function findRecordForEdit(
     subTypeId: row.subTypeId,
     memo: row.memo,
     price: row.price,
-    isInstead: isPair && row.userId !== null
+    isInstead: isPair && row.userId !== null,
+    isPair
   };
 }
 

@@ -4,6 +4,7 @@ import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
+import { calendarJaProps } from '@/components/form/date-picker';
 import { useFormAction } from '@/components/form/use-form-action';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -17,9 +18,9 @@ import {
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { colorHex } from '@/features/master';
+import { formatLocalDate, parseLocalDate } from '@/lib/shared/domain/localDate';
 import { L } from '@/lib/shared/labels';
 import { deletePlanAction, upsertPlanAction } from '../actions';
-import { formatLocalDate, parseLocalDate } from '../domain/local-date';
 import { planReminderLabels } from '../labels';
 import { planUpsertSchema } from '../schemas';
 import type { GroupedPlanTypeList, PlanItem, PlanTypeCard } from '../types';
@@ -292,6 +293,7 @@ function PlanDateSection({
             {isPeriod ? (
               <Calendar
                 mode='range'
+                {...calendarJaProps}
                 selected={{
                   from: parseLocalDate(startDate),
                   to: parseLocalDate(endDate)
@@ -302,6 +304,7 @@ function PlanDateSection({
             ) : (
               <Calendar
                 mode='single'
+                {...calendarJaProps}
                 selected={parseLocalDate(startDate)}
                 onSelect={(date) => {
                   if (date) {

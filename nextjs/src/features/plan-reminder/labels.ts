@@ -7,7 +7,12 @@ export const planReminderLabels = {
     planType: '予定カテゴリ',
     reminder: '定期的な予定'
   },
-  // 各エンティティ名（ダイアログ見出し / FormField ラベルで共有）。
+  // ダイアログ見出しの対象名（dialogTitle が「〜を追加/編集」に組み立てる）。
+  dialogEntity: {
+    planType: '予定カテゴリ',
+    reminder: '定期的な予定'
+  },
+  // 各エンティティ名（FormField の入力欄ラベル）。
   entity: {
     planName: '予定名',
     planTypeName: '予定カテゴリ名',

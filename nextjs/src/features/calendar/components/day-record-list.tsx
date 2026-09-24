@@ -8,50 +8,23 @@ import { calendarLabels } from '../labels';
 // 編集可否（ペア相手の立替は不可・精算は不可）は RecordCard 内の isEnableEdit が
 // 判定し、可のときのみ編集ボタンを出す。
 // router は各リストで 1 回だけ取得し（行ごとに useRouter を呼ばない）、onEdit を渡す。
-//
-// 日付見出しは親（calendar-screen）が全記録トグルと同じ行に出すため、ここでは持たない
-// （祝日名だけは日付と不可分なのでリスト側の先頭に残す）。
 
-type DayRecordListProps = {
-  dateStr: string | null;
-  records: RecordListItem[];
-  holidayName: string | null;
-};
-
-export function DayRecordList({
-  dateStr,
-  records,
-  holidayName
-}: DayRecordListProps) {
+export function DayRecordList({ records }: { records: RecordListItem[] }) {
   const router = useRouter();
-  if (dateStr === null) {
+  if (records.length === 0) {
     return null;
   }
 
   return (
-    <section className='flex flex-col gap-2'>
-      {holidayName ? (
-        <span className='w-fit rounded bg-red-100 px-1.5 py-0.5 text-red-700 text-xs'>
-          {holidayName}
-        </span>
-      ) : null}
-
-      {records.length === 0 ? (
-        <p className='text-muted-foreground text-sm'>
-          {calendarLabels.empty.dayRecords}
-        </p>
-      ) : (
-        <div className='flex flex-col gap-2'>
-          {records.map((record) => (
-            <RecordCard
-              key={record.id}
-              record={record}
-              onEdit={() => router.push(`/note?RECORD=${record.id}`)}
-            />
-          ))}
-        </div>
-      )}
-    </section>
+    <div className='flex flex-col gap-2'>
+      {records.map((record) => (
+        <RecordCard
+          key={record.id}
+          record={record}
+          onEdit={() => router.push(`/note?RECORD=${record.id}`)}
+        />
+      ))}
+    </div>
   );
 }
 

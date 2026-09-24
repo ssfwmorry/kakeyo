@@ -204,6 +204,7 @@ export function getRecordForEdit(
     subTypeId: view.subTypeId,
     memo: view.memo,
     price: view.price,
-    isInstead: view.isInstead ?? false
+    isInstead: view.isInstead ?? false,
+    isPair: view.isPair
   };
 }

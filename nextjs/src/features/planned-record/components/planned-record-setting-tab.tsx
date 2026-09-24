@@ -2,8 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { AddButton } from '@/components/form/add-button';
 import { SwapButton } from '@/components/form/swap-button';
 import { IconArrowDown, IconUpdate } from '@/components/icons';
+import { SectionHeading } from '@/components/section-heading';
 import { Button } from '@/components/ui/button';
 import { RecordCard } from '@/features/record';
 import { L } from '@/lib/shared/labels';
@@ -38,10 +40,9 @@ export function PlannedRecordSettingTab({
   return (
     <section className='flex flex-col gap-3'>
       <div className='flex items-center justify-between'>
-        <h2 className='flex items-center gap-1.5 text-base font-medium'>
-          <IconUpdate className='size-4 text-muted-foreground' aria-hidden />
+        <SectionHeading icon={IconUpdate}>
           {plannedRecordLabels.heading.plannedRecord}
-        </h2>
+        </SectionHeading>
         <Button
           type='button'
           size='sm'
@@ -61,6 +62,11 @@ export function PlannedRecordSettingTab({
           onEdit={() => router.push(`/note?plannedRecordId=${item.id}`)}
         />
       ))}
+
+      <AddButton
+        label={plannedRecordLabels.action.add}
+        onClick={() => router.push('/note?planned=new')}
+      />
     </section>
   );
 }

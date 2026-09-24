@@ -1,7 +1,7 @@
 import 'server-only';
 import { createSupabaseServerClient } from './supabase';
 
-// Supabase Auth 操作（凍結資産）。ログイン / パスワード再設定 / ログアウトの最小セット。
+// Supabase Auth 操作。ログイン / パスワード再設定 / ログアウトの最小セット。
 // 新規登録は UI 非表示のため実装しない。
 // 戻り値の error は Supabase の AuthError。呼び出し側（Server Action）で判定する。
 

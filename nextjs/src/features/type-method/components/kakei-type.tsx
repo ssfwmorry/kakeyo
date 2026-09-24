@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { AddButton } from '@/components/form/add-button';
 import { SwapButton } from '@/components/form/swap-button';
-import { IconArrowDown, IconArrowRight, IconPencil } from '@/components/icons';
+import { IconArrowDown, IconPencil, IconShape } from '@/components/icons';
+import { SectionHeading } from '@/components/section-heading';
+import { ShareBadge } from '@/components/share-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { ColorClassification } from '@/features/master';
 import { colorHex } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { addLabel, L } from '@/lib/shared/labels';
 import { swapSubTypeAction, swapTypeAction } from '../actions';
 import { typeMethodLabels } from '../labels';
 import type { GroupedTypeList, SubTypeCard, TypeCard } from '../types';
@@ -54,7 +57,10 @@ export function KakeiType({ typeList, colors, isPair }: KakeiTypeProps) {
 
   return (
     <section className='flex flex-col gap-3'>
-      <div className='flex items-center gap-3'>
+      <SectionHeading icon={IconShape}>
+        {typeMethodLabels.heading.type}
+      </SectionHeading>
+      <div className='flex items-center justify-between gap-3'>
         <Tabs
           value={isPay ? 'pay' : 'income'}
           onValueChange={(value) => setIsPay(value === 'pay')}
@@ -92,11 +98,10 @@ export function KakeiType({ typeList, colors, isPair }: KakeiTypeProps) {
         />
       ))}
 
-      <div className='flex justify-end'>
-        <Button type='button' onClick={() => setTypeDialog({ kind: 'create' })}>
-          ＋
-        </Button>
-      </div>
+      <AddButton
+        label={addLabel(typeMethodLabels.dialogEntity.type)}
+        onClick={() => setTypeDialog({ kind: 'create' })}
+      />
 
       <TypeDialog
         // defaultValue をプリフィルさせるため編集対象ごとにリマウントする。
@@ -147,9 +152,9 @@ function TypeCardView({
     <Card>
       <CardHeader layout='row'>
         <span className='flex items-center gap-2'>
-          <span
-            className='inline-block size-5 rounded-full'
-            style={{ backgroundColor: colorHex(card.colorName) }}
+          <ShareBadge
+            colorHex={colorHex(card.colorName)}
+            isPair={card.isPair}
           />
           {card.name}
         </span>
@@ -192,22 +197,18 @@ function TypeCardView({
                 prevId={sub.id}
                 nextId={card.subTypes[index + 1].id}
                 action={swapSubTypeAction}
-                label={typeMethodLabels.swap.next}
-                icon={<IconArrowRight className='size-4' />}
+                label={typeMethodLabels.swap.down}
+                icon={<IconArrowDown className='size-4' />}
               />
             ) : null}
           </div>
         ))}
-        <div className='flex justify-end'>
-          <Button
-            type='button'
-            size='sm'
-            variant='secondary'
-            onClick={onCreateSub}
-          >
-            ＋
-          </Button>
-        </div>
+        <AddButton
+          label={addLabel(typeMethodLabels.dialogEntity.subType)}
+          size='sm'
+          variant='secondary'
+          onClick={onCreateSub}
+        />
       </CardContent>
     </Card>
   );

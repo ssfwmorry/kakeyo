@@ -10,7 +10,6 @@
 // 行末コメントの MDI 名は、同じ意味のアイコンを探すときの手がかり。
 export {
   ArrowDown as IconArrowDown, // mdiArrowDown
-  ArrowRight as IconArrowRight, // mdiArrowRight
   Bell as IconBell, // mdiBell
   Calendar as IconCalendar, // mdiCalendar
   ChartColumn as IconChartBar, // mdiChartBar
@@ -18,11 +17,14 @@ export {
   Check as IconCheck, // mdiCheck
   // 「戻る」導線に使う。
   ChevronLeft as IconChevronLeft,
+  CreditCard as IconCreditCard, // mdiCreditCardOutline（方法）
   Delete as IconBackspace, // mdiBackspaceOutline
   Eye as IconEye, // mdiEye
   EyeOff as IconEyeOff, // mdiEyeOff
+  MessageSquareText as IconMemo, // mdiCommentTextOutline（メモ）
   Pencil as IconPencil, // mdiPencil
   PiggyBank as IconPiggyBank, // mdiPiggyBank
+  Plus as IconPlus, // mdiPlus
   PlusSquare as IconPlusBox, // mdiPlusBox
   Repeat as IconUpdate, // mdiUpdate（定期）
   Settings as IconCog, // mdiCog

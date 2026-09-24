@@ -15,7 +15,7 @@ import {
   verifyDemoSessionCookie
 } from './demoSession';
 
-// デモ Cookie の Node 側入出力（凍結資産・認証基盤）。next/headers の cookies() 経由で読み書きする
+// デモ Cookie の Node 側入出力（認証基盤）。next/headers の cookies() 経由で読み書きする
 // （proxy は cookies() を使えないため demoSession.ts を直接使う）。
 
 export async function setDemoSession(mode: DemoMode): Promise<void> {

@@ -1,4 +1,4 @@
-// 横断ラベルの公開 barrel（凍結資産）。
+// 横断ラベルの公開 barrel。
 // skill-kick の `import L from '~/constants/labels/_index'` に相当する「1 import で
 // 全横断文言を使える」入口。`import { L } from '@/lib/shared/labels'` → `L.snackbar.created`。
 //
@@ -18,3 +18,7 @@ export const L = {
 } as const;
 
 export type L = typeof L;
+
+// 文言の「組み立て」は L（値の集合）に混ぜず関数として出す。
+// 対象名は各 feature の labels の `dialogEntity` が持つ（キー名は横断で統一）。
+export { addLabel, dialogTitle } from './dialog';

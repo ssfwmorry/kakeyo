@@ -3,11 +3,15 @@
 export const bankLabels = {
   heading: {
     bank: '口座',
-    balanceRegister: '残高登録',
-    bankName: '口座名',
-    balance: '残高'
+    balanceRegister: '残高登録'
+  },
+  // ダイアログ見出しの対象名（dialogTitle が「〜を追加/編集」に組み立てる）。
+  dialogEntity: {
+    bank: '口座'
   },
   field: {
+    bankName: '口座名',
+    balance: '残高',
     recordDate: '記録日',
     total: '合計'
   },

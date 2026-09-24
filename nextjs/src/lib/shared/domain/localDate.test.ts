@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatLocalDate, parseLocalDate } from './local-date';
+import { formatLocalDate, parseLocalDate } from './localDate';
 
 describe('parseLocalDate', () => {
   it('YYYY-MM-DD をローカル暦日の Date に変換する', () => {

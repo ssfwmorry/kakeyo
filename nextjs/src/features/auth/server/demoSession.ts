@@ -1,6 +1,6 @@
 import { type DemoMode, isDemoMode } from '@/features/demo';
 
-// 署名付きデモ Cookie（凍結資産・認証基盤）。
+// 署名付きデモ Cookie（認証基盤）。
 // デモは不特定多数に公開する想定のため、ログインから各画面の取得・更新まで Supabase Auth・DB に
 // 一切触れさせない（Auth への認証リクエストが青天井になる・全リクエストが DB を叩く、を塞ぐ）。
 // そのためデモログインは実アカウントを持たず、この Cookie の有無だけでデモセッションを成立させる。

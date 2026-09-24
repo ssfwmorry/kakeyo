@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { AddButton } from '@/components/form/add-button';
 import { ConfirmDialog } from '@/components/form/confirm-dialog';
 import { useFormToast } from '@/components/form/use-form-toast';
-import { IconTrash } from '@/components/icons';
+import { IconBell, IconTrash } from '@/components/icons';
+import { SectionHeading } from '@/components/section-heading';
+import { ShareBadge } from '@/components/share-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import type { ColorClassification } from '@/features/master';
 import { colorHex } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { addLabel, L } from '@/lib/shared/labels';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 import { deleteReminderAction } from '../actions';
 import {
@@ -40,19 +43,18 @@ export function ReminderTab({
 
   return (
     <section className='flex flex-col gap-3'>
-      <h2 className='text-base font-medium'>
+      <SectionHeading icon={IconBell}>
         {planReminderLabels.heading.reminder}
-      </h2>
+      </SectionHeading>
 
       {items.map((reminder) => (
         <ReminderCardView key={reminder.id} reminder={reminder} />
       ))}
 
-      <div className='flex justify-end'>
-        <Button type='button' onClick={() => setDialogOpen(true)}>
-          ＋
-        </Button>
-      </div>
+      <AddButton
+        label={addLabel(planReminderLabels.dialogEntity.reminder)}
+        onClick={() => setDialogOpen(true)}
+      />
 
       <ReminderDialog
         open={dialogOpen}
@@ -85,9 +87,10 @@ function ReminderCardView({ reminder }: ReminderCardViewProps) {
     <Card>
       <CardHeader layout='row'>
         <span className='flex items-center gap-2'>
-          <span
-            className='inline-block size-5 rounded-full'
-            style={{ backgroundColor: colorHex(reminder.colorName) }}
+          <ShareBadge
+            colorHex={colorHex(reminder.colorName)}
+            isPair={reminder.isPair}
+            shape='square'
           />
           {reminder.name}
         </span>

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 
 // Server Action の結果（FormActionResult）に埋め込まれた toast を自動発火する
-// （凍結資産・フォーム標準）。全フォームがこのフックで「レスポンス→トースト」を
+// （フォーム標準）。全フォームがこのフックで「レスポンス→トースト」を
 // 一律に処理し、各画面で toast.xxx を手書きしない。
 //
 // useActionState の結果は再レンダリングのたびに同じ参照を返しうるため、

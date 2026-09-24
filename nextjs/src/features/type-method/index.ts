@@ -6,6 +6,13 @@
 
 export { KakeiMethod } from './components/kakei-method';
 export { KakeiType } from './components/kakei-type';
+// note フォーム（record / planned_record）が共有するカテゴリ選択部。
+export { TypeSelectionArea } from './components/type-selection';
+export {
+  type TypeSelectionState,
+  type TypeSelectionView,
+  useTypeSelection
+} from './components/use-type-selection';
 export type {
   GroupedMethodList,
   GroupedTypeList,

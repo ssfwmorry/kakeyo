@@ -6,6 +6,7 @@ export const memoShortcutLabels = {
     shortcut: 'ショートカット'
   },
   action: {
+    // 帯末尾の追加 chip の文言（表示時は先頭に ＋ を付ける）。
     addTodo: 'TODO を追加',
     add: '追加',
     // ＋ chip から開いた入力欄を閉じる。
@@ -17,8 +18,6 @@ export const memoShortcutLabels = {
     todo: 'やることを入力'
   },
   empty: {
-    // 0 件のときは chip 帯の ＋ 自体がこの文言を名乗る（別に空表示を置かない）。
-    todo: 'やることを追加',
     shortcut: 'ショートカットはありません'
   },
   error: {

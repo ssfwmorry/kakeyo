@@ -18,3 +18,14 @@ export const PAIR_SCOPED_PATHS = [
   '/plan',
   '/setting'
 ] as string[];
+
+// 「その id の 1 件を編集中」を表すクエリキーの単一の正。
+// record / planned_record / plan はいずれも共有か個人かが作成時に決まり後から移せない。
+// 編集中にモードを切り替えても対象は編集できず、入力中の値を失うだけなので、
+// これらが付いている間はペア切替スイッチを固定する。
+// 新規（?planned=new・キー無し）は共有/個人を選べるので対象外。
+export const PAIR_LOCKED_QUERY_KEYS = [
+  'RECORD',
+  'plannedRecordId',
+  'planId'
+] as string[];

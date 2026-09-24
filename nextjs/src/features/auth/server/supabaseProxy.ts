@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 import { publicEnv } from '@/lib/shared/env';
 
-// Proxy 専用の Supabase クライアント（凍結資産）。
+// Proxy 専用の Supabase クライアント。
 // 他の lib/auth/* と異なり server-only を付けない。proxy ランタイム専用で、
 // Node の Server Component/Action 用を弾く server-only とは実行コンテキストが違うため。
 //

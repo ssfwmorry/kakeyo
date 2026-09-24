@@ -15,7 +15,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import type { ColorClassification } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { dialogTitle, L } from '@/lib/shared/labels';
 import { deleteMethodAction, upsertMethodAction } from '../actions';
 import { typeMethodLabels } from '../labels';
 import { methodUpsertSchema } from '../schemas';
@@ -61,7 +61,12 @@ export function MethodDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{typeMethodLabels.entity.methodName}</DialogTitle>
+          <DialogTitle>
+            {dialogTitle(
+              typeMethodLabels.dialogEntity.method[payMode],
+              editing !== undefined
+            )}
+          </DialogTitle>
         </DialogHeader>
         <form
           {...getFormProps(form)}

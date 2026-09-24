@@ -2,7 +2,6 @@
 
 import { IconBackspace, IconClose } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import {
   popDigit,
   pushDigit,
@@ -14,8 +13,14 @@ import {
 //
 // 値は親が文字列（Conform の hidden 送信値と揃える）で保持する。表示・操作のため
 // number に変換し、変更を文字列で返す（'' は 0 として扱う）。
+//
+// 見出しラベルは置かない。金額であることは表示帯の「円」とテンキー自体が示しており、
+// ラベル行は情報を足さずに縦を 28px 使うだけになる。note は背の低い端末で
+// カテゴリ・方法・テンキーが縦に競合する画面なので、その 1 行を返す。
+// 表示帯はテンキー操作の結果なので output 要素にし、aria-label で金額欄だと伝える。
 
 type PriceKeypadProps = {
+  // 表示帯の読み上げ名（画面には出さない）。
   label?: string;
   // '' は未入力=0 として扱う。
   value: string;
@@ -45,8 +50,10 @@ export function PriceKeypad({
 
   return (
     <div className='flex flex-col gap-2'>
-      <Label>{label}</Label>
-      <div className='flex h-11 items-center justify-end gap-1 rounded-lg border border-input bg-transparent px-3'>
+      <output
+        aria-label={label}
+        className='flex h-11 items-center justify-end gap-1 rounded-lg border border-input bg-transparent px-3'
+      >
         {current !== 0 ? (
           <button
             type='button'
@@ -61,7 +68,7 @@ export function PriceKeypad({
           {current.toLocaleString()}
         </span>
         <span className='text-sm text-muted-foreground'>円</span>
-      </div>
+      </output>
 
       <div className='grid grid-cols-3 gap-1.5'>
         {DIGIT_ROWS.flat().map((digit) => (

@@ -2,21 +2,22 @@
 
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
+import { DatePicker } from '@/components/form/date-picker';
+import { DeleteButton } from '@/components/form/delete-button';
+import { MethodRow } from '@/components/form/method-row';
 import { PriceKeypad } from '@/components/form/price-keypad';
 import { SubmitButton } from '@/components/form/submit-button';
+import { TextInputRow } from '@/components/form/text-input-row';
 import { useFormAction } from '@/components/form/use-form-action';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { colorHex } from '@/features/master';
+import { IconMemo } from '@/components/icons';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type {
   GroupedMethodList,
   GroupedTypeList,
-  MethodCard,
-  SubTypeCard,
-  TypeCard
+  MethodCard
 } from '@/features/type-method';
+import { TypeSelectionArea, useTypeSelection } from '@/features/type-method';
 import { todayJst } from '@/lib/shared/domain/date';
 import { L } from '@/lib/shared/labels';
 import {
@@ -40,6 +41,9 @@ type NoteRecordFormProps = {
   // 現在の共有モード（Cookie 由来。Server から渡す）。
   isPair: boolean;
   editing?: NoteRecordDefault;
+  // 新規時の初期日付（YYYY-MM-DD）。calendar の選択日から遷移したときに渡る。
+  // 編集時は editing の日付が優先される。未指定なら今日。
+  initialDate?: string;
 };
 
 type NoteState = {
@@ -53,20 +57,40 @@ type NoteState = {
   price: string;
 };
 
-const selectClassName =
-  'flex h-9 w-full items-center rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none';
-
 export function NoteRecordForm({
   typeList,
   methodList,
   isPair,
-  editing
+  editing,
+  initialDate
 }: NoteRecordFormProps) {
-  const [state, setState] = useState<NoteState>(() => toInitialState(editing));
+  const [state, setState] = useState<NoteState>(() =>
+    toInitialState(editing, initialDate)
+  );
   const patch = (next: Partial<NoteState>) =>
     setState((prev) => ({ ...prev, ...next }));
 
-  const view = useNoteView(typeList, methodList, isPair, state);
+  // 共有トグルは画面を再マウントせず isPair だけ差し替えるため、旧モードのカテゴリ・
+  // 方法が残る。render 中に前回値と比べて捨てる（effect では 1 フレーム残る）。
+  const [prevIsPair, setPrevIsPair] = useState(isPair);
+  if (prevIsPair !== isPair) {
+    setPrevIsPair(isPair);
+    setState((prev) => ({
+      ...prev,
+      typeId: null,
+      subTypeId: null,
+      methodId: null,
+      isInstead: true
+    }));
+  }
+
+  const view = useTypeSelection(typeList, methodList, isPair, state);
+  // 候補に対して正規化済みの方法 id。state のそれではなくこちらを送信・表示に使う。
+  const methodId = resolveMethodId(
+    view.methods,
+    state.methodId,
+    editing !== undefined
+  );
   const resetSelection = () =>
     patch({ typeId: null, subTypeId: null, methodId: null });
 
@@ -80,9 +104,10 @@ export function NoteRecordForm({
         onReset={resetSelection}
       />
 
-      <NoteSelectionArea
+      <TypeSelectionArea
         view={view}
         subTypeId={state.subTypeId}
+        emptyMessage={recordLabels.empty.noTypeMethod}
         onSelectType={(typeId) => patch({ typeId, subTypeId: null })}
         onSelectSubType={(subTypeId) => patch({ subTypeId })}
         onReset={resetSelection}
@@ -94,88 +119,41 @@ export function NoteRecordForm({
           isPair={isPair}
           editing={editing}
           methods={view.methods}
+          methodId={methodId}
           patch={patch}
         />
       ) : null}
 
-      {editing ? <NoteDeleteForm id={editing.id} /> : null}
+      {editing && view.isTypeChosen ? (
+        <DeleteButton
+          id={editing.id}
+          action={deleteRecordAction}
+          description={recordLabels.confirm.delete}
+        />
+      ) : null}
     </div>
   );
 }
 
-type NoteView = {
-  types: TypeCard[];
-  methods: MethodCard[];
-  selectedType: TypeCard | null;
-  subTypes: SubTypeCard[];
-  hasSubType: boolean;
-  isTypeChosen: boolean;
-  showSubTypeGrid: boolean;
-};
-
-function useNoteView(
-  typeList: GroupedTypeList,
-  methodList: GroupedMethodList,
-  isPair: boolean,
-  state: NoteState
-): NoteView {
-  const payKey = state.isPay ? 'pay' : 'income';
-  const ownerKey = isPair ? 'pair' : 'self';
-  const types = typeList[payKey][ownerKey];
-  // 方法は立替時は自分の方法（self）、共有非立替は pair の方法。
-  const methods =
-    methodList[payKey][isPair && !state.isInstead ? 'pair' : 'self'];
-  const selectedType = useMemo(
-    () => types.find((type) => type.id === state.typeId) ?? null,
-    [types, state.typeId]
-  );
-  const subTypes = selectedType?.subTypes ?? [];
-  const hasSubType = subTypes.length > 0;
-  const isTypeChosen =
-    state.typeId !== null && (!hasSubType || state.subTypeId !== null);
-  const showSubTypeGrid =
-    state.typeId !== null && hasSubType && state.subTypeId === null;
-  return {
-    types,
-    methods,
-    selectedType,
-    subTypes,
-    hasSubType,
-    isTypeChosen,
-    showSubTypeGrid
-  };
-}
-
-function NoteSelectionArea({
-  view,
-  subTypeId,
-  onSelectType,
-  onSelectSubType,
-  onReset
-}: {
-  view: NoteView;
-  subTypeId: number | null;
-  onSelectType: (typeId: number) => void;
-  onSelectSubType: (subTypeId: number) => void;
-  onReset: () => void;
-}) {
-  return (
-    <>
-      {view.isTypeChosen ? (
-        <ChosenTypeSummary
-          selectedType={view.selectedType}
-          subTypes={view.subTypes}
-          subTypeId={subTypeId}
-          onReset={onReset}
-        />
-      ) : (
-        <TypeGrid types={view.types} onSelect={onSelectType} />
-      )}
-      {view.showSubTypeGrid ? (
-        <SubTypeGrid subTypes={view.subTypes} onSelect={onSelectSubType} />
-      ) : null}
-    </>
-  );
+// 候補（収支・立替・共有から導出される）に対して選択中の方法を解決する。
+// 未選択なら先頭を初期値にする。先頭 = 設定画面の並び順なので、よく使う方法を上に置けば
+// 1 タップも要らない。effect で追い掛けると旧候補が 1 フレーム残るため描画のたびに導出する。
+//
+// 編集中の記録が持つ方法が候補外のとき（記録の所有と共有モードが食い違う場合に起きる）は
+// 先頭で埋めず未選択にする。黙って別の方法に置き換えると、ユーザーが方法を触っていないのに
+// 保存済みの値が書き換わるため。未選択は canSubmit が止める。
+function resolveMethodId(
+  methods: MethodCard[],
+  methodId: number | null,
+  isEditing: boolean
+): number | null {
+  if (methodId !== null && methods.some((method) => method.id === methodId)) {
+    return methodId;
+  }
+  if (isEditing && methodId !== null) {
+    return null;
+  }
+  return methods[0]?.id ?? null;
 }
 
 // 方法・立替・メモ・金額・登録ボタンの本体フォーム。
@@ -184,12 +162,14 @@ function NoteDetailForm({
   isPair,
   editing,
   methods,
+  methodId,
   patch
 }: {
   state: NoteState;
   isPair: boolean;
   editing?: NoteRecordDefault;
   methods: MethodCard[];
+  methodId: number | null;
   patch: (next: Partial<NoteState>) => void;
 }) {
   const [result, action, isPending] = useFormAction(upsertRecordAction);
@@ -207,25 +187,33 @@ function NoteDetailForm({
       action={action}
       className='flex flex-col gap-4'
     >
-      <NoteHiddenFields state={state} isPair={isPair} editing={editing} />
+      <NoteHiddenFields
+        state={state}
+        isPair={isPair}
+        editing={editing}
+        methodId={methodId}
+      />
       <MethodRow
         methods={methods}
-        methodId={state.methodId}
+        methodId={methodId}
+        label={recordLabels.field.method}
+        insteadLabel={recordLabels.instead}
+        emptyMessage={recordLabels.empty.noMethod}
         showInstead={isPair && state.isPay}
         isInstead={state.isInstead}
-        onMethodChange={(methodId) => patch({ methodId })}
-        // 立替の切替は方法候補（self/pair）を変えるため方法選択をクリアする。
-        onInsteadChange={(isInstead) => patch({ isInstead, methodId: null })}
+        onMethodChange={(next) => patch({ methodId: next })}
+        onInsteadChange={(isInstead) => patch({ isInstead })}
       />
       <TextInputRow
         id='note-memo'
-        label='メモ'
+        label={recordLabels.field.memo}
+        icon={IconMemo}
         value={state.memo}
         placeholder={recordLabels.placeholder.memo}
         onChange={(memo) => patch({ memo })}
       />
       <PriceKeypad
-        label='金額'
+        label={recordLabels.field.price}
         value={state.price}
         onChange={(price) => patch({ price })}
       />
@@ -236,8 +224,9 @@ function NoteDetailForm({
       ) : null}
       <SubmitButton
         isPending={isPending}
-        className='flex-1'
-        disabled={!canSubmit(state, isPair)}
+        size='lg'
+        className='h-12 w-full text-base'
+        disabled={!canSubmit(state, isPair, methodId)}
       >
         {editing ? L.button.update : L.button.create}
       </SubmitButton>
@@ -245,24 +234,13 @@ function NoteDetailForm({
   );
 }
 
-function NoteDeleteForm({ id }: { id: number }) {
-  const [deleteResult, deleteAction] = useFormAction(deleteRecordAction);
-  return (
-    <form action={deleteAction}>
-      <input type='hidden' name='id' value={id} readOnly />
-      <Button type='submit' variant='destructive' className='w-full'>
-        {L.button.delete}
-      </Button>
-      {/* 失敗時のみ toast が発火する（成功は redirect で消える）。 */}
-      <span className='sr-only'>{deleteResult?.toast?.message ?? ''}</span>
-    </form>
-  );
-}
-
-function toInitialState(editing?: NoteRecordDefault): NoteState {
+function toInitialState(
+  editing?: NoteRecordDefault,
+  initialDate?: string
+): NoteState {
   return {
     isPay: editing?.isPay ?? true,
-    date: editing?.date ?? todayJst(),
+    date: editing?.date ?? initialDate ?? todayJst(),
     typeId: editing?.typeId ?? null,
     subTypeId: editing?.subTypeId ?? null,
     methodId: editing?.methodId ?? null,
@@ -274,13 +252,19 @@ function toInitialState(editing?: NoteRecordDefault): NoteState {
 }
 
 // 送信可否: カテゴリ確定・方法選択済み・共有時はメモ必須。
-function canSubmit(state: NoteState, isPair: boolean): boolean {
-  if (state.methodId === null) {
+function canSubmit(
+  state: NoteState,
+  isPair: boolean,
+  methodId: number | null
+): boolean {
+  if (methodId === null) {
     return false;
   }
   return !isPair || state.memo.trim() !== '';
 }
 
+// 収支をタブで持つのは、選ぶと下のカテゴリグリッドが丸ごと入れ替わるため
+// （値の二択ではなく表示の切替にあたる）。
 function NoteHeader({
   isPay,
   date,
@@ -294,199 +278,31 @@ function NoteHeader({
   onDateChange: (date: string) => void;
   onReset: () => void;
 }) {
+  // 収支が変わるとカテゴリ候補ごと入れ替わるため、選択済みのカテゴリを捨てる。
   const choose = (next: boolean) => {
     onPayChange(next);
     onReset();
   };
   return (
-    <div className='flex items-center justify-between gap-4'>
-      <div className='flex gap-2'>
-        <Button
-          type='button'
-          variant={isPay ? 'default' : 'outline'}
-          onClick={() => choose(true)}
-        >
-          {recordLabels.payToggle.pay}
-        </Button>
-        <Button
-          type='button'
-          variant={!isPay ? 'default' : 'outline'}
-          onClick={() => choose(false)}
-        >
-          {recordLabels.payToggle.income}
-        </Button>
-      </div>
-      <div className='flex flex-col gap-1'>
-        <Label htmlFor='note-date'>日付</Label>
-        <Input
-          id='note-date'
-          type='date'
-          value={date}
-          min='2000-01-01'
-          max='2099-12-31'
-          onChange={(event) => onDateChange(event.target.value)}
-        />
-      </div>
-    </div>
-  );
-}
-
-function TypeGrid({
-  types,
-  onSelect
-}: {
-  types: TypeCard[];
-  onSelect: (typeId: number) => void;
-}) {
-  if (types.length === 0) {
-    return (
-      <p className='text-center text-sm text-muted-foreground'>
-        {recordLabels.empty.noTypeMethod}
-      </p>
-    );
-  }
-  return (
-    <div className='grid grid-cols-4 gap-3'>
-      {types.map((type) => (
-        <button
-          key={type.id}
-          type='button'
-          className='flex flex-col items-center gap-1'
-          onClick={() => onSelect(type.id)}
-        >
-          <span
-            className='size-12 rounded-full'
-            style={{ backgroundColor: colorHex(type.colorName) }}
-          />
-          <span className='text-xs'>{type.name}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function ChosenTypeSummary({
-  selectedType,
-  subTypes,
-  subTypeId,
-  onReset
-}: {
-  selectedType: TypeCard | null;
-  subTypes: SubTypeCard[];
-  subTypeId: number | null;
-  onReset: () => void;
-}) {
-  const subName =
-    subTypeId === null
-      ? ''
-      : ` ＞ ${subTypes.find((sub) => sub.id === subTypeId)?.name ?? ''}`;
-  return (
-    <button
-      type='button'
-      className='self-start text-sm text-muted-foreground underline'
-      onClick={onReset}
-    >
-      {selectedType?.name}
-      {subName}（選び直す）
-    </button>
-  );
-}
-
-function SubTypeGrid({
-  subTypes,
-  onSelect
-}: {
-  subTypes: SubTypeCard[];
-  onSelect: (subTypeId: number) => void;
-}) {
-  return (
-    <div className='grid grid-cols-3 gap-2'>
-      {subTypes.map((sub) => (
-        <Button
-          key={sub.id}
-          type='button'
-          variant='secondary'
-          onClick={() => onSelect(sub.id)}
-        >
-          {sub.name}
-        </Button>
-      ))}
-    </div>
-  );
-}
-
-function MethodRow({
-  methods,
-  methodId,
-  showInstead,
-  isInstead,
-  onMethodChange,
-  onInsteadChange
-}: {
-  methods: MethodCard[];
-  methodId: number | null;
-  showInstead: boolean;
-  isInstead: boolean;
-  onMethodChange: (methodId: number | null) => void;
-  onInsteadChange: (isInstead: boolean) => void;
-}) {
-  return (
-    <div className='flex items-end gap-4'>
-      <div className='flex flex-1 flex-col gap-1'>
-        <Label htmlFor='note-method'>方法</Label>
-        <select
-          id='note-method'
-          value={methodId ?? ''}
-          onChange={(event) =>
-            onMethodChange(
-              event.target.value === '' ? null : Number(event.target.value)
-            )
-          }
-          className={selectClassName}
-        >
-          <option value=''>{recordLabels.placeholder.selectMethod}</option>
-          {methods.map((method) => (
-            <option key={method.id} value={method.id}>
-              {method.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {showInstead ? (
-        <label className='flex items-center gap-2 pb-2 text-sm'>
-          <input
-            type='checkbox'
-            checked={isInstead}
-            onChange={(event) => onInsteadChange(event.target.checked)}
-          />
-          {recordLabels.instead}
-        </label>
-      ) : null}
-    </div>
-  );
-}
-
-function TextInputRow({
-  id,
-  label,
-  value,
-  placeholder,
-  onChange
-}: {
-  id: string;
-  label: string;
-  value: string;
-  placeholder: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div className='flex flex-col gap-1'>
-      <Label htmlFor={id}>{label}</Label>
-      <Input
-        id={id}
-        value={value}
-        placeholder={placeholder}
-        onChange={(event) => onChange(event.target.value)}
+    <div className='flex items-center justify-between gap-3'>
+      <Tabs
+        value={isPay ? 'pay' : 'income'}
+        onValueChange={(value) => choose(value === 'pay')}
+      >
+        <TabsList className='h-9'>
+          <TabsTrigger value='pay' className='px-4'>
+            {recordLabels.payToggle.pay}
+          </TabsTrigger>
+          <TabsTrigger value='income' className='px-4'>
+            {recordLabels.payToggle.income}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+      <DatePicker
+        id='note-date'
+        value={date}
+        onChange={onDateChange}
+        ariaLabel={recordLabels.field.date}
       />
     </div>
   );
@@ -496,11 +312,13 @@ function TextInputRow({
 function NoteHiddenFields({
   state,
   isPair,
-  editing
+  editing,
+  methodId
 }: {
   state: NoteState;
   isPair: boolean;
   editing?: NoteRecordDefault;
+  methodId: number | null;
 }) {
   // 立替は共有 & 支出のときのみ意味を持つ。それ以外は false で送る。
   const insteadValue = isPair && state.isPay ? state.isInstead : false;
@@ -532,11 +350,11 @@ function NoteHiddenFields({
           readOnly
         />
       ) : null}
-      {state.methodId !== null ? (
+      {methodId !== null ? (
         <input
           type='hidden'
           name='methodId'
-          value={String(state.methodId)}
+          value={String(methodId)}
           readOnly
         />
       ) : null}

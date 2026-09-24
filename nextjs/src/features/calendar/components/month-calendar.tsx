@@ -14,10 +14,11 @@ import type { CalendarEvent, CalendarMonthData } from '../types';
 // - 日付クリック（dateClick）→ 親へ YYYY-MM-DD を通知（日別 record 一覧を出す）。
 // - 月移動・年月ジャンプは親（calendar-screen）の独自ヘッダーに一本化するため
 //   FullCalendar 標準ツールバーは非表示（headerToolbar=false）にし、年月は key 再マウントで反映。
-// - 高さは height='100%'（親が flex-1 で与えた高さに従う）。height='auto' だと週数 5/6 で
-//   グリッドが伸び縮みして下の記録一覧の位置が月ごとに動くうえ、6 週の月で画面からはみ出す。
-// - 祝日セルは dayCellClassNames で is-holiday を付与し、globals.css で日付数字を赤字化。
-// - plan / reminder のイベントクリック → 親へ種別と id を渡す（EventDetail で編集/削除）。
+// - 高さは height='auto'（週数 5/6 と内容に応じてグリッド自身が伸び縮みし、親は固定の
+//   箱を持たない）。
+// - 祝日・選択日はクラス名だけ付け、見た目は styles/month-calendar.css に置く。
+// - plan / reminder のイベントクリック → 親へ種別・id と押されたセルの日付を渡す
+//   （親が日パネルをその日に切り替える）。
 //
 // FullCalendar の end は排他的（その日を含まない）ため、複数日 plan は end に +1 日する。
 //
@@ -28,11 +29,12 @@ import type { CalendarEvent, CalendarMonthData } from '../types';
 
 type MonthCalendarProps = {
   data: CalendarMonthData;
-  // 選択中の日付（YYYY-MM-DD）。ハイライト等には使わず、親が保持する状態を反映。
+  // 選択中の日付（YYYY-MM-DD）。該当セルへ is-selected を付けて輪郭で示す。
   selectedDate: string | null;
   onDateClick: (dateStr: string) => void;
-  // plan / reminder イベントのクリック。
-  onEventClick?: (event: CalendarEvent) => void;
+  // plan / reminder イベントのクリック。clickedDate はクリックされたセルの日付
+  // （複数日の予定を途中の日で押したとき、開始日ではなくその週の日を親へ渡す）。
+  onEventClick?: (event: CalendarEvent, clickedDate: string) => void;
 };
 
 function toEventInput(event: CalendarEvent): EventInput {
@@ -48,11 +50,14 @@ function toEventInput(event: CalendarEvent): EventInput {
     }
   };
   if (event.kind === 'daySum') {
-    // 収支ラベルは枠を持たない中央寄せテキスト。
+    // 見た目はクラス側（styles/month-calendar.css）に委ね、ここは色指定を無効化する。
     return {
       ...base,
       display: 'list-item',
-      classNames: ['calendar-day-sum'],
+      classNames:
+        event.tone === 'income'
+          ? ['calendar-day-sum', 'is-income']
+          : ['calendar-day-sum'],
       color: 'transparent',
       textColor: 'inherit'
     };
@@ -77,6 +82,7 @@ function toEventInput(event: CalendarEvent): EventInput {
 
 export function MonthCalendar({
   data,
+  selectedDate,
   onDateClick,
   onEventClick
 }: MonthCalendarProps) {
@@ -107,19 +113,28 @@ export function MonthCalendar({
       initialView='dayGridMonth'
       initialDate={initialDate}
       locale='ja'
-      // 親（flex-1 の箱）の高さに従う。週数によらず下端が揃う。
-      height='100%'
+      height='auto'
       fixedWeekCount={false}
       selectable={false}
       // 月移動・年月ジャンプは親の独自ヘッダーに一本化するため標準ツールバーは出さない。
       headerToolbar={false}
-      // 祝日セルへ is-holiday を付与（globals.css で日付数字を赤字化）。arg.date は
-      // ローカル暦日なので dayjs でそのまま 'YYYY-MM-DD' 化して集合と突き合わせる。
-      dayCellClassNames={(arg) =>
-        holidayDates.has(dayjs(arg.date).format('YYYY-MM-DD'))
-          ? ['is-holiday']
-          : []
-      }
+      // 祝日セルへ is-holiday（日付数字を赤字化）、選択日セルへ is-selected（輪郭）を
+      // 付与する（いずれも globals.css）。arg.date はローカル暦日なので dayjs で
+      // そのまま 'YYYY-MM-DD' 化して突き合わせる。
+      dayCellClassNames={(arg) => {
+        const dateStr = dayjs(arg.date).format('YYYY-MM-DD');
+        const classNames: string[] = [];
+        if (holidayDates.has(dateStr)) {
+          classNames.push('is-holiday');
+        }
+        if (dateStr === selectedDate) {
+          classNames.push('is-selected');
+        }
+        return classNames;
+      }}
+      // ja ロケールは日付を「1日」形式で出すため、末尾の「日」を落として数字だけにする
+      // （セルの横幅を稼ぐ）。
+      dayCellContent={(arg) => arg.dayNumberText.replace('日', '')}
       events={events}
       dateClick={(arg: DateClickArg) => onDateClick(arg.dateStr)}
       eventClick={(arg: EventClickArg) => {
@@ -129,18 +144,27 @@ export function MonthCalendar({
           onDateClick(dayjs(arg.event.start ?? undefined).format('YYYY-MM-DD'));
           return;
         }
-        onEventClick?.({
-          kind,
-          start: dayjs(arg.event.start ?? undefined).format('YYYY-MM-DD'),
-          end: dayjs(arg.event.end ?? arg.event.start ?? undefined).format(
-            'YYYY-MM-DD'
-          ),
-          title: arg.event.title,
-          colorHex: null,
-          planId: (arg.event.extendedProps.planId as number | null) ?? null,
-          reminderId:
-            (arg.event.extendedProps.reminderId as number | null) ?? null
-        });
+        const start = dayjs(arg.event.start ?? undefined).format('YYYY-MM-DD');
+        // 押されたバーが載っているセル（data-date）。週をまたぐ予定は週ごとに
+        // 分割描画され、各セグメントはその週の先頭日のセルに載る。
+        const clickedDate =
+          arg.el.closest('[data-date]')?.getAttribute('data-date') ?? start;
+        onEventClick?.(
+          {
+            kind,
+            start,
+            end: dayjs(arg.event.end ?? arg.event.start ?? undefined).format(
+              'YYYY-MM-DD'
+            ),
+            title: arg.event.title,
+            colorHex: null,
+            planId: (arg.event.extendedProps.planId as number | null) ?? null,
+            reminderId:
+              (arg.event.extendedProps.reminderId as number | null) ?? null,
+            tone: null
+          },
+          clickedDate
+        );
       }}
     />
   );

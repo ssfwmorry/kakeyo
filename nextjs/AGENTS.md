@@ -20,13 +20,12 @@ public スキーマのDBに書き込みをするときは必ずユーザの許�
 - **サービス層の戻り値**: サービス/リポジトリは `Result<T, E>`（UI 文言を持たない機械可読な失敗分類）を返し、Server Action が `toFormResult` で `FormActionResult` に変換して文言を付ける。Prisma の FK 制約違反（P2003）は `foreignKey` へ写し、それ以外は `unknown` に分類する。
 - **BigInt PK 境界**: `records` / `short_cuts` の PK は Prisma 上 `BigInt`。`JSON.stringify` で落ちるため、リポジトリ/サービスの境界で `Number(row.id)` へ変換し、Server→Client を跨ぐ公開型は常に `id: number`（`Id`）にする（方針確定書 §4.1）。
 - **金額・日付**: 金額は共有 `priceSchema`（`lib/shared/domain/price.ts`。全角/カンマ正規化 + 非負整数）を経由し、素の `Number()` を使わない（§4.2）。日付は `lib/shared/domain/date.ts` の関数経由でのみ扱い、`dayjs` を直 import しない（extend 未適用インスタンス事故と SSR の JST 境界ズレの防止・§4）。
-- **feature 固有 labels**: 各 feature の `labels.ts` には feature 固有の文言のみ置く。保存/削除/編集/並べ替え/色などの汎用文言・成否通知・汎用エラーは `@/lib/shared/labels`（`L`）を使う。
+- **feature 固有 labels**: 各 feature の `labels.ts` には feature 固有の文言のみ置く。保存/削除/編集/並べ替え/色などの汎用文言・成否通知・汎用エラーは `@/lib/shared/labels`（`L`）を使う。キー名は横断で意味を固定する: `dialogEntity` = 文言を組み立てる対象名（`dialogTitle`「〜を追加/編集」・`addLabel`「〜を追加」が使う。画面見出しの `heading` や入力欄ラベルの `entity` を流用しない）、`heading` = 画面・セクション見出し、`entity` = FormField の入力欄ラベル。「〜を追加」等の言い回しは feature 側に書かず組み立て関数に寄せる。
 - **フォーム標準**: 入力は「1 フォーム = 1 スキーマ = 1 useForm」。`schemas/*.ts`（Conform + Zod）→ Server Action で `parseWithZod`（`@conform-to/zod/v4`）→ `@/components/form/FormField` + `useFormAction`。`session` 由来の値（userId/pairId 等）はスキーマに含めない。ダイアログ系の `useForm` `defaultValue` はマウント時に一度だけ取り込まれるため、編集対象ごとに `key` を変えてリマウントしプリフィルを効かせる。
 - **トースト2系統**: 遷移しないフォームは `FormActionResult.toast`（`useFormToast` が発火）、`redirect()` を挟む Server Action は `setFlashToast`（Cookie 経由・遷移先の `FlashToast` が消費）を使い、二重発火を避けるためどちらか一方に統一する。
+- **コメント**: 冗長性をなくす。タスクIDはかかない。コードを見てわかることは書かない。決断の理由があれば書く。コード修正の断片情報（例: 「旧は〜だった」）は書かない。
 
 ## 画面の動作確認（スクリーンショット）
-
-画面まわりの変更をしたら、実際にアプリを起動して画面を目視で確認する。確認時はスクリーンショットを撮って一時保存し、画像を Read で開いて自分でも表示崩れ・文言・データ表示を確認すること（HTTP ステータスや HTML だけで済ませない）。
 
 - **起動**: `pnpm build && pnpm start`（本番ビルド）で `http://localhost:3000` を立てる。DB は `.env` の接続先（リモート Supabase の `develop` スキーマ）を指すため、**書き込み系の確認はデモログインで行う**（デモは Server 層で no-op になり実 DB に副作用を与えない。§上記の「public スキーマへの書き込みは許可制」とも整合）。実データでの確認は `.env` 末尾コメントの動作確認用ユーザで通常ログインする（デモとは別物）。
 - **保存先**: スクリーンショットは `nextjs/.screenshots/` に連番＋画面名（例 `01-login.png` / `02-bank.png`）で保存する。`.screenshots/` は `.gitignore` 済み（コミットしない一時確認用）。

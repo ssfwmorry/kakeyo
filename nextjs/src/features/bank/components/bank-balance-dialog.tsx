@@ -136,7 +136,7 @@ function BalanceRow({
     <div className='flex items-start gap-2'>
       <div className='flex w-2/5 flex-col gap-1'>
         <Label htmlFor={selectProps.id} className='sr-only'>
-          {bankLabels.heading.bankName}
+          {bankLabels.field.bankName}
         </Label>
         <select {...selectProps} className={selectClassName}>
           <option value=''>{bankLabels.placeholder.selectBank}</option>
@@ -154,7 +154,7 @@ function BalanceRow({
       </div>
       <div className='flex flex-1 flex-col gap-1'>
         <Label htmlFor={priceProps.id} className='sr-only'>
-          {bankLabels.heading.balance}
+          {bankLabels.field.balance}
         </Label>
         <Input
           {...priceProps}

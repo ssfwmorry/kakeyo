@@ -29,7 +29,8 @@ export function buildCalendarEvents(data: CalendarMonthData): CalendarEvent[] {
         plan.planTypeColorName ?? plan.reminderColorName ?? 'grey'
       ),
       planId: plan.id,
-      reminderId: plan.reminderId
+      reminderId: plan.reminderId,
+      tone: null
     });
   }
 
@@ -42,7 +43,8 @@ export function buildCalendarEvents(data: CalendarMonthData): CalendarEvent[] {
       title: reminder.name,
       colorHex: colorHex(reminder.colorName),
       planId: null,
-      reminderId: reminder.id
+      reminderId: reminder.id,
+      tone: null
     });
   }
 
@@ -59,7 +61,9 @@ export function buildCalendarEvents(data: CalendarMonthData): CalendarEvent[] {
       title,
       colorHex: null,
       planId: null,
-      reminderId: null
+      reminderId: null,
+      // sum は「支出=正」向き。負なら収入超過。
+      tone: day.sum < 0 ? 'income' : 'expense'
     });
   }
 

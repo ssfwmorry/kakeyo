@@ -6,11 +6,11 @@ import {
 import { getUserInProxy } from '@/features/auth/server/supabaseProxy';
 import { authRoutes } from '@/features/auth/shared/routes';
 
-// 認証ガード（凍結資産）。ファイル名は proxy.ts（Next.js 16 で middleware から改名）。
+// 認証ガード。ファイル名は proxy.ts（Next.js 16 で middleware から改名）。
 //
 // リダイレクト規則:
 // - 未ログイン: /login, /inquiry のみ可。それ以外は /login へ
-// - ログイン時: /login → /note、/（INDEX）→ /calendar
+// - ログイン時: /login → /calendar、/（INDEX）→ /calendar
 //
 // デモ（署名付きデモ Cookie 保持）もログイン済みとして扱う。Cookie が有効なら
 // getUserInProxy（Supabase のトークン検証・リフレッシュ）は呼ばない。
@@ -47,7 +47,7 @@ export async function proxy(request: NextRequest) {
   return routeLoggedIn(request, pathname, response);
 }
 
-// ログイン済みが login に来たら note、ルートに来たら calendar へ。それ以外は通す。
+// ログイン済みが login / ルートに来たらどちらもカレンダーへ。それ以外は通す。
 function routeLoggedIn(
   request: NextRequest,
   pathname: string,

@@ -7,7 +7,7 @@ import {
 } from '@/lib/shared/pair/pages-without-pair';
 import type { SessionData } from '@/lib/shared/types/auth';
 
-// ペアモード（共有 ON/OFF）の単一の正（凍結資産）。
+// ペアモード（共有 ON/OFF）の単一の正。
 //
 // 「見えるデータのスコープが変わる切替」なので、両方のデータを持って出し分けず、
 // Cookie に状態を持ち、トグルで再 fetch する。状態とデータが

@@ -5,38 +5,29 @@ export const calendarLabels = {
   heading: {
     title: 'カレンダー',
     monthSum: '月の収支',
-    // 日付未選択時の記録一覧見出し。
+    // 日付未選択時の日パネル見出し。
     dayRecords: '記録',
-    // 全記録トグル ON のときの記録一覧見出し。
+    // 全記録トグル ON のときの見出し。
     monthRecords: 'この月の記録'
   },
   action: {
     prevMonth: '前の月',
     nextMonth: '次の月',
-    addRecord: '記録＋',
-    addPlan: '予定＋',
+    addRecord: '記録を追加',
+    addPlan: '予定を追加',
     editRecord: '記録を編集',
-    // 記録＋/予定＋ の行に並ぶ TODO 帯の開閉トグル。
-    todo: 'TODO',
     // 当月の全記録を一覧表示するトグル。
     showAllRecords: '全ての記録',
     showSelectedDay: '選択日に戻す'
   },
   empty: {
-    dayRecords: '記録がありません',
+    // 日パネルに予定も記録も無いときの 1 行表示。
+    day: '予定も記録もありません',
     monthRecords: 'この月の記録はありません'
   },
   event: {
     plan: '予定',
-    reminder: 'リマインダー'
-  },
-  // カレンダーのイベント（予定/リマインダー）をクリックしたときの詳細カード文言。
-  eventDetail: {
-    plan: {
-      deleteConfirm: '削除してもよいですか？'
-    },
-    reminder: {
-      badge: 'リマインダー'
-    }
+    reminder: 'リマインダー',
+    deleteConfirm: '削除してもよいですか？'
   }
 } as const;

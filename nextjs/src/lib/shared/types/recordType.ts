@@ -1,4 +1,4 @@
-// record_type（家計計算の起点）の定義（凍結資産）。
+// record_type（家計計算の起点）の定義。
 // records / planned_records / short_cuts が共有する分類。
 //
 // - 0  SELF       : 個人の記録

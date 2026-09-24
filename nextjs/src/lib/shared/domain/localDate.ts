@@ -1,7 +1,7 @@
-// 'YYYY-MM-DD'（ローカル暦日）と Date の相互変換（plan の日付ピッカー用の純粋関数）。
+// 'YYYY-MM-DD'（ローカル暦日）と Date の相互変換（日付ピッカー用の純粋関数）。
 // react-day-picker はローカル暦日の Date を扱うため、ここでは UTC/JST 変換を挟まず
-// 素朴なローカル日付として往復させる（lib/shared/domain/date.ts は UTC↔JST 境界変換の
-// 責務で、tz を通すと日付キーがずれるため用途が異なる。month-calendar と同じ整理）。
+// 素朴なローカル日付として往復させる（date.ts は UTC↔JST 境界変換の責務で、tz を
+// 通すとカレンダーが扱う「画面に見えている暦日」が JST 以外の端末で前日にずれる）。
 
 // 'YYYY-MM-DD' → ローカル暦日の Date（不正・空文字は undefined）。
 export function parseLocalDate(value: string): Date | undefined {

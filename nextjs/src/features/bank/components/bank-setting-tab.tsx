@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { IconPencil } from '@/components/icons';
+import { AddButton } from '@/components/form/add-button';
+import { IconPencil, IconPiggyBank } from '@/components/icons';
+import { SectionHeading } from '@/components/section-heading';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import type { ColorClassification } from '@/features/master';
 import { colorHex } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { addLabel, L } from '@/lib/shared/labels';
 import { bankLabels } from '../labels';
 import type { BankItem } from '../types';
 import { BankFormDialog } from './bank-form-dialog';
@@ -29,7 +31,9 @@ export function BankSettingTab({ banks, colors }: BankSettingTabProps) {
 
   return (
     <section className='flex flex-col gap-3'>
-      <h2 className='text-base font-medium'>{bankLabels.heading.bank}</h2>
+      <SectionHeading icon={IconPiggyBank}>
+        {bankLabels.heading.bank}
+      </SectionHeading>
 
       <div className='grid grid-cols-2 gap-2'>
         {banks.map((bank) => (
@@ -41,11 +45,10 @@ export function BankSettingTab({ banks, colors }: BankSettingTabProps) {
         ))}
       </div>
 
-      <div className='flex justify-end'>
-        <Button type='button' onClick={() => setDialog({ kind: 'create' })}>
-          ＋
-        </Button>
-      </div>
+      <AddButton
+        label={addLabel(bankLabels.dialogEntity.bank)}
+        onClick={() => setDialog({ kind: 'create' })}
+      />
 
       <BankFormDialog
         // 編集対象ごとにリマウントして defaultValue のプリフィルを効かせる。

@@ -17,14 +17,21 @@ export const plannedRecordLabels = {
     price: '金額'
   },
   placeholder: {
-    memo: 'メモ',
-    selectMethod: '方法を選択'
+    memo: 'メモ'
   },
   empty: {
-    noTypeMethod: '設定画面でカテゴリと方法を追加してください'
+    noTypeMethod: '設定画面でカテゴリと方法を追加してください',
+    // 収支・立替の組み合わせに使える方法が 1 件もないとき。
+    noMethod: '設定画面で方法を追加してください'
   },
   swap: {
     down: '下と入れ替え'
+  },
+  action: {
+    add: '定期を追加'
+  },
+  confirm: {
+    delete: 'この定期を削除します。元に戻せません。'
   },
   error: {
     pairRequired: 'ペア設定が必要です',

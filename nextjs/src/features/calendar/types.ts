@@ -61,4 +61,6 @@ export type CalendarEvent = {
   // 参照元の id（plan / reminder のクリック識別に使う。daySum は null）。
   planId: Id | null;
   reminderId: Id | null;
+  // daySum の向き（収入超過なら 'income'）。plan / reminder は null。
+  tone: 'income' | 'expense' | null;
 };

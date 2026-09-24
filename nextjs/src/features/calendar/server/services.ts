@@ -30,7 +30,7 @@ export async function getCalendarMonth(
     getPlanList(session, { start: range.startStr, end: range.endStr }),
     getReminderList(session)
   ]);
-  const days = buildDaySumList(records);
+  const days = buildDaySumList(records, range);
 
   const monthSum = await withDemoRead(
     session,

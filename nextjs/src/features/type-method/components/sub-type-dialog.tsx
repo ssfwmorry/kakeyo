@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-import { L } from '@/lib/shared/labels';
+import { dialogTitle, L } from '@/lib/shared/labels';
 import { deleteSubTypeAction, upsertSubTypeAction } from '../actions';
 import { typeMethodLabels } from '../labels';
 import { subTypeUpsertSchema } from '../schemas';
@@ -54,7 +54,12 @@ export function SubTypeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{typeMethodLabels.entity.subTypeName}</DialogTitle>
+          <DialogTitle>
+            {dialogTitle(
+              typeMethodLabels.dialogEntity.subType,
+              editing !== undefined
+            )}
+          </DialogTitle>
         </DialogHeader>
         <form
           {...getFormProps(form)}

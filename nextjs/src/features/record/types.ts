@@ -90,6 +90,8 @@ export type NoteRecordDefault = {
   memo: string | null;
   price: number;
   isInstead: boolean;
+  // 共有（pair_id あり）の record か。開いたときに画面のモードを合わせるために使う。
+  isPair: boolean;
 };
 
 // 検索条件（get_summarized_record_list の input）。records 明細画面が組み立てる。

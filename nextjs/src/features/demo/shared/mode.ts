@@ -1,4 +1,4 @@
-// デモモードの共有定義（凍結資産・認証基盤）。server-only を含まない。
+// デモモードの共有定義（認証基盤）。server-only を含まない。
 // login フォーム（Client）が mode を Server Action へ渡し、proxy / session が Cookie を
 // 検証するため、型と固定値はここに置いて server / client / proxy の三者で共有する。
 

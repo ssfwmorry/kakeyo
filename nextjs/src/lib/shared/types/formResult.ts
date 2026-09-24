@@ -1,7 +1,7 @@
 import type { SubmissionResult } from '@conform-to/react';
 import type { Result } from '@/lib/shared/types/result';
 
-// Conform を使う Server Action の共通戻り値型（凍結資産・フォーム標準）。
+// Conform を使う Server Action の共通戻り値型（フォーム標準）。
 // skill-kick の「action のレスポンスにトースト文言を埋め込み、FE が結果を受けて
 // 自動でトースト発火する」発想を App Router 流に。
 // - submission : Conform の useForm(lastResult) に渡す field/フォームエラー
@@ -29,7 +29,7 @@ export type FormActionResult = {
   toast?: ToastMessage;
 };
 
-// サービス層の Result を FormActionResult へ変換する共通ヘルパ（凍結資産）。
+// サービス層の Result を FormActionResult へ変換する共通ヘルパ。
 // 「サービス層＝成否のみ / トースト文言＝Action」の責務分担を 1 箇所に集約し、
 // 各レーンが Result→FormActionResult の変換とトースト種別を手書きする重複を防ぐ。
 //

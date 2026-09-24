@@ -3,7 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { serverEnv } from '@/lib/server/env.server';
 import { PrismaClient } from '@/prisma/generated/client';
 
-// Prisma クライアントのシングルトン（凍結資産）。
+// Prisma クライアントのシングルトン。
 // - adapter-pg で DB 直結（RLS はバイパス。絞り込みは lib/db/scope.ts に集約）。
 // - スキーマ（develop / public）は接続時に指定する。
 // - dev の HMR で複数インスタンスが生成されるのを防ぐため globalThis にキャッシュする。

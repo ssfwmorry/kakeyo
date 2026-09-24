@@ -1,12 +1,11 @@
-// かけよ Prisma スキーマ（凍結資産）
+// かけよ Prisma スキーマ
 //
 // 正: kakeyo/docs/database/tables.md（DDL 実体）
 // 方針:
 // - PK は連番 int を維持（Id = number）。UUID 化しない（方針確定書 §4）
 // - users.uid は Firebase UID(char28) 由来。Supabase Auth 移行後も schema 上は可変長 string のまま
-//   （実 UID の付け替えは P5 のデータ移行で手作業。schema はここで凍結し変えない）
 // - スキーマ切替（develop / public）は実行時に adapter-pg の schema オプションで行う（schema.prisma には固定しない）
-// - RLS は Supabase 側に残す多層防御。アプリ層の絞り込みは lib/db/scope.ts に集約（P1）
+// - RLS は Supabase 側に残す多層防御。アプリ層の絞り込みは lib/db/scope.ts に集約
 
 generator client {
   provider     = "prisma-client"

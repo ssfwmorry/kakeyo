@@ -1,7 +1,7 @@
 import 'server-only';
 import { Prisma } from '@/prisma/generated/client';
 
-// Prisma のエラー分類ヘルパ（凍結資産・削除系サービスの共通述語）。
+// Prisma のエラー分類ヘルパ（削除系サービスの共通述語）。
 // 各 feature の service は自前の error union（'foreignKey' | ...）を持つため、
 // ここでは「どの分類か」の判定のみを提供し、union への写像は呼び出し側に委ねる。
 

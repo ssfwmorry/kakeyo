@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { ColorClassification } from '@/features/master';
-import { L } from '@/lib/shared/labels';
+import { dialogTitle, L } from '@/lib/shared/labels';
 import { insertReminderAction } from '../actions';
 import { dayOptionsForMonth, daysInMonthFixed } from '../domain/month-days';
 import { planReminderLabels } from '../labels';
@@ -90,7 +90,9 @@ export function ReminderDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{planReminderLabels.heading.reminder}</DialogTitle>
+          <DialogTitle>
+            {dialogTitle(planReminderLabels.dialogEntity.reminder, false)}
+          </DialogTitle>
         </DialogHeader>
         <form
           {...getFormProps(form)}
