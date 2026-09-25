@@ -18,19 +18,27 @@ export {
   Check as IconCheck, // mdiCheck
   // 「戻る」導線に使う。
   ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
+  CircleAlert as IconAlertCircle, // mdiAlertCircleOutline（エラートースト）
   CreditCard as IconCreditCard, // mdiCreditCardOutline（方法）
   Delete as IconBackspace, // mdiBackspaceOutline
+  // 並べ替えのドラッグハンドル（2 本線）。
+  Equal as IconGrip,
   Eye as IconEye, // mdiEye
   EyeOff as IconEyeOff, // mdiEyeOff
+  Landmark as IconBank, // mdiBank（口座）
+  Lock as IconLock, // mdiLock（編集中の固定）
   LogOut as IconLogout, // mdiLogout
   Mail as IconMail, // mdiEmailOutline（お問い合わせ）
   MessageSquareText as IconMemo, // mdiCommentTextOutline（メモ）
+  Minus as IconMinus, // mdiMinus（編集中の削除マーク・ステッパー）
   Moon as IconMoon, // mdiWeatherNight（ダークへ切替）
   Pencil as IconPencil, // mdiPencil
   PiggyBank as IconPiggyBank, // mdiPiggyBank
   Plus as IconPlus, // mdiPlus
   PlusSquare as IconPlusBox, // mdiPlusBox
   Repeat as IconUpdate, // mdiUpdate（定期）
+  RotateCcw as IconRotateCcw, // mdiRestore（金額のクリア）
   Settings as IconCog, // mdiCog
   Shapes as IconShape, // mdiShape
   SquareArrowOutUpRight as IconOpenInNew, // mdiOpenInNew

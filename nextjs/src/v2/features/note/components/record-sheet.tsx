@@ -40,6 +40,7 @@ export function RecordSheet({
   methodList,
   shortcuts,
   isPair,
+  hasPair,
   editing,
   initialDate,
   today,
@@ -50,6 +51,7 @@ export function RecordSheet({
   methodList: GroupedMethodList;
   shortcuts: ShortCutItem[];
   isPair: boolean;
+  hasPair: boolean;
   // 編集対象。新規のときは undefined。
   editing?: NoteRecordDefault;
   // 新規の初期日付（カレンダーの選択日）。
@@ -116,6 +118,7 @@ export function RecordSheet({
       <BottomSheetContent className='max-h-[94dvh]'>
         {view.kind === 'type' ? (
           <TypeStep
+            hasPair={hasPair}
             isPair={isPair}
             // 共有か個人かは作成時に決まり後から移せないので、編集中は切り替えさせない。
             isPairLocked={editing !== undefined}

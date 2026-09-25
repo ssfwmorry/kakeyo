@@ -27,6 +27,10 @@ export type ToastMessage = {
 export type FormActionResult = {
   submission?: SubmissionResult;
   toast?: ToastMessage;
+  // 失敗したときのサービス層の分類（'foreignKey' など）。文言とは別に、
+  // クライアントが失敗の種類で出し方を変えるときに見る（例: 紐づくデータがあるので
+  // 削除できない → トーストではなく説明つきのアラート）。
+  error?: string;
 };
 
 // サービス層の Result を FormActionResult へ変換する共通ヘルパ。
@@ -58,6 +62,7 @@ export function toFormResult<T, E extends string>(
     '処理に失敗しました';
   return {
     submission: options.submission,
-    toast: { type: ToastType.error, message }
+    toast: { type: ToastType.error, message },
+    error: result.error
   };
 }

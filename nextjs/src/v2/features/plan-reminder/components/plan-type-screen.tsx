@@ -50,9 +50,7 @@ export function PlanTypeScreen({
         backLabel='設定'
       />
       <div className='flex flex-col gap-3 px-4'>
-        <ScreenTitle badge={isPair ? '共有の設定' : '個人の設定'}>
-          予定カテゴリ
-        </ScreenTitle>
+        <ScreenTitle badge={isPair ? 'pair' : 'self'}>予定カテゴリ</ScreenTitle>
 
         {planTypes.length > 0 ? (
           <SectionList>

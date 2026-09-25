@@ -36,7 +36,7 @@ export function ReminderScreen({
     <div className='flex flex-col pb-6'>
       <ScreenHeader backHref='/v2/setting' backLabel='設定' />
       <div className='flex flex-col gap-3 px-4'>
-        <ScreenTitle badge='個人の設定'>リマインダー</ScreenTitle>
+        <ScreenTitle badge='self'>リマインダー</ScreenTitle>
 
         {overdue.length > 0 ? (
           <SectionList

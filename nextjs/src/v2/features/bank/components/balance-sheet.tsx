@@ -8,13 +8,13 @@ import type { BankItem } from '@/features/bank';
 import { postBankBalancesAction } from '@/features/bank/actions';
 import { bankBalanceFormSchema } from '@/features/bank/schemas/bank-balance-schema';
 import { colorVar } from '@/features/master';
-import { formatDateLabelJst } from '@/lib/shared/domain/date';
+import { SheetHeader } from '@/v2/components/sheet-header';
 import {
   BottomSheet,
-  BottomSheetContent,
-  BottomSheetTitle
+  BottomSheetContent
 } from '@/v2/components/ui/bottom-sheet';
-import { Button } from '@/v2/components/ui/button';
+import { SheetSubmitButton } from '@/v2/components/ui/sheet-submit-button';
+import { formatSlashDate } from '@/v2/lib/format';
 
 // 残高を登録するシート。
 //
@@ -68,23 +68,17 @@ export function BalanceSheet({
 
   return (
     <BottomSheet onOpenChange={onOpenChange} open={isOpen}>
-      <BottomSheetContent>
-        <div className='grid h-10 grid-cols-[1fr_auto_1fr] items-center'>
-          <button
-            className='justify-self-start text-base text-primary'
-            onClick={() => onOpenChange(false)}
-            type='button'
-          >
-            キャンセル
-          </button>
-          <BottomSheetTitle>残高を登録</BottomSheetTitle>
-          <span />
-        </div>
+      <BottomSheetContent gap={12}>
+        <SheetHeader
+          left='close'
+          onLeft={() => onOpenChange(false)}
+          title='残高を登録'
+        />
 
-        <div className='flex h-12 items-center rounded-2xl bg-card px-3.5'>
+        <div className='flex h-12 items-center rounded-[14px] bg-card px-3.5'>
           <span className='flex-grow text-[15px]'>記録日</span>
           <span className='flex h-8 items-center rounded-lg bg-background px-2.5 text-[15px]'>
-            {formatDateLabelJst(today)}
+            {formatSlashDate(today)}
           </span>
         </div>
 
@@ -98,7 +92,7 @@ export function BalanceSheet({
             action(buildFormData(event.currentTarget));
           }}
         >
-          <div className='overflow-hidden rounded-2xl bg-card'>
+          <div className='overflow-hidden rounded-[14px] bg-card'>
             {banks.map((bank, index) => (
               <BalanceRow bank={bank} isFirst={index === 0} key={bank.id} />
             ))}
@@ -110,9 +104,7 @@ export function BalanceSheet({
             </p>
           ) : null}
 
-          <Button className='w-full' type='submit'>
-            登録する
-          </Button>
+          <SheetSubmitButton label='登録する' />
         </form>
       </BottomSheetContent>
     </BottomSheet>

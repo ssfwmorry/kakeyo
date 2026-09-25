@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { ConfirmDialog } from '@/components/form/confirm-dialog';
 import { useFormToast } from '@/components/form/use-form-toast';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
+import { ConfirmAlert } from '@/v2/components/ui/confirm-alert';
 
-// シート末尾の削除。デザイン基礎では白い面に赤い文字で、保存とは離して置く。
+// シート末尾の削除。白い面に赤い文字で、保存とは離して置く。
 //
-// 確認は共通の ConfirmDialog に任せる（window.confirm を使わない方針は既存と同じ）。
-// 削除フォームは名前・色のフォームとは別物なので、submit ではなく Server Action を
-// 直接呼ぶ（同じ form に入れると保存と削除が 1 つの submit に混ざる）。
+// 確認は v2 の ConfirmAlert。削除フォームは名前・色のフォームとは別物なので、
+// submit ではなく Server Action を直接呼ぶ（同じ form に入れると保存と削除が
+// 1 つの submit に混ざる）。
 
 export function SheetDeleteButton({
   id,
@@ -29,10 +29,12 @@ export function SheetDeleteButton({
   onDeleted: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [isConfirming, setIsConfirming] = useState(false);
   const [result, setResult] = useState<FormActionResult | null>(null);
   useFormToast(result);
 
   const remove = () => {
+    setIsConfirming(false);
     startTransition(async () => {
       const formData = new FormData();
       formData.set('id', String(id));
@@ -46,20 +48,22 @@ export function SheetDeleteButton({
   };
 
   return (
-    <ConfirmDialog
-      onConfirm={remove}
-      size='sm'
-      solidConfirm
-      title={confirmMessage}
-      trigger={
-        <button
-          className='h-12 rounded-xl bg-card font-semibold text-base text-destructive disabled:opacity-50'
-          disabled={isPending}
-          type='button'
-        >
-          {label}
-        </button>
-      }
-    />
+    <>
+      <button
+        className='h-12 rounded-[14px] bg-card font-semibold text-base text-destructive disabled:opacity-50'
+        disabled={isPending}
+        onClick={() => setIsConfirming(true)}
+        type='button'
+      >
+        {label}
+      </button>
+      <ConfirmAlert
+        onCancel={() => setIsConfirming(false)}
+        onConfirm={remove}
+        open={isConfirming}
+        pending={isPending}
+        title={confirmMessage}
+      />
+    </>
   );
 }

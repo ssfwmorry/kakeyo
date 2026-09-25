@@ -35,9 +35,37 @@
   --bar: rgba(255, 255, 255, 0.86);
   --overlay: rgba(12, 16, 17, 0.4);
 
+  /* デザイン各画面に繰り返し出る、shadcn に対応する変数がない色。 */
+  /* カード内の薄い区切り・カレンダーのセル罫線・タブバー選択ピルの地。 */
+  --line-soft: #eef0f0;
+  /* 日付ボタンの地・「他N件」の地。 */
+  --fill-soft: #f1f2f2;
+  /* 無効な主ボタンの地。 */
+  --disabled: #dde1e1;
+  /* シートのグラバー。 */
+  --grabber: #c9cfd0;
+  /* 破線チップの枠・「なし」のドット。 */
+  --dash: #b9c0c1;
+  /* シェブロン・ドラッグハンドル・×。 */
+  --icon-muted: #9aa2a4;
+  /* タブバーの非選択タブ。 */
+  --tab-muted: #6b7375;
+  /* セグメントの選択面。ダークでは面より一段明るい。 */
+  --segment-on: #ffffff;
+  /* 削除ボタンの淡い赤地。 */
+  --destructive-soft: #fbe9e7;
+  /* スイッチの OFF。 */
+  --switch-off: #d5dadb;
+  /* 予定の帯などの淡い面を作るときに色へ混ぜる面の割合の補数。
+     ライトは白へ 80%（色 20%）、ダークは面へ 75%（色 25%）。 */
+  --band-mix: 20%;
+
   /* 角丸。--radius から派生する shadcn の radius-* が
      アイコン面 8 / ボタン 12 / カード 16 に並ぶよう 10px を基準に置く。 */
   --radius: 0.625rem;
+
+  /* 金額・日付の桁が揃うよう、v2 の中は等幅数字にする。 */
+  font-variant-numeric: tabular-nums;
 
   /* カテゴリ色（color_classifications の色名 19 色）。
      DB は色名のまま。値はライト（白地）で、元の色相を保ったまま
@@ -77,11 +105,12 @@
   --popover-foreground: #ecefef;
   /* ダークのアクセントは地との明度差を確保するため明るい側へ寄せる。
      その上の文字（--primary-foreground）は地の色。 */
-  --primary: #4cc2cf;
+  --primary: #4db6c1;
   --primary-foreground: #0b1f22;
-  --secondary: #1d3335;
+  /* アクセント淡。アクセントを地へ 72% 混ぜた値。 */
+  --secondary: #203e42;
   --secondary-foreground: #ecefef;
-  --accent: #1d3335;
+  --accent: #203e42;
   --accent-foreground: #ecefef;
   --muted: #2a2f32;
   --muted-foreground: #a1a9ab;
@@ -89,11 +118,23 @@
   --destructive-foreground: #0f1213;
   --border: #2f3538;
   --input: #2f3538;
-  --ring: #4cc2cf;
+  --ring: #4db6c1;
 
   --saturday: #7fa8f0;
   --bar: rgba(27, 31, 33, 0.86);
   --overlay: rgba(0, 0, 0, 0.6);
+
+  --line-soft: #24292b;
+  --fill-soft: #24292b;
+  --disabled: #2a2f32;
+  --grabber: #3a4043;
+  --dash: #3a4043;
+  --icon-muted: #6b7375;
+  --tab-muted: #a1a9ab;
+  --segment-on: #3a4043;
+  --destructive-soft: #3a2321;
+  --switch-off: #3a4043;
+  --band-mix: 25%;
 
   /* カテゴリ色のダーク用。面（#1B1F21）に対してコントラスト比 4.6 以上。 */
   --cat-red: #e7564b;

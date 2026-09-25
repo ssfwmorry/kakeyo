@@ -45,6 +45,7 @@ export default async function V2SettingPage() {
   return (
     <SettingScreen
       bankCount={banks === null ? null : banks.length}
+      hasPair={session.pairId !== null}
       isPair={isPair}
       methodCount={
         methodList.pay[scope].length +

@@ -44,6 +44,7 @@ type SettingRow = {
 
 export function SettingScreen({
   isPair,
+  hasPair,
   typeCount,
   methodCount,
   bankCount,
@@ -52,6 +53,7 @@ export function SettingScreen({
   reminderCount
 }: {
   isPair: boolean;
+  hasPair: boolean;
   typeCount: number;
   methodCount: number;
   // 口座は個人モード専用。共有モードでは行ごと出さないので null。
@@ -120,7 +122,7 @@ export function SettingScreen({
         <NotificationBellSlot />
         <div className='flex items-center gap-1.5'>
           <ThemeToggle />
-          <PairModeSegment isPair={isPair} />
+          <PairModeSegment hasPair={hasPair} isPair={isPair} />
         </div>
       </div>
 

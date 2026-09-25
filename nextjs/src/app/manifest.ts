@@ -15,8 +15,9 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: 'ja',
     start_url: '/',
     display: 'standalone',
-    background_color: '#000000',
-    theme_color: '#000000',
+    // 新デザインの地の色（デザイン基礎「manifest の theme_color は地の色に合わせる」）。
+    background_color: '#F4F5F4',
+    theme_color: '#F4F5F4',
     icons: [
       {
         src: '/icon-192.png',

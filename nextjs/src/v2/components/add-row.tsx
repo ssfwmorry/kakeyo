@@ -11,7 +11,7 @@ import { IconPlus } from '@/components/icons';
 // リストと同じ見た目だがセルではなく操作なので、ListCell ではなくボタンとして持つ。
 
 const ROW_CLASS =
-  'flex h-12 w-full items-center gap-2.5 rounded-2xl bg-card px-3.5 font-semibold text-base text-primary';
+  'flex h-12 w-full items-center gap-2.5 rounded-[14px] bg-card px-3.5 font-semibold text-base text-primary';
 
 function PlusIcon() {
   return <IconPlus aria-hidden='true' className='size-5' strokeWidth={2.4} />;

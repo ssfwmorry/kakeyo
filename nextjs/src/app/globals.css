@@ -49,6 +49,18 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* v2 の独自トークン（v2/styles/tokens.css）。.v2-root の中でだけ値を持つ。 */
+  --color-saturday: var(--saturday);
+  --color-line-soft: var(--line-soft);
+  --color-fill-soft: var(--fill-soft);
+  --color-disabled: var(--disabled);
+  --color-grabber: var(--grabber);
+  --color-dash: var(--dash);
+  --color-icon-muted: var(--icon-muted);
+  --color-tab-muted: var(--tab-muted);
+  --color-segment-on: var(--segment-on);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-switch-off: var(--switch-off);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

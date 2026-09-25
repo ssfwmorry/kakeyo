@@ -34,9 +34,7 @@ export function PlannedRecordScreen({
     <div className='flex flex-col pb-6'>
       <ScreenHeader backHref='/v2/setting' backLabel='設定' />
       <div className='flex flex-col gap-3 px-4'>
-        <ScreenTitle badge={isPair ? '共有の設定' : '個人の設定'}>
-          定期の記録
-        </ScreenTitle>
+        <ScreenTitle badge={isPair ? 'pair' : 'self'}>定期の記録</ScreenTitle>
         <p className='px-1 text-[13px] text-muted-foreground leading-relaxed'>
           毎月決まった日に、自動で記録されます
         </p>

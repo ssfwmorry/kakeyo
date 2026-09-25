@@ -55,9 +55,7 @@ export function TypeScreen({
         backLabel='設定'
       />
       <div className='flex flex-col gap-3 px-4'>
-        <ScreenTitle badge={isPair ? '共有の設定' : '個人の設定'}>
-          カテゴリ
-        </ScreenTitle>
+        <ScreenTitle badge={isPair ? 'pair' : 'self'}>カテゴリ</ScreenTitle>
 
         <Segment
           label='カテゴリの種類'

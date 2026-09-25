@@ -23,6 +23,7 @@ const PAY_OPTIONS = [
 export function TypeStep({
   title,
   isPair,
+  hasPair,
   isPairLocked,
   isPay,
   types,
@@ -34,6 +35,7 @@ export function TypeStep({
 }: {
   title: string;
   isPair: boolean;
+  hasPair: boolean;
   isPairLocked: boolean;
   isPay: boolean;
   types: TypeCard[];
@@ -47,7 +49,13 @@ export function TypeStep({
     <div className='flex flex-col gap-3'>
       <SheetHeader
         onCancel={onCancel}
-        right={<PairModeSegment isLocked={isPairLocked} isPair={isPair} />}
+        right={
+          <PairModeSegment
+            hasPair={hasPair}
+            isLocked={isPairLocked}
+            isPair={isPair}
+          />
+        }
         title={title}
       />
 

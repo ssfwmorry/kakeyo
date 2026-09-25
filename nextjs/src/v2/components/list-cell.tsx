@@ -32,11 +32,11 @@ const HEIGHT_CLASS = {
   64: 'h-16'
 } as const;
 
-function Chevron() {
+export function Chevron() {
   return (
     <svg
       aria-hidden='true'
-      className='size-3.5 shrink-0 text-muted-foreground'
+      className='size-3.5 shrink-0 text-icon-muted'
       fill='none'
       stroke='currentColor'
       strokeLinecap='round'

@@ -1,9 +1,5 @@
 'use client';
 
-import { getFormProps, useForm } from '@conform-to/react';
-import { parseWithZod } from '@conform-to/zod/v4';
-import { useCloseOnSuccess } from '@/components/form/use-close-on-success';
-import { useFormAction } from '@/components/form/use-form-action';
 import type { ColorClassification } from '@/features/master';
 import type { MethodCard } from '@/features/type-method';
 import {
@@ -11,24 +7,12 @@ import {
   upsertMethodAction
 } from '@/features/type-method/actions';
 import { methodUpsertSchema } from '@/features/type-method/schemas';
-import {
-  BottomSheet,
-  BottomSheetContent,
-  BottomSheetTitle
-} from '@/v2/components/ui/bottom-sheet';
-import { ColorGrid } from '@/v2/components/ui/color-grid';
-import { TextField } from '@/v2/components/ui/text-field';
+import { MasterSheet } from '@/v2/components/master-sheet';
+import { quoted } from '@/v2/lib/format';
 import type { PayMode } from './pay-mode';
-import { SheetActionBar } from './sheet-action-bar';
-import { SheetDeleteButton } from './sheet-delete-button';
 
-// 方法の追加・編集シート。旧ダイアログ（kakei-method.tsx 内）を下から出すシートに置き換える。
-//
-// 追加と編集は同じ形で、編集のときだけ末尾に削除を出す（デザイン基礎 SetMethod）。
-// フォームの作りは既存と同じ「1 フォーム = 1 スキーマ = 1 useForm」。
-//
-// 編集対象が変わっても useForm の defaultValue はマウント時にしか取り込まれないため、
-// 呼び出し側は method?.id で key を変えてこのコンポーネントごと作り直す。
+// 方法の追加・編集シート。名前と色だけのマスタなので、口座と同じ MasterSheet に載せる。
+// 記録に使われている方法は消せないので、削除は「削除できません」のアラートで説明する。
 
 export function MethodSheet({
   isOpen,
@@ -51,66 +35,23 @@ export function MethodSheet({
   colors: ColorClassification[];
   isPair: boolean;
 }) {
-  const [result, action] = useFormAction(upsertMethodAction);
-  const [form, fields] = useForm({
-    lastResult: result?.submission,
-    onValidate: ({ formData }) =>
-      parseWithZod(formData, { schema: methodUpsertSchema })
-  });
-  useCloseOnSuccess(result, onOpenChange);
-
-  const isEdit = method !== undefined;
-
   return (
-    <BottomSheet onOpenChange={onOpenChange} open={isOpen}>
-      <BottomSheetContent>
-        <form
-          {...getFormProps(form)}
-          action={action}
-          className='flex flex-col gap-3.5'
-        >
-          <input name='payMode' readOnly type='hidden' value={payMode} />
-          <input name='isPair' readOnly type='hidden' value={String(isPair)} />
-          {isEdit ? (
-            <input name='id' readOnly type='hidden' value={method.id} />
-          ) : null}
-
-          <SheetActionBar onCancel={() => onOpenChange(false)}>
-            <BottomSheetTitle>
-              {entityName}を{isEdit ? '編集' : '追加'}
-            </BottomSheetTitle>
-          </SheetActionBar>
-
-          <TextField
-            defaultValue={method?.name}
-            errorId={fields.name.errorId}
-            errors={fields.name.errors}
-            key={fields.name.key}
-            label='名前'
-            name={fields.name.name}
-            placeholder={placeholder}
-          />
-
-          <ColorGrid
-            colors={colors}
-            defaultColorId={method?.colorClassificationId}
-            errorId={fields.colorId.errorId}
-            errors={fields.colorId.errors}
-            label='色'
-            name={fields.colorId.name}
-          />
-        </form>
-
-        {isEdit ? (
-          <SheetDeleteButton
-            action={deleteMethodAction}
-            confirmMessage={`この${entityName}を削除します。元に戻せません。`}
-            id={method.id}
-            label={`この${entityName}を削除`}
-            onDeleted={() => onOpenChange(false)}
-          />
-        ) : null}
-      </BottomSheetContent>
-    </BottomSheet>
+    <MasterSheet
+      colors={colors}
+      deleteAction={deleteMethodAction}
+      editing={method}
+      entity={entityName}
+      hiddenFields={{ payMode, isPair: String(isPair) }}
+      isOpen={isOpen}
+      namePlaceholder={placeholder}
+      onForeignKey={{
+        kind: 'alert',
+        description: (name) =>
+          `${quoted(name)}には記録があります。名前と色の変更はできます。`
+      }}
+      onOpenChange={onOpenChange}
+      upsertAction={upsertMethodAction}
+      upsertSchema={methodUpsertSchema}
+    />
   );
 }

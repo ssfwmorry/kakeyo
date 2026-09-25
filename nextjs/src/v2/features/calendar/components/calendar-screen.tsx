@@ -156,7 +156,7 @@ export function CalendarScreen({
     <div className='flex flex-col gap-3 px-4 pb-6'>
       <div className='flex h-11 items-center justify-end gap-1.5'>
         <ThemeToggle />
-        <PairModeSegment isPair={initial.isPair} />
+        <PairModeSegment hasPair={initial.hasPair} isPair={initial.isPair} />
       </div>
 
       <div className='flex items-center gap-2'>
@@ -237,6 +237,7 @@ export function CalendarScreen({
       {recordSheet.kind === 'closed' ? null : (
         <RecordSheet
           editing={recordSheet.kind === 'edit' ? recordSheet.record : undefined}
+          hasPair={initial.hasPair}
           initialDate={selectedDate}
           // 共有か個人かは作成時に決まる。編集は対象に合わせ、候補もその側を出す。
           isPair={

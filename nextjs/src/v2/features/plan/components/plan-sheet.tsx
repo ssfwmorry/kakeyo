@@ -5,7 +5,6 @@ import { parseWithZod } from '@conform-to/zod/v4';
 import { cn } from 'cn';
 import { useEffect, useState, useTransition } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { ConfirmDialog } from '@/components/form/confirm-dialog';
 import { calendarJaProps } from '@/components/form/date-picker';
 import { useFormAction } from '@/components/form/use-form-action';
 import { useFormToast } from '@/components/form/use-form-toast';
@@ -26,6 +25,7 @@ import {
   BottomSheetContent,
   BottomSheetTitle
 } from '@/v2/components/ui/bottom-sheet';
+import { ConfirmAlert } from '@/v2/components/ui/confirm-alert';
 import { deletePlanAction, savePlanAction } from '../actions';
 
 // 予定の追加・編集シート（デザイン PlanAdd / PlanEdit）。旧 /plan 画面を
@@ -519,7 +519,7 @@ function TypeChip({
   );
 }
 
-// 削除。デザインでは保存の左に置く正方形の赤いボタン。確認は共通の ConfirmDialog。
+// 削除。確認は v2 の ConfirmAlert。ヘッダー右への移動は T04。
 function PlanDeleteButton({
   id,
   onDeleted
@@ -528,10 +528,12 @@ function PlanDeleteButton({
   onDeleted: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [isConfirming, setIsConfirming] = useState(false);
   const [result, setResult] = useState<FormActionResult | null>(null);
   useFormToast(result);
 
   const remove = () => {
+    setIsConfirming(false);
     startTransition(async () => {
       const formData = new FormData();
       formData.set('id', String(id));
@@ -544,21 +546,23 @@ function PlanDeleteButton({
   };
 
   return (
-    <ConfirmDialog
-      onConfirm={remove}
-      size='sm'
-      solidConfirm
-      title='この予定を削除します。元に戻せません。'
-      trigger={
-        <button
-          aria-label='この予定を削除'
-          className='flex size-13 shrink-0 items-center justify-center rounded-xl bg-destructive/12 text-destructive disabled:opacity-50'
-          disabled={isPending}
-          type='button'
-        >
-          <IconTrash aria-hidden='true' className='size-5' />
-        </button>
-      }
-    />
+    <>
+      <button
+        aria-label='この予定を削除'
+        className='flex size-13 shrink-0 items-center justify-center rounded-xl bg-destructive-soft text-destructive disabled:opacity-50'
+        disabled={isPending}
+        onClick={() => setIsConfirming(true)}
+        type='button'
+      >
+        <IconTrash aria-hidden='true' className='size-5' />
+      </button>
+      <ConfirmAlert
+        onCancel={() => setIsConfirming(false)}
+        onConfirm={remove}
+        open={isConfirming}
+        pending={isPending}
+        title='この予定を削除しますか？'
+      />
+    </>
   );
 }
