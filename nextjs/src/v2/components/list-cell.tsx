@@ -88,13 +88,16 @@ function ListCellInner({
   );
 }
 
-// 詳細画面へ進む行。
+// 詳細画面へ進む行。外部サイトへ出る行（とりせつ等）は target / rel を渡す。
 export function ListCellLink({
   height = 48,
   className,
   href,
+  target,
+  rel,
   ...inner
-}: ListCellProps & { href: ComponentProps<typeof Link>['href'] }) {
+}: ListCellProps &
+  Pick<ComponentProps<typeof Link>, 'href' | 'target' | 'rel'>) {
   return (
     <Link
       className={cn(
@@ -103,6 +106,8 @@ export function ListCellLink({
         className
       )}
       href={href}
+      rel={rel}
+      target={target}
     >
       <ListCellInner {...inner} />
     </Link>

@@ -2,20 +2,22 @@ import type { ReactNode } from 'react';
 import {
   IconBell,
   IconCalendar,
-  IconCog,
   IconCreditCard,
   IconLogout,
   IconMail,
   IconManual,
+  IconOpenInNew,
   IconPiggyBank,
   IconTag,
   IconUpdate
 } from '@/components/icons';
+import { TUTORIAL_URL } from '@/features/auth/labels';
 import { ListCellLink } from '@/v2/components/list-cell';
 import { PairModeSegment } from '@/v2/components/pair-mode-segment';
 import { ScreenTitle } from '@/v2/components/screen-title';
 import { SectionList } from '@/v2/components/section-list';
 import { ThemeToggle } from '@/v2/components/theme-toggle';
+import { LogoutCell } from './logout-cell';
 import { NotificationBellSlot } from './notification-bell-slot';
 
 // 設定トップ（新デザイン）。
@@ -36,6 +38,8 @@ type SettingRow = {
   tile: string;
   // 右端に出す件数。null なら出さない。
   count: number | null;
+  // 外部サイトへ出る行。別タブで開き、シェブロンの代わりに「外部」アイコンを出す。
+  external?: boolean;
 };
 
 export function SettingScreen({
@@ -135,46 +139,41 @@ export function SettingScreen({
           ))}
         </SectionList>
 
+        {/* 「アカウント」行はデザインにはあるが、退会フローが未確定で行き先の画面が
+            旧画面にも無い（旧 GeneralTab のコメント参照）。退会フローが決まるまで出さない。 */}
         <SectionList title='その他'>
+          {/* とりせつは画面ではなく Notion の外部ページ（ログイン画面と同じ先）。 */}
           <SettingCell
             isFirst
             row={{
-              href: '/v2/setting/manual',
+              href: TUTORIAL_URL,
               label: 'とりせつ',
               icon: IconManual,
               tile: 'var(--muted-foreground)',
-              count: null
+              count: null,
+              external: true
             }}
           />
+          {/* お問い合わせは公開ページ（/inquiry）が旧デザインのまま残っている。
+              静的な案内文だけの画面なので v2 版は作らず、そのまま送る。 */}
           <SettingCell
             row={{
-              href: '/v2/setting/inquiry',
+              href: '/inquiry',
               label: 'お問い合わせ',
               icon: IconMail,
               tile: 'var(--muted-foreground)',
               count: null
             }}
           />
-          <SettingCell
-            row={{
-              href: '/v2/setting/account',
-              label: 'アカウント',
-              icon: IconCog,
-              tile: 'var(--muted-foreground)',
-              count: null
-            }}
-          />
           {/* ログアウトは破壊的ではないが引き返しにくい操作なので、
               文字色を destructive にしてグループの末尾に置く。 */}
-          <SettingCell
-            className='text-destructive'
-            row={{
-              href: '/v2/logout',
-              label: 'ログアウト',
-              icon: IconLogout,
-              tile: 'var(--destructive)',
-              count: null
-            }}
+          <LogoutCell
+            leading={
+              <IconTile
+                color='var(--destructive)'
+                icon={<IconLogout className='size-4' />}
+              />
+            }
           />
         </SectionList>
       </div>
@@ -199,6 +198,16 @@ function SettingCell({
       isFirst={isFirst}
       label={row.label}
       leading={<IconTile color={row.tile} icon={<Icon className='size-4' />} />}
+      rel={row.external ? 'noopener noreferrer' : undefined}
+      target={row.external ? '_blank' : undefined}
+      trailing={
+        row.external ? (
+          <IconOpenInNew
+            aria-hidden='true'
+            className='size-3.5 shrink-0 text-muted-foreground'
+          />
+        ) : undefined
+      }
       value={row.count === null ? undefined : String(row.count)}
     />
   );
