@@ -11,6 +11,7 @@
 export {
   ArrowDown as IconArrowDown, // mdiArrowDown
   Bell as IconBell, // mdiBell
+  BookOpen as IconManual, // mdiBookOpenOutline（とりせつ）
   Calendar as IconCalendar, // mdiCalendar
   ChartColumn as IconChartBar, // mdiChartBar
   ChartPie as IconChartPie, // mdiChartPie
@@ -21,7 +22,10 @@ export {
   Delete as IconBackspace, // mdiBackspaceOutline
   Eye as IconEye, // mdiEye
   EyeOff as IconEyeOff, // mdiEyeOff
+  LogOut as IconLogout, // mdiLogout
+  Mail as IconMail, // mdiEmailOutline（お問い合わせ）
   MessageSquareText as IconMemo, // mdiCommentTextOutline（メモ）
+  Moon as IconMoon, // mdiWeatherNight（ダークへ切替）
   Pencil as IconPencil, // mdiPencil
   PiggyBank as IconPiggyBank, // mdiPiggyBank
   Plus as IconPlus, // mdiPlus
@@ -30,6 +34,8 @@ export {
   Settings as IconCog, // mdiCog
   Shapes as IconShape, // mdiShape
   SquareArrowOutUpRight as IconOpenInNew, // mdiOpenInNew
+  Sun as IconSun, // mdiWeatherSunny（ライトへ切替）
+  Tag as IconTag, // mdiTagOutline（カテゴリ）
   Trash2 as IconTrash, // mdiTrashCanOutline
   TrendingUp as IconAnalytics, // mdiGoogleAnalytics
   // 共有(ペア)の唯一の正。2 人アイコンを使う

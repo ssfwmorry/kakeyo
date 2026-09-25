@@ -30,3 +30,22 @@ export const FALLBACK_COLOR_HEX = '#9e9e9e';
 export function colorHex(name: string): string {
   return COLOR_HEX[name] ?? FALLBACK_COLOR_HEX;
 }
+
+// --- 新デザイン用 ---------------------------------------------------------
+// 新デザインは同じ色名をライト/ダークで別の hex に描き分ける。実値は
+// v2/styles/tokens.css の --cat-* が持ち、ここは「色名 → CSS 変数」の対応だけを返す。
+// hex を直接返さないのは、テーマ切替に CSS 側で追従させ、SSR とクライアントで
+// 色が食い違わないようにするため。
+
+// 既知の色名かどうか。未知なら --cat-fallback へ落とす。
+const COLOR_NAMES = new Set(Object.keys(COLOR_HEX));
+
+// 色名 → CSS 変数参照。inline style の値としてそのまま使う。
+export function colorVar(name: string | null): string {
+  return name !== null && COLOR_NAMES.has(name)
+    ? `var(--cat-${name})`
+    : 'var(--cat-fallback)';
+}
+
+// カテゴリ色の丸に載せる頭文字の色。ライトは白、ダークは地の色。
+export const CATEGORY_ON_COLOR = 'var(--cat-on)';

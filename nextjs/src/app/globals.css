@@ -4,6 +4,9 @@
 /* feature 側にコロケーションした素 CSS。Tailwind v4 は @import を先頭側に
    まとめる必要があるため、コンポーネントではなくここから読む。 */
 @import "../features/calendar/styles/month-calendar.css";
+/* 新デザインの色トークン。.v2-root スコープなので既存画面には影響しない
+   （docs/new-design/README.md）。 */
+@import "../v2/styles/tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 

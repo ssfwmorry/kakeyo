@@ -5,6 +5,12 @@
 // 他レーンは実装関数を @/features/master/server/repositories/* から直接 import する。
 
 // 色名 → hex（FE/BE 両用の純粋関数。色マスタ所有 feature が単一の正を提供する）。
-export { COLOR_HEX, colorHex, FALLBACK_COLOR_HEX } from './color';
+export {
+  CATEGORY_ON_COLOR,
+  COLOR_HEX,
+  colorHex,
+  colorVar,
+  FALLBACK_COLOR_HEX
+} from './color';
 export type { ColorClassification } from './server/repositories/colorClassification';
 export type { DayClassification } from './server/repositories/dayClassification';
