@@ -25,6 +25,7 @@ const PAY_OPTIONS = [
 
 export function TypeStep({
   isPair,
+  isPairLocked,
   isPay,
   types,
   shortcuts,
@@ -33,6 +34,7 @@ export function TypeStep({
   onPickShortcut
 }: {
   isPair: boolean;
+  isPairLocked: boolean;
   isPay: boolean;
   types: TypeCard[];
   shortcuts: ShortCutItem[];
@@ -65,7 +67,7 @@ export function TypeStep({
             strokeWidth={2.4}
           />
         </Link>
-        <PairModeSegment isPair={isPair} />
+        <PairModeSegment isLocked={isPairLocked} isPair={isPair} />
       </div>
 
       <Segment

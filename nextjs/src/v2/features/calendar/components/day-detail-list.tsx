@@ -13,11 +13,13 @@ import type { RecordListItem } from '@/features/record';
 export function DayDetailList({
   daySum,
   plans,
-  reminders
+  reminders,
+  onEditPlan
 }: {
   daySum: DaySum | undefined;
   plans: PlanItem[];
   reminders: ReminderItem[];
+  onEditPlan: (plan: PlanItem) => void;
 }) {
   const records = daySum?.records ?? [];
   const isEmpty =
@@ -35,7 +37,12 @@ export function DayDetailList({
     <div className='overflow-hidden rounded-2xl bg-card'>
       {/* 3 種を続けて積むので、区切り線の有無はカード全体での通し番号で決める。 */}
       {plans.map((plan, index) => (
-        <PlanRow isFirst={index === 0} key={plan.id} plan={plan} />
+        <PlanRow
+          isFirst={index === 0}
+          key={plan.id}
+          onEdit={() => onEditPlan(plan)}
+          plan={plan}
+        />
       ))}
       {reminders.map((reminder, index) => (
         <ReminderRow
@@ -55,21 +62,35 @@ export function DayDetailList({
   );
 }
 
-function PlanRow({ plan, isFirst }: { plan: PlanItem; isFirst: boolean }) {
+// 押すと編集シートが開く。リマインダー由来の予定（reminderId あり）も同じシートで
+// 直せる（元のリマインダーには影響しない）。
+function PlanRow({
+  plan,
+  isFirst,
+  onEdit
+}: {
+  plan: PlanItem;
+  isFirst: boolean;
+  onEdit: () => void;
+}) {
   return (
-    <div
-      className={`flex h-12 items-center gap-3 px-3.5 ${isFirst ? '' : 'border-t'}`}
+    <button
+      className={`flex h-12 w-full items-center gap-3 px-3.5 text-left text-foreground ${isFirst ? '' : 'border-t'}`}
+      onClick={onEdit}
+      type='button'
     >
       <span
         aria-hidden='true'
         className='h-6 w-1 shrink-0 rounded-sm'
         style={{
-          backgroundColor: colorVar(plan.planTypeColorName)
+          backgroundColor: colorVar(
+            plan.planTypeColorName ?? plan.reminderColorName
+          )
         }}
       />
       <span className='flex-grow truncate text-[15px]'>{plan.name}</span>
       <span className='shrink-0 text-muted-foreground text-xs'>予定</span>
-    </div>
+    </button>
   );
 }
 
@@ -125,7 +146,7 @@ function RecordRow({
   return (
     <Link
       className={`flex h-15 items-center gap-3 px-3.5 text-foreground ${isFirst ? '' : 'border-t'}`}
-      href={`/note?RECORD=${record.id}`}
+      href={`/v2/note?RECORD=${record.id}`}
     >
       {/* カテゴリ色の淡いタイル。色そのままだと記録が並んだとき強すぎる。 */}
       <span

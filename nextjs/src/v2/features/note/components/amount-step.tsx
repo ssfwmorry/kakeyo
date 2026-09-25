@@ -3,14 +3,24 @@
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { cn } from 'cn';
-import { useState } from 'react';
+import Link from 'next/link';
+import { useState, useTransition } from 'react';
+import { ConfirmDialog } from '@/components/form/confirm-dialog';
 import { useFormAction } from '@/components/form/use-form-action';
-import { IconCalendar, IconChevronLeft, IconMemo } from '@/components/icons';
+import { useFormToast } from '@/components/form/use-form-toast';
+import {
+  IconCalendar,
+  IconChevronLeft,
+  IconClose,
+  IconMemo,
+  IconTrash
+} from '@/components/icons';
 import { colorVar } from '@/features/master';
 import { recordLabels } from '@/features/record/labels';
 import { recordUpsertSchema } from '@/features/record/schemas/record-schema';
 import type { MethodCard, TypeCard } from '@/features/type-method';
-import { createRecordAction } from '../actions';
+import type { FormActionResult } from '@/lib/shared/types/formResult';
+import { deleteRecordAction, upsertRecordAction } from '../actions';
 import { buildDateChips, withSelectedChip } from '../domain/date-chips';
 import { Chip } from './chip';
 import { DateSheet } from './date-sheet';
@@ -24,10 +34,14 @@ import type { NoteState } from './note-state';
 //
 // 共有モードはメモ必須（ペアに見える内容なので何の記録か分かるようにする）。
 // 満たさないうちは登録ボタンの文言で理由を伝える。
+//
+// 編集（デザイン RecordEdit）は同じ形で、左上が「＜」でなく「×」（カレンダーへ戻る）、
+// 下端に削除が加わる。カテゴリを変えたいときは中央のピルで 1 枚目へ戻る。
 
 export function AmountStep({
   state,
   isPair,
+  editingId,
   selectedType,
   methods,
   methodId,
@@ -37,6 +51,8 @@ export function AmountStep({
 }: {
   state: NoteState;
   isPair: boolean;
+  // 編集対象の id。新規のときは undefined。
+  editingId?: number;
   selectedType: TypeCard;
   methods: MethodCard[];
   // 候補に対して正規化済みの方法 id（state のそれではなくこちらを送る）。
@@ -45,7 +61,7 @@ export function AmountStep({
   onBack: () => void;
   patch: (next: Partial<NoteState>) => void;
 }) {
-  const [result, action, isPending] = useFormAction(createRecordAction);
+  const [result, action, isPending] = useFormAction(upsertRecordAction);
   const [form] = useForm({
     lastResult: result?.submission,
     onValidate: ({ formData }) =>
@@ -57,6 +73,7 @@ export function AmountStep({
   const showInstead = isPair && state.isPay;
   const needsMemo = isPair && state.memo.trim() === '';
   const canSubmit = methodId !== null && state.price > 0 && !needsMemo;
+  const isEdit = editingId !== undefined;
 
   return (
     <form
@@ -65,9 +82,13 @@ export function AmountStep({
       className='flex min-h-full flex-col gap-3.5 px-4'
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 34px)' }}
     >
+      {isEdit ? (
+        <input name='id' readOnly type='hidden' value={editingId} />
+      ) : null}
       <HiddenFields isPair={isPair} methodId={methodId} state={state} />
 
       <StepHeader
+        isEdit={isEdit}
         isPair={isPair}
         isPay={state.isPay}
         onBack={onBack}
@@ -88,25 +109,12 @@ export function AmountStep({
         />
       ) : null}
 
-      <Field label={`${state.isPay ? '支払' : '受取'}方法`}>
-        {methods.length === 0 ? (
-          <p className='px-1 text-muted-foreground text-sm'>
-            {recordLabels.empty.noMethod}
-          </p>
-        ) : (
-          <div className='-mx-4 flex gap-2 overflow-x-auto px-4'>
-            {methods.map((method) => (
-              <Chip
-                isSelected={method.id === methodId}
-                key={method.id}
-                onClick={() => patch({ methodId: method.id })}
-              >
-                {method.name}
-              </Chip>
-            ))}
-          </div>
-        )}
-      </Field>
+      <MethodField
+        isPay={state.isPay}
+        methodId={methodId}
+        methods={methods}
+        onChange={(next) => patch({ methodId: next })}
+      />
 
       <MemoField
         isPair={isPair}
@@ -124,9 +132,69 @@ export function AmountStep({
         </p>
       ) : null}
 
+      <SubmitBar
+        canSubmit={canSubmit}
+        editingId={editingId}
+        isPending={isPending}
+        needsMemo={needsMemo}
+      />
+    </form>
+  );
+}
+
+function MethodField({
+  isPay,
+  methods,
+  methodId,
+  onChange
+}: {
+  isPay: boolean;
+  methods: MethodCard[];
+  methodId: number | null;
+  onChange: (methodId: number) => void;
+}) {
+  return (
+    <Field label={`${isPay ? '支払' : '受取'}方法`}>
+      {methods.length === 0 ? (
+        <p className='px-1 text-muted-foreground text-sm'>
+          {recordLabels.empty.noMethod}
+        </p>
+      ) : (
+        <div className='-mx-4 flex gap-2 overflow-x-auto px-4'>
+          {methods.map((method) => (
+            <Chip
+              isSelected={method.id === methodId}
+              key={method.id}
+              onClick={() => onChange(method.id)}
+            >
+              {method.name}
+            </Chip>
+          ))}
+        </div>
+      )}
+    </Field>
+  );
+}
+
+// 登録／保存と、編集のときだけ左に削除。共有でメモが空のときは文言で理由を伝える。
+function SubmitBar({
+  editingId,
+  canSubmit,
+  needsMemo,
+  isPending
+}: {
+  editingId?: number;
+  canSubmit: boolean;
+  needsMemo: boolean;
+  isPending: boolean;
+}) {
+  const verb = editingId === undefined ? '登録' : '保存';
+  return (
+    <div className='flex gap-2.5'>
+      {editingId === undefined ? null : <DeleteButton id={editingId} />}
       <button
         className={cn(
-          'h-13 rounded-xl font-bold text-[17px]',
+          'h-13 flex-grow rounded-xl font-bold text-[17px]',
           canSubmit
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted font-semibold text-[15px] text-muted-foreground'
@@ -134,9 +202,44 @@ export function AmountStep({
         disabled={!canSubmit || isPending}
         type='submit'
       >
-        {needsMemo ? 'メモを入れると登録できます' : '登録する'}
+        {needsMemo ? `メモを入れると${verb}できます` : `${verb}する`}
       </button>
-    </form>
+    </div>
+  );
+}
+
+// 削除。保存の左に置く正方形の赤いボタン。確認は共通の ConfirmDialog。
+// 成功時は Action が /v2/calendar へ遷移するので、result に値が入るのは失敗時だけ。
+function DeleteButton({ id }: { id: number }) {
+  const [isPending, startTransition] = useTransition();
+  const [result, setResult] = useState<FormActionResult | null>(null);
+  useFormToast(result);
+
+  const remove = () => {
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('id', String(id));
+      setResult(await deleteRecordAction(null, formData));
+    });
+  };
+
+  return (
+    <ConfirmDialog
+      onConfirm={remove}
+      size='sm'
+      solidConfirm
+      title={recordLabels.confirm.delete}
+      trigger={
+        <button
+          aria-label='この記録を削除'
+          className='flex size-13 shrink-0 items-center justify-center rounded-xl bg-destructive/12 text-destructive disabled:opacity-50'
+          disabled={isPending}
+          type='button'
+        >
+          <IconTrash aria-hidden='true' className='size-5' />
+        </button>
+      }
+    />
   );
 }
 
@@ -191,14 +294,17 @@ function HiddenFields({
   );
 }
 
-// 「＜」と、選んだカテゴリの丸いピル。ピルを押しても 1 枚目に戻る（選び直しの導線）。
+// 左の「＜」（編集では「×」）と、選んだカテゴリの丸いピル。
+// ピルを押すと 1 枚目に戻る（選び直しの導線）。
 function StepHeader({
+  isEdit,
   isPay,
   isPair,
   selectedType,
   subTypeId,
   onBack
 }: {
+  isEdit: boolean;
   isPay: boolean;
   isPair: boolean;
   selectedType: TypeCard;
@@ -206,20 +312,32 @@ function StepHeader({
   onBack: () => void;
 }) {
   const subName = selectedType.subTypes.find((sub) => sub.id === subTypeId);
+  const cornerClass =
+    'flex size-9 items-center justify-center rounded-full bg-muted text-foreground';
   return (
     <div className='grid h-12 grid-cols-[44px_1fr_44px] items-center'>
-      <button
-        aria-label='カテゴリに戻る'
-        className='flex size-9 items-center justify-center rounded-full bg-muted text-foreground'
-        onClick={onBack}
-        type='button'
-      >
-        <IconChevronLeft
-          aria-hidden='true'
-          className='size-4.5'
-          strokeWidth={2.4}
-        />
-      </button>
+      {isEdit ? (
+        <Link aria-label='閉じる' className={cornerClass} href='/v2/calendar'>
+          <IconClose
+            aria-hidden='true'
+            className='size-4.5'
+            strokeWidth={2.4}
+          />
+        </Link>
+      ) : (
+        <button
+          aria-label='カテゴリに戻る'
+          className={cornerClass}
+          onClick={onBack}
+          type='button'
+        >
+          <IconChevronLeft
+            aria-hidden='true'
+            className='size-4.5'
+            strokeWidth={2.4}
+          />
+        </button>
+      )}
       <button
         className='flex h-9 max-w-full items-center gap-2 justify-self-center rounded-full bg-card px-3.5 text-foreground'
         onClick={onBack}

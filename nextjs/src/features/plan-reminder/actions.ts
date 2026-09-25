@@ -14,7 +14,7 @@ import {
   toFormResult
 } from '@/lib/shared/types/formResult';
 import type { Result } from '@/lib/shared/types/result';
-import { planReminderLabels } from './labels';
+import { planReminderErrorMessage } from './domain/error-message';
 import {
   deleteSchema,
   planTypeUpsertSchema,
@@ -41,20 +41,6 @@ function revalidateSetting(): void {
   revalidatePath(V2_SETTING_PATH, 'layout');
 }
 
-// service の失敗分類 → ユーザ向け文言。
-function errorMessage(error: PlanReminderError): string | undefined {
-  switch (error) {
-    case 'foreignKey':
-      return L.error.hasRelatedData;
-    case 'pairRequired':
-      return planReminderLabels.error.pairRequired;
-    case 'notInScope':
-      return L.error.notFound;
-    default:
-      return undefined;
-  }
-}
-
 // Result → FormActionResult 変換（設定タブ用。遷移しないため toast を返す）。
 function toResult(
   result: Result<void, PlanReminderError>,
@@ -63,7 +49,7 @@ function toResult(
 ): FormActionResult {
   return toFormResult(result, {
     success,
-    errorMessage,
+    errorMessage: planReminderErrorMessage,
     fallbackError: L.snackbar.failed,
     submission
   });

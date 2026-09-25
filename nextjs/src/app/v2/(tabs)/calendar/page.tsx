@@ -4,6 +4,7 @@ import {
   getMemoList,
   getShortCutList
 } from '@/features/memo-shortcut/server/services';
+import { getPlanTypeCardList } from '@/features/plan-reminder/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { todayJst, toYearMonthJst } from '@/lib/shared/domain/date';
 import { CalendarScreen } from '@/v2/features/calendar/components/calendar-screen';
@@ -15,15 +16,17 @@ export default async function V2CalendarPage() {
   const today = todayJst();
   const yearMonth = toYearMonthJst(new Date());
 
-  const [month, memos, shortcuts, isPair] = await Promise.all([
+  const [month, memos, shortcuts, isPair, planTypeList] = await Promise.all([
     getCalendarMonth(session, yearMonth),
     getMemoList(session),
     getShortCutList(session),
-    getEffectivePairMode(session)
+    getEffectivePairMode(session),
+    getPlanTypeCardList(session)
   ]);
 
   return (
     <CalendarScreen
+      planTypeList={planTypeList}
       initial={{
         hasPair: session.pairId !== null,
         isPair,
