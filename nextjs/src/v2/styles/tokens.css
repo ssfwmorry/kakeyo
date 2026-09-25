@@ -56,6 +56,12 @@
   --destructive-soft: #fbe9e7;
   /* スイッチの OFF。 */
   --switch-off: #d5dadb;
+  /* 設定トップの行頭タイル。行の意味づけの色で、カテゴリ色（--cat-*）とは別。 */
+  --tile-blue: #2463b5;
+  --tile-green: #197a4b;
+  --tile-purple: #6d4bc4;
+  --tile-orange: #c2610c;
+  --tile-red: #b83a3a;
   /* 予定の帯などの淡い面を作るときに色へ混ぜる面の割合の補数。
      ライトは白へ 80%（色 20%）、ダークは面へ 75%（色 25%）。 */
   --band-mix: 20%;
@@ -134,6 +140,12 @@
   --segment-on: #3a4043;
   --destructive-soft: #3a2321;
   --switch-off: #3a4043;
+  /* 設定トップの行頭タイル。行の意味づけの色で、カテゴリ色（--cat-*）とは別。 */
+  --tile-blue: #2463b5;
+  --tile-green: #197a4b;
+  --tile-purple: #6d4bc4;
+  --tile-orange: #c2610c;
+  --tile-red: #b83a3a;
   --band-mix: 25%;
 
   /* カテゴリ色のダーク用。面（#1B1F21）に対してコントラスト比 4.6 以上。 */

@@ -35,6 +35,7 @@ export function PlanTypeSheet({
       entity='予定カテゴリ'
       hiddenFields={{ isPair: String(isPair) }}
       isOpen={isOpen}
+      nameAriaLabel='予定カテゴリの名前'
       namePlaceholder='例：通院'
       onForeignKey={{
         kind: 'toast',

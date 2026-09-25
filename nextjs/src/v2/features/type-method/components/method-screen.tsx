@@ -1,28 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { SwapButton } from '@/components/form/swap-button';
-import { IconArrowDown } from '@/components/icons';
 import type { ColorClassification } from '@/features/master';
 import type { GroupedMethodList, MethodCard } from '@/features/type-method';
-import { swapMethodAction } from '@/features/type-method/actions';
+import {
+  deleteMethodAction,
+  reorderMethodAction
+} from '@/features/type-method/actions';
 import { AddRow } from '@/v2/components/add-row';
+import { DeleteAlerts, useDeleteFlow } from '@/v2/components/delete-flow';
 import { NameCell } from '@/v2/components/name-cell';
-import { ScreenHeader } from '@/v2/components/screen-header';
-import { ScreenTitle } from '@/v2/components/screen-title';
+import {
+  ScreenHeader,
+  ScreenHeaderAction
+} from '@/v2/components/screen-header';
+import { ScreenNote, ScreenTitle } from '@/v2/components/screen-title';
 import { SectionList } from '@/v2/components/section-list';
+import {
+  SortableHandle,
+  SortableList,
+  useSortableOrder
+} from '@/v2/components/sortable-list';
 import { Segment } from '@/v2/components/ui/segment';
-import { MethodSheet } from './method-sheet';
+import { MethodSheet, methodForeignKeyHandling } from './method-sheet';
 import type { PayMode } from './pay-mode';
 
-// 設定 › 方法（新デザイン）。支払 / 受取 / 精算のセグメントで切り替える。
+// 設定 › 方法（原典 SetMethod）。支払 / 受取 / 精算のセグメントで切り替える。
 // 精算は共有モード専用なので、個人モードでは選択肢ごと出さない。
 //
-// 旧画面との違いは、編集が別ダイアログではなく行タップで開くシートになったこと。
-// 「編集」を押すと削除と並べ替えが行内に出る（デザイン基礎 SetMethod）。
-//
-// 並べ替えはデザインではドラッグハンドルだが、既存の swap（下と入れ替え）を使う。
-// ドラッグ並べ替えは別途入れる。
+// 編集は行タップで開くシート。「編集」中は行頭に削除の −、行末にドラッグハンドルが出る。
+// 編集中でも行を押してシートを開ける。
 
 const TAB_TEXT: Record<
   PayMode,
@@ -65,6 +72,10 @@ export function MethodScreen({
   const [payMode, setPayMode] = useState<PayMode>('pay');
   const [isEditing, setIsEditing] = useState(false);
   const [sheet, setSheet] = useState<SheetState>({ kind: 'closed' });
+  const remove = useDeleteFlow({
+    deleteAction: deleteMethodAction,
+    onForeignKey: methodForeignKeyHandling
+  });
 
   const bucket = methodList[payMode];
   const cards = isPair ? bucket.pair : bucket.self;
@@ -79,13 +90,9 @@ export function MethodScreen({
     <div className='flex flex-col'>
       <ScreenHeader
         action={
-          <button
-            className='h-11 px-2 font-semibold text-base text-primary'
-            onClick={() => setIsEditing((prev) => !prev)}
-            type='button'
-          >
+          <ScreenHeaderAction onClick={() => setIsEditing((prev) => !prev)}>
             {isEditing ? '完了' : '編集'}
-          </button>
+          </ScreenHeaderAction>
         }
         backHref='/v2/setting'
         backLabel='設定'
@@ -100,35 +107,21 @@ export function MethodScreen({
             setSheet({ kind: 'closed' });
           }}
           options={options}
+          size='md'
           value={payMode}
         />
-        <p className='px-1 text-muted-foreground text-xs leading-relaxed'>
-          {text.note}
-        </p>
+        <ScreenNote>{text.note}</ScreenNote>
 
         {cards.length > 0 ? (
           <SectionList>
-            {cards.map((card, index) => (
-              <NameCell
-                colorName={card.colorName}
-                isEditing={isEditing}
-                isFirst={index === 0}
-                key={card.id}
-                name={card.name}
-                onOpen={() => setSheet({ kind: 'edit', card })}
-                handle={
-                  cards[index + 1] === undefined ? undefined : (
-                    <SwapButton
-                      action={swapMethodAction}
-                      icon={<IconArrowDown className='size-4' />}
-                      label='下と入れ替え'
-                      nextId={cards[index + 1].id}
-                      prevId={card.id}
-                    />
-                  )
-                }
-              />
-            ))}
+            {/* 区分ごとに並べ替えの対象が入れ替わるので、タブごとに状態を作り直す。 */}
+            <MethodRows
+              cards={cards}
+              isEditing={isEditing}
+              key={payMode}
+              onOpen={(card) => setSheet({ kind: 'edit', card })}
+              onRemove={(card) => remove.ask({ id: card.id, name: card.name })}
+            />
           </SectionList>
         ) : (
           <p className='px-1 text-muted-foreground text-sm'>
@@ -141,11 +134,16 @@ export function MethodScreen({
           onClick={() => setSheet({ kind: 'create' })}
         />
 
-        <p className='px-1 text-muted-foreground text-xs leading-relaxed'>
-          「編集」で並べ替えと削除。並び順は入力画面・精算画面の候補の並びに
-          そのまま使われます。個人モードでは「精算」は出ません。
-        </p>
+        <ScreenNote>
+          「編集」で並べ替えと削除。並び順は入力画面・精算画面の候補の並びにそのまま使われます。個人モードでは「精算」は出ません。
+        </ScreenNote>
       </div>
+
+      <DeleteAlerts
+        entity={text.entity}
+        onForeignKey={methodForeignKeyHandling}
+        remove={remove}
+      />
 
       {sheet.kind === 'closed' ? null : (
         <MethodSheet
@@ -167,5 +165,39 @@ export function MethodScreen({
         />
       )}
     </div>
+  );
+}
+
+function MethodRows({
+  cards,
+  isEditing,
+  onOpen,
+  onRemove
+}: {
+  cards: MethodCard[];
+  isEditing: boolean;
+  onOpen: (card: MethodCard) => void;
+  onRemove: (card: MethodCard) => void;
+}) {
+  const { ordered, reorder } = useSortableOrder(cards, reorderMethodAction);
+
+  return (
+    <SortableList
+      disabled={!isEditing}
+      items={ordered}
+      onReorder={reorder}
+      renderItem={(card, { handleProps }) => (
+        <NameCell
+          colorName={card.colorName}
+          handle={isEditing ? <SortableHandle {...handleProps} /> : undefined}
+          isEditing={isEditing}
+          isFirst={card.id === ordered[0]?.id}
+          isOpenableWhileEditing
+          name={card.name}
+          onOpen={() => onOpen(card)}
+          onRemove={() => onRemove(card)}
+        />
+      )}
+    />
   );
 }

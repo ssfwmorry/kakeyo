@@ -7,12 +7,20 @@ import {
   upsertMethodAction
 } from '@/features/type-method/actions';
 import { methodUpsertSchema } from '@/features/type-method/schemas';
+import type { ForeignKeyHandling } from '@/v2/components/delete-flow';
 import { MasterSheet } from '@/v2/components/master-sheet';
 import { quoted } from '@/v2/lib/format';
 import type { PayMode } from './pay-mode';
 
 // 方法の追加・編集シート。名前と色だけのマスタなので、口座と同じ MasterSheet に載せる。
-// 記録に使われている方法は消せないので、削除は「削除できません」のアラートで説明する。
+// 記録に使われている方法は消せないので、削除は「削除できません」のアラートで説明する
+// （一覧の編集モードの − からの削除も同じ出し方にする）。
+
+export const methodForeignKeyHandling: ForeignKeyHandling = {
+  kind: 'alert',
+  description: (name) =>
+    `${quoted(name)}には記録があります。名前と色の変更はできます。`
+};
 
 export function MethodSheet({
   isOpen,
@@ -43,12 +51,9 @@ export function MethodSheet({
       entity={entityName}
       hiddenFields={{ payMode, isPair: String(isPair) }}
       isOpen={isOpen}
+      nameAriaLabel='方法の名前'
       namePlaceholder={placeholder}
-      onForeignKey={{
-        kind: 'alert',
-        description: (name) =>
-          `${quoted(name)}には記録があります。名前と色の変更はできます。`
-      }}
+      onForeignKey={methodForeignKeyHandling}
       onOpenChange={onOpenChange}
       upsertAction={upsertMethodAction}
       upsertSchema={methodUpsertSchema}

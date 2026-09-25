@@ -2,11 +2,18 @@
 
 import { useState } from 'react';
 import type { GroupedTypeList, TypeCard } from '@/features/type-method';
-import { reorderTypeAction } from '@/features/type-method/actions';
+import {
+  deleteTypeAction,
+  reorderTypeAction
+} from '@/features/type-method/actions';
 import { AddRowLink } from '@/v2/components/add-row';
+import { DeleteAlerts, useDeleteFlow } from '@/v2/components/delete-flow';
 import { NameCell } from '@/v2/components/name-cell';
-import { ScreenHeader } from '@/v2/components/screen-header';
-import { ScreenTitle } from '@/v2/components/screen-title';
+import {
+  ScreenHeader,
+  ScreenHeaderAction
+} from '@/v2/components/screen-header';
+import { ScreenNote, ScreenTitle } from '@/v2/components/screen-title';
 import { SectionList } from '@/v2/components/section-list';
 import {
   SortableHandle,
@@ -14,13 +21,13 @@ import {
   useSortableOrder
 } from '@/v2/components/sortable-list';
 import { Segment } from '@/v2/components/ui/segment';
+import { summarizeSubTypes } from '../domain/sub-type-summary';
 
-// 設定 › カテゴリ一覧（新デザイン）。支出 / 収入のセグメントで切り替える。
+// 設定 › カテゴリ一覧（原典 SetType）。支出 / 収入のセグメントで切り替える。
 //
-// 方法と違い、カテゴリはサブカテゴリを持つので編集はシートではなく専用画面へ進む
-// （デザイン基礎 SetType → SetTypeEdit）。
-//
-// 「編集」中は行末がドラッグハンドルになり、任意順に並べ替えられる。
+// 方法と違い、カテゴリはサブカテゴリを持つので編集はシートではなく専用画面へ進む。
+// 「編集」中は行頭に削除の −、行末にドラッグハンドルが出る。編集中でも名前を押せば
+// 編集画面へ進める。
 
 type PayTab = 'pay' | 'income';
 
@@ -38,6 +45,7 @@ export function TypeScreen({
 }) {
   const [payTab, setPayTab] = useState<PayTab>('pay');
   const [isEditing, setIsEditing] = useState(false);
+  const remove = useDeleteFlow({ deleteAction: deleteTypeAction });
 
   const bucket = typeList[payTab];
   const cards = isPair ? bucket.pair : bucket.self;
@@ -46,13 +54,9 @@ export function TypeScreen({
     <div className='flex flex-col'>
       <ScreenHeader
         action={
-          <button
-            className='h-11 px-2 font-semibold text-base text-primary'
-            onClick={() => setIsEditing((prev) => !prev)}
-            type='button'
-          >
+          <ScreenHeaderAction onClick={() => setIsEditing((prev) => !prev)}>
             {isEditing ? '完了' : '編集'}
-          </button>
+          </ScreenHeaderAction>
         }
         backHref='/v2/setting'
         backLabel='設定'
@@ -64,6 +68,7 @@ export function TypeScreen({
           label='カテゴリの種類'
           onChange={setPayTab}
           options={TAB_OPTIONS}
+          size='md'
           value={payTab}
         />
 
@@ -74,6 +79,7 @@ export function TypeScreen({
               cards={cards}
               isEditing={isEditing}
               key={payTab}
+              onRemove={(card) => remove.ask({ id: card.id, name: card.name })}
               payTab={payTab}
             />
           </SectionList>
@@ -88,10 +94,12 @@ export function TypeScreen({
           label='カテゴリを追加'
         />
 
-        <p className='px-1 text-muted-foreground text-xs leading-relaxed'>
-          「編集」で並べ替え。並び順は入力画面のカテゴリの並びにそのまま使われます。
-        </p>
+        <ScreenNote>
+          「編集」で並べ替えと削除。並び順は入力画面のカテゴリの並びにそのまま使われます。
+        </ScreenNote>
       </div>
+
+      <DeleteAlerts entity='カテゴリ' remove={remove} />
     </div>
   );
 }
@@ -99,11 +107,13 @@ export function TypeScreen({
 function TypeRows({
   cards,
   payTab,
-  isEditing
+  isEditing,
+  onRemove
 }: {
   cards: TypeCard[];
   payTab: PayTab;
   isEditing: boolean;
+  onRemove: (card: TypeCard) => void;
 }) {
   const { ordered, reorder } = useSortableOrder(cards, reorderTypeAction);
 
@@ -113,50 +123,18 @@ function TypeRows({
       items={ordered}
       onReorder={reorder}
       renderItem={(card, { handleProps }) => (
-        <TypeRow
-          card={card}
+        <NameCell
+          colorName={card.colorName}
+          description={summarizeSubTypes(card.subTypes.map((sub) => sub.name))}
           handle={isEditing ? <SortableHandle {...handleProps} /> : undefined}
+          href={`/v2/setting/type/${card.id}?isPay=${payTab === 'pay'}`}
           isEditing={isEditing}
           isFirst={card.id === ordered[0]?.id}
-          payTab={payTab}
+          isOpenableWhileEditing
+          name={card.name}
+          onRemove={() => onRemove(card)}
         />
       )}
-    />
-  );
-}
-
-function TypeRow({
-  card,
-  payTab,
-  isEditing,
-  isFirst,
-  handle
-}: {
-  card: TypeCard;
-  payTab: PayTab;
-  isEditing: boolean;
-  isFirst: boolean;
-  handle?: React.ReactNode;
-}) {
-  // サブカテゴリは最初の 2 件までを並べ、それ以上は件数で畳む。
-  // 行の高さを一定に保ちつつ、何が入っているかの手がかりは残す。
-  const subNames = card.subTypes.map((sub) => sub.name);
-  const description =
-    subNames.length === 0
-      ? 'サブカテゴリなし'
-      : subNames.length <= 2
-        ? subNames.join('、')
-        : `${subNames.slice(0, 2).join('、')} ほか${subNames.length - 2}件`;
-
-  return (
-    <NameCell
-      colorName={card.colorName}
-      description={description}
-      handle={handle}
-      href={`/v2/setting/type/${card.id}?isPay=${payTab === 'pay'}`}
-      isEditing={isEditing}
-      isFirst={isFirst}
-      name={card.name}
     />
   );
 }

@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 import {
+  IconBank,
   IconBell,
   IconCalendar,
   IconCreditCard,
   IconLogout,
   IconMail,
   IconManual,
-  IconOpenInNew,
-  IconPiggyBank,
   IconTag,
   IconUpdate
 } from '@/components/icons';
@@ -28,7 +27,7 @@ import { LogoutCell } from './logout-cell';
 // そのため、この画面自身はフォームを持たず件数だけを出す。
 //
 // 行のアイコンは色タイル（30px・角丸 8）に白抜き。タイルの色はカテゴリ色ではなく
-// 行の意味づけなので、CSS 変数ではなくここで直接指定している。
+// 行の意味づけなので、--cat-* ではなく専用の --tile-* を使う。
 
 type SettingRow = {
   href: string;
@@ -38,7 +37,7 @@ type SettingRow = {
   tile: string;
   // 右端に出す件数。null なら出さない。
   count: number | null;
-  // 外部サイトへ出る行。別タブで開き、シェブロンの代わりに「外部」アイコンを出す。
+  // 外部サイトへ出る行。別タブで開く。
   external?: boolean;
 };
 
@@ -74,7 +73,7 @@ export function SettingScreen({
       href: '/v2/setting/method',
       label: '方法',
       icon: IconCreditCard,
-      tile: 'var(--cat-blue)',
+      tile: 'var(--tile-blue)',
       count: methodCount
     },
     // 口座は個人の資産なので共有モードでは出さない（旧画面と同じ扱い）。
@@ -84,8 +83,8 @@ export function SettingScreen({
           {
             href: '/v2/bank',
             label: '口座',
-            icon: IconPiggyBank,
-            tile: 'var(--cat-green)',
+            icon: IconBank,
+            tile: 'var(--tile-green)',
             count: bankCount
           }
         ]),
@@ -93,7 +92,7 @@ export function SettingScreen({
       href: '/v2/setting/planned-record',
       label: '定期の記録',
       icon: IconUpdate,
-      tile: 'var(--cat-deep-purple)',
+      tile: 'var(--tile-purple)',
       count: plannedRecordCount
     }
   ];
@@ -103,14 +102,14 @@ export function SettingScreen({
       href: '/v2/setting/plan-type',
       label: '予定カテゴリ',
       icon: IconCalendar,
-      tile: 'var(--cat-orange)',
+      tile: 'var(--tile-orange)',
       count: planTypeCount
     },
     {
       href: '/v2/setting/reminder',
       label: 'リマインダー',
       icon: IconBell,
-      tile: 'var(--cat-red)',
+      tile: 'var(--tile-red)',
       count: reminderCount
     }
   ];
@@ -173,7 +172,7 @@ export function SettingScreen({
             leading={
               <IconTile
                 color='var(--destructive)'
-                icon={<IconLogout className='size-4' />}
+                icon={<IconLogout className='size-[17px]' />}
               />
             }
           />
@@ -199,17 +198,11 @@ function SettingCell({
       href={row.href}
       isFirst={isFirst}
       label={row.label}
-      leading={<IconTile color={row.tile} icon={<Icon className='size-4' />} />}
+      leading={
+        <IconTile color={row.tile} icon={<Icon className='size-[17px]' />} />
+      }
       rel={row.external ? 'noopener noreferrer' : undefined}
       target={row.external ? '_blank' : undefined}
-      trailing={
-        row.external ? (
-          <IconOpenInNew
-            aria-hidden='true'
-            className='size-3.5 shrink-0 text-muted-foreground'
-          />
-        ) : undefined
-      }
       value={row.count === null ? undefined : String(row.count)}
     />
   );

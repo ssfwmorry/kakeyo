@@ -2,6 +2,7 @@
 
 import { getFormProps, getInputProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
+import { cn } from 'cn';
 import { useEffect, useRef } from 'react';
 import { useFormAction } from '@/components/form/use-form-action';
 import { IconPlus } from '@/components/icons';
@@ -42,18 +43,23 @@ export function SubTypeAddRow({
     <form {...getFormProps(form)} action={action}>
       <input name='typeId' readOnly type='hidden' value={typeId} />
       <label
-        className={`flex h-12 items-center gap-3 px-3.5 ${hasDivider ? 'border-t' : ''}`}
+        className={cn(
+          'ml-3.5 flex h-12 items-center gap-3 pr-3.5',
+          hasDivider && 'border-t'
+        )}
       >
         <span
           aria-hidden='true'
-          className='flex size-5.5 shrink-0 items-center justify-center rounded-full bg-[var(--cat-green)] text-[var(--cat-on)]'
+          className='flex size-5.5 shrink-0 items-center justify-center rounded-full bg-[var(--tile-green)] text-white'
         >
           <IconPlus className='size-3' strokeWidth={3} />
         </span>
         <input
           {...getInputProps(fields.name, { type: 'text' })}
+          aria-label='サブカテゴリを追加'
           className='min-w-0 flex-grow bg-transparent text-base text-foreground outline-none'
           key={fields.name.key}
+          maxLength={10}
           placeholder='サブカテゴリを追加'
           ref={inputRef}
         />

@@ -1,21 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import { SwapButton } from '@/components/form/swap-button';
-import { IconArrowDown } from '@/components/icons';
 import type { ColorClassification } from '@/features/master';
 import type { PlanTypeCard } from '@/features/plan-reminder';
-import { swapPlanTypeAction } from '@/features/plan-reminder/actions';
+import { reorderPlanTypeAction } from '@/features/plan-reminder/actions';
 import { AddRow } from '@/v2/components/add-row';
 import { NameCell } from '@/v2/components/name-cell';
-import { ScreenHeader } from '@/v2/components/screen-header';
-import { ScreenTitle } from '@/v2/components/screen-title';
+import {
+  ScreenHeader,
+  ScreenHeaderAction
+} from '@/v2/components/screen-header';
+import {
+  ScreenLead,
+  ScreenNote,
+  ScreenTitle
+} from '@/v2/components/screen-title';
 import { SectionList } from '@/v2/components/section-list';
+import {
+  SortableHandle,
+  SortableList,
+  useSortableOrder
+} from '@/v2/components/sortable-list';
+import { dismissToast } from '@/v2/lib/toast';
 import { PlanTypeSheet } from './plan-type-sheet';
 
-// 設定 › 予定カテゴリ（新デザイン）。名前と色だけを持つので、方法と同じくシートで編集する。
+// 設定 › 予定カテゴリ（原典 SetPlanType）。名前と色だけを持つので、方法と同じくシートで編集する。
 //
-// 並べ替えはデザインではドラッグハンドルだが、既存の swap（下と入れ替え）を使う。
+// 「編集」中は並べ替えだけ（行頭の − は無く、行タップも追加行も無い）。削除はシートの
+// ゴミ箱から行う。
 
 type SheetState =
   | { kind: 'closed' }
@@ -33,48 +45,55 @@ export function PlanTypeScreen({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [sheet, setSheet] = useState<SheetState>({ kind: 'closed' });
+  const { ordered, reorder } = useSortableOrder(
+    planTypes,
+    reorderPlanTypeAction
+  );
+
+  // 編集モードの出入りで、開いていたシートと残っていたトーストを片付ける。
+  const toggleEditing = () => {
+    setIsEditing((prev) => !prev);
+    setSheet({ kind: 'closed' });
+    dismissToast();
+  };
 
   return (
     <div className='flex flex-col'>
       <ScreenHeader
         action={
-          <button
-            className='h-11 px-2 font-semibold text-base text-primary'
-            onClick={() => setIsEditing((prev) => !prev)}
-            type='button'
-          >
+          <ScreenHeaderAction onClick={toggleEditing}>
             {isEditing ? '完了' : '編集'}
-          </button>
+          </ScreenHeaderAction>
         }
         backHref='/v2/setting'
         backLabel='設定'
       />
       <div className='flex flex-col gap-3 px-4'>
         <ScreenTitle badge={isPair ? 'pair' : 'self'}>予定カテゴリ</ScreenTitle>
+        <ScreenLead>
+          予定を追加するときに選ぶカテゴリです。色はカレンダーの帯の色になります
+        </ScreenLead>
 
-        {planTypes.length > 0 ? (
+        {ordered.length > 0 ? (
           <SectionList>
-            {planTypes.map((card, index) => (
-              <NameCell
-                colorName={card.colorName}
-                isEditing={isEditing}
-                isFirst={index === 0}
-                key={card.id}
-                name={card.name}
-                onOpen={() => setSheet({ kind: 'edit', card })}
-                handle={
-                  planTypes[index + 1] === undefined ? undefined : (
-                    <SwapButton
-                      action={swapPlanTypeAction}
-                      icon={<IconArrowDown className='size-4' />}
-                      label='下と入れ替え'
-                      nextId={planTypes[index + 1].id}
-                      prevId={card.id}
-                    />
-                  )
-                }
-              />
-            ))}
+            <SortableList
+              disabled={!isEditing}
+              items={ordered}
+              onReorder={reorder}
+              renderItem={(card, { handleProps }) => (
+                <NameCell
+                  ariaLabel={`${card.name}を編集`}
+                  colorName={card.colorName}
+                  handle={
+                    isEditing ? <SortableHandle {...handleProps} /> : undefined
+                  }
+                  isEditing={isEditing}
+                  isFirst={card.id === ordered[0]?.id}
+                  name={card.name}
+                  onOpen={() => setSheet({ kind: 'edit', card })}
+                />
+              )}
+            />
           </SectionList>
         ) : (
           <p className='px-1 text-muted-foreground text-sm'>
@@ -82,15 +101,18 @@ export function PlanTypeScreen({
           </p>
         )}
 
-        <AddRow
-          label='予定カテゴリを追加'
-          onClick={() => setSheet({ kind: 'create' })}
-        />
+        {isEditing ? null : (
+          <AddRow
+            label='予定カテゴリを追加'
+            onClick={() => setSheet({ kind: 'create' })}
+          />
+        )}
 
-        <p className='px-1 text-muted-foreground text-xs leading-relaxed'>
-          「編集」で並べ替え。並び順は予定を追加するときの候補の並びに
-          そのまま使われます。
-        </p>
+        <ScreenNote>
+          {isEditing
+            ? 'ドラッグして並べ替えます。並び順は予定を追加するときの候補の並びになります。'
+            : '行をタップすると名前と色を変えられます。「編集」で並べ替え。'}
+        </ScreenNote>
       </div>
 
       {sheet.kind === 'closed' ? null : (

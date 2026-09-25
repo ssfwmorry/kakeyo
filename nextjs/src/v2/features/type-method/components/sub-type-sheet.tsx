@@ -23,12 +23,15 @@ export function SubTypeSheet({
 }) {
   return (
     <MasterSheet
+      counter={false}
       deleteAction={deleteSubTypeAction}
       editing={subType}
       entity='サブカテゴリ'
       helper='名前を変えると、これまでの記録にも新しい名前で表示されます'
       hiddenFields={{ typeId: String(typeId) }}
       isOpen={isOpen}
+      nameAriaLabel='サブカテゴリ名'
+      nameHeight={48}
       onOpenChange={onOpenChange}
       upsertAction={upsertSubTypeAction}
       upsertSchema={subTypeUpsertSchema}
