@@ -23,7 +23,7 @@ public スキーマのDBに書き込みをするときは必ずユーザの許�
 - **feature 固有 labels**: 各 feature の `labels.ts` には feature 固有の文言のみ置く。保存/削除/編集/並べ替え/色などの汎用文言・成否通知・汎用エラーは `@/lib/shared/labels`（`L`）を使う。キー名は横断で意味を固定する: `dialogEntity` = 文言を組み立てる対象名（`dialogTitle`「〜を追加/編集」・`addLabel`「〜を追加」が使う。画面見出しの `heading` や入力欄ラベルの `entity` を流用しない）、`heading` = 画面・セクション見出し、`entity` = FormField の入力欄ラベル。「〜を追加」等の言い回しは feature 側に書かず組み立て関数に寄せる。
 - **フォーム標準**: 入力は「1 フォーム = 1 スキーマ = 1 useForm」。`schemas/*.ts`（Conform + Zod）→ Server Action で `parseWithZod`（`@conform-to/zod/v4`）→ `@/components/form/FormField` + `useFormAction`。`session` 由来の値（userId/pairId 等）はスキーマに含めない。ダイアログ系の `useForm` `defaultValue` はマウント時に一度だけ取り込まれるため、編集対象ごとに `key` を変えてリマウントしプリフィルを効かせる。
 - **トースト2系統**: 遷移しないフォームは `FormActionResult.toast`（`useFormToast` が発火）、`redirect()` を挟む Server Action は `setFlashToast`（Cookie 経由・遷移先の `FlashToast` が消費）を使い、二重発火を避けるためどちらか一方に統一する。
-- **コメント**: 冗長性をなくす。タスクIDはかかない。コードを見てわかることは書かない。決断の理由があれば書く。コード修正の断片情報（例: 「旧は〜だった」）は書かない。
+- **コメント**: 冗長性をなくす。タスクIDはかかない。コードを見てわかることは書かない。決断の理由があれば書く。後で見たときに不明な表現となるコード修正の断片情報（例: 「旧は〜だった」「新バージョンでは〜を使用するため、〜」）は書かない。
 
 ## 画面の動作確認（スクリーンショット）
 
