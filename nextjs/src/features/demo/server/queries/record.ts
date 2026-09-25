@@ -6,6 +6,7 @@ import {
 } from '@/features/record/domain/record-fields';
 import { SETTLEMENT_DISPLAY } from '@/features/record/labels';
 import type {
+  LastUsedMethodIds,
   NoteRecordDefault,
   PairedRecordItem,
   RecordListItem,
@@ -206,5 +207,30 @@ export function getRecordForEdit(
     price: view.price,
     isInstead: view.isInstead ?? false,
     isPair: view.isPair
+  };
+}
+
+// 実リポジトリの findLastUsedMethodIds と同じ規則（組み合わせごとに datetime 降順の先頭）。
+export function getLastUsedMethodIds(scope: SessionScope): LastUsedMethodIds {
+  // recordViews は datetime 昇順なので、末尾から探せば最新になる。
+  const views = visibleRecordViews(scope);
+  const latestMethodId = (
+    isPay: boolean,
+    recordType: RecordType
+  ): number | null => {
+    for (let i = views.length - 1; i >= 0; i -= 1) {
+      const view = views[i];
+      if (view.isPay === isPay && view.recordType === recordType) {
+        return view.methodId;
+      }
+    }
+    return null;
+  };
+  return {
+    paySelf: latestMethodId(true, RecordType.self),
+    incomeSelf: latestMethodId(false, RecordType.self),
+    payPairInstead: latestMethodId(true, RecordType.instead),
+    payPairShared: latestMethodId(true, RecordType.pair),
+    incomePair: latestMethodId(false, RecordType.pair)
   };
 }

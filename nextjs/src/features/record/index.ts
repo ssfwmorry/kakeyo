@@ -19,6 +19,7 @@ export { NoteRecordForm } from './components/note-record-form';
 export { RecordCard, type RecordCardItem } from './components/record-card';
 export { SETTLEMENT_DISPLAY } from './labels';
 export type {
+  LastUsedMethodIds,
   NoteRecordDefault,
   PairedRecordItem,
   RecordError,
