@@ -54,11 +54,19 @@ describe('assignEventLanes', () => {
 
   it('空いた段は詰めずに残す（下の段の位置を揃えるため）', () => {
     const lanes = assignEventLanes(
-      [event('a', '2026-09-01', '2026-09-03'), event('b', '2026-09-02')],
+      [
+        event('a', '2026-09-01', '2026-09-02'),
+        event('b', '2026-09-02', '2026-09-03')
+      ],
       3
     );
-    // 2 段目を使う b は 9/2 だけ。9/3 の 2 段目は空きとして残る。
-    expect(lanes.get('2026-09-03')?.[1]).toEqual({ kind: 'empty', lane: 1 });
+    // 9/2 で a が 1 段目を使っているので b は 2 段目。a が終わった 9/3 でも b は
+    // 2 段目のまま通し、空いた 1 段目は詰めずに空きとして残る。
+    expect(lanes.get('2026-09-03')?.[0]).toEqual({ kind: 'empty', lane: 0 });
+    expect(lanes.get('2026-09-03')?.[1]).toMatchObject({
+      kind: 'event',
+      lane: 1
+    });
   });
 
   it('段が溢れたら最下段を「他N件」に畳む', () => {

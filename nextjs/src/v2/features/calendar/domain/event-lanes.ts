@@ -79,7 +79,9 @@ function toSlots(
   lanes: (LaneEvent | undefined)[],
   maxLanes: number
 ): LaneSlot[] {
-  const visible = lanes.slice(0, maxLanes);
+  // occupied の段は歯抜け（sparse）になりうる。map は穴を飛ばすので、
+  // Array.from で undefined に実体化してから空き段に変換する。
+  const visible = Array.from(lanes.slice(0, maxLanes));
   const hiddenCount = lanes.slice(maxLanes).filter(Boolean).length;
 
   const slots: LaneSlot[] = visible.map((event, lane) =>

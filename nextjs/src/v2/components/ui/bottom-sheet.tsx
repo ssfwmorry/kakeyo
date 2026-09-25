@@ -26,7 +26,8 @@ export function BottomSheetContent({
 }: Drawer.Popup.Props) {
   return (
     <Drawer.Portal>
-      <Drawer.Backdrop className='fixed inset-0 z-50 bg-[var(--overlay)] transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0' />
+      {/* 暗幕も Portal で body 直下に出るので、--overlay を引くために v2-root が要る。 */}
+      <Drawer.Backdrop className='v2-root fixed inset-0 z-50 bg-[var(--overlay)] transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0' />
       <Drawer.Viewport className='fixed inset-0 z-50 flex items-end justify-center'>
         <Drawer.Popup
           className={cn(
