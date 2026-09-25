@@ -3,40 +3,37 @@
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { cn } from 'cn';
-import Link from 'next/link';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { ConfirmDialog } from '@/components/form/confirm-dialog';
+import { calendarJaProps } from '@/components/form/date-picker';
 import { useFormAction } from '@/components/form/use-form-action';
 import { useFormToast } from '@/components/form/use-form-toast';
-import {
-  IconCalendar,
-  IconChevronLeft,
-  IconClose,
-  IconMemo,
-  IconTrash
-} from '@/components/icons';
+import { IconCalendar, IconMemo, IconTrash } from '@/components/icons';
+import { Calendar } from '@/components/ui/calendar';
 import { colorVar } from '@/features/master';
 import { recordLabels } from '@/features/record/labels';
 import { recordUpsertSchema } from '@/features/record/schemas/record-schema';
 import type { MethodCard, TypeCard } from '@/features/type-method';
+import { formatLocalDate, parseLocalDate } from '@/lib/shared/domain/localDate';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 import { deleteRecordAction, upsertRecordAction } from '../actions';
 import { buildDateChips, withSelectedChip } from '../domain/date-chips';
 import { Chip } from './chip';
-import { DateSheet } from './date-sheet';
 import { Keypad } from './keypad';
 import type { NoteState } from './note-state';
+import { SheetHeader } from './sheet-header';
 
-// 入力フロー 2 枚目: 金額と詳細（デザイン Note / NoteIncome / NotePair）。
+// 記録シート 3 枚目: 金額と詳細（デザイン Note / NoteIncome / NotePair / RecordEdit）。
 //
-// 上から「戻る｜選んだカテゴリ」「日付」「（共有なら）だれのお金で払った？」「方法」「メモ」、
-// 下に金額とテンキー、登録ボタン。金額を一番下に置くのは、テンキーの真上に見えるようにするため。
+// 上から「‹ カテゴリ｜選んだカテゴリのピル」「日付」「（共有なら）だれのお金で払った？」
+// 「方法」「メモ」、下に金額とテンキー、登録ボタン。「他の日を選ぶ」の暦はチップの下に
+// 開く（シートの上にシートを重ねない）。
 //
 // 共有モードはメモ必須（ペアに見える内容なので何の記録か分かるようにする）。
 // 満たさないうちは登録ボタンの文言で理由を伝える。
 //
-// 編集（デザイン RecordEdit）は同じ形で、左上が「＜」でなく「×」（カレンダーへ戻る）、
-// 下端に削除が加わる。カテゴリを変えたいときは中央のピルで 1 枚目へ戻る。
+// 編集は左が「キャンセル」で、ピルを押すと 1 枚目に戻ってカテゴリを選び直せる。
+// 下端に削除が加わる。
 
 export function AmountStep({
   state,
@@ -47,6 +44,8 @@ export function AmountStep({
   methodId,
   today,
   onBack,
+  onCancel,
+  onSaved,
   patch
 }: {
   state: NoteState;
@@ -59,6 +58,9 @@ export function AmountStep({
   methodId: number | null;
   today: string;
   onBack: () => void;
+  onCancel: () => void;
+  // 登録・更新・削除が成功したとき。呼び出し側でシートを閉じて月を取り直す。
+  onSaved: () => void;
   patch: (next: Partial<NoteState>) => void;
 }) {
   const [result, action, isPending] = useFormAction(upsertRecordAction);
@@ -67,6 +69,11 @@ export function AmountStep({
     onValidate: ({ formData }) =>
       parseWithZod(formData, { schema: recordUpsertSchema })
   });
+  useEffect(() => {
+    if (result?.toast?.type === 'success') {
+      onSaved();
+    }
+  }, [result, onSaved]);
   // 検証エラーの多くは hidden に付くので、フォーム全体のエラーとしてまとめて出す。
   const errorMessages = [...new Set(Object.values(form.allErrors).flat())];
 
@@ -79,21 +86,25 @@ export function AmountStep({
     <form
       {...getFormProps(form)}
       action={action}
-      className='flex min-h-full flex-col gap-3.5 px-4'
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 34px)' }}
+      className='flex flex-col gap-3.5'
     >
       {isEdit ? (
         <input name='id' readOnly type='hidden' value={editingId} />
       ) : null}
       <HiddenFields isPair={isPair} methodId={methodId} state={state} />
 
-      <StepHeader
-        isEdit={isEdit}
-        isPair={isPair}
-        isPay={state.isPay}
-        onBack={onBack}
-        selectedType={selectedType}
-        subTypeId={state.subTypeId}
+      <SheetHeader
+        back={isEdit ? undefined : { label: 'カテゴリ', onClick: onBack }}
+        onCancel={onCancel}
+        title={
+          <TypePill
+            isPair={isPair}
+            isPay={state.isPay}
+            onClick={onBack}
+            selectedType={selectedType}
+            subTypeId={state.subTypeId}
+          />
+        }
       />
 
       <DateField
@@ -137,109 +148,9 @@ export function AmountStep({
         editingId={editingId}
         isPending={isPending}
         needsMemo={needsMemo}
+        onDeleted={onSaved}
       />
     </form>
-  );
-}
-
-function MethodField({
-  isPay,
-  methods,
-  methodId,
-  onChange
-}: {
-  isPay: boolean;
-  methods: MethodCard[];
-  methodId: number | null;
-  onChange: (methodId: number) => void;
-}) {
-  return (
-    <Field label={`${isPay ? '支払' : '受取'}方法`}>
-      {methods.length === 0 ? (
-        <p className='px-1 text-muted-foreground text-sm'>
-          {recordLabels.empty.noMethod}
-        </p>
-      ) : (
-        <div className='-mx-4 flex gap-2 overflow-x-auto px-4'>
-          {methods.map((method) => (
-            <Chip
-              isSelected={method.id === methodId}
-              key={method.id}
-              onClick={() => onChange(method.id)}
-            >
-              {method.name}
-            </Chip>
-          ))}
-        </div>
-      )}
-    </Field>
-  );
-}
-
-// 登録／保存と、編集のときだけ左に削除。共有でメモが空のときは文言で理由を伝える。
-function SubmitBar({
-  editingId,
-  canSubmit,
-  needsMemo,
-  isPending
-}: {
-  editingId?: number;
-  canSubmit: boolean;
-  needsMemo: boolean;
-  isPending: boolean;
-}) {
-  const verb = editingId === undefined ? '登録' : '保存';
-  return (
-    <div className='flex gap-2.5'>
-      {editingId === undefined ? null : <DeleteButton id={editingId} />}
-      <button
-        className={cn(
-          'h-13 flex-grow rounded-xl font-bold text-[17px]',
-          canSubmit
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted font-semibold text-[15px] text-muted-foreground'
-        )}
-        disabled={!canSubmit || isPending}
-        type='submit'
-      >
-        {needsMemo ? `メモを入れると${verb}できます` : `${verb}する`}
-      </button>
-    </div>
-  );
-}
-
-// 削除。保存の左に置く正方形の赤いボタン。確認は共通の ConfirmDialog。
-// 成功時は Action が /v2/calendar へ遷移するので、result に値が入るのは失敗時だけ。
-function DeleteButton({ id }: { id: number }) {
-  const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState<FormActionResult | null>(null);
-  useFormToast(result);
-
-  const remove = () => {
-    startTransition(async () => {
-      const formData = new FormData();
-      formData.set('id', String(id));
-      setResult(await deleteRecordAction(null, formData));
-    });
-  };
-
-  return (
-    <ConfirmDialog
-      onConfirm={remove}
-      size='sm'
-      solidConfirm
-      title={recordLabels.confirm.delete}
-      trigger={
-        <button
-          aria-label='この記録を削除'
-          className='flex size-13 shrink-0 items-center justify-center rounded-xl bg-destructive/12 text-destructive disabled:opacity-50'
-          disabled={isPending}
-          type='button'
-        >
-          <IconTrash aria-hidden='true' className='size-5' />
-        </button>
-      }
-    />
   );
 }
 
@@ -294,70 +205,41 @@ function HiddenFields({
   );
 }
 
-// 左の「＜」（編集では「×」）と、選んだカテゴリの丸いピル。
-// ピルを押すと 1 枚目に戻る（選び直しの導線）。
-function StepHeader({
-  isEdit,
+// 選んだカテゴリの丸いピル。押すと 1 枚目に戻る（選び直しの導線）。
+function TypePill({
   isPay,
   isPair,
   selectedType,
   subTypeId,
-  onBack
+  onClick
 }: {
-  isEdit: boolean;
   isPay: boolean;
   isPair: boolean;
   selectedType: TypeCard;
   subTypeId: number | null;
-  onBack: () => void;
+  onClick: () => void;
 }) {
   const subName = selectedType.subTypes.find((sub) => sub.id === subTypeId);
-  const cornerClass =
-    'flex size-9 items-center justify-center rounded-full bg-muted text-foreground';
   return (
-    <div className='grid h-12 grid-cols-[44px_1fr_44px] items-center'>
-      {isEdit ? (
-        <Link aria-label='閉じる' className={cornerClass} href='/v2/calendar'>
-          <IconClose
-            aria-hidden='true'
-            className='size-4.5'
-            strokeWidth={2.4}
-          />
-        </Link>
-      ) : (
-        <button
-          aria-label='カテゴリに戻る'
-          className={cornerClass}
-          onClick={onBack}
-          type='button'
-        >
-          <IconChevronLeft
-            aria-hidden='true'
-            className='size-4.5'
-            strokeWidth={2.4}
-          />
-        </button>
-      )}
-      <button
-        className='flex h-9 max-w-full items-center gap-2 justify-self-center rounded-full bg-card px-3.5 text-foreground'
-        onClick={onBack}
-        type='button'
-      >
-        <span
-          aria-hidden='true'
-          className='size-2.5 shrink-0 rounded-full'
-          style={{ backgroundColor: colorVar(selectedType.colorName) }}
-        />
-        <span className='truncate font-semibold text-[15px]'>
-          {selectedType.name}
-          {subName === undefined ? '' : ` › ${subName.name}`}
-        </span>
-        <Badge isAccent={!isPay}>
-          {isPay ? recordLabels.payToggle.pay : recordLabels.payToggle.income}
-        </Badge>
-        {isPair ? <Badge isAccent>共有</Badge> : null}
-      </button>
-    </div>
+    <button
+      className='flex h-9 max-w-full items-center gap-2 rounded-full bg-card px-3.5 text-foreground'
+      onClick={onClick}
+      type='button'
+    >
+      <span
+        aria-hidden='true'
+        className='size-2.5 shrink-0 rounded-full'
+        style={{ backgroundColor: colorVar(selectedType.colorName) }}
+      />
+      <span className='truncate font-semibold text-[15px]'>
+        {selectedType.name}
+        {subName === undefined ? '' : ` › ${subName.name}`}
+      </span>
+      <Badge isAccent={!isPay}>
+        {isPay ? recordLabels.payToggle.pay : recordLabels.payToggle.income}
+      </Badge>
+      {isPair ? <Badge isAccent>共有</Badge> : null}
+    </button>
   );
 }
 
@@ -397,7 +279,7 @@ function Field({
   );
 }
 
-// 今日・昨日・おとといのチップと、それ以外の日を選ぶカレンダーのボタン。
+// 今日・昨日・おとといのチップと、それ以外の日を選ぶ暦。暦はチップの下に開く。
 function DateField({
   value,
   today,
@@ -407,7 +289,7 @@ function DateField({
   today: string;
   onChange: (date: string) => void;
 }) {
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isPicking, setIsPicking] = useState(false);
   const chips = withSelectedChip(buildDateChips(today), value);
   return (
     <Field label={recordLabels.field.date}>
@@ -422,20 +304,38 @@ function DateField({
           </Chip>
         ))}
         <button
+          aria-expanded={isPicking}
           aria-label='他の日を選ぶ'
-          className='flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-foreground'
-          onClick={() => setIsSheetOpen(true)}
+          className={cn(
+            'flex size-9 shrink-0 items-center justify-center rounded-full',
+            isPicking ? 'bg-muted text-foreground' : 'bg-card text-foreground'
+          )}
+          onClick={() => setIsPicking((prev) => !prev)}
           type='button'
         >
           <IconCalendar aria-hidden='true' className='size-4' />
         </button>
       </div>
-      <DateSheet
-        isOpen={isSheetOpen}
-        onChange={onChange}
-        onOpenChange={setIsSheetOpen}
-        value={value}
-      />
+      {isPicking ? (
+        <div className='flex justify-center rounded-[14px] bg-card py-2'>
+          <Calendar
+            {...calendarJaProps}
+            autoFocus
+            className='bg-transparent'
+            defaultMonth={parseLocalDate(value)}
+            mode='single'
+            onSelect={(next) => {
+              // 同じ日を押すと undefined が来る（選択解除）。日付は必須なので無視する。
+              if (next === undefined) {
+                return;
+              }
+              onChange(formatLocalDate(next));
+              setIsPicking(false);
+            }}
+            selected={parseLocalDate(value)}
+          />
+        </div>
+      ) : null}
     </Field>
   );
 }
@@ -507,6 +407,40 @@ function InsteadOption({
   );
 }
 
+function MethodField({
+  isPay,
+  methods,
+  methodId,
+  onChange
+}: {
+  isPay: boolean;
+  methods: MethodCard[];
+  methodId: number | null;
+  onChange: (methodId: number) => void;
+}) {
+  return (
+    <Field label={`${isPay ? '支払' : '受取'}方法`}>
+      {methods.length === 0 ? (
+        <p className='px-1 text-muted-foreground text-sm'>
+          {recordLabels.empty.noMethod}
+        </p>
+      ) : (
+        <div className='-mx-4 flex gap-2 overflow-x-auto px-4'>
+          {methods.map((method) => (
+            <Chip
+              isSelected={method.id === methodId}
+              key={method.id}
+              onClick={() => onChange(method.id)}
+            >
+              {method.name}
+            </Chip>
+          ))}
+        </div>
+      )}
+    </Field>
+  );
+}
+
 function MemoField({
   value,
   isPair,
@@ -562,7 +496,7 @@ function AmountDisplay({ isPay, price }: { isPay: boolean; price: number }) {
     <output
       aria-label={`${isPay ? recordLabels.payToggle.pay : recordLabels.payToggle.income}の金額`}
       className={cn(
-        'mt-auto flex h-14 items-baseline justify-end gap-1.5 px-1 tabular-nums',
+        'flex h-14 items-baseline justify-end gap-1.5 px-1 tabular-nums',
         isPay ? 'text-foreground' : 'text-primary'
       )}
     >
@@ -572,5 +506,85 @@ function AmountDisplay({ isPay, price }: { isPay: boolean; price: number }) {
       </span>
       <span className='font-semibold text-lg'>円</span>
     </output>
+  );
+}
+
+// 登録／保存と、編集のときだけ左に削除。共有でメモが空のときは文言で理由を伝える。
+function SubmitBar({
+  editingId,
+  canSubmit,
+  needsMemo,
+  isPending,
+  onDeleted
+}: {
+  editingId?: number;
+  canSubmit: boolean;
+  needsMemo: boolean;
+  isPending: boolean;
+  onDeleted: () => void;
+}) {
+  const verb = editingId === undefined ? '登録' : '保存';
+  return (
+    <div className='flex gap-2.5'>
+      {editingId === undefined ? null : (
+        <DeleteButton id={editingId} onDeleted={onDeleted} />
+      )}
+      <button
+        className={cn(
+          'h-13 flex-grow rounded-xl font-bold text-[17px]',
+          canSubmit
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted font-semibold text-[15px] text-muted-foreground'
+        )}
+        disabled={!canSubmit || isPending}
+        type='submit'
+      >
+        {needsMemo ? `メモを入れると${verb}できます` : `${verb}する`}
+      </button>
+    </div>
+  );
+}
+
+// 削除。保存の左に置く正方形の赤いボタン。確認は共通の ConfirmDialog。
+function DeleteButton({
+  id,
+  onDeleted
+}: {
+  id: number;
+  onDeleted: () => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const [result, setResult] = useState<FormActionResult | null>(null);
+  useFormToast(result);
+
+  const remove = () => {
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('id', String(id));
+      const next = await deleteRecordAction(null, formData);
+      setResult(next);
+      if (next.toast?.type === 'success') {
+        onDeleted();
+      }
+    });
+  };
+
+  return (
+    <ConfirmDialog
+      onConfirm={remove}
+      size='sm'
+      solidConfirm
+      title={recordLabels.confirm.delete}
+      trigger={
+        <button
+          aria-label='この記録を削除'
+          className='flex size-13 shrink-0 items-center justify-center rounded-xl bg-destructive/12 text-destructive disabled:opacity-50'
+          disabled={isPending}
+          type='button'
+        >
+          <IconTrash aria-hidden='true' className='size-5' />
+        </button>
+      }
+    />
   );
 }

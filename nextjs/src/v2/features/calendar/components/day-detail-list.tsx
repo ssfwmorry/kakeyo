@@ -1,9 +1,9 @@
-import Link from 'next/link';
 import type { DaySum } from '@/features/calendar';
 import { resolveDisplayIsPay } from '@/features/calendar/domain/record-sign';
 import { colorVar } from '@/features/master';
 import type { PlanItem, ReminderItem } from '@/features/plan-reminder';
-import type { RecordListItem } from '@/features/record';
+import type { NoteRecordDefault, RecordListItem } from '@/features/record';
+import { toRecordDefault } from '@/v2/features/note/domain/record-default';
 
 // 選んだ日の予定・リマインダー・記録を 1 枚のカードに積む。
 //
@@ -14,12 +14,14 @@ export function DayDetailList({
   daySum,
   plans,
   reminders,
-  onEditPlan
+  onEditPlan,
+  onEditRecord
 }: {
   daySum: DaySum | undefined;
   plans: PlanItem[];
   reminders: ReminderItem[];
   onEditPlan: (plan: PlanItem) => void;
+  onEditRecord: (record: NoteRecordDefault) => void;
 }) {
   const records = daySum?.records ?? [];
   const isEmpty =
@@ -55,6 +57,7 @@ export function DayDetailList({
         <RecordRow
           isFirst={plans.length + reminders.length + index === 0}
           key={record.id}
+          onEdit={onEditRecord}
           record={record}
         />
       ))}
@@ -126,13 +129,17 @@ function ReminderRow({
   );
 }
 
+// 押すと編集シートが開く。精算の記録は入力フローの形に載らないので押せない。
 function RecordRow({
   record,
-  isFirst
+  isFirst,
+  onEdit
 }: {
   record: RecordListItem;
   isFirst: boolean;
+  onEdit: (record: NoteRecordDefault) => void;
 }) {
+  const editing = toRecordDefault(record);
   const title =
     record.subTypeName === null
       ? (record.typeName ?? '')
@@ -143,11 +150,9 @@ function RecordRow({
       : `${record.memo} · ${record.methodName}`;
   const color = colorVar(record.typeColorClassificationName);
 
-  return (
-    <Link
-      className={`flex h-15 items-center gap-3 px-3.5 text-foreground ${isFirst ? '' : 'border-t'}`}
-      href={`/v2/note?RECORD=${record.id}`}
-    >
+  const rowClass = `flex h-15 w-full items-center gap-3 px-3.5 text-left text-foreground ${isFirst ? '' : 'border-t'}`;
+  const body = (
+    <>
       {/* カテゴリ色の淡いタイル。色そのままだと記録が並んだとき強すぎる。 */}
       <span
         aria-hidden='true'
@@ -167,6 +172,15 @@ function RecordRow({
         {resolveDisplayIsPay(record) ? '−' : '+'}
         {record.price.toLocaleString('ja-JP')}
       </span>
-    </Link>
+    </>
+  );
+
+  if (editing === null) {
+    return <div className={rowClass}>{body}</div>;
+  }
+  return (
+    <button className={rowClass} onClick={() => onEdit(editing)} type='button'>
+      {body}
+    </button>
   );
 }

@@ -10,8 +10,8 @@ import { ThemeProvider } from '@/v2/components/theme-provider';
 //   ヘッダを持ち、そこに「個人｜共有」とダーク切替を置く（位置は全画面で揃える）。
 // - 色は .v2-root スコープのトークンで塗る。既存画面には一切影響しない。
 //
-// タブバーの有無は下の route group が決める。(tabs) はタブバー付き、(modal) は
-// 入力フローのような全画面モーダルで、タブバーを持たない。
+// タブバーは下の (tabs) route group が持つ。タブバー無しの全画面（(modal)）は
+// 入力フローをシートに変えたので今は無いが、必要になったら同じ形で足せる。
 //
 // 認証ガードは (private) と同じく requireAuth。Proxy に加えた多層防御。
 

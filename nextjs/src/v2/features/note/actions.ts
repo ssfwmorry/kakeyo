@@ -1,7 +1,7 @@
 'use server';
 
 import { parseWithZod } from '@conform-to/zod/v4';
-import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { recordErrorMessage } from '@/features/record/domain/error-message';
 import {
@@ -9,22 +9,21 @@ import {
   recordUpsertSchema
 } from '@/features/record/schemas/record-schema';
 import { deleteRecord, upsertRecord } from '@/features/record/server/services';
-import { setFlashToast } from '@/lib/server/flash';
 import { getPairMode } from '@/lib/server/pair/mode';
 import { startOfDayJst } from '@/lib/shared/domain/date';
 import { L } from '@/lib/shared/labels';
 import {
   type FormActionResult,
-  ToastType
+  toFormResult
 } from '@/lib/shared/types/formResult';
 
-// 入力フロー（新デザイン）の record 登録・更新・削除。スキーマとサービスは旧 /note と
-// 同じで、違いは着地先が /v2/calendar なことだけ。旧 Action の redirect 先は固定なので
-// v2 用に薄く持つ。旧画面を消すときにこちらを本体にする。
+// 記録シート（新デザイン）の登録・更新・削除。スキーマとサービスは旧 /note と同じ。
 //
-// 成功時は遷移するので flash 通知、失敗（遷移しない）は FormActionResult.toast で返す。
+// 旧 /note は保存後に /calendar へ遷移するため flash 通知だったが、新デザインは
+// カレンダーの上に出るシートで、保存してもカレンダーに留まる。そのため遷移せず
+// FormActionResult.toast を返し、シートを閉じた側で月を取り直す（予定シートと同じ）。
 
-const CALENDAR_PATH = '/v2/calendar';
+const V2_CALENDAR_PATH = '/v2/calendar';
 
 export async function upsertRecordAction(
   _prev: FormActionResult | null,
@@ -62,22 +61,13 @@ export async function upsertRecordAction(
     memo,
     isPair
   });
-
-  if (!result.ok) {
-    return {
-      submission: submission.reply(),
-      toast: {
-        type: ToastType.error,
-        message: recordErrorMessage(result.error) ?? L.snackbar.failed
-      }
-    };
-  }
-
-  await setFlashToast({
-    type: ToastType.success,
-    message: id === undefined ? L.snackbar.created : L.snackbar.updated
+  revalidatePath(V2_CALENDAR_PATH);
+  return toFormResult(result, {
+    success: id === undefined ? L.snackbar.created : L.snackbar.updated,
+    errorMessage: recordErrorMessage,
+    fallbackError: L.snackbar.failed,
+    submission: submission.reply()
   });
-  redirect(CALENDAR_PATH);
 }
 
 export async function deleteRecordAction(
@@ -90,17 +80,11 @@ export async function deleteRecordAction(
   }
   const session = await requireAuth();
   const result = await deleteRecord(session, submission.value.id);
-
-  if (!result.ok) {
-    return {
-      submission: submission.reply(),
-      toast: {
-        type: ToastType.error,
-        message: recordErrorMessage(result.error) ?? L.snackbar.failed
-      }
-    };
-  }
-
-  await setFlashToast({ type: ToastType.success, message: L.snackbar.deleted });
-  redirect(CALENDAR_PATH);
+  revalidatePath(V2_CALENDAR_PATH);
+  return toFormResult(result, {
+    success: L.snackbar.deleted,
+    errorMessage: recordErrorMessage,
+    fallbackError: L.snackbar.failed,
+    submission: submission.reply()
+  });
 }

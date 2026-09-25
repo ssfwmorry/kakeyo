@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition
+} from 'react';
 import { IconChevronLeft, IconPlus } from '@/components/icons';
 import type {
   CalendarInitialData,
@@ -14,10 +21,16 @@ import {
 } from '@/features/calendar/domain/day-events';
 import { shiftMonth } from '@/features/calendar/domain/period';
 import type { GroupedPlanTypeList, PlanItem } from '@/features/plan-reminder';
+import type { NoteRecordDefault } from '@/features/record';
+import type {
+  GroupedMethodList,
+  GroupedTypeList
+} from '@/features/type-method';
 import { formatDateWithWeekdayJst } from '@/lib/shared/domain/date';
 import { formatPrefixedSum } from '@/lib/shared/domain/priceDisplay';
 import { PairModeSegment } from '@/v2/components/pair-mode-segment';
 import { ThemeToggle } from '@/v2/components/theme-toggle';
+import { RecordSheet } from '@/v2/features/note/components/record-sheet';
 import { PlanSheet } from '@/v2/features/plan/components/plan-sheet';
 import { assignEventLanes, type LaneEvent } from '../domain/event-lanes';
 import { buildMonthGrid } from '../domain/month-grid';
@@ -43,12 +56,25 @@ type PlanSheetState =
   | { kind: 'create' }
   | { kind: 'edit'; plan: PlanItem };
 
+// 記録シート。追加は選択日を初期値に、編集は対象の記録を持って開く。
+type RecordSheetState =
+  | { kind: 'closed' }
+  | { kind: 'create' }
+  | { kind: 'edit'; record: NoteRecordDefault };
+
+// タブバーの ＋ はどの画面からでも記録を追加できるよう、このクエリ付きでカレンダーへ来る。
+const NOTE_QUERY = 'note';
+
 export function CalendarScreen({
   initial,
-  planTypeList
+  planTypeList,
+  typeList,
+  methodList
 }: {
   initial: CalendarInitialData;
   planTypeList: GroupedPlanTypeList;
+  typeList: GroupedTypeList;
+  methodList: GroupedMethodList;
 }) {
   const [month, setMonth] = useState<CalendarMonthData>(initial.month);
   const [selectedDate, setSelectedDate] = useState(initial.today);
@@ -56,8 +82,25 @@ export function CalendarScreen({
   const [planSheet, setPlanSheet] = useState<PlanSheetState>({
     kind: 'closed'
   });
+  const [recordSheet, setRecordSheet] = useState<RecordSheetState>({
+    kind: 'closed'
+  });
 
-  // 予定を保存・削除したら、いま見ている月を取り直す。月データはこの画面の state
+  // ?note=new で来たら記録シートを開き、クエリは消す（更新やブラウザバックで
+  // また開かないように）。history.replaceState では Next のルーター側に古い URL が
+  // 残り、Server Action 後の再検証で ?note=new が戻ってくるので router.replace で消す。
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const shouldOpenNote = searchParams.get(NOTE_QUERY) === 'new';
+  useEffect(() => {
+    if (!shouldOpenNote) {
+      return;
+    }
+    setRecordSheet({ kind: 'create' });
+    router.replace('/v2/calendar', { scroll: false });
+  }, [shouldOpenNote, router]);
+
+  // 記録・予定を保存・削除したら、いま見ている月を取り直す。月データはこの画面の state
   // なので、サーバ側の再検証だけでは画面に反映されない。
   const reloadMonth = useCallback(() => {
     startTransition(async () => {
@@ -151,13 +194,14 @@ export function CalendarScreen({
       />
 
       <div className='grid grid-cols-2 gap-2.5'>
-        <Link
+        <button
           className='flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary font-semibold text-[15px] text-primary-foreground'
-          href={`/v2/note?date=${selectedDate}`}
+          onClick={() => setRecordSheet({ kind: 'create' })}
+          type='button'
         >
           <IconPlus aria-hidden='true' className='size-4.5' strokeWidth={2.4} />
           記録
-        </Link>
+        </button>
         <button
           className='flex h-11 items-center justify-center gap-1.5 rounded-xl bg-secondary font-semibold text-[15px] text-primary'
           onClick={() => setPlanSheet({ kind: 'create' })}
@@ -185,9 +229,35 @@ export function CalendarScreen({
       <DayDetailList
         daySum={daySums.get(selectedDate)}
         onEditPlan={(plan) => setPlanSheet({ kind: 'edit', plan })}
+        onEditRecord={(record) => setRecordSheet({ kind: 'edit', record })}
         plans={selectDayPlans(month.plans, selectedDate)}
         reminders={selectDayReminders(month.reminders, selectedDate)}
       />
+
+      {recordSheet.kind === 'closed' ? null : (
+        <RecordSheet
+          editing={recordSheet.kind === 'edit' ? recordSheet.record : undefined}
+          initialDate={selectedDate}
+          // 共有か個人かは作成時に決まる。編集は対象に合わせ、候補もその側を出す。
+          isPair={
+            recordSheet.kind === 'edit'
+              ? recordSheet.record.isPair
+              : initial.isPair
+          }
+          // 編集対象ごとにシートを作り直す。
+          key={recordSheet.kind === 'edit' ? recordSheet.record.id : 'create'}
+          methodList={methodList}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setRecordSheet({ kind: 'closed' });
+            }
+          }}
+          onSaved={reloadMonth}
+          shortcuts={initial.shortcuts}
+          today={initial.today}
+          typeList={typeList}
+        />
+      )}
 
       <CalendarPlanSheet
         initialDate={selectedDate}

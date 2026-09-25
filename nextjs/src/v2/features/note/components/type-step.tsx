@@ -1,8 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { IconClose } from '@/components/icons';
 import { colorVar } from '@/features/master';
 import type { ShortCutItem } from '@/features/memo-shortcut';
 import { recordLabels } from '@/features/record/labels';
@@ -10,13 +7,13 @@ import type { TypeCard } from '@/features/type-method';
 import { InitialCircle } from '@/v2/components/initial-circle';
 import { PairModeSegment } from '@/v2/components/pair-mode-segment';
 import { Segment } from '@/v2/components/ui/segment';
-import { SubTypePickSheet } from './sub-type-pick-sheet';
+import { SheetHeader } from './sheet-header';
 
-// 入力フロー 1 枚目: カテゴリを選ぶ（デザイン NoteType / NoteTypePair）。
+// 記録シート 1 枚目: カテゴリを選ぶ（デザイン NoteType / NoteTypePair をシートに寄せたもの）。
 //
-// 上から「閉じる｜個人｜共有」「支出｜収入」「いつもの」「カテゴリ」。
-// カテゴリを押すとサブカテゴリのシートが開き、サブカテゴリが無ければそのまま 2 枚目へ進む。
-// 「いつもの」はショートカットで、押すと中身が入った状態で 2 枚目へ進む。
+// 上から「キャンセル｜記録を追加｜個人｜共有」「支出｜収入」「いつもの」「カテゴリ」。
+// カテゴリを押すとサブカテゴリの一覧（2 枚目）へ、サブカテゴリが無ければ金額（3 枚目）へ進む。
+// 「いつもの」はショートカットで、押すと中身が入った状態で金額へ進む。
 
 const PAY_OPTIONS = [
   { value: 'pay', label: recordLabels.payToggle.pay },
@@ -24,51 +21,35 @@ const PAY_OPTIONS = [
 ] as const;
 
 export function TypeStep({
+  title,
   isPair,
   isPairLocked,
   isPay,
   types,
   shortcuts,
+  onCancel,
   onPayChange,
   onPickType,
   onPickShortcut
 }: {
+  title: string;
   isPair: boolean;
   isPairLocked: boolean;
   isPay: boolean;
   types: TypeCard[];
   shortcuts: ShortCutItem[];
+  onCancel: () => void;
   onPayChange: (isPay: boolean) => void;
-  onPickType: (typeId: number, subTypeId: number | null) => void;
+  onPickType: (type: TypeCard) => void;
   onPickShortcut: (item: ShortCutItem) => void;
 }) {
-  // サブカテゴリを選ばせているカテゴリ。null なら閉じている。
-  const [sheetType, setSheetType] = useState<TypeCard | null>(null);
-
-  const pick = (type: TypeCard) => {
-    if (type.subTypes.length === 0) {
-      onPickType(type.id, null);
-      return;
-    }
-    setSheetType(type);
-  };
-
   return (
-    <div className='flex flex-col gap-3 px-4 pb-8'>
-      <div className='flex h-11 items-center justify-between'>
-        <Link
-          aria-label='閉じる'
-          className='flex size-9 items-center justify-center rounded-full bg-muted text-foreground'
-          href='/v2/calendar'
-        >
-          <IconClose
-            aria-hidden='true'
-            className='size-4.5'
-            strokeWidth={2.4}
-          />
-        </Link>
-        <PairModeSegment isLocked={isPairLocked} isPair={isPair} />
-      </div>
+    <div className='flex flex-col gap-3'>
+      <SheetHeader
+        onCancel={onCancel}
+        right={<PairModeSegment isLocked={isPairLocked} isPair={isPair} />}
+        title={title}
+      />
 
       <Segment
         label='収支'
@@ -95,7 +76,7 @@ export function TypeStep({
               <button
                 className='flex h-20 flex-col items-center justify-center gap-1.5 rounded-[14px] bg-card'
                 key={type.id}
-                onClick={() => pick(type)}
+                onClick={() => onPickType(type)}
                 type='button'
               >
                 <InitialCircle
@@ -111,21 +92,6 @@ export function TypeStep({
           </div>
         )}
       </div>
-
-      {sheetType === null ? null : (
-        <SubTypePickSheet
-          onOpenChange={(isOpen) => {
-            if (!isOpen) {
-              setSheetType(null);
-            }
-          }}
-          onPick={(subTypeId) => {
-            onPickType(sheetType.id, subTypeId);
-            setSheetType(null);
-          }}
-          type={sheetType}
-        />
-      )}
     </div>
   );
 }

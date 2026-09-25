@@ -17,7 +17,8 @@ export const PAIR_SCOPED_PATHS = [
   '/note',
   '/plan',
   '/setting',
-  '/v2/note'
+  // 新デザインのカレンダーは記録・予定のシートを持ち、個人｜共有で候補が変わる。
+  '/v2/calendar'
 ] as string[];
 
 // 「その id の 1 件を編集中」を表すクエリキーの単一の正。

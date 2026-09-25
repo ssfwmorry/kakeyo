@@ -74,7 +74,9 @@ export function TabBar() {
           <Link
             aria-label='入力'
             className='flex h-9.5 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground'
-            href='/v2/note'
+            // 入力はカレンダーの上に出るシート。他のタブからでも開けるよう、
+            // クエリ付きでカレンダーへ送る（カレンダー側で読んでシートを開く）。
+            href='/v2/calendar?note=new'
           >
             <IconPlus
               aria-hidden='true'
