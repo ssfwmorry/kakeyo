@@ -11,37 +11,18 @@ import {
   type FormActionResult,
   ToastType
 } from '@/lib/shared/types/formResult';
-import { recordLabels } from '../labels';
+import { recordErrorMessage } from '../domain/error-message';
 import {
   recordDeleteSchema,
   recordUpsertSchema
 } from '../schemas/record-schema';
 import * as service from '../server/services';
-import type { RecordError } from '../types';
 
 // 記録入力の record 用 Server Actions。保存/削除は成功時に calendar へ遷移する
 // ため flash 通知、検証失敗（遷移しない）のみ FormActionResult.toast / submission を返す。
 
 // record 保存/削除後の遷移先。
 const CALENDAR_PATH = '/calendar';
-
-// service の失敗分類 → ユーザ向け文言。
-function errorMessage(error: RecordError): string | undefined {
-  switch (error) {
-    case 'foreignKey':
-      return L.error.hasRelatedData;
-    case 'pairRequired':
-      return recordLabels.error.pairRequired;
-    case 'sameMonthOnly':
-      return recordLabels.error.sameMonthOnly;
-    case 'notInScope':
-      return L.error.notFound;
-    case 'noTarget':
-      return recordLabels.error.noTarget;
-    default:
-      return undefined;
-  }
-}
 
 // record 登録・更新。成功→flash + calendar 遷移、失敗→toast 返却（遷移しない）。
 export async function upsertRecordAction(
@@ -86,7 +67,7 @@ export async function upsertRecordAction(
       submission: submission.reply(),
       toast: {
         type: ToastType.error,
-        message: errorMessage(result.error) ?? L.snackbar.failed
+        message: recordErrorMessage(result.error) ?? L.snackbar.failed
       }
     };
   }
@@ -115,7 +96,7 @@ export async function deleteRecordAction(
       submission: submission.reply(),
       toast: {
         type: ToastType.error,
-        message: errorMessage(result.error) ?? L.snackbar.failed
+        message: recordErrorMessage(result.error) ?? L.snackbar.failed
       }
     };
   }

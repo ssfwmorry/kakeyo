@@ -128,7 +128,7 @@ export function CalendarScreen({ initial }: { initial: CalendarInitialData }) {
       <div className='grid grid-cols-2 gap-2.5'>
         <Link
           className='flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary font-semibold text-[15px] text-primary-foreground'
-          href={`/note?date=${selectedDate}`}
+          href={`/v2/note?date=${selectedDate}`}
         >
           <IconPlus aria-hidden='true' className='size-4.5' strokeWidth={2.4} />
           記録

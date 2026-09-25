@@ -73,6 +73,18 @@ export function startOfNextMonthJst(yearMonth: string): Date {
   return dayjs.tz(yearMonth, JST).add(1, 'month').startOf('month').toDate();
 }
 
+// YYYY-MM-DD（JST の暦日）を days 日ずらす（負なら過去）。「昨日」「おととい」の算出に使う。
+// 暦日の文字列同士の計算なので tz 変換は挟まない。
+export function addDaysJst(dateStr: string, days: number): string {
+  return dayjs(dateStr).add(days, 'day').format(DATE_FORMAT);
+}
+
+// 'YYYY-MM-DD' → 'M/D'。日付チップのように短く出す場所の整形。
+export function formatMonthDayJst(dateStr: string): string {
+  const [, month, day] = dateStr.split('-');
+  return `${Number(month)}/${Number(day)}`;
+}
+
 // 'YYYY-MM-DD' → 'M月D日'。日別見出しの表示整形。
 // 生の ISO 文字列を見出しに出すと日本語 UI として不自然なため、表示側はこれを通す。
 export function formatDateLabelJst(dateStr: string): string {

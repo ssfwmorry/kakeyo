@@ -16,7 +16,8 @@ export const PAIR_SCOPED_PATHS = [
   '/summary',
   '/note',
   '/plan',
-  '/setting'
+  '/setting',
+  '/v2/note'
 ] as string[];
 
 // 「その id の 1 件を編集中」を表すクエリキーの単一の正。

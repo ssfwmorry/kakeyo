@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addDaysJst,
   dateInMonthJst,
   endOfDayJst,
   formatDateLabelJst,
   formatDateWithWeekdayJst,
+  formatMonthDayJst,
   listDatesJst,
   startOfDayJst,
   startOfMonthJst,
@@ -147,5 +149,24 @@ describe('listDatesJst', () => {
   it('同日なら 1 件、逆順なら空', () => {
     expect(listDatesJst('2026-09-21', '2026-09-21')).toEqual(['2026-09-21']);
     expect(listDatesJst('2026-09-22', '2026-09-21')).toEqual([]);
+  });
+});
+
+describe('addDaysJst', () => {
+  it('負の日数で過去へ、月跨ぎも暦どおり', () => {
+    expect(addDaysJst('2026-03-01', -1)).toBe('2026-02-28');
+    expect(addDaysJst('2026-03-01', -2)).toBe('2026-02-27');
+  });
+
+  it('閏年の 2/29 を跨ぐ', () => {
+    expect(addDaysJst('2024-02-28', 1)).toBe('2024-02-29');
+    expect(addDaysJst('2024-03-01', -1)).toBe('2024-02-29');
+  });
+});
+
+describe('formatMonthDayJst', () => {
+  it('ゼロ埋めを外して M/D にする', () => {
+    expect(formatMonthDayJst('2026-09-05')).toBe('9/5');
+    expect(formatMonthDayJst('2026-12-25')).toBe('12/25');
   });
 });
