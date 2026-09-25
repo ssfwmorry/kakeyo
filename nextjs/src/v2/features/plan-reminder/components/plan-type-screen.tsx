@@ -62,7 +62,7 @@ export function PlanTypeScreen({
                 key={card.id}
                 name={card.name}
                 onOpen={() => setSheet({ kind: 'edit', card })}
-                swap={
+                handle={
                   planTypes[index + 1] === undefined ? undefined : (
                     <SwapButton
                       action={swapPlanTypeAction}

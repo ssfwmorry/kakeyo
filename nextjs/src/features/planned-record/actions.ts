@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { setFlashToast } from '@/lib/server/flash';
 import { getPairMode } from '@/lib/server/pair/mode';
+import { reorderIdsSchema } from '@/lib/shared/domain/reorder';
 import { L } from '@/lib/shared/labels';
 import {
   type FormActionResult,
@@ -140,6 +141,26 @@ export async function swapPlannedRecordAction(
   revalidatePath(SETTING_PATH);
   return toFormResult(result, {
     success: L.snackbar.swapped,
+    errorMessage,
+    fallbackError: L.snackbar.failed
+  });
+}
+
+// ドラッグ並べ替え。ids の並びが新しい順。成功の文言は「変更しました」。
+// 新デザインの設定は詳細画面ごとにルートが分かれるので、旧 /setting と両方を再検証する。
+export async function reorderPlannedRecordAction(
+  ids: number[]
+): Promise<FormActionResult> {
+  const parsed = reorderIdsSchema.safeParse({ ids });
+  if (!parsed.success) {
+    return { toast: { type: ToastType.error, message: L.snackbar.failed } };
+  }
+  const session = await requireAuth();
+  const result = await service.reorderPlannedRecords(session, parsed.data.ids);
+  revalidatePath(SETTING_PATH);
+  revalidatePath('/v2/setting', 'layout');
+  return toFormResult(result, {
+    success: L.snackbar.updated,
     errorMessage,
     fallbackError: L.snackbar.failed
   });

@@ -4,6 +4,7 @@ import type { SubmissionResult } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/features/auth/server/requireAuth';
+import { reorderIdsSchema } from '@/lib/shared/domain/reorder';
 import { L } from '@/lib/shared/labels';
 import {
   type FormActionResult,
@@ -203,4 +204,50 @@ export async function swapMethodAction(
   const result = await service.swapMethod(session, prevId, nextId);
   revalidateSetting();
   return toResult(result, L.snackbar.swapped);
+}
+
+// ドラッグ並べ替え。ids の並びが新しい順。ボタン起動と同じく Conform を通さず、
+// 配列の形だけをスキーマで確かめる。成功の文言は「変更しました」（入れ替えではない）。
+export async function reorderTypeAction(
+  ids: number[]
+): Promise<FormActionResult> {
+  const parsed = reorderIdsSchema.safeParse({ ids });
+  if (!parsed.success) {
+    return { toast: { type: 'error', message: L.snackbar.failed } };
+  }
+  const session = await requireAuth();
+  const result = await service.reorderTypes(session, parsed.data.ids);
+  revalidateSetting();
+  return toResult(result, L.snackbar.updated);
+}
+
+export async function reorderSubTypeAction(
+  typeId: number,
+  ids: number[]
+): Promise<FormActionResult> {
+  const parsed = reorderIdsSchema.safeParse({ ids });
+  if (!parsed.success) {
+    return { toast: { type: 'error', message: L.snackbar.failed } };
+  }
+  const session = await requireAuth();
+  const result = await service.reorderSubTypes(
+    session,
+    typeId,
+    parsed.data.ids
+  );
+  revalidateSetting();
+  return toResult(result, L.snackbar.updated);
+}
+
+export async function reorderMethodAction(
+  ids: number[]
+): Promise<FormActionResult> {
+  const parsed = reorderIdsSchema.safeParse({ ids });
+  if (!parsed.success) {
+    return { toast: { type: 'error', message: L.snackbar.failed } };
+  }
+  const session = await requireAuth();
+  const result = await service.reorderMethods(session, parsed.data.ids);
+  revalidateSetting();
+  return toResult(result, L.snackbar.updated);
 }

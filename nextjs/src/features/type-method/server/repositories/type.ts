@@ -1,6 +1,7 @@
 import 'server-only';
 import { prisma } from '@/lib/server/db/client';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
+import type { SortAssignment } from '@/lib/shared/domain/reorder';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
@@ -179,4 +180,48 @@ export async function swapSubTypeSort(
     prisma.subType.update({ where: { id: a.id }, data: { sort: b.sort } }),
     prisma.subType.update({ where: { id: b.id }, data: { sort: a.sort } })
   ]);
+}
+
+// REORDER（任意順）。並べ替え対象の行を scope 内から引く。集まり（isPay・pairId）の
+// 検証は service 層で行う。
+export async function findTypeRowsForReorder(
+  scope: SessionScope,
+  ids: Id[]
+): Promise<{ id: Id; sort: number; isPay: boolean; pairId: Id | null }[]> {
+  return prisma.type.findMany({
+    where: { AND: [{ id: { in: ids } }, buildScopeWhere(scope)] },
+    select: { id: true, sort: true, isPay: true, pairId: true }
+  });
+}
+
+export async function findSubTypeRowsForReorder(
+  scope: SessionScope,
+  typeId: Id,
+  ids: Id[]
+): Promise<{ id: Id; sort: number; typeId: Id }[]> {
+  return prisma.subType.findMany({
+    where: { id: { in: ids }, typeId, type: buildScopeWhere(scope) },
+    select: { id: true, sort: true, typeId: true }
+  });
+}
+
+// 割り当て済みの sort を 1 トランザクションで書く。
+export async function updateTypeSorts(
+  assignments: SortAssignment[]
+): Promise<void> {
+  await prisma.$transaction(
+    assignments.map(({ id, sort }) =>
+      prisma.type.update({ where: { id }, data: { sort } })
+    )
+  );
+}
+
+export async function updateSubTypeSorts(
+  assignments: SortAssignment[]
+): Promise<void> {
+  await prisma.$transaction(
+    assignments.map(({ id, sort }) =>
+      prisma.subType.update({ where: { id }, data: { sort } })
+    )
+  );
 }

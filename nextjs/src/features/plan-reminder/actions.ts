@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { setFlashToast } from '@/lib/server/flash';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
+import { reorderIdsSchema } from '@/lib/shared/domain/reorder';
 import { L } from '@/lib/shared/labels';
 import {
   type FormActionResult,
@@ -218,5 +219,19 @@ export async function checkReminderAction(
   // ベルの件数/一覧は (private)/layout.tsx が取得する dueReminders に依存するため、
   // layout を再検証して消化結果を反映させる（setPairMode と同じ layout 再検証方式）。
   revalidatePath('/', 'layout');
+  return toResult(result, L.snackbar.updated);
+}
+
+// ドラッグ並べ替え。ids の並びが新しい順。成功の文言は「変更しました」。
+export async function reorderPlanTypeAction(
+  ids: number[]
+): Promise<FormActionResult> {
+  const parsed = reorderIdsSchema.safeParse({ ids });
+  if (!parsed.success) {
+    return { toast: { type: 'error', message: L.snackbar.failed } };
+  }
+  const session = await requireAuth();
+  const result = await service.reorderPlanTypes(session, parsed.data.ids);
+  revalidateSetting();
   return toResult(result, L.snackbar.updated);
 }

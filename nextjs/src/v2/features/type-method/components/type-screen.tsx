@@ -1,15 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { SwapButton } from '@/components/form/swap-button';
-import { IconArrowDown } from '@/components/icons';
 import type { GroupedTypeList, TypeCard } from '@/features/type-method';
-import { swapTypeAction } from '@/features/type-method/actions';
+import { reorderTypeAction } from '@/features/type-method/actions';
 import { AddRowLink } from '@/v2/components/add-row';
 import { NameCell } from '@/v2/components/name-cell';
 import { ScreenHeader } from '@/v2/components/screen-header';
 import { ScreenTitle } from '@/v2/components/screen-title';
 import { SectionList } from '@/v2/components/section-list';
+import {
+  SortableHandle,
+  SortableList,
+  useSortableOrder
+} from '@/v2/components/sortable-list';
 import { Segment } from '@/v2/components/ui/segment';
 
 // 設定 › カテゴリ一覧（新デザイン）。支出 / 収入のセグメントで切り替える。
@@ -17,7 +20,7 @@ import { Segment } from '@/v2/components/ui/segment';
 // 方法と違い、カテゴリはサブカテゴリを持つので編集はシートではなく専用画面へ進む
 // （デザイン基礎 SetType → SetTypeEdit）。
 //
-// 並べ替えはデザインではドラッグハンドルだが、既存の swap（下と入れ替え）を使う。
+// 「編集」中は行末がドラッグハンドルになり、任意順に並べ替えられる。
 
 type PayTab = 'pay' | 'income';
 
@@ -66,16 +69,13 @@ export function TypeScreen({
 
         {cards.length > 0 ? (
           <SectionList>
-            {cards.map((card, index) => (
-              <TypeRow
-                card={card}
-                isEditing={isEditing}
-                isFirst={index === 0}
-                key={card.id}
-                nextId={cards[index + 1]?.id}
-                payTab={payTab}
-              />
-            ))}
+            {/* 支出 / 収入で並べ替えの対象が入れ替わるので、タブごとに状態を作り直す。 */}
+            <TypeRows
+              cards={cards}
+              isEditing={isEditing}
+              key={payTab}
+              payTab={payTab}
+            />
           </SectionList>
         ) : (
           <p className='px-1 text-muted-foreground text-sm'>
@@ -96,18 +96,47 @@ export function TypeScreen({
   );
 }
 
+function TypeRows({
+  cards,
+  payTab,
+  isEditing
+}: {
+  cards: TypeCard[];
+  payTab: PayTab;
+  isEditing: boolean;
+}) {
+  const { ordered, reorder } = useSortableOrder(cards, reorderTypeAction);
+
+  return (
+    <SortableList
+      disabled={!isEditing}
+      items={ordered}
+      onReorder={reorder}
+      renderItem={(card, { handleProps }) => (
+        <TypeRow
+          card={card}
+          handle={isEditing ? <SortableHandle {...handleProps} /> : undefined}
+          isEditing={isEditing}
+          isFirst={card.id === ordered[0]?.id}
+          payTab={payTab}
+        />
+      )}
+    />
+  );
+}
+
 function TypeRow({
   card,
   payTab,
   isEditing,
   isFirst,
-  nextId
+  handle
 }: {
   card: TypeCard;
   payTab: PayTab;
   isEditing: boolean;
   isFirst: boolean;
-  nextId?: number;
+  handle?: React.ReactNode;
 }) {
   // サブカテゴリは最初の 2 件までを並べ、それ以上は件数で畳む。
   // 行の高さを一定に保ちつつ、何が入っているかの手がかりは残す。
@@ -123,21 +152,11 @@ function TypeRow({
     <NameCell
       colorName={card.colorName}
       description={description}
+      handle={handle}
       href={`/v2/setting/type/${card.id}?isPay=${payTab === 'pay'}`}
       isEditing={isEditing}
       isFirst={isFirst}
       name={card.name}
-      swap={
-        nextId === undefined ? undefined : (
-          <SwapButton
-            action={swapTypeAction}
-            icon={<IconArrowDown className='size-4' />}
-            label='下と入れ替え'
-            nextId={nextId}
-            prevId={card.id}
-          />
-        )
-      }
     />
   );
 }

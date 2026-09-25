@@ -1,6 +1,7 @@
 import 'server-only';
 import { prisma } from '@/lib/server/db/client';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
+import type { SortAssignment } from '@/lib/shared/domain/reorder';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
@@ -94,4 +95,25 @@ export async function swapPlanTypeSort(
     prisma.planType.update({ where: { id: a.id }, data: { sort: b.sort } }),
     prisma.planType.update({ where: { id: b.id }, data: { sort: a.sort } })
   ]);
+}
+
+// REORDER（任意順）。集まり（pairId）の検証は service 層で行う。
+export async function findPlanTypeRowsForReorder(
+  scope: SessionScope,
+  ids: Id[]
+): Promise<{ id: Id; sort: number; pairId: Id | null }[]> {
+  return prisma.planType.findMany({
+    where: { AND: [{ id: { in: ids } }, buildScopeWhere(scope)] },
+    select: { id: true, sort: true, pairId: true }
+  });
+}
+
+export async function updatePlanTypeSorts(
+  assignments: SortAssignment[]
+): Promise<void> {
+  await prisma.$transaction(
+    assignments.map(({ id, sort }) =>
+      prisma.planType.update({ where: { id }, data: { sort } })
+    )
+  );
 }

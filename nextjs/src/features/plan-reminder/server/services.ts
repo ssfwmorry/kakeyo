@@ -5,6 +5,7 @@ import * as demoPlanReminder from '@/features/demo/server/queries/plan-reminder'
 import { isForeignKeyError } from '@/lib/server/db/errors';
 import { resolveOwner } from '@/lib/server/pair/owner';
 import { todayJst } from '@/lib/shared/domain/date';
+import { planReorder } from '@/lib/shared/domain/reorder';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
@@ -325,6 +326,23 @@ export async function checkReminder(
       nextDate,
       plan
     });
+    return ok(undefined);
+  });
+}
+
+// 任意順の並べ替え。全 id が scope 内かつ同じ所有（self / pair）に揃っていることを
+// 検証してから、既存の sort 値を割り当て直す。
+export async function reorderPlanTypes(
+  session: SessionData,
+  ids: Id[]
+): Promise<Result<void, PlanReminderError>> {
+  return withDemoWriteVoid(session, async () => {
+    const rows = await planTypeRepo.findPlanTypeRowsForReorder(session, ids);
+    const plan = planReorder(rows, ids, (row) => String(row.pairId));
+    if (plan === null) {
+      return err('notInScope');
+    }
+    await planTypeRepo.updatePlanTypeSorts(plan);
     return ok(undefined);
   });
 }

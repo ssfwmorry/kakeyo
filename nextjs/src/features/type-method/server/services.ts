@@ -4,6 +4,7 @@ import * as demoTypeMethod from '@/features/demo/server/queries/type-method';
 import { getColorClassificationList } from '@/features/master/server/repositories/colorClassification';
 import { isForeignKeyError } from '@/lib/server/db/errors';
 import { resolveOwner } from '@/lib/server/pair/owner';
+import { planReorder } from '@/lib/shared/domain/reorder';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
@@ -282,6 +283,54 @@ export async function swapMethod(
       return pair;
     }
     await methodRepo.swapMethodSort(pair.data[0], pair.data[1]);
+    return ok(undefined);
+  });
+}
+
+// 任意順の並べ替え。ids の並びが新しい順。全 id が scope 内かつ同じ集まり
+// （収支の区分と所有）に揃っていることを検証してから、既存の sort 値を割り当て直す。
+export async function reorderTypes(
+  session: SessionData,
+  ids: Id[]
+): Promise<Result<void, TypeMethodError>> {
+  return withDemoWriteVoid(session, async () => {
+    const rows = await typeRepo.findTypeRowsForReorder(session, ids);
+    const plan = planReorder(rows, ids, (row) => `${row.isPay}:${row.pairId}`);
+    if (plan === null) {
+      return err('notInScope');
+    }
+    await typeRepo.updateTypeSorts(plan);
+    return ok(undefined);
+  });
+}
+
+export async function reorderSubTypes(
+  session: SessionData,
+  typeId: Id,
+  ids: Id[]
+): Promise<Result<void, TypeMethodError>> {
+  return withDemoWriteVoid(session, async () => {
+    const rows = await typeRepo.findSubTypeRowsForReorder(session, typeId, ids);
+    const plan = planReorder(rows, ids, (row) => String(row.typeId));
+    if (plan === null) {
+      return err('notInScope');
+    }
+    await typeRepo.updateSubTypeSorts(plan);
+    return ok(undefined);
+  });
+}
+
+export async function reorderMethods(
+  session: SessionData,
+  ids: Id[]
+): Promise<Result<void, TypeMethodError>> {
+  return withDemoWriteVoid(session, async () => {
+    const rows = await methodRepo.findMethodRowsForReorder(session, ids);
+    const plan = planReorder(rows, ids, (row) => `${row.isPay}:${row.pairId}`);
+    if (plan === null) {
+      return err('notInScope');
+    }
+    await methodRepo.updateMethodSorts(plan);
     return ok(undefined);
   });
 }

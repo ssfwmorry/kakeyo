@@ -10,8 +10,8 @@ import {
 
 // カテゴリ・方法の 1 行。色の丸 + 名前で、押すと編集（シートまたは編集画面）が開く。
 //
-// 編集モードでは行そのものは押せなくなり、右端の並べ替えだけが操作対象になる。
-// 行をボタンやリンクのまま並べ替えを中に置くと、操作が入れ子になって
+// 編集モードでは行そのものは押せなくなり、右端の並べ替えハンドルだけが操作対象になる。
+// 行をボタンやリンクのままハンドルを中に置くと、操作が入れ子になって
 // どちらが反応するか決まらないため。
 //
 // デザインでは行頭にも削除マーク（赤い −）が出るが、削除は編集シート・編集画面の
@@ -25,8 +25,8 @@ type NameCellProps = {
   description?: string;
   isEditing: boolean;
   isFirst: boolean;
-  // 編集モードで右端に出す並べ替え。最終行では undefined。
-  swap?: ReactNode;
+  // 編集モードで右端に出す並べ替えハンドル。
+  handle?: ReactNode;
 };
 
 export function NameCell(
@@ -34,7 +34,7 @@ export function NameCell(
     // シートを開く行はハンドラ、編集画面へ進む行はリンク先を持つ。
     ({ onOpen: () => void; href?: never } | { href: string; onOpen?: never })
 ) {
-  const { name, colorName, description, isEditing, isFirst, swap } = props;
+  const { name, colorName, description, isEditing, isFirst, handle } = props;
 
   const shared = {
     description,
@@ -45,9 +45,8 @@ export function NameCell(
   };
 
   if (isEditing) {
-    // 最終行は swap を持たない。undefined を渡すと既定のシェブロンに戻ってしまうので
-    // null で潰す（進める行に見せない）。
-    return <ListCellStatic {...shared} trailing={swap ?? null} />;
+    // ハンドルが無い行も既定のシェブロンに戻さない（進める行に見せない）。
+    return <ListCellStatic {...shared} trailing={handle ?? null} />;
   }
 
   return props.href === undefined ? (

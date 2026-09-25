@@ -116,7 +116,7 @@ export function MethodScreen({
                 key={card.id}
                 name={card.name}
                 onOpen={() => setSheet({ kind: 'edit', card })}
-                swap={
+                handle={
                   cards[index + 1] === undefined ? undefined : (
                     <SwapButton
                       action={swapMethodAction}
