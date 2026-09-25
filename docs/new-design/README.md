@@ -160,9 +160,12 @@ vaul は入れない（Radix 系の依存が増え、Base UI と二系統にな�
 - **v2 → 旧画面への着地**: 定期の記録の追加・編集は旧 /note へ送り、保存すると
   旧 /setting に戻る。`redirect(SETTING_PATH)` が固定のため。定期の記録のフォームを
   v2 に持つまで残る（デザインに無いので T14 の前に別途決める）。
-- **Service Worker のキャッシュ**: `kakeyo-static-v1` が `_next/static` を持つため、
-  dev サーバーを立て直すと同名のチャンクを SW が古いまま返し、スタイルが崩れて見える
-  ことがある。DevTools で SW を unregister して Cache Storage を消せば直る。
+- **Service Worker のキャッシュ**: `kakeyo-static-v1` が `_next/static` を cache-first で
+  持つが、dev のチャンク名は中身が変わっても同じなので、サーバーを立て直すと古い CSS/JS を
+  返し続けて画面が崩れる。開発中は SW を登録せず、登録済みなら剥がすようにした
+  （`features/pwa/components/sw-register.tsx`）。すでに古いチャンクを掴んでいるブラウザは
+  剥がす側のコードも古いまま返されるので、一度だけ DevTools で SW の unregister と
+  Cache Storage の削除が要る。
 - **再検証の二重打ち**: 設定・口座まわりの更新は旧パスと v2 パスの両方を再検証する。
   T14 で旧パスを消すまでの負債。
 - **口座マスタの編集が v2 に無い**: 設定配下のデザインに口座の追加・編集画面が無いため、
