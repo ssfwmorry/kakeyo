@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { OfflineBanner } from '@/features/pwa/components/offline-banner';
 import { ThemeProvider } from '@/v2/components/theme-provider';
+import { V2Toaster } from '@/v2/components/toaster';
 
 // 新デザインのシェル（docs/new-design/README.md）。移行が終わるまで (private) と並走する。
 //
@@ -24,10 +25,14 @@ export default async function V2Layout({ children }: { children: ReactNode }) {
           外側の 1 枚は PC 幅で余る左右を塗るためだけのもの。これがないと、
           はみ出した部分に旧トークンの body 色が出る。 */}
       <div className='v2-root min-h-dvh bg-background text-foreground'>
-        <div className='mx-auto flex h-dvh w-full max-w-md flex-col bg-background sm:border-x'>
-          <OfflineBanner />
-          {children}
-        </div>
+        {/* トーストは v2-root の内側に置く（トークンを引くため）。root layout の
+            Toaster は v2 配下では描画されない（LegacyToaster）。 */}
+        <V2Toaster>
+          <div className='mx-auto flex h-dvh w-full max-w-md flex-col bg-background sm:border-x'>
+            <OfflineBanner />
+            {children}
+          </div>
+        </V2Toaster>
       </div>
     </ThemeProvider>
   );

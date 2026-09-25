@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist_Mono } from 'next/font/google';
 import { FlashToast } from '@/components/form/flash-toast';
-import { Toaster } from '@/components/ui/sonner';
+import { LegacyToaster } from '@/features/layout/components/legacy-toaster';
 import { SwRegister } from '@/features/pwa/components/sw-register';
 import './globals.css';
 
@@ -37,8 +37,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     >
       <body className='min-h-full flex flex-col'>
         {children}
-        {/* トーストは画面下中央に出す。 */}
-        <Toaster position='bottom-center' />
+        <LegacyToaster />
         <FlashToast />
         <SwRegister />
       </body>

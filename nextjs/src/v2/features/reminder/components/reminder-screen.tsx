@@ -2,7 +2,6 @@
 
 import { cn } from 'cn';
 import { useState, useTransition } from 'react';
-import { toast } from 'sonner';
 import { IconCheck } from '@/components/icons';
 import type { ReminderItem } from '@/features/plan-reminder';
 import { checkReminderAction } from '@/features/plan-reminder/actions';
@@ -12,6 +11,7 @@ import { ListCellButton } from '@/v2/components/list-cell';
 import { ScreenHeader } from '@/v2/components/screen-header';
 import { ScreenTitle } from '@/v2/components/screen-title';
 import { SectionList } from '@/v2/components/section-list';
+import { showToast } from '@/v2/lib/toast';
 
 // リマインダー設定（新デザイン）。
 //
@@ -107,7 +107,7 @@ function ReminderRow({
       setIsChecking(true);
       const result = await checkReminderAction(reminder.id);
       if (result.toast) {
-        toast[result.toast.type](result.toast.message);
+        showToast(result.toast);
       }
       // 失敗時はチェックを戻す（成功時は行が入れ替わるので戻す必要がない）。
       if (result.toast?.type === 'error') {
