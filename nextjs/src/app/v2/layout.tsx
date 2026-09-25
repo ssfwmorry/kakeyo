@@ -19,18 +19,22 @@ export default async function V2Layout({ children }: { children: ReactNode }) {
 
   return (
     <ThemeProvider>
-      {/* v2-root がトークンの適用範囲。ここから内側だけが新デザインの色になる。 */}
-      <div className='v2-root mx-auto flex h-dvh w-full max-w-md flex-col bg-background text-foreground sm:border-x'>
-        <OfflineBanner />
-        {/* 各画面は内容の高さで積み、はみ出す分をここでスクロールさせる。
-            min-h-0 がないと中身の高さで膨らみ flex-1 が頭打ちにならない。 */}
-        <main
-          className='flex min-h-0 flex-1 flex-col overflow-y-auto'
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
-        >
-          {children}
-        </main>
-        <TabBar />
+      {/* v2-root がトークンの適用範囲。ここから内側だけが新デザインの色になる。
+          外側の 1 枚は PC 幅で余る左右を塗るためだけのもの。これがないと、
+          はみ出した部分に旧トークンの body 色が出る。 */}
+      <div className='v2-root min-h-dvh bg-background text-foreground'>
+        <div className='mx-auto flex h-dvh w-full max-w-md flex-col bg-background sm:border-x'>
+          <OfflineBanner />
+          {/* 各画面は内容の高さで積み、はみ出す分をここでスクロールさせる。
+              min-h-0 がないと中身の高さで膨らみ flex-1 が頭打ちにならない。 */}
+          <main
+            className='flex min-h-0 flex-1 flex-col overflow-y-auto'
+            style={{ paddingTop: 'env(safe-area-inset-top)' }}
+          >
+            {children}
+          </main>
+          <TabBar />
+        </div>
       </div>
     </ThemeProvider>
   );

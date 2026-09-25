@@ -64,15 +64,17 @@ nextjs/src/
   併せて `features/master/color.ts` の `COLOR_HEX` をライト用・ダーク用の 2 組に差し替える
   （デザイン基礎「カテゴリ色の扱い：案A」の対応表のとおり。DB の色名は変えない）。
 
-- [ ] **T2. v2 共通部品**
-  `components/ui` の Button（default/secondary/ghost/destructive の 4 種）、
-  Sheet（下から）、Segment（Tabs 置き換え）、Chip（Badge 置き換え）、ListCell（設定・一覧の共通セル）、
-  ScreenHeader（戻る + タイトル + 右アクション）、SectionList（見出し + 白カード群）。
+- [~] **T2. v2 共通部品**
+  済: Button（4 種）、BottomSheet（下から）、PairModeSegment、ListCell、SectionList、
+  ScreenHeader、ScreenTitle、AddRow / AddRowLink、TabBar、ThemeToggle。
+  残: 入力部品一式（Input / Label / RadioGroup / ColorPicker / Select）。
+  これが無いと追加・編集フォームをシート化できない（T5 の「追加」が旧画面送りなのはこのため）。
 
-- [ ] **T3. アプリシェル**
-  すりガラスのタブバー（カレンダー / 集計 / ＋ / 口座 / 設定）、`env(safe-area-inset-*)`、
-  ダーク切替ボタン（ライト中は月、ダーク中は太陽）、個人｜共有スイッチの右上固定配置、
-  manifest の `theme_color` を地の色へ。
+- [~] **T3. アプリシェル**
+  済: すりガラスのタブバー（カレンダー / 集計 / ＋ / 口座 / 設定）、`env(safe-area-inset-*)`、
+  ダーク切替ボタン（ライト中は月、ダーク中は太陽）、個人｜共有セグメントの右上固定配置、
+  ThemeProvider（`next-themes`、初期値は端末設定）。
+  残: manifest の `theme_color`（`#000000` のまま）。旧画面にも効くので T14 で地の色へ。
 
 ### 画面（浅い順）
 
@@ -80,8 +82,9 @@ nextjs/src/
   タブ廃止。家計管理 / 予定管理 / その他の 3 グループのリスト。各行は色タイル付きアイコン + 件数 + 右シェブロン。
   **最も単純なため先行実装済み。**
 
-- [ ] **T5. 設定 › リマインダー**（`SetReminder.dc.html`）
-  期日超過 / これから の 2 グループ。丸タップで消化済み（打ち消し線）。追加行。
+- [~] **T5. 設定 › リマインダー**（`SetReminder.dc.html`）
+  済: 期日超過 / これから の 2 グループ、丸タップで消化（打ち消し線）。
+  残: 「リマインダーを追加」のシート化（T2 の入力部品待ち。今は旧 /setting へ送っている）。
 
 - [ ] **T6. 設定 › 定期の記録**（`SetPlanned.dc.html`）
   毎月の収入 / 支出のサマリー 2 枚 + 日付つきリスト + 追加行。

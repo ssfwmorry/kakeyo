@@ -27,10 +27,19 @@ import type { PlanReminderError } from './types';
 // plan/reminder の Server Actions。
 // - PLAN（予定入力画面）: 保存/削除後に /calendar へ遷移するため flash トーストを使う。
 // - PLAN TYPE / REMINDER（設定「予定管理」タブ）: 同一画面内更新のため
-//   FormActionResult.toast を使い、保存後 revalidatePath('/setting') で再取得する。
+//   FormActionResult.toast を使い、保存後 revalidateSetting() で再取得する。
 
 const SETTING_PATH = '/setting';
 const CALENDAR_PATH = '/calendar';
+// 新デザインの設定は詳細画面ごとにルートが分かれる（/v2/setting/reminder など）。
+// 移行が終わるまで旧 /setting と両方を再検証する。
+const V2_SETTING_PATH = '/v2/setting';
+
+// 設定画面（旧 1 枚 + 新デザインの各詳細）をまとめて再検証する。
+function revalidateSetting(): void {
+  revalidatePath(SETTING_PATH);
+  revalidatePath(V2_SETTING_PATH, 'layout');
+}
 
 // service の失敗分類 → ユーザ向け文言。
 function errorMessage(error: PlanReminderError): string | undefined {
@@ -76,7 +85,7 @@ export async function upsertPlanTypeAction(
     colorId,
     isPair
   });
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(
     result,
     id === undefined ? L.snackbar.created : L.snackbar.updated,
@@ -94,7 +103,7 @@ export async function deletePlanTypeAction(
   }
   const session = await requireAuth();
   const result = await service.deletePlanType(session, submission.value.id);
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
@@ -105,7 +114,7 @@ export async function swapPlanTypeAction(
 ): Promise<FormActionResult> {
   const session = await requireAuth();
   const result = await service.swapPlanType(session, prevId, nextId);
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.swapped);
 }
 
@@ -193,7 +202,7 @@ export async function insertReminderAction(
     isPair,
     condition: { conditionType, month, monthDay, baseType }
   });
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.created, submission.reply());
 }
 
@@ -207,7 +216,7 @@ export async function deleteReminderAction(
   }
   const session = await requireAuth();
   const result = await service.deleteReminder(session, submission.value.id);
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
@@ -218,7 +227,7 @@ export async function checkReminderAction(
   const session = await requireAuth();
   const result = await service.checkReminder(session, reminderId);
   // 設定画面のリマインダー一覧を再検証する。
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   // 消化は共通レイアウトの通知ベル（全 (private) 画面のヘッダに常設）からも起動される。
   // ベルの件数/一覧は (private)/layout.tsx が取得する dueReminders に依存するため、
   // layout を再検証して消化結果を反映させる（setPairMode と同じ layout 再検証方式）。
