@@ -64,11 +64,12 @@ nextjs/src/
   併せて `features/master/color.ts` の `COLOR_HEX` をライト用・ダーク用の 2 組に差し替える
   （デザイン基礎「カテゴリ色の扱い：案A」の対応表のとおり。DB の色名は変えない）。
 
-- [~] **T2. v2 共通部品**
-  済: Button（4 種）、BottomSheet（下から）、PairModeSegment、ListCell、SectionList、
-  ScreenHeader、ScreenTitle、AddRow / AddRowLink、TabBar、ThemeToggle。
-  残: 入力部品一式（Input / Label / RadioGroup / ColorPicker / Select）。
-  これが無いと追加・編集フォームをシート化できない。T6 以降で必要になった時点で足す。
+- [x] **T2. v2 共通部品**
+  Button（4 種）、BottomSheet（下から）、Segment、PairModeSegment、
+  ListCell（Link / Button / Static）、SectionList、NameCell、InitialCircle、
+  ScreenHeader、ScreenTitle、AddRow / AddRowLink、TabBar、ThemeToggle、
+  TextField、ColorGrid、SheetActionBar、SheetDeleteButton。
+  RadioGroup / Select は設定画面では出番がなかったので作っていない（入力フローで必要になる）。
 
 - [~] **T3. アプリシェル**
   済: すりガラスのタブバー（カレンダー / 集計 / ＋ / 口座 / 設定）、`env(safe-area-inset-*)`、
@@ -93,14 +94,18 @@ nextjs/src/
   追加・編集は旧 /note（入力フロー）へ送る。保存すると旧 /setting に着地する
   （リダイレクト先が固定のため）。入力フローの作り直し（T12・T13）で解消する。
 
-- [ ] **T7. 設定 › 方法**（`SetMethod.dc.html`）
-  支払 / 受取 / 精算のセグメント + 並べ替え。
+- [x] **T7. 設定 › 方法**（`SetMethod.dc.html`）
+  支払 / 受取 / 精算のセグメント、行タップで編集シート（名前・色・削除）、
+  「編集」で並べ替え。精算は共有モードのみ。
 
-- [ ] **T8. 設定 › カテゴリ一覧・編集**（`SetType.dc.html` / `SetTypeEdit.dc.html`）
-  支出 / 収入セグメント、編集モードで並べ替え・削除、サブカテゴリの編集つき詳細。
+- [x] **T8. 設定 › カテゴリ一覧・編集**（`SetType.dc.html` / `SetTypeEdit.dc.html`）
+  支出 / 収入セグメント、「編集」で並べ替え、編集画面でサブカテゴリの
+  追加・改名・削除・並べ替え。新規追加も同じ画面。
+  併せて予定カテゴリ（設定トップから）も同じ形で作った。
 
-- [ ] **T9. 口座**（`Bank.dc.html`）
-  口座一覧 + 残高登録シート。
+- [x] **T9. 口座**（`Bank.dc.html`）
+  総資産 + 総資産 1 本の推移グラフ + 口座別残高 + 残高登録シート。
+  口座そのものの追加・編集はデザインに無いため作っていない（旧設定画面のまま）。
 
 - [ ] **T10. 集計**（`Summary.dc.html`）
   内訳 / 推移 / 精算のセグメント。recharts の色をトークンに合わせる。
@@ -127,8 +132,12 @@ nextjs/src/
 - **v2 → 旧画面への着地**: 定期の記録の追加・編集は旧 /note へ送り、保存すると
   旧 /setting に戻る。`redirect(SETTING_PATH)` が固定のため。T12・T13 で入力フローを
   作り直すまで残る。
-- **再検証の二重打ち**: 設定まわりの更新は旧 /setting と /v2/setting の両方を
-  再検証する。T14 で旧パスを消すまでの負債。
+- **再検証の二重打ち**: 設定・口座まわりの更新は旧パスと v2 パスの両方を再検証する。
+  T14 で旧パスを消すまでの負債。
+- **口座マスタの編集が v2 に無い**: 設定配下のデザインに口座の追加・編集画面が無いため、
+  /v2/bank は残高の閲覧と登録だけを持つ。口座の増減は旧 /setting から行う。
+- **並べ替えはドラッグでない**: デザインはドラッグハンドルだが、実装は既存の
+  swap（下と入れ替え）を流用している。
 
 ## 未決事項
 

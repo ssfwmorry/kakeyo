@@ -22,6 +22,16 @@ import type { BankError } from './types';
 // revalidatePath('/bank') で再取得する（二重発火回避のため flash は使わない）。
 
 const BANK_PATH = '/bank';
+// 新デザインの口座は /v2/bank。移行が終わるまで両方を再検証する。
+const V2_BANK_PATH = '/v2/bank';
+// 口座は設定トップにも件数が出るので、そこも合わせて更新する。
+const V2_SETTING_PATH = '/v2/setting';
+
+function revalidateBank(): void {
+  revalidatePath(BANK_PATH);
+  revalidatePath(V2_BANK_PATH);
+  revalidatePath(V2_SETTING_PATH, 'layout');
+}
 
 // service の失敗分類 → ユーザ向け文言。
 function errorMessage(error: BankError): string | undefined {
@@ -62,7 +72,7 @@ export async function upsertBankAction(
   const session = await requireAuth();
   const { id, name, colorId } = submission.value;
   const result = await service.upsertBank(session, { id, name, colorId });
-  revalidatePath(BANK_PATH);
+  revalidateBank();
   return toResult(
     result,
     id === undefined ? L.snackbar.created : L.snackbar.updated,
@@ -80,7 +90,7 @@ export async function deleteBankAction(
   }
   const session = await requireAuth();
   const result = await service.deleteBank(session, submission.value.id);
-  revalidatePath(BANK_PATH);
+  revalidateBank();
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
@@ -94,6 +104,6 @@ export async function postBankBalancesAction(
   }
   const session = await requireAuth();
   const result = await service.postBankBalances(session, submission.value.rows);
-  revalidatePath(BANK_PATH);
+  revalidateBank();
   return toResult(result, L.snackbar.created, submission.reply());
 }

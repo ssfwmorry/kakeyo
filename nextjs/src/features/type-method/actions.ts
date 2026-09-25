@@ -25,6 +25,15 @@ import type { TypeMethodError } from './types';
 // flash ではなく FormActionResult.toast を使う。保存後 revalidatePath で再取得。
 
 const SETTING_PATH = '/setting';
+// 新デザインの設定は詳細画面ごとにルートが分かれる（/v2/setting/type など）。
+// 移行が終わるまで旧 /setting と両方を再検証する。
+const V2_SETTING_PATH = '/v2/setting';
+
+// 設定画面（旧 1 枚 + 新デザインの各詳細）をまとめて再検証する。
+function revalidateSetting(): void {
+  revalidatePath(SETTING_PATH);
+  revalidatePath(V2_SETTING_PATH, 'layout');
+}
 
 // service の失敗分類 → ユーザ向け文言。foreignKey は削除時の紐づきエラー。
 function errorMessage(error: TypeMethodError): string | undefined {
@@ -71,7 +80,7 @@ export async function upsertTypeAction(
     isPay,
     isPair
   });
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(
     result,
     id === undefined ? L.snackbar.created : L.snackbar.updated,
@@ -89,7 +98,7 @@ export async function deleteTypeAction(
   }
   const session = await requireAuth();
   const result = await service.deleteType(session, submission.value.id);
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
@@ -104,7 +113,7 @@ export async function upsertSubTypeAction(
   const session = await requireAuth();
   const { id, typeId, name } = submission.value;
   const result = await service.upsertSubType(session, { id, typeId, name });
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(
     result,
     id === undefined ? L.snackbar.created : L.snackbar.updated,
@@ -122,7 +131,7 @@ export async function deleteSubTypeAction(
   }
   const session = await requireAuth();
   const result = await service.deleteSubType(session, submission.value.id);
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
@@ -143,7 +152,7 @@ export async function upsertMethodAction(
     payMode,
     isPair
   });
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(
     result,
     id === undefined ? L.snackbar.created : L.snackbar.updated,
@@ -161,7 +170,7 @@ export async function deleteMethodAction(
   }
   const session = await requireAuth();
   const result = await service.deleteMethod(session, submission.value.id);
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
@@ -172,7 +181,7 @@ export async function swapTypeAction(
 ): Promise<FormActionResult> {
   const session = await requireAuth();
   const result = await service.swapType(session, prevId, nextId);
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.swapped);
 }
 
@@ -182,7 +191,7 @@ export async function swapSubTypeAction(
 ): Promise<FormActionResult> {
   const session = await requireAuth();
   const result = await service.swapSubType(session, prevId, nextId);
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.swapped);
 }
 
@@ -192,6 +201,6 @@ export async function swapMethodAction(
 ): Promise<FormActionResult> {
   const session = await requireAuth();
   const result = await service.swapMethod(session, prevId, nextId);
-  revalidatePath(SETTING_PATH);
+  revalidateSetting();
   return toResult(result, L.snackbar.swapped);
 }

@@ -109,6 +109,27 @@ export function ListCellLink({
   );
 }
 
+// 行そのものは押せず、中に置いたボタンだけが操作対象になる行。
+// 並べ替え中のカテゴリ・方法のように、「行の中に操作がある」ときに使う
+// （行をボタンやリンクにすると、その中のボタンが入れ子になってしまう）。
+export function ListCellStatic({
+  height = 48,
+  className,
+  ...inner
+}: ListCellProps) {
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-3 px-3.5 text-foreground',
+        HEIGHT_CLASS[height],
+        className
+      )}
+    >
+      <ListCellInner {...inner} />
+    </div>
+  );
+}
+
 // その場で何かを起こす行（削除・ログアウト・トグルなど）。
 export function ListCellButton({
   height = 48,
