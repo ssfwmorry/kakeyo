@@ -34,6 +34,16 @@ nextjs/src/
 | components/ui（shadcn） | v2 に別途持つ（角丸・高さ・色が全面的に違うため） |
 | 画面 UI（*-screen, *-tab, *-form） | 全面的に作り直し |
 
+### ボトムシート
+
+Base UI（`@base-ui/react` 1.8.0）の `Drawer` を使う。`swipeDirection` の既定が `down` で、
+スワイプ閉じ・グラバー・スナップポイントが標準で揃っている。
+vaul は入れない（Radix 系の依存が増え、Base UI と二系統になる）。
+
+スワイプ閉じはタッチ端末でのみ効く。デスクトップのブラウザ（`hasTouch: false`）では
+キャンセルボタンと背景タップで閉じる。検証するときは Playwright の
+`hasTouch: true` なコンテキストを使う。
+
 ### トークンの扱い
 
 `globals.css` の `:root` / `.dark` は触らず、`src/v2/styles/tokens.css` に `.v2-root` スコープで
