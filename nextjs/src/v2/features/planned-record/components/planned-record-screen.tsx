@@ -31,7 +31,7 @@ export function PlannedRecordScreen({
     .reduce((sum, item) => sum + item.price, 0);
 
   return (
-    <div className='flex flex-col pb-6'>
+    <div className='flex flex-col'>
       <ScreenHeader backHref='/v2/setting' backLabel='設定' />
       <div className='flex flex-col gap-3 px-4'>
         <ScreenTitle badge={isPair ? 'pair' : 'self'}>定期の記録</ScreenTitle>

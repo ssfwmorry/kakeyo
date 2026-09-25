@@ -34,9 +34,9 @@ export function ThemeToggle() {
       type='button'
     >
       {isDark ? (
-        <IconSun aria-hidden='true' className='size-5' />
+        <IconSun aria-hidden='true' className='size-[21px]' />
       ) : (
-        <IconMoon aria-hidden='true' className='size-5' />
+        <IconMoon aria-hidden='true' className='size-[21px]' />
       )}
     </button>
   );

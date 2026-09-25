@@ -11,6 +11,7 @@ import {
 } from '@/features/type-method/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { todayJst, toYearMonthJst } from '@/lib/shared/domain/date';
+import { NotificationBell } from '@/v2/components/notification-bell';
 import { CalendarScreen } from '@/v2/features/calendar/components/calendar-screen';
 
 // カレンダー（ホーム・新デザイン）。取得は旧画面と同じサービスをそのまま使う。
@@ -35,6 +36,7 @@ export default async function V2CalendarPage() {
 
   return (
     <CalendarScreen
+      headerLeft={<NotificationBell />}
       methodList={methodList}
       planTypeList={planTypeList}
       typeList={typeList}

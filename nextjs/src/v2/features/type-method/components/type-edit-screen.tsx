@@ -67,7 +67,7 @@ export function TypeEditScreen({
   const previewColor = type?.colorName ?? 'grey';
 
   return (
-    <div className='flex flex-col pb-6'>
+    <div className='flex flex-col'>
       <form {...getFormProps(form)} action={action}>
         <input name='isPay' readOnly type='hidden' value={String(isPay)} />
         <input name='isPair' readOnly type='hidden' value={String(isPair)} />

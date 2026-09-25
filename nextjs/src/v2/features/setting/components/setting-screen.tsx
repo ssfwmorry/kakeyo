@@ -13,12 +13,12 @@ import {
 } from '@/components/icons';
 import { TUTORIAL_URL } from '@/features/auth/labels';
 import { ListCellLink } from '@/v2/components/list-cell';
+import { NotificationBell } from '@/v2/components/notification-bell';
 import { PairModeSegment } from '@/v2/components/pair-mode-segment';
 import { ScreenTitle } from '@/v2/components/screen-title';
 import { SectionList } from '@/v2/components/section-list';
 import { ThemeToggle } from '@/v2/components/theme-toggle';
 import { LogoutCell } from './logout-cell';
-import { NotificationBellSlot } from './notification-bell-slot';
 
 // 設定トップ（新デザイン）。
 //
@@ -116,10 +116,10 @@ export function SettingScreen({
   ];
 
   return (
-    <div className='flex flex-col gap-2 px-4 pb-6'>
+    <div className='flex flex-col gap-2 px-4'>
       {/* 画面上部の固定配置。左にベル、右にダーク切替と個人｜共有（全画面共通の位置）。 */}
       <div className='flex h-11 items-center justify-between'>
-        <NotificationBellSlot />
+        <NotificationBell />
         <div className='flex items-center gap-1.5'>
           <ThemeToggle />
           <PairModeSegment hasPair={hasPair} isPair={isPair} />

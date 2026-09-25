@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -69,12 +70,15 @@ export function CalendarScreen({
   initial,
   planTypeList,
   typeList,
-  methodList
+  methodList,
+  headerLeft
 }: {
   initial: CalendarInitialData;
   planTypeList: GroupedPlanTypeList;
   typeList: GroupedTypeList;
   methodList: GroupedMethodList;
+  // ヘッダー左に置く要素（お知らせのベル）。Server Component を page から渡す。
+  headerLeft?: ReactNode;
 }) {
   const [month, setMonth] = useState<CalendarMonthData>(initial.month);
   const [selectedDate, setSelectedDate] = useState(initial.today);
@@ -153,10 +157,13 @@ export function CalendarScreen({
   const [year, monthPart] = month.yearMonth.split('-');
 
   return (
-    <div className='flex flex-col gap-3 px-4 pb-6'>
-      <div className='flex h-11 items-center justify-end gap-1.5'>
-        <ThemeToggle />
-        <PairModeSegment hasPair={initial.hasPair} isPair={initial.isPair} />
+    <div className='flex flex-col gap-3 px-4'>
+      <div className='flex h-11 items-center justify-between'>
+        <span>{headerLeft}</span>
+        <div className='flex items-center gap-1.5'>
+          <ThemeToggle />
+          <PairModeSegment hasPair={initial.hasPair} isPair={initial.isPair} />
+        </div>
       </div>
 
       <div className='flex items-center gap-2'>

@@ -76,7 +76,7 @@ export function MethodScreen({
   ).map((value) => ({ value, label: TAB_TEXT[value].label }));
 
   return (
-    <div className='flex flex-col pb-6'>
+    <div className='flex flex-col'>
       <ScreenHeader
         action={
           <button

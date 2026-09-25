@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addDaysJst,
   dateInMonthJst,
+  diffDaysJst,
   endOfDayJst,
   formatDateLabelJst,
   formatDateWithWeekdayJst,
@@ -168,5 +169,18 @@ describe('formatMonthDayJst', () => {
   it('ゼロ埋めを外して M/D にする', () => {
     expect(formatMonthDayJst('2026-09-05')).toBe('9/5');
     expect(formatMonthDayJst('2026-12-25')).toBe('12/25');
+  });
+});
+
+describe('diffDaysJst', () => {
+  it('a − b を日数で返す（月跨ぎ・閏年）', () => {
+    expect(diffDaysJst('2026-09-25', '2026-09-20')).toBe(5);
+    expect(diffDaysJst('2026-09-25', '2026-08-31')).toBe(25);
+    expect(diffDaysJst('2024-03-01', '2024-02-28')).toBe(2);
+  });
+
+  it('同日は 0、b が後なら負', () => {
+    expect(diffDaysJst('2026-09-25', '2026-09-25')).toBe(0);
+    expect(diffDaysJst('2026-09-20', '2026-09-25')).toBe(-5);
   });
 });

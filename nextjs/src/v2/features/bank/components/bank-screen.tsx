@@ -31,7 +31,7 @@ export function BankScreen({
   const latest = tableRows.at(-1);
 
   return (
-    <div className='flex flex-col gap-3 px-4 pb-6'>
+    <div className='flex flex-col gap-3 px-4'>
       <div className='flex h-11 items-center justify-end'>
         <ThemeToggle />
       </div>

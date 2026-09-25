@@ -79,6 +79,12 @@ export function addDaysJst(dateStr: string, days: number): string {
   return dayjs(dateStr).add(days, 'day').format(DATE_FORMAT);
 }
 
+// 2 つの暦日（YYYY-MM-DD）の差を日数で返す（a − b）。「N 日過ぎています」の算出に使う。
+// 暦日の文字列同士の計算なので tz 変換は挟まない。
+export function diffDaysJst(a: string, b: string): number {
+  return dayjs(a).diff(dayjs(b), 'day');
+}
+
 // 'YYYY-MM-DD' → 'M/D'。日付チップのように短く出す場所の整形。
 export function formatMonthDayJst(dateStr: string): string {
   const [, month, day] = dateStr.split('-');

@@ -35,7 +35,7 @@ export function PlanTypeScreen({
   const [sheet, setSheet] = useState<SheetState>({ kind: 'closed' });
 
   return (
-    <div className='flex flex-col pb-6'>
+    <div className='flex flex-col'>
       <ScreenHeader
         action={
           <button

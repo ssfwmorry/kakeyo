@@ -40,7 +40,7 @@ export function TypeScreen({
   const cards = isPair ? bucket.pair : bucket.self;
 
   return (
-    <div className='flex flex-col pb-6'>
+    <div className='flex flex-col'>
       <ScreenHeader
         action={
           <button
