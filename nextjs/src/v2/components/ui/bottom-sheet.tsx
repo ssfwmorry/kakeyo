@@ -2,6 +2,7 @@
 
 import { Drawer } from '@base-ui/react/drawer';
 import { cn } from 'cn';
+import type { ReactNode } from 'react';
 
 // 下から出るシート。新デザインでは Dialog を全てこれに置き換える
 // （デザイン基礎「Dialog はすべて下から出るシートに置き換える」）。
@@ -18,6 +19,9 @@ import { cn } from 'cn';
 // - full: 上端 56px を残して画面下端まで固定。入力フローのようにテンキーを下に
 //   張り付ける画面が使う。内側はスクロールさせず、中身が flex で縦に並ぶ。
 //
+// footer は下端に張り付く帯（予定シートの保存ボタンなど）。スクロール領域の外に置き、
+// 中身が長くても常に見える。フォームの送信ボタンを置くときは form 属性でフォームに結ぶ。
+//
 // Portal で body 直下に出るため、トークンを効かせるために v2-root を付け直している。
 
 export const BottomSheet = Drawer.Root;
@@ -29,13 +33,16 @@ export function BottomSheetContent({
   children,
   size = 'content',
   gap = 14,
+  footer,
   ...props
 }: Drawer.Popup.Props & {
   size?: 'content' | 'full';
   // 中身の縦の間隔。設定系のシートは 12、それ以外は 14（デザイン各シート）。
   gap?: 12 | 14;
+  footer?: ReactNode;
 }) {
   const isFull = size === 'full';
+  const hasFooter = footer !== undefined;
   return (
     <Drawer.Portal>
       {/* 暗幕も Portal で body 直下に出るので、--overlay を引くために v2-root が要る。 */}
@@ -60,16 +67,27 @@ export function BottomSheetContent({
             className={cn(
               'flex min-h-0 flex-1 flex-col px-4 pt-2',
               gap === 12 ? 'gap-3' : 'gap-3.5',
-              isFull ? 'overflow-hidden' : 'overflow-y-auto'
+              isFull ? 'overflow-hidden' : 'overflow-y-auto',
+              hasFooter && 'pb-1'
             )}
             style={
-              isFull
+              isFull || hasFooter
                 ? undefined
                 : { paddingBottom: 'max(env(safe-area-inset-bottom), 34px)' }
             }
           >
             {children}
           </Drawer.Content>
+          {hasFooter ? (
+            <div
+              className='shrink-0 border-t bg-background px-4 pt-3'
+              style={{
+                paddingBottom: 'max(env(safe-area-inset-bottom), 34px)'
+              }}
+            >
+              {footer}
+            </div>
+          ) : null}
         </Drawer.Popup>
       </Drawer.Viewport>
     </Drawer.Portal>

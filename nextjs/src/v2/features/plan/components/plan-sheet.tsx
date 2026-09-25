@@ -1,41 +1,40 @@
 'use client';
 
-import { getFormProps, useForm } from '@conform-to/react';
-import { parseWithZod } from '@conform-to/zod/v4';
-import { cn } from 'cn';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useId, useState, useTransition } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { calendarJaProps } from '@/components/form/date-picker';
 import { useFormAction } from '@/components/form/use-form-action';
 import { useFormToast } from '@/components/form/use-form-toast';
-import { IconTrash } from '@/components/icons';
-import { Calendar } from '@/components/ui/calendar';
 import { colorVar } from '@/features/master';
 import { planReminderLabels } from '@/features/plan-reminder/labels';
-import { planUpsertSchema } from '@/features/plan-reminder/schemas';
 import type { PlanItem, PlanTypeCard } from '@/features/plan-reminder/types';
-import {
-  formatDateWithWeekdayJst,
-  listDatesJst
-} from '@/lib/shared/domain/date';
+import { addDaysJst, listDatesJst } from '@/lib/shared/domain/date';
 import { formatLocalDate, parseLocalDate } from '@/lib/shared/domain/localDate';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
+import { SheetHeader, SheetTrashButton } from '@/v2/components/sheet-header';
 import {
   BottomSheet,
-  BottomSheetContent,
-  BottomSheetTitle
+  BottomSheetContent
 } from '@/v2/components/ui/bottom-sheet';
 import { ConfirmAlert } from '@/v2/components/ui/confirm-alert';
+import { InlineCalendar } from '@/v2/components/ui/inline-calendar';
+import { SheetSubmitButton } from '@/v2/components/ui/sheet-submit-button';
+import { Switch } from '@/v2/components/ui/switch';
+import { formatSlashDateWeekJa, quoted } from '@/v2/lib/format';
+import { useSubmissionErrorToast } from '@/v2/lib/submission-error';
 import { deletePlanAction, savePlanAction } from '../actions';
 
-// 予定の追加・編集シート（デザイン PlanAdd / PlanEdit）。旧 /plan 画面を
+// 予定の追加・編集シート（原典 PlanAdd / PlanEdit）。旧 /plan 画面を
 // カレンダーの上に出るシートに置き換える。
 //
-// 上から「キャンセル｜予定を追加｜（共有）」、予定名、日付（単日／期間）と期間スイッチ、
-// カテゴリのチップ、メモ。下端に削除（編集のみ）と保存。
-// 日付は行のボタンを押すとすぐ下に暦が開く。シートの上にさらにシートを重ねない。
+// 上から「×｜予定を追加（共有）｜ゴミ箱」、予定名、日付（単日／期間）と期間スイッチ、
+// カテゴリのチップ、メモ。下端に張り付く保存ボタン。削除はヘッダー右のゴミ箱から
+// 中央の確認を経て行う。
 //
+// 日付は行のボタンを押すとすぐ下に暦が開く（README D8）。シートの上にさらにシートを重ねない。
 // 保存しても遷移せず、閉じた側（カレンダー）が月を取り直す。
+//
+// 入力欄の下にエラーを出す場所は無い。主ボタンの活性はクライアント状態で決め、
+// サーバの検証に落ちたときだけトーストで理由を出す。
 
 export function PlanSheet({
   plan,
@@ -57,11 +56,7 @@ export function PlanSheet({
   onSaved: () => void;
 }) {
   const [result, action, isPending] = useFormAction(savePlanAction);
-  const [form, fields] = useForm({
-    lastResult: result?.submission,
-    onValidate: ({ formData }) =>
-      parseWithZod(formData, { schema: planUpsertSchema })
-  });
+  useSubmissionErrorToast(result);
   useEffect(() => {
     if (result?.toast?.type === 'success') {
       onSaved();
@@ -71,6 +66,7 @@ export function PlanSheet({
 
   const initial = toInitialValues(plan, initialDate);
   const [name, setName] = useState(initial.name);
+  const [memo, setMemo] = useState(initial.memo);
   const [isPeriod, setIsPeriod] = useState(initial.isPeriod);
   const [startDate, setStartDate] = useState(initial.startDate);
   const [endDate, setEndDate] = useState(initial.endDate);
@@ -80,16 +76,47 @@ export function PlanSheet({
   const submittedEndDate = isPeriod ? endDate : startDate;
   const canSave = name.trim() !== '';
   const isEdit = plan !== undefined;
-  const saveVerb = isEdit ? '保存' : '追加';
+  const verb = isEdit ? '保存' : '追加';
+  const title = isEdit ? '予定を編集' : '予定を追加';
+  const close = () => onOpenChange(false);
+
+  const remove = useDeleteFlow(plan?.id, () => {
+    onSaved();
+    close();
+  });
+  const formId = useId();
 
   return (
     <BottomSheet onOpenChange={onOpenChange} open>
-      <BottomSheetContent>
-        <form
-          {...getFormProps(form)}
-          action={action}
-          className='flex flex-col gap-3.5'
-        >
+      <BottomSheetContent
+        aria-label={title}
+        // 保存はスクロール領域の外の帯に置く。中身が長くてもボタンは見えたまま。
+        footer={
+          <SheetSubmitButton
+            disabled={!canSave || isPending}
+            disabledLabel={`予定名を入れると${verb}できます`}
+            form={formId}
+            label={`${verb}する`}
+          />
+        }
+      >
+        <SheetHeader
+          left='close'
+          onLeft={close}
+          right={
+            isEdit ? (
+              <SheetTrashButton
+                disabled={remove.isPending}
+                label='この予定を削除'
+                onClick={remove.ask}
+              />
+            ) : undefined
+          }
+          tag={isPair ? '共有' : undefined}
+          title={title}
+        />
+
+        <form action={action} className='flex flex-col gap-3.5' id={formId}>
           <HiddenFields
             endDate={submittedEndDate}
             isPair={isPair}
@@ -98,25 +125,18 @@ export function PlanSheet({
             startDate={startDate}
           />
 
-          <SheetHeader
-            isPair={isPair}
-            onCancel={() => onOpenChange(false)}
-            title={isEdit ? '予定を編集' : '予定を追加'}
-          />
-
-          <label className='flex h-13 items-center rounded-xl bg-card px-3.5'>
+          <label className='flex h-13 shrink-0 items-center rounded-xl bg-card px-3.5'>
             <input
               aria-label={planReminderLabels.entity.planName}
               className='min-w-0 flex-grow bg-transparent font-semibold text-foreground text-lg outline-none'
               maxLength={30}
-              name={fields.name.name}
+              name='name'
               onChange={(event) => setName(event.target.value)}
               placeholder='予定名（30文字まで）'
               type='text'
               value={name}
             />
           </label>
-          <FieldError errors={fields.name.errors} />
 
           <DateSection
             endDate={submittedEndDate}
@@ -125,10 +145,15 @@ export function PlanSheet({
               setStartDate(next.startDate);
               setEndDate(next.endDate);
             }}
-            onPeriodChange={setIsPeriod}
+            onPeriodChange={(next) => {
+              setIsPeriod(next);
+              // ON にした瞬間に最低 2 日間にする。OFF は単日に戻す。
+              setEndDate(
+                next ? maxDate(endDate, addDaysJst(startDate, 1)) : startDate
+              );
+            }}
             startDate={startDate}
           />
-          <FieldError errors={fields.endDate.errors} />
 
           <TypeChips
             onChange={setPlanTypeId}
@@ -143,23 +168,24 @@ export function PlanSheet({
             <textarea
               aria-label={planReminderLabels.entity.memo}
               className='h-21 resize-none rounded-xl bg-card px-3.5 py-3 text-[15px] text-foreground leading-relaxed outline-none'
-              defaultValue={plan?.memo ?? ''}
-              name={fields.memo.name}
+              name='memo'
+              onChange={(event) => setMemo(event.target.value)}
               placeholder='任意。URL を貼るとリンクになります'
+              value={memo}
             />
           </div>
-
-          <SheetFooter
-            canSave={canSave}
-            isPending={isPending}
-            onDeleted={() => {
-              onSaved();
-              onOpenChange(false);
-            }}
-            planId={plan?.id}
-            saveVerb={saveVerb}
-          />
         </form>
+
+        {plan === undefined ? null : (
+          <ConfirmAlert
+            description={`${quoted(plan.name)}を削除します。削除すると元に戻せません。`}
+            onCancel={remove.cancel}
+            onConfirm={remove.run}
+            open={remove.isConfirming}
+            pending={remove.isPending}
+            title='この予定を削除しますか？'
+          />
+        )}
       </BottomSheetContent>
     </BottomSheet>
   );
@@ -171,6 +197,7 @@ function toInitialValues(
   initialDate: string
 ): {
   name: string;
+  memo: string;
   isPeriod: boolean;
   startDate: string;
   endDate: string;
@@ -179,6 +206,7 @@ function toInitialValues(
   if (plan === undefined) {
     return {
       name: '',
+      memo: '',
       isPeriod: false,
       startDate: initialDate,
       endDate: initialDate,
@@ -187,6 +215,7 @@ function toInitialValues(
   }
   return {
     name: plan.name,
+    memo: plan.memo ?? '',
     isPeriod: plan.startDate !== plan.endDate,
     startDate: plan.startDate,
     endDate: plan.endDate,
@@ -194,8 +223,12 @@ function toInitialValues(
   };
 }
 
-// Server Action へ送る hidden 群。スキーマの名前に合わせる（Conform の fields を通さず
-// 素の name で送るのは、値が全て state 由来で Conform の管理下にないため）。
+// 'YYYY-MM-DD' は辞書順が日付順。
+function maxDate(a: string, b: string): string {
+  return a > b ? a : b;
+}
+
+// Server Action へ送る hidden 群。スキーマの名前に合わせる。
 function HiddenFields({
   planId,
   isPair,
@@ -227,87 +260,6 @@ function HiddenFields({
   );
 }
 
-// 「キャンセル｜見出し｜（共有）」。保存はフッタにあるので右は空ける。
-function SheetHeader({
-  title,
-  isPair,
-  onCancel
-}: {
-  title: string;
-  isPair: boolean;
-  onCancel: () => void;
-}) {
-  return (
-    <div className='grid h-10 grid-cols-[1fr_auto_1fr] items-center'>
-      <button
-        className='justify-self-start text-base text-primary'
-        onClick={onCancel}
-        type='button'
-      >
-        キャンセル
-      </button>
-      <span className='flex items-center gap-1.5'>
-        <BottomSheetTitle className='text-[17px]'>{title}</BottomSheetTitle>
-        {isPair ? (
-          <span className='flex h-5 items-center rounded-md bg-secondary px-1.5 font-bold text-[11px] text-primary'>
-            共有
-          </span>
-        ) : null}
-      </span>
-    </div>
-  );
-}
-
-// 下端に固定した削除（編集のみ）と保存。シートの中身が長くてもボタンは見えたまま。
-function SheetFooter({
-  planId,
-  canSave,
-  isPending,
-  saveVerb,
-  onDeleted
-}: {
-  planId?: number;
-  canSave: boolean;
-  isPending: boolean;
-  // 「追加」「保存」。ボタンとその理由の文言に使う。
-  saveVerb: string;
-  onDeleted: () => void;
-}) {
-  return (
-    <div
-      className='-mx-4 sticky bottom-0 mt-1 flex gap-2.5 border-t bg-popover px-4 pt-3'
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 20px)' }}
-    >
-      {planId === undefined ? null : (
-        <PlanDeleteButton id={planId} onDeleted={onDeleted} />
-      )}
-      <button
-        className={cn(
-          'h-13 flex-grow rounded-xl font-bold text-[17px]',
-          canSave
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted font-semibold text-base text-muted-foreground'
-        )}
-        disabled={!canSave || isPending}
-        type='submit'
-      >
-        {canSave ? `${saveVerb}する` : `予定名を入れると${saveVerb}できます`}
-      </button>
-    </div>
-  );
-}
-
-function FieldError({ errors }: { errors?: string[] }) {
-  if (!errors) {
-    return null;
-  }
-  return (
-    <p className='px-1 text-destructive text-sm' role='alert'>
-      {errors.join(' / ')}
-    </p>
-  );
-}
-
 // 日付（単日）／期間の行と、期間スイッチ。行のボタンを押すと下に暦が開く。
 function DateSection({
   isPeriod,
@@ -328,7 +280,7 @@ function DateSection({
   return (
     <div className='flex flex-col gap-2'>
       <div className='overflow-hidden rounded-[14px] bg-card'>
-        <div className='flex h-12.5 items-center gap-2 px-3.5'>
+        <div className='flex h-[50px] items-center gap-2 px-3.5'>
           <span className='flex-grow text-base'>
             {isPeriod ? '期間' : '日付'}
           </span>
@@ -339,27 +291,24 @@ function DateSection({
           ) : null}
           <button
             aria-expanded={isPicking}
-            className='h-8.5 whitespace-nowrap rounded-lg bg-muted px-3 font-semibold text-[15px] text-foreground'
+            aria-label={isPeriod ? '期間を選ぶ' : undefined}
+            className='h-8.5 whitespace-nowrap rounded-lg bg-fill-soft px-3 font-semibold text-[15px] text-foreground'
             onClick={() => setIsPicking((prev) => !prev)}
             type='button'
           >
             {isPeriod
-              ? `${formatDateWithWeekdayJst(startDate)} 〜 ${formatDateWithWeekdayJst(endDate)}`
-              : formatDateWithWeekdayJst(startDate)}
+              ? `${formatSlashDateWeekJa(startDate)} 〜 ${formatSlashDateWeekJa(endDate)}`
+              : formatSlashDateWeekJa(startDate)}
           </button>
         </div>
         <div className='ml-3.5 border-t' />
-        <div className='flex h-12.5 items-center px-3.5'>
+        <div className='flex h-[50px] items-center px-3.5'>
           <span className='flex-grow text-base'>期間を指定</span>
-          <PeriodSwitch
-            isOn={isPeriod}
-            onChange={(next) => {
-              onPeriodChange(next);
-              // 期間 OFF に戻したら終了日も開始日に揃える。
-              if (!next) {
-                onChange({ startDate, endDate: startDate });
-              }
-            }}
+          <Switch
+            aria-label='期間を指定'
+            checked={isPeriod}
+            offClass='bg-disabled'
+            onCheckedChange={onPeriodChange}
           />
         </div>
       </div>
@@ -367,10 +316,7 @@ function DateSection({
       {isPicking ? (
         <div className='flex justify-center rounded-[14px] bg-card py-2'>
           {isPeriod ? (
-            <Calendar
-              {...calendarJaProps}
-              autoFocus
-              className='bg-transparent'
+            <InlineCalendar
               defaultMonth={parseLocalDate(startDate)}
               mode='range'
               onSelect={(range: DateRange | undefined) => {
@@ -389,10 +335,7 @@ function DateSection({
               }}
             />
           ) : (
-            <Calendar
-              {...calendarJaProps}
-              autoFocus
-              className='bg-transparent'
+            <InlineCalendar
               defaultMonth={parseLocalDate(startDate)}
               mode='single'
               onSelect={(next) => {
@@ -409,36 +352,6 @@ function DateSection({
         </div>
       ) : null}
     </div>
-  );
-}
-
-// iOS 風のスイッチ（56×32）。shadcn の Switch は形が違うので v2 では自前で持つ。
-function PeriodSwitch({
-  isOn,
-  onChange
-}: {
-  isOn: boolean;
-  onChange: (isOn: boolean) => void;
-}) {
-  return (
-    <button
-      aria-checked={isOn}
-      aria-label='期間を指定'
-      className={cn(
-        'relative h-8 w-14 shrink-0 rounded-full transition-colors',
-        isOn ? 'bg-primary' : 'bg-muted'
-      )}
-      onClick={() => onChange(!isOn)}
-      role='switch'
-      type='button'
-    >
-      <span
-        className={cn(
-          'absolute top-0.5 left-0.5 size-7 rounded-full bg-card shadow-sm transition-transform',
-          isOn && 'translate-x-6'
-        )}
-      />
-    </button>
   );
 }
 
@@ -459,10 +372,12 @@ function TypeChips({
       </span>
       <div className='flex flex-wrap gap-2'>
         <TypeChip
-          color='var(--muted-foreground)'
+          color='var(--dash)'
           isSelected={value === null}
           label='なし'
           onSelect={() => onChange(null)}
+          // 「なし」は色を持たないので、選択中も文字は本文色のまま。
+          selectedTextColor='var(--foreground)'
         />
         {planTypes.map((type) => (
           <TypeChip
@@ -482,12 +397,14 @@ function TypeChip({
   label,
   color,
   isSelected,
-  onSelect
+  onSelect,
+  selectedTextColor = color
 }: {
   label: string;
   color: string;
   isSelected: boolean;
   onSelect: () => void;
+  selectedTextColor?: string;
 }) {
   return (
     <button
@@ -497,9 +414,9 @@ function TypeChip({
       style={
         isSelected
           ? {
-              backgroundColor: `color-mix(in oklch, ${color} 15%, var(--card))`,
+              backgroundColor: `color-mix(in srgb, ${color} 15%, var(--card))`,
               borderColor: color,
-              color
+              color: selectedTextColor
             }
           : {
               backgroundColor: 'var(--card)',
@@ -519,20 +436,17 @@ function TypeChip({
   );
 }
 
-// 削除。確認は v2 の ConfirmAlert。ヘッダー右への移動は T04。
-function PlanDeleteButton({
-  id,
-  onDeleted
-}: {
-  id: number;
-  onDeleted: () => void;
-}) {
-  const [isPending, startTransition] = useTransition();
+// 削除の一連の状態。ゴミ箱 → 中央の確認 → 実行 → 成功なら閉じる。
+function useDeleteFlow(id: number | undefined, onDeleted: () => void) {
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<FormActionResult | null>(null);
   useFormToast(result);
 
-  const remove = () => {
+  const run = () => {
+    if (id === undefined) {
+      return;
+    }
     setIsConfirming(false);
     startTransition(async () => {
       const formData = new FormData();
@@ -545,24 +459,11 @@ function PlanDeleteButton({
     });
   };
 
-  return (
-    <>
-      <button
-        aria-label='この予定を削除'
-        className='flex size-13 shrink-0 items-center justify-center rounded-xl bg-destructive-soft text-destructive disabled:opacity-50'
-        disabled={isPending}
-        onClick={() => setIsConfirming(true)}
-        type='button'
-      >
-        <IconTrash aria-hidden='true' className='size-5' />
-      </button>
-      <ConfirmAlert
-        onCancel={() => setIsConfirming(false)}
-        onConfirm={remove}
-        open={isConfirming}
-        pending={isPending}
-        title='この予定を削除しますか？'
-      />
-    </>
-  );
+  return {
+    isConfirming,
+    isPending,
+    ask: () => setIsConfirming(true),
+    cancel: () => setIsConfirming(false),
+    run
+  };
 }

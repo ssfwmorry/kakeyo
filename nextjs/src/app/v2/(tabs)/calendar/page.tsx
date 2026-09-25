@@ -1,9 +1,6 @@
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { getCalendarMonth } from '@/features/calendar/server/services';
-import {
-  getMemoList,
-  getShortCutList
-} from '@/features/memo-shortcut/server/services';
+import { getMemoList } from '@/features/memo-shortcut/server/services';
 import { getPlanTypeCardList } from '@/features/plan-reminder/server/services';
 import {
   getMethodCardList,
@@ -17,17 +14,19 @@ import { CalendarScreen } from '@/v2/features/calendar/components/calendar-scree
 // カレンダー（ホーム・新デザイン）。取得は旧画面と同じサービスをそのまま使う。
 // 記録・予定のシートをこの画面の上に出すので、その候補（カテゴリ・方法・予定カテゴリ）も
 // ここで取る。
+//
+// 「いつもの」（ショートカット）は新デザインに無いので取らない（README D7）。
+// 記録シートが shortcuts を受けなくなるまでは空で渡す。
 
 export default async function V2CalendarPage() {
   const session = await requireAuth();
   const today = todayJst();
   const yearMonth = toYearMonthJst(new Date());
 
-  const [month, memos, shortcuts, isPair, planTypeList, typeList, methodList] =
+  const [month, memos, isPair, planTypeList, typeList, methodList] =
     await Promise.all([
       getCalendarMonth(session, yearMonth),
       getMemoList(session),
-      getShortCutList(session),
       getEffectivePairMode(session),
       getPlanTypeCardList(session),
       getTypeCardList(session),
@@ -45,7 +44,7 @@ export default async function V2CalendarPage() {
         isPair,
         memos,
         month,
-        shortcuts,
+        shortcuts: [],
         today
       }}
     />

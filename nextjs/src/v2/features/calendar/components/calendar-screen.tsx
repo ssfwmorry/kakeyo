@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   type ReactNode,
@@ -27,12 +26,12 @@ import type {
   GroupedMethodList,
   GroupedTypeList
 } from '@/features/type-method';
-import { formatDateWithWeekdayJst } from '@/lib/shared/domain/date';
-import { formatPrefixedSum } from '@/lib/shared/domain/priceDisplay';
 import { PairModeSegment } from '@/v2/components/pair-mode-segment';
 import { ThemeToggle } from '@/v2/components/theme-toggle';
 import { RecordSheet } from '@/v2/features/note/components/record-sheet';
+import { NotifySheetStateProvider } from '@/v2/features/notify/components/notify-sheet-state';
 import { PlanSheet } from '@/v2/features/plan/components/plan-sheet';
+import { formatMonthDayWeekJa, formatSignedPrice } from '@/v2/lib/format';
 import { assignEventLanes, type LaneEvent } from '../domain/event-lanes';
 import { buildMonthGrid } from '../domain/month-grid';
 import { DayDetailList } from './day-detail-list';
@@ -47,6 +46,9 @@ import { TodoChips } from './todo-chips';
 //
 // 月移動は既存の Server Action をそのまま使う。取得中も前の月を出したままにして、
 // 画面が空白になるのを避ける。
+//
+// お知らせシートの開閉はこの画面が持つ。ヘッダーのベルと日別リストのリマインダー行の
+// 両方から同じシートを開くため。
 
 // セルに出す帯の段数。3 段以上入れると 1 マスが高くなりすぎて月が見渡せない。
 const MAX_LANES = 2;
@@ -157,125 +159,133 @@ export function CalendarScreen({
   const [year, monthPart] = month.yearMonth.split('-');
 
   return (
-    <div className='flex flex-col gap-3 px-4'>
-      <div className='flex h-11 items-center justify-between'>
-        <span>{headerLeft}</span>
-        <div className='flex items-center gap-1.5'>
-          <ThemeToggle />
-          <PairModeSegment hasPair={initial.hasPair} isPair={initial.isPair} />
+    <NotifySheetStateProvider>
+      <div className='flex flex-col gap-3 px-4'>
+        <div className='flex h-11 items-center justify-between'>
+          <span>{headerLeft}</span>
+          <div className='flex items-center gap-1.5'>
+            <ThemeToggle />
+            <PairModeSegment
+              hasPair={initial.hasPair}
+              isPair={initial.isPair}
+            />
+          </div>
         </div>
-      </div>
 
-      <div className='flex items-center gap-2'>
-        <h1 className='font-bold text-3xl'>{Number(monthPart)}月</h1>
-        <span className='mt-1.5 text-[17px] text-muted-foreground'>{year}</span>
-        <span className='mt-2 flex items-baseline gap-1'>
-          <span className='text-muted-foreground text-xs'>収支</span>
-          {/* monthSum は「支出=正」向き。符号の付け方は共通の整形関数に委ねる
-              （summary と同じ見え方に揃える）。 */}
-          <span className='font-semibold text-[15px] tabular-nums'>
-            {formatPrefixedSum(month.monthSum)}
+        <div className='flex items-center gap-2'>
+          <h1 className='font-bold text-3xl'>{Number(monthPart)}月</h1>
+          <span className='mt-1.5 text-[17px] text-muted-foreground'>
+            {year}
           </span>
-        </span>
-        <div className='ml-auto flex gap-1.5'>
-          <MonthNavButton
-            direction='prev'
-            isPending={isPending}
-            onClick={() => moveMonth(-1)}
-          />
-          <MonthNavButton
-            direction='next'
-            isPending={isPending}
-            onClick={() => moveMonth(1)}
-          />
+          <span className='mt-2 flex items-baseline gap-1'>
+            <span className='text-muted-foreground text-xs'>収支</span>
+            {/* monthSum は「支出=正」向きなので符号を反転して出す。色は符号によらず本文色。 */}
+            <span className='font-semibold text-[15px]'>
+              {formatSignedPrice(Math.abs(month.monthSum), month.monthSum > 0)}
+            </span>
+          </span>
+          <div className='ml-auto flex gap-1.5'>
+            <MonthNavButton
+              direction='prev'
+              isPending={isPending}
+              onClick={() => moveMonth(-1)}
+            />
+            <MonthNavButton
+              direction='next'
+              isPending={isPending}
+              onClick={() => moveMonth(1)}
+            />
+          </div>
         </div>
-      </div>
 
-      <MonthGrid
-        cells={cells}
-        daySums={daySums}
-        lanes={lanes}
-        onSelect={setSelectedDate}
-        selectedDate={selectedDate}
-        today={initial.today}
-      />
-
-      <div className='grid grid-cols-2 gap-2.5'>
-        <button
-          className='flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary font-semibold text-[15px] text-primary-foreground'
-          onClick={() => setRecordSheet({ kind: 'create' })}
-          type='button'
-        >
-          <IconPlus aria-hidden='true' className='size-4.5' strokeWidth={2.4} />
-          記録
-        </button>
-        <button
-          className='flex h-11 items-center justify-center gap-1.5 rounded-xl bg-secondary font-semibold text-[15px] text-primary'
-          onClick={() => setPlanSheet({ kind: 'create' })}
-          type='button'
-        >
-          <IconPlus aria-hidden='true' className='size-4.5' strokeWidth={2.4} />
-          予定
-        </button>
-      </div>
-
-      <TodoChips memos={initial.memos} />
-
-      <div className='mt-1 flex items-center'>
-        <h2 className='font-semibold text-[17px]'>
-          {formatDateWithWeekdayJst(selectedDate)}
-        </h2>
-        <Link
-          className='ml-auto font-semibold text-primary text-sm'
-          href='/records'
-        >
-          すべての記録
-        </Link>
-      </div>
-
-      <DayDetailList
-        daySum={daySums.get(selectedDate)}
-        onEditPlan={(plan) => setPlanSheet({ kind: 'edit', plan })}
-        onEditRecord={(record) => setRecordSheet({ kind: 'edit', record })}
-        plans={selectDayPlans(month.plans, selectedDate)}
-        reminders={selectDayReminders(month.reminders, selectedDate)}
-      />
-
-      {recordSheet.kind === 'closed' ? null : (
-        <RecordSheet
-          editing={recordSheet.kind === 'edit' ? recordSheet.record : undefined}
-          hasPair={initial.hasPair}
-          initialDate={selectedDate}
-          // 共有か個人かは作成時に決まる。編集は対象に合わせ、候補もその側を出す。
-          isPair={
-            recordSheet.kind === 'edit'
-              ? recordSheet.record.isPair
-              : initial.isPair
-          }
-          // 編集対象ごとにシートを作り直す。
-          key={recordSheet.kind === 'edit' ? recordSheet.record.id : 'create'}
-          methodList={methodList}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) {
-              setRecordSheet({ kind: 'closed' });
-            }
-          }}
-          onSaved={reloadMonth}
-          shortcuts={initial.shortcuts}
-          today={initial.today}
-          typeList={typeList}
+        <MonthGrid
+          cells={cells}
+          daySums={daySums}
+          lanes={lanes}
+          onSelect={setSelectedDate}
+          selectedDate={selectedDate}
         />
-      )}
 
-      <CalendarPlanSheet
-        initialDate={selectedDate}
-        isPairMode={initial.isPair}
-        onClose={() => setPlanSheet({ kind: 'closed' })}
-        onSaved={reloadMonth}
-        planTypeList={planTypeList}
-        state={planSheet}
-      />
-    </div>
+        <div className='grid grid-cols-2 gap-2.5'>
+          <button
+            className='flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary font-semibold text-[15px] text-primary-foreground'
+            onClick={() => setRecordSheet({ kind: 'create' })}
+            type='button'
+          >
+            <IconPlus
+              aria-hidden='true'
+              className='size-4.5'
+              strokeWidth={2.4}
+            />
+            記録
+          </button>
+          <button
+            className='flex h-11 items-center justify-center gap-1.5 rounded-xl bg-secondary font-semibold text-[15px] text-primary'
+            onClick={() => setPlanSheet({ kind: 'create' })}
+            type='button'
+          >
+            <IconPlus
+              aria-hidden='true'
+              className='size-4.5'
+              strokeWidth={2.4}
+            />
+            予定
+          </button>
+        </div>
+
+        <TodoChips hasPair={initial.hasPair} memos={initial.memos} />
+
+        {/* 「すべての記録」への導線はデザインが無いので出さない（README D10）。 */}
+        <h2 className='mt-1 font-semibold text-[17px]'>
+          {formatMonthDayWeekJa(selectedDate)}
+        </h2>
+
+        <DayDetailList
+          daySum={daySums.get(selectedDate)}
+          onEditPlan={(plan) => setPlanSheet({ kind: 'edit', plan })}
+          onEditRecord={(record) => setRecordSheet({ kind: 'edit', record })}
+          plans={selectDayPlans(month.plans, selectedDate)}
+          reminders={selectDayReminders(month.reminders, selectedDate)}
+        />
+
+        {recordSheet.kind === 'closed' ? null : (
+          <RecordSheet
+            editing={
+              recordSheet.kind === 'edit' ? recordSheet.record : undefined
+            }
+            hasPair={initial.hasPair}
+            initialDate={selectedDate}
+            // 共有か個人かは作成時に決まる。編集は対象に合わせ、候補もその側を出す。
+            isPair={
+              recordSheet.kind === 'edit'
+                ? recordSheet.record.isPair
+                : initial.isPair
+            }
+            // 編集対象ごとにシートを作り直す。
+            key={recordSheet.kind === 'edit' ? recordSheet.record.id : 'create'}
+            methodList={methodList}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) {
+                setRecordSheet({ kind: 'closed' });
+              }
+            }}
+            onSaved={reloadMonth}
+            shortcuts={initial.shortcuts}
+            today={initial.today}
+            typeList={typeList}
+          />
+        )}
+
+        <CalendarPlanSheet
+          initialDate={selectedDate}
+          isPairMode={initial.isPair}
+          onClose={() => setPlanSheet({ kind: 'closed' })}
+          onSaved={reloadMonth}
+          planTypeList={planTypeList}
+          state={planSheet}
+        />
+      </div>
+    </NotifySheetStateProvider>
   );
 }
 

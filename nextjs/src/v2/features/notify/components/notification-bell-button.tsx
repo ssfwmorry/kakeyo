@@ -4,14 +4,17 @@ import { useState } from 'react';
 import { IconBell } from '@/components/icons';
 import type { NotifyRow } from '../domain/notify-rows';
 import { NotifySheet } from './notify-sheet';
+import { useNotifySheetState } from './notify-sheet-state';
 
 // ベルのボタン本体とバッジ。押すとお知らせシートを開く（リンクではない）。
 //
 // 行はサーバで計算済みのものを受け、シートで「確認」した行は表示から外す。
 // 再検証で props が入れ替わったあとは、外した id が含まれなくなるので放置してよい。
+//
+// 開閉状態は画面が Provider で持つこともある（カレンダーの日別リストからも開くため）。
 
 export function NotificationBellButton({ rows }: { rows: NotifyRow[] }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useNotifySheetState();
   const [checkedIds, setCheckedIds] = useState<ReadonlySet<number>>(
     () => new Set()
   );

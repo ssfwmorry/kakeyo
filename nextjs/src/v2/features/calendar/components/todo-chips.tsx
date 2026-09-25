@@ -6,29 +6,51 @@ import { IconClose, IconShare } from '@/components/icons';
 import type { MemoItem } from '@/features/memo-shortcut';
 import { deleteMemoAction } from '@/features/memo-shortcut/actions';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
+import { TodoSheet } from './todo-sheet';
 
-// TODO を横並びのチップで出す（デザイン基礎 Calendar）。
+// TODO の帯（原典 Calendar）。見出しと件数の下に、チップを折り返して並べる。
+// 末尾の「＋ 追加」で追加シートを開く。
 //
-// 旧画面は縦のリストで 1 行ずつ削除ボタンを持っていたが、新デザインでは
-// カレンダーと日別リストの間に挟まる帯なので、横スクロールのチップにする。
-// 件数が増えても縦の場所を取らない。
-//
+// 削除は × で即時（確認なし）。TODO は短い文なので、消しても書き直しが軽い。
 // 共有の TODO は人のアイコンを添えて区別する。
 
-export function TodoChips({ memos }: { memos: MemoItem[] }) {
+export function TodoChips({
+  memos,
+  hasPair
+}: {
+  memos: MemoItem[];
+  hasPair: boolean;
+}) {
+  const [isAdding, setIsAdding] = useState(false);
+
   return (
-    <div className='-mx-4 flex items-center gap-2 overflow-x-auto px-4'>
-      <span className='shrink-0 font-bold text-muted-foreground text-xs tracking-wide'>
-        TODO
-      </span>
-      {memos.map((memo) => (
-        <TodoChip key={memo.id} memo={memo} />
-      ))}
-      {/* 追加はカレンダーからではなく旧画面の導線に合わせる。新デザインの
-          「＋ 追加」はシートを開く想定だが、TODO 自体の見直しが別途あるため
-          ここでは出さない。 */}
-      {memos.length === 0 ? (
-        <span className='text-muted-foreground text-sm'>ありません</span>
+    <div className='flex flex-col gap-2'>
+      <div className='flex items-baseline gap-1.5 text-muted-foreground text-xs'>
+        <span className='font-bold tracking-[0.04em]'>TODO</span>
+        <span>{memos.length}件</span>
+      </div>
+      <div className='flex flex-wrap gap-1.5'>
+        {memos.map((memo) => (
+          <TodoChip key={memo.id} memo={memo} />
+        ))}
+        <button
+          className='h-8 whitespace-nowrap rounded-2xl border border-dash border-dashed px-3 text-[13px] text-muted-foreground'
+          onClick={() => setIsAdding(true)}
+          type='button'
+        >
+          ＋ 追加
+        </button>
+      </div>
+
+      {isAdding ? (
+        <TodoSheet
+          hasPair={hasPair}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setIsAdding(false);
+            }
+          }}
+        />
       ) : null}
     </div>
   );
@@ -48,22 +70,24 @@ function TodoChip({ memo }: { memo: MemoItem }) {
   };
 
   return (
-    <span className='flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-card pr-1 pl-3 text-[13px]'>
+    <span className='flex h-8 max-w-full items-center gap-1 whitespace-nowrap rounded-2xl bg-card pr-0.5 pl-3 text-[13px]'>
       {memo.isPair ? (
         <IconShare
-          aria-label='ペアと共有'
-          className='size-3.5 text-muted-foreground'
+          aria-label='共有'
+          className='size-3.5 shrink-0 text-primary'
+          role='img'
+          strokeWidth={2}
         />
       ) : null}
-      {memo.memo}
+      <span className='truncate'>{memo.memo}</span>
       <button
-        aria-label={`${memo.memo} を削除`}
-        className='flex size-6 items-center justify-center rounded-full text-muted-foreground disabled:opacity-50'
+        aria-label={`${memo.memo}を削除`}
+        className='flex size-7 shrink-0 items-center justify-center rounded-full text-icon-muted disabled:opacity-50'
         disabled={isPending}
         onClick={remove}
         type='button'
       >
-        <IconClose aria-hidden='true' className='size-3.5' />
+        <IconClose aria-hidden='true' className='size-3' strokeWidth={2.6} />
       </button>
     </span>
   );

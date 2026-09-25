@@ -3,16 +3,16 @@
 import { cn } from 'cn';
 import type { DaySum } from '@/features/calendar';
 import { colorVar } from '@/features/master';
-import { formatPrefixedSum } from '@/lib/shared/domain/priceDisplay';
+import { formatSignedPrice } from '@/v2/lib/format';
 import type { LaneMap, LaneSlot } from '../domain/event-lanes';
 import type { MonthCell } from '../domain/month-grid';
 
-// 月のカレンダーグリッド。セルは「日付・その日の収支・予定の帯」を縦に積む。
-//
-// 既存は FullCalendar だが、新デザインはセルの中身がこの 3 段で、帯が複数日に
-// またがる。ライブラリのレイアウトに載せるより自前で組むほうが素直なので置き換えた。
+// 月のカレンダーグリッド（原典 Calendar）。セルは「日付・その日の収支・予定の帯」を
+// 縦に積む。帯が複数日にまたがるので、ライブラリのレイアウトに載せず自前で組む。
 //
 // 段（lane）の割り当ては domain/event-lanes.ts が持つ。ここは描くだけ。
+//
+// 月外の日はマスだけ置いて中身を描かない。今日の強調も無い（README D13）。
 
 const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const;
 
@@ -21,7 +21,6 @@ export function MonthGrid({
   daySums,
   lanes,
   selectedDate,
-  today,
   onSelect
 }: {
   cells: MonthCell[];
@@ -29,7 +28,6 @@ export function MonthGrid({
   daySums: Map<string, DaySum>;
   lanes: LaneMap;
   selectedDate: string;
-  today: string;
   onSelect: (dateStr: string) => void;
 }) {
   return (
@@ -50,33 +48,36 @@ export function MonthGrid({
         ))}
       </div>
       <div className='grid grid-cols-7'>
-        {cells.map((cell) => (
-          <DayCell
-            cell={cell}
-            daySum={daySums.get(cell.dateStr)}
-            isSelected={cell.dateStr === selectedDate}
-            isToday={cell.dateStr === today}
-            key={cell.dateStr}
-            onSelect={onSelect}
-            slots={lanes.get(cell.dateStr) ?? []}
-          />
-        ))}
+        {cells.map((cell) =>
+          cell.isCurrentMonth ? (
+            <DayCell
+              cell={cell}
+              daySum={daySums.get(cell.dateStr)}
+              isSelected={cell.dateStr === selectedDate}
+              key={cell.dateStr}
+              onSelect={onSelect}
+              slots={lanes.get(cell.dateStr) ?? []}
+            />
+          ) : (
+            <div
+              aria-hidden='true'
+              className='h-18 border-line-soft border-t'
+              key={cell.dateStr}
+            />
+          )
+        )}
       </div>
     </div>
   );
 }
 
-// 日付の文字色。選択中・月外・日曜/祝日・土曜の順に決まる。
+// 日付の文字色。選択中・日曜/祝日・土曜の順に決まる。
 function dayNumberClass({
   isSelected,
-  isToday,
-  isCurrentMonth,
   isHoliday,
   weekday
 }: {
   isSelected: boolean;
-  isToday: boolean;
-  isCurrentMonth: boolean;
   isHoliday: boolean;
   weekday: number;
 }): string {
@@ -84,18 +85,13 @@ function dayNumberClass({
     // 選択中はアクセントで塗る。曜日の色より優先する。
     return 'bg-primary font-bold text-primary-foreground';
   }
-  // 今日は塗らずに太字だけで示す（選択と今日が別の日でも見分けられる）。
-  const weight = isToday ? 'font-bold' : '';
-  if (!isCurrentMonth) {
-    return `${weight} text-muted-foreground/50`;
-  }
   if (weekday === 0 || isHoliday) {
-    return `${weight} text-destructive`;
+    return 'text-destructive';
   }
   if (weekday === 6) {
-    return `${weight} text-[var(--saturday)]`;
+    return 'text-[var(--saturday)]';
   }
-  return weight;
+  return 'text-foreground';
 }
 
 function DayCell({
@@ -103,14 +99,12 @@ function DayCell({
   daySum,
   slots,
   isSelected,
-  isToday,
   onSelect
 }: {
   cell: MonthCell;
   daySum: DaySum | undefined;
   slots: LaneSlot[];
   isSelected: boolean;
-  isToday: boolean;
   onSelect: (dateStr: string) => void;
 }) {
   const isHoliday = daySum?.holidayName != null;
@@ -120,34 +114,28 @@ function DayCell({
     <button
       aria-current={isSelected ? 'date' : undefined}
       aria-label={`${cell.dateStr}${isHoliday ? ` ${daySum?.holidayName}` : ''}`}
-      className='flex h-18 flex-col gap-px border-t pt-1'
+      className='flex h-18 flex-col gap-px border-line-soft border-t pt-[3px]'
       onClick={() => onSelect(cell.dateStr)}
       type='button'
     >
       <span
         className={cn(
           'flex size-6 items-center justify-center self-center rounded-full text-[13px]',
-          dayNumberClass({
-            isCurrentMonth: cell.isCurrentMonth,
-            isHoliday,
-            isSelected,
-            isToday,
-            weekday: cell.weekday
-          })
+          dayNumberClass({ isHoliday, isSelected, weekday: cell.weekday })
         )}
       >
         {cell.day}
       </span>
 
       {/* 収支の行。値が無い日も高さを確保して帯の位置を揃える。
-          sum は「支出=正」向きなので、収入超過（負）のときにアクセントを当てる。 */}
+          sum は「支出=正」向きなので、符号を反転して出し、収入超過（負）のときにアクセントを当てる。 */}
       <span
         className={cn(
-          'h-3 text-center text-[9px] leading-3',
+          'h-[11px] text-center text-[9px] leading-[11px]',
           sum < 0 ? 'text-primary' : 'text-muted-foreground'
         )}
       >
-        {sum === 0 ? '' : formatPrefixedSum(sum)}
+        {sum === 0 ? '' : formatSignedPrice(Math.abs(sum), sum > 0)}
       </span>
 
       <span className='flex flex-col gap-0.5'>
@@ -171,7 +159,7 @@ function LaneBar({ slot, weekday }: { slot: LaneSlot; weekday: number }) {
 
   if (slot.kind === 'more') {
     return (
-      <span className='mx-0.5 h-3.5 truncate rounded-[3px] bg-muted px-1 text-[10px] text-muted-foreground leading-[14px]'>
+      <span className='mx-0.5 h-3.5 truncate rounded-[3px] bg-fill-soft px-[3px] font-semibold text-[10px] text-muted-foreground leading-3'>
         他{slot.count}件
       </span>
     );
@@ -186,7 +174,7 @@ function LaneBar({ slot, weekday }: { slot: LaneSlot; weekday: number }) {
   return (
     <span
       className={cn(
-        'h-3.5 truncate px-1 font-semibold text-[10px] leading-[14px]',
+        'h-3.5 truncate px-[3px] font-semibold text-[10px] leading-3',
         isLeftEdge && 'ml-0.5 rounded-l-[3px]',
         isRightEdge && 'mr-0.5 rounded-r-[3px]'
       )}
@@ -198,9 +186,9 @@ function LaneBar({ slot, weekday }: { slot: LaneSlot; weekday: number }) {
               color
             }
           : {
-              // 面へ 80% 寄せた淡い地に、色そのままの文字。ダークでも同じ見え方に
-              // なるよう、混ぜる相手は白ではなく --card にする。
-              backgroundColor: `color-mix(in oklch, ${color} 20%, var(--card))`,
+              // 面へ寄せた淡い地に、色そのままの文字。混ぜる割合はライト／ダークで
+              // 違う（--band-mix）。
+              backgroundColor: `color-mix(in srgb, ${color} var(--band-mix), var(--card))`,
               color
             }
       }
