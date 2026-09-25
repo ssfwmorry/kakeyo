@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "check": "biome check --write ./",
     "check:type": "tsc",
@@ -12,6 +12,8 @@
     "lint": "biome lint ./",
     "lint:fix": "biome lint --write ./",
     "format": "biome format --write ./",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel",
     "test": "vitest run",
     "test:watch": "vitest"
   },
