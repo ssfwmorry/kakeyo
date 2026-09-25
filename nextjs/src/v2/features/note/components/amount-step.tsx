@@ -10,9 +10,11 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconMemo,
-  IconRotateCcw
+  IconRotateCcw,
+  IconUpdate
 } from '@/components/icons';
 import { colorVar } from '@/features/master';
+import type { NoteRecordDefault } from '@/features/record';
 import { recordLabels } from '@/features/record/labels';
 import { recordUpsertSchema } from '@/features/record/schemas/record-schema';
 import type { MethodCard, TypeCard } from '@/features/type-method';
@@ -24,10 +26,14 @@ import { ConfirmAlert } from '@/v2/components/ui/confirm-alert';
 import { InlineCalendar } from '@/v2/components/ui/inline-calendar';
 import { RoundIconButton } from '@/v2/components/ui/round-icon-button';
 import { Segment } from '@/v2/components/ui/segment';
-import { formatMonthDayWeekJa } from '@/v2/lib/format';
+import { formatMonthDayWeekJa, formatSignedPrice } from '@/v2/lib/format';
 import { useSubmissionErrorToast } from '@/v2/lib/submission-error';
 import { showToast } from '@/v2/lib/toast';
 import { deleteRecordAction, upsertRecordAction } from '../actions';
+import {
+  type EditableDateRange,
+  editableDateRange
+} from '../domain/editable-dates';
 import { relativeDayLabel } from '../domain/relative-day';
 import { Keypad } from './keypad';
 import type { NoteState } from './note-state';
@@ -39,6 +45,10 @@ import type { NoteState } from './note-state';
 //
 // 共有モードはメモ必須（ペアに見える内容なので何の記録か分かるようにする）。
 // 満たさないうちは送信ボタンの文言で理由を伝える。
+//
+// 編集（原典 RecordEdit）も同じ画面で、左が×・右がゴミ箱になる。定期の記録から作られた
+// 記録は日付を同じ月の中にだけ動かせるので、カードの下にその案内を出し、前後の日と暦を
+// 月の中に留める。
 
 const INSTEAD_OPTIONS = [
   { value: 'instead', label: '自分が立替', sub: 'あとで精算する' },
@@ -48,7 +58,7 @@ const INSTEAD_OPTIONS = [
 export function AmountStep({
   state,
   isPair,
-  editingId,
+  editing,
   selectedType,
   methods,
   methodId,
@@ -60,8 +70,8 @@ export function AmountStep({
 }: {
   state: NoteState;
   isPair: boolean;
-  // 編集対象の id。新規のときは undefined。
-  editingId?: Id;
+  // 編集対象。新規のときは undefined。
+  editing?: NoteRecordDefault;
   selectedType: TypeCard;
   methods: MethodCard[];
   // 候補に対して正規化済みの方法 id（state のそれではなくこちらを送る）。
@@ -86,9 +96,18 @@ export function AmountStep({
   // 検証エラーの多くは hidden に付くので、画面に出さずトーストでまとめて伝える。
   useSubmissionErrorToast(result);
 
+  const editingId = editing?.id;
+  const isFromPlanned = editing?.plannedRecordId != null;
+  const dateRange = editableDateRange({
+    savedDate: editing?.date,
+    isFromPlanned,
+    today
+  });
+
   const showInstead = isPair && state.isPay;
   const needsMemo = isPair && state.memo.trim() === '';
-  const canSubmit = methodId !== null && state.price > 0 && !needsMemo;
+  const hasPrice = state.price > 0;
+  const canSubmit = methodId !== null && hasPrice && !needsMemo;
 
   return (
     <form
@@ -106,7 +125,11 @@ export function AmountStep({
         onLeft={editingId === undefined ? onBack : onClose}
         right={
           editingId === undefined ? undefined : (
-            <DeleteButton id={editingId} onDeleted={onSaved} />
+            <DeleteButton
+              description={deleteDescription(state, selectedType)}
+              id={editingId}
+              onDeleted={onSaved}
+            />
           )
         }
         title={
@@ -123,6 +146,7 @@ export function AmountStep({
       <div className='shrink-0 overflow-hidden rounded-[14px] bg-card'>
         <DateRow
           onChange={(date) => patch({ date })}
+          range={dateRange}
           today={today}
           value={state.date}
         />
@@ -133,8 +157,10 @@ export function AmountStep({
           value={state.memo}
         />
       </div>
+      {isFromPlanned ? <PlannedBanner /> : null}
 
       <MethodField
+        isEditing={editingId !== undefined}
         isInstead={state.isInstead}
         isPay={state.isPay}
         methodId={methodId}
@@ -153,11 +179,43 @@ export function AmountStep({
       <SubmitBar
         action={action}
         canSubmit={canSubmit}
+        hasPrice={hasPrice}
         isEditing={editingId !== undefined}
         isPending={isPending}
         needsMemo={needsMemo}
       />
     </form>
+  );
+}
+
+// 「食費 › スーパー」。サブカテゴリが無ければカテゴリだけ。
+function typeLabel(selectedType: TypeCard, subTypeId: Id | null): string {
+  const sub = selectedType.subTypes.find((item) => item.id === subTypeId);
+  return sub === undefined
+    ? selectedType.name
+    : `${selectedType.name} › ${sub.name}`;
+}
+
+// 削除の確認の本文。画面に見えている日付・カテゴリ・金額をそのまま読み上げる
+// （原典 RecordEdit の confirm と同じ）。
+function deleteDescription(state: NoteState, selectedType: TypeCard): string {
+  const target = `${typeLabel(selectedType, state.subTypeId)} ${formatSignedPrice(state.price, state.isPay)}円`;
+  return `${formatMonthDayWeekJa(state.date)}の「${target}」を削除します。削除すると元に戻せません。`;
+}
+
+// 定期の記録から作られた記録の案内。日付が同じ月に留まる理由を伝える。
+function PlannedBanner() {
+  return (
+    <div className='-mt-2 flex shrink-0 items-center gap-2 rounded-[10px] bg-secondary px-3 py-2'>
+      <IconUpdate
+        aria-hidden='true'
+        className='size-4 shrink-0 text-primary'
+        strokeWidth={2.2}
+      />
+      <span className='text-[12px] text-foreground leading-normal'>
+        定期の記録から作られた記録です。日付は同じ月の中でだけ変えられます。
+      </span>
+    </div>
   );
 }
 
@@ -234,7 +292,6 @@ function TypePill({
   subTypeId: Id | null;
   onClick: () => void;
 }) {
-  const subName = selectedType.subTypes.find((sub) => sub.id === subTypeId);
   return (
     <button
       aria-label='カテゴリを変える'
@@ -248,8 +305,7 @@ function TypePill({
         style={{ backgroundColor: colorVar(selectedType.colorName) }}
       />
       <span className='truncate font-semibold text-[15px]'>
-        {selectedType.name}
-        {subName === undefined ? '' : ` › ${subName.name}`}
+        {typeLabel(selectedType, subTypeId)}
       </span>
       <Badge isAccent={!isPay}>
         {isPay ? recordLabels.payToggle.pay : recordLabels.payToggle.income}
@@ -279,20 +335,22 @@ function Badge({
 }
 
 // 日付。前後 1 日は丸ボタン、離れた日は暦を行の下に展開して選ぶ。
-// 未来の記録は付けられないので、次の日は今日で止める。
+// 動かせる範囲（range）の外には出さない。前後のボタンは端で無効にし、暦も端の外を選べなくする。
 function DateRow({
   value,
   today,
+  range,
   onChange
 }: {
   value: string;
   today: string;
+  range: EditableDateRange;
   onChange: (date: string) => void;
 }) {
   const [isPicking, setIsPicking] = useState(false);
   const relative = relativeDayLabel(value, today);
-  const canGoNext = value < today;
-  const todayDate = parseLocalDate(today);
+  const canGoPrev = range.min === null || value > range.min;
+  const canGoNext = value < range.max;
 
   return (
     <>
@@ -322,12 +380,13 @@ function DateRow({
         </button>
         <RoundIconButton
           aria-label='前の日'
+          disabled={!canGoPrev}
           onClick={() => onChange(addDaysJst(value, -1))}
           tone='soft'
         >
           <IconChevronLeft
             aria-hidden='true'
-            className='size-4'
+            className={cn('size-4', !canGoPrev && 'text-icon-muted')}
             strokeWidth={2.4}
           />
         </RoundIconButton>
@@ -347,11 +406,8 @@ function DateRow({
       {isPicking ? (
         <div className='flex justify-center border-line-soft border-t pb-1'>
           <InlineCalendar
+            {...calendarBounds(range)}
             defaultMonth={parseLocalDate(value)}
-            // 未来の記録は付けられないので、今日より後は選べなくする。
-            disabled={
-              todayDate === undefined ? undefined : { after: todayDate }
-            }
             mode='single'
             onSelect={(next) => {
               // 同じ日を押すと undefined が来る（選択解除）。日付は必須なので無視する。
@@ -367,6 +423,25 @@ function DateRow({
       ) : null}
     </>
   );
+}
+
+// 暦に渡す範囲。端の外の日は選べなくする。下限があるとき（定期由来）は月を跨いで
+// 見せる意味が無いので、暦の月送りも止める。
+function calendarBounds(range: EditableDateRange): {
+  disabled: ({ after: Date } | { before: Date })[];
+  startMonth?: Date;
+  endMonth?: Date;
+} {
+  const maxDate = parseLocalDate(range.max);
+  const minDate = range.min === null ? undefined : parseLocalDate(range.min);
+  const disabled = [
+    ...(maxDate === undefined ? [] : [{ after: maxDate }]),
+    ...(minDate === undefined ? [] : [{ before: minDate }])
+  ];
+  if (minDate === undefined) {
+    return { disabled };
+  }
+  return { disabled, startMonth: minDate, endMonth: maxDate };
 }
 
 function MemoRow({
@@ -417,10 +492,12 @@ function MemoRow({
 }
 
 // 方法の候補。共有の支出だけは、その前に「だれのお金で払った？」で候補ごと切り替える。
+// 新規は前回の方法が入っていることをラベルで伝える。編集は保存済みの方法なので付けない。
 function MethodField({
   showInstead,
   isInstead,
   isPay,
+  isEditing,
   methods,
   methodId,
   patch
@@ -428,10 +505,12 @@ function MethodField({
   showInstead: boolean;
   isInstead: boolean;
   isPay: boolean;
+  isEditing: boolean;
   methods: MethodCard[];
   methodId: Id | null;
   patch: (next: Partial<NoteState>) => void;
 }) {
+  const methodLabel = isPay ? '支払方法' : '受取方法';
   return (
     <div className='flex shrink-0 flex-col gap-1.5'>
       {showInstead ? (
@@ -450,7 +529,7 @@ function MethodField({
         </>
       ) : (
         <FieldLabel>
-          {isPay ? '支払方法' : '受取方法'}（前回の方法を自動で選択）
+          {isEditing ? methodLabel : `${methodLabel}（前回の方法を自動で選択）`}
         </FieldLabel>
       )}
       <MethodPills
@@ -549,7 +628,15 @@ function AmountRow({
 //
 // トーストは useFormToast（effect で発火）ではなくここで直に出す。成功すると
 // モーダルごと閉じてこの部品が消えるため、effect まで到達しない。
-function DeleteButton({ id, onDeleted }: { id: Id; onDeleted: () => void }) {
+function DeleteButton({
+  id,
+  description,
+  onDeleted
+}: {
+  id: Id;
+  description: string;
+  onDeleted: () => void;
+}) {
   const [isPending, startTransition] = useTransition();
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -576,6 +663,7 @@ function DeleteButton({ id, onDeleted }: { id: Id; onDeleted: () => void }) {
         onClick={() => setIsConfirming(true)}
       />
       <ConfirmAlert
+        description={description}
         onCancel={() => setIsConfirming(false)}
         onConfirm={remove}
         open={isConfirming}
@@ -587,20 +675,28 @@ function DeleteButton({ id, onDeleted }: { id: Id; onDeleted: () => void }) {
 }
 
 // 全高固定シートの保存バー。シートの左右余白を打ち消して地を端まで伸ばす。
+// 押せない理由はメモ → 金額の順で 1 つだけ出す。
 function SubmitBar({
   action,
   canSubmit,
   needsMemo,
+  hasPrice,
   isEditing,
   isPending
 }: {
   action: (formData: FormData) => void;
   canSubmit: boolean;
   needsMemo: boolean;
+  hasPrice: boolean;
   isEditing: boolean;
   isPending: boolean;
 }) {
   const verb = isEditing ? '保存' : '登録';
+  const label = needsMemo
+    ? `メモを入れると${verb}できます`
+    : hasPrice
+      ? `${verb}する`
+      : `金額を入れると${verb}できます`;
   return (
     <div
       className='-mx-4 shrink-0 bg-background px-4 pt-2.5'
@@ -617,7 +713,7 @@ function SubmitBar({
         formAction={action}
         type='submit'
       >
-        {needsMemo ? `メモを入れると${verb}できます` : `${verb}する`}
+        {label}
       </button>
     </div>
   );

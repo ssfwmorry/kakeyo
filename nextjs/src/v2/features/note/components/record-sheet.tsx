@@ -99,7 +99,7 @@ export function RecordSheet({
       >
         {isAmountStep && selection.selectedType !== null ? (
           <AmountStep
-            editingId={editing?.id}
+            editing={editing}
             isPair={isPair}
             methodId={methodId}
             methods={selection.methods}

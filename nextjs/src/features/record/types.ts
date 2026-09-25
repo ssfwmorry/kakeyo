@@ -92,6 +92,9 @@ export type NoteRecordDefault = {
   isInstead: boolean;
   // 共有（pair_id あり）の record か。開いたときに画面のモードを合わせるために使う。
   isPair: boolean;
+  // 定期の記録から実体化された record なら元の planned_records.id。日付を同じ月の中に
+  // 留める案内を編集画面が出すために使う（判定そのものはサービス層が行う）。
+  plannedRecordId: Id | null;
 };
 
 // 検索条件（get_summarized_record_list の input）。records 明細画面が組み立てる。

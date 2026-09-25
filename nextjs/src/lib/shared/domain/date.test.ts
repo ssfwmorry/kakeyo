@@ -4,9 +4,11 @@ import {
   dateInMonthJst,
   diffDaysJst,
   endOfDayJst,
+  firstDayOfMonthJst,
   formatDateLabelJst,
   formatDateWithWeekdayJst,
   formatMonthDayJst,
+  lastDayOfMonthJst,
   listDatesJst,
   startOfDayJst,
   startOfMonthJst,
@@ -182,5 +184,17 @@ describe('diffDaysJst', () => {
   it('同日は 0、b が後なら負', () => {
     expect(diffDaysJst('2026-09-25', '2026-09-25')).toBe(0);
     expect(diffDaysJst('2026-09-20', '2026-09-25')).toBe(-5);
+  });
+});
+
+describe('firstDayOfMonthJst / lastDayOfMonthJst', () => {
+  it('属する月の 1 日と末日を返す', () => {
+    expect(firstDayOfMonthJst('2026-09-25')).toBe('2026-09-01');
+    expect(lastDayOfMonthJst('2026-09-25')).toBe('2026-09-30');
+  });
+
+  it('閏年の 2 月は 29 日', () => {
+    expect(lastDayOfMonthJst('2028-02-10')).toBe('2028-02-29');
+    expect(lastDayOfMonthJst('2026-02-10')).toBe('2026-02-28');
   });
 });

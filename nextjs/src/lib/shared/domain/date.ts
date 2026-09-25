@@ -79,6 +79,16 @@ export function addDaysJst(dateStr: string, days: number): string {
   return dayjs(dateStr).add(days, 'day').format(DATE_FORMAT);
 }
 
+// YYYY-MM-DD（JST の暦日）が属する月の 1 日。
+export function firstDayOfMonthJst(dateStr: string): string {
+  return dayjs(dateStr).startOf('month').format(DATE_FORMAT);
+}
+
+// YYYY-MM-DD（JST の暦日）が属する月の末日。
+export function lastDayOfMonthJst(dateStr: string): string {
+  return dayjs(dateStr).endOf('month').format(DATE_FORMAT);
+}
+
 // 2 つの暦日（YYYY-MM-DD）の差を日数で返す（a − b）。「N 日過ぎています」の算出に使う。
 // 暦日の文字列同士の計算なので tz 変換は挟まない。
 export function diffDaysJst(a: string, b: string): number {

@@ -352,7 +352,8 @@ export async function findRecordForEdit(
     memo: row.memo,
     price: row.price,
     isInstead: isPair && row.userId !== null,
-    isPair
+    isPair,
+    plannedRecordId: row.plannedRecordId
   };
 }
 

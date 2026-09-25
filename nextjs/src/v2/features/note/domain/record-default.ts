@@ -23,6 +23,7 @@ export function toRecordDefault(
     memo: record.memo,
     price: record.price,
     isInstead: record.isInstead ?? false,
-    isPair: record.isPair
+    isPair: record.isPair,
+    plannedRecordId: record.plannedRecordId
   };
 }

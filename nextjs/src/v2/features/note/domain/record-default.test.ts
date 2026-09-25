@@ -42,8 +42,15 @@ describe('toRecordDefault', () => {
       memo: 'ランチ',
       price: 1280,
       isInstead: false,
-      isPair: false
+      isPair: false,
+      plannedRecordId: null
     });
+  });
+
+  it('定期由来の記録は plannedRecordId を保つ', () => {
+    expect(
+      toRecordDefault(record({ plannedRecordId: 4 }))?.plannedRecordId
+    ).toBe(4);
   });
 
   it('共有の立替は isInstead を保つ', () => {
