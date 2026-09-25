@@ -12,6 +12,8 @@
     "lint": "biome lint ./",
     "lint:fix": "biome lint --write ./",
     "format": "biome format --write ./",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -55,6 +57,7 @@
     "prisma": "7.10.0",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vercel": "^60.0.1",
     "vitest": "^5.0.1"
   },
   "packageManager": "pnpm@10.17.0",
