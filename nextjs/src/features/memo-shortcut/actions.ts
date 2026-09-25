@@ -23,6 +23,13 @@ import type { MemoError } from './types';
 //   統合レーンがそのパスに memo/shortcut を表示する前提で用意する。
 
 const CALENDAR_PATH = '/calendar';
+// 新デザインのカレンダーは /v2/calendar。移行が終わるまで両方を再検証する。
+const V2_CALENDAR_PATH = '/v2/calendar';
+
+function revalidateCalendar(): void {
+  revalidatePath(CALENDAR_PATH);
+  revalidatePath(V2_CALENDAR_PATH);
+}
 
 // service の失敗分類 → ユーザ向け文言。
 function errorMessage(error: MemoError): string | undefined {
@@ -61,7 +68,7 @@ export async function insertMemoAction(
   const session = await requireAuth();
   const { memo, isPair } = submission.value;
   const result = await service.insertMemo(session, { memo, isPair });
-  revalidatePath(CALENDAR_PATH);
+  revalidateCalendar();
   return toResult(result, L.snackbar.created, submission.reply());
 }
 
@@ -75,6 +82,6 @@ export async function deleteMemoAction(
   }
   const session = await requireAuth();
   const result = await service.deleteMemo(session, submission.value.id);
-  revalidatePath(CALENDAR_PATH);
+  revalidateCalendar();
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
