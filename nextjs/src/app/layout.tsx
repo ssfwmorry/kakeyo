@@ -28,7 +28,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang='ja' className={`${geistMono.variable} h-full antialiased`}>
+    // next-themes（v2 の ThemeProvider）がクライアントで html に class と color-scheme を
+    // 付けるため、SSR の HTML と必ず食い違う。この 1 要素だけ警告を抑える（公式の対処）。
+    <html
+      className={`${geistMono.variable} h-full antialiased`}
+      lang='ja'
+      suppressHydrationWarning
+    >
       <body className='min-h-full flex flex-col'>
         {children}
         {/* トーストは画面下中央に出す。 */}
