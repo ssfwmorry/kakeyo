@@ -1,66 +1,41 @@
 'use client';
 
 import { useState } from 'react';
-import type { ShortCutItem } from '@/features/memo-shortcut';
 import type { NoteRecordDefault } from '@/features/record';
-import type {
-  GroupedMethodList,
-  GroupedTypeList,
-  TypeCard
-} from '@/features/type-method';
 import { useTypeSelection } from '@/features/type-method';
 import {
   BottomSheet,
   BottomSheetContent
 } from '@/v2/components/ui/bottom-sheet';
-import { isInsteadShortcut, selectShortcutsForMode } from '../domain/shortcut';
+import { pickLastUsedMethodId } from '../domain/last-used-method';
 import { AmountStep } from './amount-step';
+import type { NoteModalCandidates } from './note-modal';
 import type { NoteState } from './note-state';
-import { SubTypeStep } from './sub-type-step';
 import { TypeStep } from './type-step';
 
-// 記録の追加・編集シート（新デザイン）。カレンダーの上に下から出る。
-//
-// カテゴリ（1 枚目）→ サブカテゴリ（2 枚目）→ 金額と詳細（3 枚目）を 1 つのシートの
+// 入力の全画面モーダル。カテゴリ（入力①）と金額と詳細（入力②）を 1 つのシートの
 // 中で切り替える。シートの上にシートを重ねると、スワイプで閉じる対象が曖昧になるため。
 //
-// カテゴリと方法の候補の導出は旧フォームと同じ useTypeSelection を使う。
-// ただし「サブカテゴリがあれば必ず選ぶ」という旧の確定条件は使わず、
-// どの画面にいるかを自分で持つ（新デザインはサブカテゴリを飛ばせる）。
-//
-// 編集は 3 枚目から始まり、ピルを押すと 1 枚目に戻ってカテゴリを選び直せる。
-
-type View =
-  | { kind: 'type' }
-  | { kind: 'sub'; type: TypeCard }
-  | { kind: 'amount' };
+// 編集は②から始まり、ピルを押すと①に戻ってカテゴリを選び直せる。
 
 export function RecordSheet({
-  typeList,
-  methodList,
-  shortcuts,
-  isPair,
-  hasPair,
+  candidates,
   editing,
   initialDate,
-  today,
-  onOpenChange,
+  onClose,
   onSaved
 }: {
-  typeList: GroupedTypeList;
-  methodList: GroupedMethodList;
-  shortcuts: ShortCutItem[];
-  isPair: boolean;
-  hasPair: boolean;
-  // 編集対象。新規のときは undefined。
+  candidates: NoteModalCandidates;
   editing?: NoteRecordDefault;
-  // 新規の初期日付（カレンダーの選択日）。
   initialDate: string;
-  today: string;
-  onOpenChange: (isOpen: boolean) => void;
-  // 登録・更新・削除が成功したとき。呼び出し側で月を取り直す。
-  onSaved: () => void;
+  onClose: () => void;
+  onSaved?: () => void;
 }) {
+  const { typeList, methodList, lastUsedMethodIds, hasPair, today } =
+    candidates;
+  // 編集対象の共有／個人は対象自身の区分に従う（作成時に決まり後から移せない）。
+  const isPair = editing?.isPair ?? candidates.isPair;
+
   const [state, setState] = useState<NoteState>(() => ({
     isPay: editing?.isPay ?? true,
     date: editing?.date ?? initialDate,
@@ -71,18 +46,16 @@ export function RecordSheet({
     memo: editing?.memo ?? '',
     price: editing?.price ?? 0
   }));
-  const [view, setView] = useState<View>(
-    editing === undefined ? { kind: 'type' } : { kind: 'amount' }
-  );
+  const [isAmountStep, setIsAmountStep] = useState(editing !== undefined);
   const patch = (next: Partial<NoteState>) =>
     setState((prev) => ({ ...prev, ...next }));
 
   // 個人｜共有を切り替えるとカテゴリ・方法の候補ごと入れ替わるので、選択を捨てて
-  // 1 枚目に戻す。render 中に前回値と比べて捨てる（effect では 1 フレーム残る）。
+  // ①に戻す。render 中に前回値と比べて捨てる（effect では 1 フレーム残る）。
   const [prevIsPair, setPrevIsPair] = useState(isPair);
   if (prevIsPair !== isPair) {
     setPrevIsPair(isPair);
-    setView({ kind: 'type' });
+    setIsAmountStep(false);
     setState((prev) => ({
       ...prev,
       typeId: null,
@@ -93,117 +66,100 @@ export function RecordSheet({
   }
 
   const selection = useTypeSelection(typeList, methodList, isPair, state);
-  const methodId = resolveMethodId(
-    selection.methods,
-    state.methodId,
-    editing !== undefined
-  );
+  const methodId = resolveMethodId({
+    methods: selection.methods,
+    selected: state.methodId,
+    isEditing: editing !== undefined,
+    lastUsed: pickLastUsedMethodId(lastUsedMethodIds, {
+      isPay: state.isPay,
+      isPair,
+      isInstead: state.isInstead
+    })
+  });
 
-  const openAmount = (next: Partial<NoteState>) => {
+  const goToAmount = (next: Partial<NoteState>) => {
     patch(next);
-    setView({ kind: 'amount' });
+    setIsAmountStep(true);
   };
   const backToType = () => {
-    setView({ kind: 'type' });
+    setIsAmountStep(false);
     patch({ typeId: null, subTypeId: null });
   };
-  const close = () => onOpenChange(false);
   const saved = () => {
-    onSaved();
-    close();
+    onSaved?.();
+    onClose();
   };
 
   return (
-    <BottomSheet onOpenChange={onOpenChange} open>
-      <BottomSheetContent className='max-h-[94dvh]'>
-        {view.kind === 'type' ? (
-          <TypeStep
-            hasPair={hasPair}
-            isPair={isPair}
-            // 共有か個人かは作成時に決まり後から移せないので、編集中は切り替えさせない。
-            isPairLocked={editing !== undefined}
-            isPay={state.isPay}
-            onCancel={close}
-            onPayChange={(isPay) =>
-              // 収支が変わるとカテゴリ候補ごと入れ替わるため、選択済みのカテゴリを捨てる。
-              patch({ isPay, typeId: null, subTypeId: null, methodId: null })
-            }
-            onPickShortcut={(item) =>
-              openAmount({
-                isPay: item.isPay,
-                typeId: item.typeId,
-                subTypeId: item.subTypeId,
-                methodId: item.methodId,
-                isInstead: isInsteadShortcut(item),
-                memo: item.memo ?? '',
-                price: item.price
-              })
-            }
-            onPickType={(type) => {
-              if (type.subTypes.length === 0) {
-                openAmount({ typeId: type.id, subTypeId: null });
-                return;
-              }
-              patch({ typeId: type.id, subTypeId: null });
-              setView({ kind: 'sub', type });
-            }}
-            // 編集中に「いつもの」を押すと、金額やメモまで別の記録の内容で上書きされる。
-            // 編集はカテゴリを選び直すだけの画面なので出さない。
-            shortcuts={
-              editing === undefined
-                ? selectShortcutsForMode(shortcuts, isPair)
-                : []
-            }
-            title={editing === undefined ? '記録を追加' : '記録を編集'}
-            types={selection.types}
-          />
-        ) : null}
-
-        {view.kind === 'sub' ? (
-          <SubTypeStep
-            onBack={backToType}
-            onPick={(subTypeId) => openAmount({ subTypeId })}
-            type={view.type}
-          />
-        ) : null}
-
-        {view.kind === 'amount' && selection.selectedType !== null ? (
+    <BottomSheet onOpenChange={(isOpen) => !isOpen && onClose()} open>
+      <BottomSheetContent
+        // 原典のゴーストに重なる影。入力は画面を覆うので、地から浮いて見せる。
+        className='shadow-[0_-8px_24px_rgba(0,0,0,0.18)]'
+        size='full'
+      >
+        {isAmountStep && selection.selectedType !== null ? (
           <AmountStep
             editingId={editing?.id}
             isPair={isPair}
             methodId={methodId}
             methods={selection.methods}
             onBack={backToType}
-            onCancel={close}
+            onClose={onClose}
             onSaved={saved}
             patch={patch}
             selectedType={selection.selectedType}
             state={state}
             today={today}
           />
-        ) : null}
+        ) : (
+          <TypeStep
+            hasPair={hasPair}
+            isPair={isPair}
+            // 共有か個人かは作成時に決まり後から移せないので、編集中は切り替えさせない。
+            isPairLocked={editing !== undefined}
+            isPay={state.isPay}
+            onClose={onClose}
+            onPayChange={(isPay) =>
+              // 収支が変わるとカテゴリ候補ごと入れ替わるため、選択済みのカテゴリを捨てる。
+              patch({ isPay, typeId: null, subTypeId: null, methodId: null })
+            }
+            onPick={(typeId, subTypeId) => goToAmount({ typeId, subTypeId })}
+            types={selection.types}
+          />
+        )}
       </BottomSheetContent>
     </BottomSheet>
   );
 }
 
-// 候補に対して選択中の方法を解決する。未選択なら先頭を初期値にする。先頭 = 設定画面の
-// 並び順なので、よく使う方法を上に置けば 1 タップも要らない。描画のたびに導出する
+// 候補に対して選択中の方法を解決する。未選択なら前回使った方法、それも候補に無ければ
+// 候補の先頭（＝設定画面の並び順の先頭）で埋める。描画のたびに導出する
 // （effect だと旧候補が 1 フレーム残る）。
 //
 // 編集中の記録が持つ方法が候補外のとき（記録の所有と共有モードが食い違う場合に起きる）は
 // 先頭で埋めず未選択にする。黙って別の方法に置き換えると、ユーザーが方法を触っていないのに
 // 保存済みの値が書き換わるため。未選択は送信ボタン側が止める。
-function resolveMethodId(
-  methods: { id: number }[],
-  methodId: number | null,
-  isEditing: boolean
-): number | null {
-  if (methodId !== null && methods.some((method) => method.id === methodId)) {
-    return methodId;
+function resolveMethodId({
+  methods,
+  selected,
+  isEditing,
+  lastUsed
+}: {
+  methods: { id: number }[];
+  selected: number | null;
+  isEditing: boolean;
+  lastUsed: number | null;
+}): number | null {
+  const has = (id: number | null) =>
+    id !== null && methods.some((method) => method.id === id);
+  if (has(selected)) {
+    return selected;
   }
-  if (isEditing && methodId !== null) {
+  if (isEditing && selected !== null) {
     return null;
+  }
+  if (has(lastUsed)) {
+    return lastUsed;
   }
   return methods[0]?.id ?? null;
 }

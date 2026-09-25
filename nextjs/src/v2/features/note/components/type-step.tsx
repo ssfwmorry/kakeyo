@@ -1,54 +1,56 @@
 'use client';
 
+import { Fragment, useState } from 'react';
 import { colorVar } from '@/features/master';
-import type { ShortCutItem } from '@/features/memo-shortcut';
 import { recordLabels } from '@/features/record/labels';
 import type { TypeCard } from '@/features/type-method';
+import type { Id } from '@/lib/shared/types/id';
 import { InitialCircle } from '@/v2/components/initial-circle';
 import { PairModeSegment } from '@/v2/components/pair-mode-segment';
+import { SheetHeader } from '@/v2/components/sheet-header';
 import { Segment } from '@/v2/components/ui/segment';
-import { SheetHeader } from './sheet-header';
 
-// 記録シート 1 枚目: カテゴリを選ぶ（デザイン NoteType / NoteTypePair をシートに寄せたもの）。
+// 入力① カテゴリを選ぶ（原典 NoteType / NoteTypePair / NoteSub）。
 //
-// 上から「キャンセル｜記録を追加｜個人｜共有」「支出｜収入」「いつもの」「カテゴリ」。
-// カテゴリを押すとサブカテゴリの一覧（2 枚目）へ、サブカテゴリが無ければ金額（3 枚目）へ進む。
-// 「いつもの」はショートカットで、押すと中身が入った状態で金額へ進む。
+// カテゴリは 4 列のグリッド。サブカテゴリを持つカテゴリを押すと、その行の直下に
+// 全幅のパネルが開いてサブカテゴリのチップが並ぶ。別の画面へ送らずその場で開くのは、
+// 「カテゴリ → サブカテゴリ」が 1 つの選択であることを見せるため。
 
 const PAY_OPTIONS = [
   { value: 'pay', label: recordLabels.payToggle.pay },
   { value: 'income', label: recordLabels.payToggle.income }
 ] as const;
 
+const COLUMNS = 4;
+
 export function TypeStep({
-  title,
   isPair,
   hasPair,
   isPairLocked,
   isPay,
   types,
-  shortcuts,
-  onCancel,
+  onClose,
   onPayChange,
-  onPickType,
-  onPickShortcut
+  onPick
 }: {
-  title: string;
   isPair: boolean;
   hasPair: boolean;
   isPairLocked: boolean;
   isPay: boolean;
   types: TypeCard[];
-  shortcuts: ShortCutItem[];
-  onCancel: () => void;
+  onClose: () => void;
   onPayChange: (isPay: boolean) => void;
-  onPickType: (type: TypeCard) => void;
-  onPickShortcut: (item: ShortCutItem) => void;
+  // サブカテゴリを選ばずに進んだときは subTypeId が null。
+  onPick: (typeId: Id, subTypeId: Id | null) => void;
 }) {
+  // 展開中のカテゴリ。収支を切り替えると候補ごと入れ替わるので閉じる。
+  const [expandedId, setExpandedId] = useState<Id | null>(null);
+
   return (
-    <div className='flex flex-col gap-3'>
+    <>
       <SheetHeader
-        onCancel={onCancel}
+        left='close'
+        onLeft={onClose}
         right={
           <PairModeSegment
             hasPair={hasPair}
@@ -56,21 +58,22 @@ export function TypeStep({
             isPair={isPair}
           />
         }
-        title={title}
+        // 原典にタイトル文字は無い。Drawer のアクセシブルネームだけ付ける。
+        title={<span className='sr-only'>入力</span>}
       />
 
       <Segment
         label='収支'
-        onChange={(value) => onPayChange(value === 'pay')}
+        onChange={(value) => {
+          setExpandedId(null);
+          onPayChange(value === 'pay');
+        }}
         options={PAY_OPTIONS}
+        size='lg'
         value={isPay ? 'pay' : 'income'}
       />
 
-      {shortcuts.length > 0 ? (
-        <ShortcutGrid items={shortcuts} onPick={onPickShortcut} />
-      ) : null}
-
-      <div className='mt-1 flex flex-col gap-2'>
+      <div className='mt-1 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto'>
         <span className='font-semibold text-[13px] text-muted-foreground'>
           カテゴリ
         </span>
@@ -79,70 +82,141 @@ export function TypeStep({
             {recordLabels.empty.noTypeMethod}
           </p>
         ) : (
-          <div className='grid grid-cols-4 gap-2'>
-            {types.map((type) => (
-              <button
-                className='flex h-20 flex-col items-center justify-center gap-1.5 rounded-[14px] bg-card'
-                key={type.id}
-                onClick={() => onPickType(type)}
-                type='button'
-              >
-                <InitialCircle
-                  colorName={type.colorName}
-                  name={type.name}
-                  size={40}
-                />
-                <span className='max-w-full truncate px-1 font-semibold text-foreground text-xs'>
-                  {type.name}
-                </span>
-              </button>
-            ))}
-          </div>
+          <TypeGrid
+            expandedId={expandedId}
+            onPick={onPick}
+            onToggle={(typeId) =>
+              setExpandedId((prev) => (prev === typeId ? null : typeId))
+            }
+            types={types}
+          />
         )}
       </div>
+    </>
+  );
+}
+
+function TypeGrid({
+  types,
+  expandedId,
+  onToggle,
+  onPick
+}: {
+  types: TypeCard[];
+  expandedId: Id | null;
+  onToggle: (typeId: Id) => void;
+  onPick: (typeId: Id, subTypeId: Id | null) => void;
+}) {
+  const expandedIndex = types.findIndex((type) => type.id === expandedId);
+  const expanded = expandedIndex === -1 ? null : types[expandedIndex];
+  // パネルは展開中のセルがある行の末尾に差し込む（grid の行を跨がせない）。
+  const panelAfterIndex =
+    expanded === null
+      ? -1
+      : Math.min(
+          expandedIndex - (expandedIndex % COLUMNS) + COLUMNS - 1,
+          types.length - 1
+        );
+
+  return (
+    <div className='grid grid-cols-4 gap-2'>
+      {types.map((type, index) => (
+        <Fragment key={type.id}>
+          <TypeCell
+            isExpanded={type.id === expandedId}
+            onClick={() =>
+              type.subTypes.length === 0
+                ? onPick(type.id, null)
+                : onToggle(type.id)
+            }
+            type={type}
+          />
+          {expanded !== null && index === panelAfterIndex ? (
+            <SubTypePanel
+              column={expandedIndex % COLUMNS}
+              onPick={(subTypeId) => onPick(expanded.id, subTypeId)}
+              type={expanded}
+            />
+          ) : null}
+        </Fragment>
+      ))}
     </div>
   );
 }
 
-// 「いつもの」。ショートカットを 2 列のカードで出す。色の点と「カテゴリ › サブカテゴリ」、
-// 下段に「方法 · メモ」。
-function ShortcutGrid({
-  items,
+function TypeCell({
+  type,
+  isExpanded,
+  onClick
+}: {
+  type: TypeCard;
+  isExpanded: boolean;
+  onClick: () => void;
+}) {
+  const hasSubTypes = type.subTypes.length > 0;
+  return (
+    <button
+      aria-expanded={hasSubTypes ? isExpanded : undefined}
+      className='flex h-20 flex-col items-center justify-center gap-1.5 rounded-[14px] bg-card'
+      onClick={onClick}
+      style={
+        isExpanded
+          ? { boxShadow: `inset 0 0 0 2px ${colorVar(type.colorName)}` }
+          : undefined
+      }
+      type='button'
+    >
+      <InitialCircle colorName={type.colorName} name={type.name} size={40} />
+      <span className='max-w-full truncate px-1 font-semibold text-foreground text-xs'>
+        {type.name}
+      </span>
+    </button>
+  );
+}
+
+// 展開したカテゴリのサブカテゴリ。上向きのキャレットで、どのセルから開いたかを示す。
+function SubTypePanel({
+  type,
+  column,
   onPick
 }: {
-  items: ShortCutItem[];
-  onPick: (item: ShortCutItem) => void;
+  type: TypeCard;
+  // 展開元のセルの列（0 始まり）。キャレットの横位置に使う。
+  column: number;
+  onPick: (subTypeId: Id | null) => void;
 }) {
   return (
-    <div className='flex flex-col gap-2'>
-      <span className='font-semibold text-[13px] text-muted-foreground'>
-        いつもの（タップで金額入力へ）
+    <div className='relative col-span-full my-0.5 mb-1 flex flex-col gap-2.5 rounded-2xl bg-card px-3 pt-3.5 pb-3'>
+      <span
+        aria-hidden='true'
+        className='-top-1.5 absolute size-3 rotate-45 rounded-[2px] bg-card'
+        // 列の中心 = 列幅の半分 + 左にある列の幅と間隔。列幅は grid が決めるので
+        // 実寸ではなく割合で置く。
+        style={{
+          left: `calc((100% - ${(COLUMNS - 1) * 8}px) / ${COLUMNS} * ${column + 0.5} + ${column * 8}px - 6px)`
+        }}
+      />
+      <span className='font-semibold text-[12px] text-muted-foreground'>
+        {type.name}のサブカテゴリ
       </span>
-      <div className='grid grid-cols-2 gap-2'>
-        {items.map((item) => (
+      <div className='flex flex-wrap gap-2'>
+        {type.subTypes.map((sub) => (
           <button
-            className='flex h-14 items-center gap-2.5 rounded-[14px] bg-card px-3 text-left text-foreground'
-            key={item.id}
-            onClick={() => onPick(item)}
+            className='flex h-10 items-center whitespace-nowrap rounded-[20px] bg-background px-4 font-semibold text-[15px] text-foreground'
+            key={sub.id}
+            onClick={() => onPick(sub.id)}
             type='button'
           >
-            <span
-              aria-hidden='true'
-              className='size-2.5 shrink-0 rounded-full'
-              style={{ backgroundColor: colorVar(item.colorName) }}
-            />
-            <span className='flex min-w-0 flex-col gap-0.5'>
-              <span className='truncate font-semibold text-sm'>
-                {item.typeName}
-                {item.subTypeName === null ? '' : ` › ${item.subTypeName}`}
-              </span>
-              <span className='truncate text-muted-foreground text-xs'>
-                {item.methodName}
-                {item.memo === null ? '' : ` · ${item.memo}`}
-              </span>
-            </span>
+            {sub.name}
           </button>
         ))}
+        <button
+          className='flex h-10 items-center whitespace-nowrap rounded-[20px] border border-dash border-dashed px-4 text-[14px] text-muted-foreground'
+          onClick={() => onPick(null)}
+          type='button'
+        >
+          なしで進む
+        </button>
       </div>
     </div>
   );

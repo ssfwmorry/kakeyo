@@ -1,8 +1,16 @@
 import type { ReactNode } from 'react';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { OfflineBanner } from '@/features/pwa/components/offline-banner';
+import { getLastUsedMethodIds } from '@/features/record/server/services';
+import {
+  getMethodCardList,
+  getTypeCardList
+} from '@/features/type-method/server/services';
+import { getEffectivePairMode } from '@/lib/server/pair/mode';
+import { todayJst } from '@/lib/shared/domain/date';
 import { ThemeProvider } from '@/v2/components/theme-provider';
 import { V2Toaster } from '@/v2/components/toaster';
+import { NoteModalProvider } from '@/v2/features/note/components/note-modal';
 
 // 新デザインのシェル（docs/new-design/README.md）。移行が終わるまで (private) と並走する。
 //
@@ -11,13 +19,21 @@ import { V2Toaster } from '@/v2/components/toaster';
 //   ヘッダを持ち、そこに「個人｜共有」とダーク切替を置く（位置は全画面で揃える）。
 // - 色は .v2-root スコープのトークンで塗る。既存画面には一切影響しない。
 //
-// タブバーは下の (tabs) route group が持つ。タブバー無しの全画面（(modal)）は
-// 入力フローをシートに変えたので今は無いが、必要になったら同じ形で足せる。
+// 入力の全画面モーダルはここが持つ（README D1）。どのタブからでも開いて閉じると
+// 元のタブに戻るので、タブより外側に置く必要がある。候補（カテゴリ・方法・前回の方法）も
+// ここで 1 度だけ取る。
 //
 // 認証ガードは (private) と同じく requireAuth。Proxy に加えた多層防御。
 
 export default async function V2Layout({ children }: { children: ReactNode }) {
-  await requireAuth();
+  const session = await requireAuth();
+
+  const [typeList, methodList, lastUsedMethodIds, isPair] = await Promise.all([
+    getTypeCardList(session),
+    getMethodCardList(session),
+    getLastUsedMethodIds(session),
+    getEffectivePairMode(session)
+  ]);
 
   return (
     <ThemeProvider>
@@ -28,9 +44,20 @@ export default async function V2Layout({ children }: { children: ReactNode }) {
         {/* トーストは v2-root の内側に置く（トークンを引くため）。root layout の
             Toaster は v2 配下では描画されない（LegacyToaster）。 */}
         <V2Toaster>
-          <div className='mx-auto flex h-dvh w-full max-w-md flex-col bg-background sm:border-x'>
-            <OfflineBanner />
-            {children}
+          <div className='mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-background sm:border-x'>
+            <NoteModalProvider
+              candidates={{
+                typeList,
+                methodList,
+                lastUsedMethodIds,
+                isPair,
+                hasPair: session.pairId !== null,
+                today: todayJst()
+              }}
+            >
+              <OfflineBanner />
+              {children}
+            </NoteModalProvider>
           </div>
         </V2Toaster>
       </div>

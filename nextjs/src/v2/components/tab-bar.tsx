@@ -10,6 +10,7 @@ import {
   IconCog,
   IconPlus
 } from '@/components/icons';
+import { useNoteModal } from '@/v2/features/note/components/note-modal';
 
 // 浮くピル型のタブバー（原典 Main / Calendar の nav）。画面下端から少し浮かせ、
 // すりガラスの地に 5 スロット（カレンダー・集計・＋・口座・設定）を均等に置く。
@@ -20,6 +21,7 @@ import {
 // 外側に幅だけを持つ透明な枠を置き、その中でバーを描く。
 //
 // 中央の ＋ はタブではなく「入力を開く」ボタン。ラベルを持たず、アクセントの丸で出す。
+// 入力は全画面モーダルで、どのタブからでも開いて閉じると元のタブに戻る。
 
 type TabItem = {
   href: string;
@@ -65,6 +67,7 @@ function Tab({ item, isActive }: { item: TabItem; isActive: boolean }) {
 
 export function TabBar() {
   const pathname = usePathname();
+  const noteModal = useNoteModal();
 
   return (
     <div
@@ -80,19 +83,18 @@ export function TabBar() {
           />
         ))}
         <div className='flex flex-1 basis-0 justify-center'>
-          <Link
+          <button
             aria-label='入力'
             className='flex size-12 items-center justify-center rounded-full bg-primary text-white shadow-[0_4px_12px_rgba(22,25,26,0.22)]'
-            // 入力はカレンダーの上に出るシート。他のタブからでも開けるよう、
-            // クエリ付きでカレンダーへ送る（全画面モーダル化は入力フローの作り直しで行う）。
-            href='/v2/calendar?note=new'
+            onClick={() => noteModal.open()}
+            type='button'
           >
             <IconPlus
               aria-hidden='true'
               className='size-[22px]'
               strokeWidth={2.4}
             />
-          </Link>
+          </button>
         </div>
         {RIGHT_TABS.map((item) => (
           <Tab
