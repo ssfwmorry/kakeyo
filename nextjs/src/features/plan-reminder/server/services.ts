@@ -56,7 +56,7 @@ export async function getPlanList(
   );
 }
 
-// plan 編集画面（/plan?planId=）のプリフィル用に plan 1 件を取得する。
+// 予定シートの編集のプリフィル用に plan 1 件を取得する。
 // scope 外・不存在は null（呼び出し側で新規扱いにするかを決める）。
 // PlanRow は PlanItem と同形のためそのまま返す（toPlanItems は配列整形のみで単件は不要）。
 export async function getPlanForEdit(

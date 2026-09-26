@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { TabBar } from '@/v2/components/tab-bar';
+import { TabBar } from '@/components/tab-bar';
 
 // タブバー付きの画面（カレンダー / 集計 / 口座 / 設定とその配下）。
 //

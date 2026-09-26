@@ -3,7 +3,6 @@ import { recordLabels } from '../labels';
 import type { RecordError } from '../types';
 
 // record サービスの失敗分類 → ユーザ向け文言。
-// 旧 /note の Action と新デザインの入力フローが同じ変換を使うため、Action の外に置く。
 
 export function recordErrorMessage(error: RecordError): string | undefined {
   switch (error) {

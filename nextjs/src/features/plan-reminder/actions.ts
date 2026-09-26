@@ -7,6 +7,7 @@ import { requireAuth } from '@/features/auth/server/requireAuth';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { reorderIdsSchema } from '@/lib/shared/domain/reorder';
 import { L } from '@/lib/shared/labels';
+import type { SessionData } from '@/lib/shared/types/auth';
 import {
   type FormActionResult,
   toFormResult
@@ -16,16 +17,17 @@ import { planReminderErrorMessage } from './domain/error-message';
 import {
   deleteSchema,
   planTypeUpsertSchema,
+  planUpsertSchema,
   reminderInsertSchema
 } from './schemas';
 import * as service from './server/services';
 import type { PlanReminderError } from './types';
 
-// 予定カテゴリ・リマインダーの Server Actions。同一画面内更新のため
-// FormActionResult.toast を使い、保存後 revalidateSetting() で再取得する。
-// 予定（カレンダーのシート）の保存・削除は v2/features/plan/actions.ts が持つ。
+// 予定・予定カテゴリ・リマインダーの Server Actions。どれも画面の上に出るシートから呼ばれ、
+// 保存しても画面に留まるので、遷移せず FormActionResult.toast を返し再検証で取り直す。
 
 const SETTING_PATH = '/setting';
+const CALENDAR_PATH = '/calendar';
 
 // 設定はトップ（件数）と詳細画面（一覧）に分かれるので、layout 単位でまとめて再検証する。
 function revalidateSetting(): void {
@@ -144,4 +146,66 @@ export async function reorderPlanTypeAction(
   const result = await service.reorderPlanTypes(session, parsed.data.ids);
   revalidateSetting();
   return toResult(result, L.snackbar.updated);
+}
+
+// 予定（カレンダーのシート）。共有か個人かは作成時に決まり後から移せない。新規は今のモード、
+// 編集は対象自身の区分に従う（フォーム値は信用しない）。scope 外・不存在なら service が
+// notInScope を返す。
+export async function savePlanAction(
+  _prev: FormActionResult | null,
+  formData: FormData
+): Promise<FormActionResult> {
+  const submission = parseWithZod(formData, { schema: planUpsertSchema });
+  if (submission.status !== 'success') {
+    return { submission: submission.reply() };
+  }
+  const session = await requireAuth();
+  const { id, name, startDate, endDate, planTypeId, memo } = submission.value;
+  const isPair = await resolveIsPair(session, id);
+  const result = await service.upsertPlan(session, {
+    id,
+    name,
+    startDate,
+    endDate,
+    planTypeId,
+    memo,
+    isPair
+  });
+  revalidatePath(CALENDAR_PATH);
+  return toFormResult(result, {
+    success: id === undefined ? L.snackbar.created : L.snackbar.updated,
+    errorMessage: planReminderErrorMessage,
+    fallbackError: L.snackbar.failed,
+    submission: submission.reply()
+  });
+}
+
+async function resolveIsPair(
+  session: SessionData,
+  id: number | undefined
+): Promise<boolean> {
+  if (id === undefined) {
+    return getEffectivePairMode(session);
+  }
+  const target = await service.getPlanForEdit(session, id);
+  return target?.isPair ?? false;
+}
+
+export async function deletePlanAction(
+  _prev: FormActionResult | null,
+  formData: FormData
+): Promise<FormActionResult> {
+  const submission = parseWithZod(formData, { schema: deleteSchema });
+  if (submission.status !== 'success') {
+    return { submission: submission.reply() };
+  }
+  const session = await requireAuth();
+  const result = await service.deletePlan(session, submission.value.id);
+  revalidatePath(CALENDAR_PATH);
+  return toFormResult(result, {
+    success: L.snackbar.deleted,
+    errorMessage: planReminderErrorMessage,
+    fallbackError: L.snackbar.failed,
+    submission: submission.reply()
+  });
 }

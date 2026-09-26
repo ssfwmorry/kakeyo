@@ -1,4 +1,6 @@
 // planned-record（定期）feature の公開 API（barrel）。
+// server-only（repositories / services / actions）は re-export しない。公開するのは FE 型のみ。
+// データは @/features/planned-record/server/services から直接 import して取得する。
 // server-only（repositories / services / actions）は re-export しない。
 // 公開するのは画面 Client Component と FE 型のみ。
 // - note 画面ルート（app/(private)/note/page.tsx）が NotePlannedRecordForm を使う。

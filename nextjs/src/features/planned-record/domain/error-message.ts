@@ -2,7 +2,7 @@ import { L } from '@/lib/shared/labels';
 import { plannedRecordLabels } from '../labels';
 import type { PlannedRecordError } from '../types';
 
-// service の失敗分類 → ユーザ向け文言。旧画面と新デザインの Action が共有する。
+// service の失敗分類 → ユーザ向け文言。
 export function plannedRecordErrorMessage(
   error: PlannedRecordError
 ): string | undefined {

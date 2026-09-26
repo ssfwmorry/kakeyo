@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { OfflineBanner } from '@/features/pwa/components/offline-banner';
+import { NoteModalProvider } from '@/features/record/components/note-modal';
 import { getLastUsedMethodIds } from '@/features/record/server/services';
 import {
   getMethodCardList,
@@ -8,7 +9,6 @@ import {
 } from '@/features/type-method/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { todayJst } from '@/lib/shared/domain/date';
-import { NoteModalProvider } from '@/v2/features/note/components/note-modal';
 
 // 認証必須画面の共有 layout（アプリのシェル。docs/new-design/README.md）。
 //

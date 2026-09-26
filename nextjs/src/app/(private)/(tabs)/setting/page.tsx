@@ -5,17 +5,16 @@ import {
   getReminderList
 } from '@/features/plan-reminder/server/services';
 import { getPlannedRecordList } from '@/features/planned-record/server/services';
+import { SettingScreen } from '@/features/setting/components/setting-screen';
 import {
   getMethodCardList,
   getTypeCardList
 } from '@/features/type-method/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
-import { SettingScreen } from '@/v2/features/setting/components/setting-screen';
 
-// 設定トップ（新デザイン）の薄いルート。
+// 設定トップの薄いルート。
 //
-// 旧画面（(private)/setting）は各タブが中身のフォームを持つため一覧そのものを渡していたが、
-// 新デザインのトップは詳細画面への入口と件数しか出さない。そのため取得結果は件数に畳んで渡す。
+// トップは詳細画面への入口と件数しか出さないので、取得結果は件数に畳んで渡す。
 // 一覧本体は各詳細画面（/setting/*）がそれぞれ取得する。
 
 export default async function SettingPage() {

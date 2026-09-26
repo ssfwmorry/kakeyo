@@ -1,4 +1,6 @@
 // summary feature の公開 API（barrel）。
+// server-only（server/services・server/repositories・schema-sql）と Server Action は
+//   re-export しない（ページと画面が直接 import する）。公開するのは FE 型のみ。
 // server-only（server/services・server/repositories・schema-sql）と
 //   Server Action（actions.ts・records-actions.ts）は re-export しない
 //   （ページは直接 import する）。

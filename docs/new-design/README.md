@@ -2,8 +2,10 @@
 
 - デザイン原典: https://claude.ai/artifact/2FanNbHvamWFqdHGu5kjkH （「かけよ デザイン再検討」・Design キャンバス）
 - 作業ブランチ: `feat/nextjs-new-design`
-- 実装先: `nextjs/src/v2/` と `nextjs/src/app/v2/`（ルート昇格・ファイル移動は全タスク完了後に別途行う）
-- 本書の位置づけ: **デザイン原典を唯一の正**とし、現状の v2 実装との差分をタスクに分けたもの。
+- 状態: **T01〜T12 とルート昇格まで完了（2026-09-26）**。新デザインが `/calendar` `/summary` `/bank` `/setting/*` の本番ルートで、旧画面は撤去済み。
+- 実装先: `nextjs/src/components/`（共通部品）・`nextjs/src/features/<feature>/`（画面・domain・actions）・`nextjs/src/app/(private)/`（ルート）。
+  タスク中は `src/v2/` と `src/app/v2/` に閉じて作り、完了後にこの配置へ移した（タスクファイルの完了メモに出てくる `v2/...` のパスは移動前のもの）。
+- 本書の位置づけ: **デザイン原典を唯一の正**とし、実装との差分をタスクに分けたもの。
   各タスクは `tasks/` の 1 ファイルが仕様の全てを持ち、**別セッションで単独に実行できる**。
 
 ## デザイン原典の読み方（各セッション共通）
@@ -45,7 +47,7 @@
 | D16 | リマインダーの「予定に残す」で予定が作られるのは実装どおり「〜か月後」型のみ。文言「この日の予定はカレンダーに残ります」もその条件でだけ出す。 |
 | D17 | モックにある影のうち、タブバー・中央＋・セグメント選択面・スイッチのつまみ・トーストは**そのまま影を付ける**。それ以外（数字キー等）は影なし。 |
 | D18 | ボトムシートの UI は既存 v2 実装（「キャンセル｜見出し｜保存」のバー・末尾の削除ボタン）を引き継がず、原典のシート（×｜タイトル｜ゴミ箱、主ボタン、中央の確認）を正に作る。旧形は全廃。 |
-| D19 | 「名前＋色」だけを持つマスタ（方法・予定カテゴリ・口座。名前だけのサブカテゴリも）はデータの形が同じなので、追加・編集シートを**共通部品 `MasterSheet`（`src/v2/components/master-sheet.tsx`）**に揃える。構成は原典 SetBank のシート（名前＋文字数カウンタ・補足・36px の色・主ボタン・右上ゴミ箱・中央の確認）。紐づくデータがあって削除できないときは、方法・口座は「削除できません」のアラート（名前と色の変更はできます）、予定カテゴリは原典どおりトースト。 |
+| D19 | 「名前＋色」だけを持つマスタ（方法・予定カテゴリ・口座。名前だけのサブカテゴリも）はデータの形が同じなので、追加・編集シートを**共通部品 `MasterSheet`（`src/components/master-sheet.tsx`）**に揃える。構成は原典 SetBank のシート（名前＋文字数カウンタ・補足・36px の色・主ボタン・右上ゴミ箱・中央の確認）。紐づくデータがあって削除できないときは、方法・口座は「削除できません」のアラート（名前と色の変更はできます）、予定カテゴリは原典どおりトースト。 |
 
 ## タスク一覧（依存順・各タスク 1 セッション想定）
 
@@ -72,13 +74,21 @@
 2. 担当タスクに列挙されたデザインファイルを `Artifact` の `read` で取り直し、マークアップと script を読む
    （タスク仕様は要約なので、寸法・文言に迷ったら原典を優先する）。
 3. `nextjs/AGENTS.md` の横断規約（scope / セッション / デモ注入 / Result 型 / labels / フォーム標準 / コメント）を守る。
-4. 実装は `src/v2/**` と `src/app/v2/**` に閉じる。`src/features/**` の server 層（services / repositories / schemas）は再利用し、
-   足りないものだけ追加する。旧 UI（`src/app/(private)`、`src/features/*/components`）は触らない。
+4. `src/features/**` の server 層（services / repositories / schemas）は再利用し、足りないものだけ追加する。
+   画面は `src/features/<feature>/components/`、共通部品は `src/components/`、ルートは `src/app/(private)/` に置く。
 5. `pnpm check:full` と `pnpm test` を通す。画面確認はデモログインで（`AGENTS.md`「画面の動作確認」）。
 6. 完了したら本書のタスク一覧の状態を更新し、タスクファイル末尾の「完了メモ」に決めたこと・残したことを書く。
 7. コミットはタスク単位（数コミット可）。コミットメッセージにタスク ID は書かない。
 
-## 移行中の既知の段差（タスク完了で解消されるもの）
+## ルート昇格（2026-09-26）で行ったこと
 
-- Service Worker の開発中キャッシュ問題（`features/pwa/components/sw-register.tsx` で回避済み）。
-- 再検証が旧パスと v2 パスの二重打ちになっている（ルート昇格時に整理）。
+- `src/app/v2/**` を `src/app/(private)/**` に置き、`/v2` の付かないパスで各画面を出す。旧画面（`(private)` の旧ページ・`features/*/components` の旧部品・swap 系 Action・ショートカット記録）は削除。
+- 色トークンを `globals.css` の `:root` / `.dark` に移し `.v2-root` を廃止。`ThemeProvider` とトースター（`AppToaster`）は root layout に置き、ログイン画面も同じトーストで出す。
+- `src/v2/**` を `src/components/**`・`src/features/<feature>/**`・`src/lib/shared/**` に移した（入力フロー `note` → `features/record`、予定シート `plan` とリマインダー `reminder` → `features/plan-reminder`、`memo-shortcut` feature は `memo` に改名）。
+- 再検証は 1 系統（`/setting` は配下ごと layout 単位、記録は `/` の layout 単位）。ペア切替も `/setting/*` を layout 単位で再検証する。
+- recharts / FullCalendar の依存を外した。
+
+## デザイン待ちで保留のもの
+
+- 集計の「推移」「精算」、集計の行タップ明細、設定の「アカウント」行（README D10）。集計の server 層（`features/summary`）には推移・精算用の取得関数を残してある。
+- ログイン・お問い合わせ画面は原典が無く、shadcn の標準部品のまま（色トークンだけ新デザインになる）。

@@ -4,8 +4,8 @@ import {
   startOfDayJst
 } from '@/lib/shared/domain/date';
 
-// dayGridMonth は前後の月の日も一部見えるため、record/plan を「前月21日〜翌月9日」で
-// まとめて取得し、当月の枠外セルにも収支を出せるようにする。
+// 月をまたぐ予定と月初・月末の帯を切らずに描くため、record/plan を「前月21日〜翌月9日」で
+// まとめて取得する。
 // record 取得は Date（両端含む gte..lte）、plan 取得は YYYY-MM-DD 文字列を要求するため
 // 両形式を用意する。
 

@@ -12,7 +12,7 @@ import type {
 // note フォーム（record / planned_record）が共有するカテゴリ・方法の候補導出。
 //
 // 収支（pay/income）・共有（self/pair）・立替で候補が入れ替わるため、選択中の値から
-// 描画に必要な形を毎レンダで導出する。effect で追い掛けると旧候補が 1 フレーム残る。
+// 描画に必要な形を毎レンダで導出する。effect で追い掛けると前の候補が 1 フレーム残る。
 
 export type TypeSelectionState = {
   isPay: boolean;

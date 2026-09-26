@@ -1,16 +1,16 @@
 import { notFound } from 'next/navigation';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { getColorClassifications } from '@/features/master/server/services';
+import { TypeEditScreen } from '@/features/type-method/components/type-edit-screen';
 import { getTypeCardList } from '@/features/type-method/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
-import { TypeEditScreen } from '@/v2/features/type-method/components/type-edit-screen';
 
-// 設定 › カテゴリを編集（新デザイン）。
+// 設定 › カテゴリを編集。
 //
 // 1 件だけ取るサービスは無いので、一覧から絞る。カテゴリは数十件の規模で、
 // 一覧は設定画面が既に取得しているため、専用の取得系を足すほどの重さはない。
 
-export default async function V2TypeEditPage({
+export default async function TypeEditPage({
   params,
   searchParams
 }: {

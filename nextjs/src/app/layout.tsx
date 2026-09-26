@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { Geist_Mono } from 'next/font/google';
 import { FlashToast } from '@/components/form/flash-toast';
+import { ThemeProvider } from '@/components/theme-provider';
+import { AppToaster } from '@/components/toaster';
 import { SwRegister } from '@/features/pwa/components/sw-register';
-import { ThemeProvider } from '@/v2/components/theme-provider';
-import { AppToaster } from '@/v2/components/toaster';
 import './globals.css';
 
 // 日本語フォントは Web フォントで配らず OS のものを使う。
