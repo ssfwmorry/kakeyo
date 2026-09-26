@@ -8,11 +8,7 @@ export default defineConfig({
     environment: 'node',
     // ドメイン計算テストは lib/ と各 feature の domain/ に置く。feature 側も CI 対象に含める
     // （server-only は下の alias で空モジュール化されるため間接 import しても通る）。
-    include: [
-      'src/lib/**/*.test.ts',
-      'src/features/**/*.test.ts',
-      'src/v2/**/*.test.ts'
-    ]
+    include: ['src/lib/**/*.test.ts', 'src/features/**/*.test.ts']
   },
   resolve: {
     alias: [

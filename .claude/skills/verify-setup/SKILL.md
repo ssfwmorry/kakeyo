@@ -1,6 +1,6 @@
 ---
 name: verify-setup
-description: kakeyo(nextjs)のClaude動作確認用スキル。コードレビュー(/review相当)、コード簡素化(/simplify相当)、Playwrightによる画面スクリーンショット確認の3つを順に実行し、環境が正しく機能するかを確認する。ユーザーが「動作確認」「セットアップ確認」「/verify-setup」「review/simplify/スクショの確認」などを依頼したときに使う。
+description: かけよ(Next.js)のClaude動作確認用スキル。コードレビュー(/review相当)、コード簡素化(/simplify相当)、Playwrightによる画面スクリーンショット確認の3つを順に実行し、環境が正しく機能するかを確認する。ユーザーが「動作確認」「セットアップ確認」「/verify-setup」「review/simplify/スクショの確認」などを依頼したときに使う。
 metadata:
   author: kakeyo
   version: "0.1.0"
@@ -8,7 +8,7 @@ metadata:
 
 # verify-setup — 動作確認用スキル
 
-このスキルは kakeyo(nextjs)における Claude の動作環境を確認するためのものです。
+このスキルは かけよ(Next.js)における Claude の動作環境を確認するためのものです。
 次の3つの動作を順に実行し、それぞれが正しく機能するかを目視で確認します。
 
 1. **コードレビュー**(`/review` 相当)
@@ -22,7 +22,7 @@ metadata:
 
 ## 前提
 
-- 作業ディレクトリ: `kakeyo/nextjs/`
+- 作業ディレクトリ: リポジトリのルート（`kakeyo/`）
 - パッケージマネージャ: `pnpm`
 - Playwright MCP は `mico-eng-basic` プラグイン提供の `playwright` サーバーを使う
   (ツール未登録ならセッション再起動で反映される)
@@ -81,11 +81,11 @@ metadata:
 3. **認証必須画面の撮影**(任意): `(private)` 配下(bank / setting / calendar 等)を撮る場合は、
    Playwright MCP で**デモログインボタンをクリック → 遷移 → スクショ**の順に行う。
    単純な headless スクショはログイン導線を辿れず login 画面で止まるため不可。
-4. **保存先**: スクショは `nextjs/.screenshots/` に「連番＋画面名」で保存する
+4. **保存先**: スクショは `.screenshots/` に「連番＋画面名」で保存する
    (例 `01-login.png` / `02-bank.png`)。`.screenshots/` は `.gitignore` 済み。
 5. **目視確認**: 保存した画像を **Read で開いて自分でも確認**する
    (HTTP ステータスや HTML だけで済ませない)。表示崩れ・文言・データ表示をチェックする。
-6. 確認後、不要になった一時ファイルは `.screenshots/` を削除してよい。
+6. `.screenshots/` は削除せずに残す（削除は人間が行う）。
 
 > Playwright MCP のツールが使えない場合は、その旨を報告し「MCP未登録」としてステップを失敗扱いにする
 > (セッション再起動で反映される旨も伝える)。

@@ -3,7 +3,7 @@
 - デザイン原典: https://claude.ai/artifact/2FanNbHvamWFqdHGu5kjkH （「かけよ デザイン再検討」・Design キャンバス）
 - 作業ブランチ: `feat/nextjs-new-design`
 - 状態: **T01〜T12 とルート昇格まで完了（2026-09-26）**。新デザインが `/calendar` `/summary` `/bank` `/setting/*` の本番ルートで、旧画面は撤去済み。
-- 実装先: `nextjs/src/components/`（共通部品）・`nextjs/src/features/<feature>/`（画面・domain・actions）・`nextjs/src/app/(private)/`（ルート）。
+- 実装先: `src/components/`（共通部品）・`src/features/<feature>/`（画面・domain・actions）・`src/app/(private)/`（ルート）。
   タスク中は `src/v2/` と `src/app/v2/` に閉じて作り、完了後にこの配置へ移した（タスクファイルの完了メモに出てくる `v2/...` のパスは移動前のもの）。
 - 本書の位置づけ: **デザイン原典を唯一の正**とし、実装との差分をタスクに分けたもの。
   各タスクは `tasks/` の 1 ファイルが仕様の全てを持ち、**別セッションで単独に実行できる**。
@@ -73,7 +73,7 @@
 1. `docs/new-design/README.md`（本書）と `共通仕様.md`、担当タスクの `tasks/Txx-*.md` を読む。
 2. 担当タスクに列挙されたデザインファイルを `Artifact` の `read` で取り直し、マークアップと script を読む
    （タスク仕様は要約なので、寸法・文言に迷ったら原典を優先する）。
-3. `nextjs/AGENTS.md` の横断規約（scope / セッション / デモ注入 / Result 型 / labels / フォーム標準 / コメント）を守る。
+3. `AGENTS.md` の横断規約（scope / セッション / デモ注入 / Result 型 / labels / フォーム標準 / コメント）を守る。
 4. `src/features/**` の server 層（services / repositories / schemas）は再利用し、足りないものだけ追加する。
    画面は `src/features/<feature>/components/`、共通部品は `src/components/`、ルートは `src/app/(private)/` に置く。
 5. `pnpm check:full` と `pnpm test` を通す。画面確認はデモログインで（`AGENTS.md`「画面の動作確認」）。
