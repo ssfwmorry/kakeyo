@@ -171,19 +171,31 @@ export async function updatePlannedRecord(
 
 // DELETE（1 件）。scope を where に AND し、削除できたかを返す
 // （scope 外の行は count===0 で notFound）。
-// 実体化済み record が紐づく場合は FK 制約違反（P2003）が throw される
-// （呼び出し側 service が foreignKey へ分類する）。
+//
+// 実体化済み record は残す（「これまでに記録された分は残ります」）。records の
+// planned_record_id を先に NULL にしてから消すので、FK 制約に当たらない。
+// 2 つの更新は同じトランザクションで行い、NULL 化だけ済んで削除に失敗する状態を作らない。
+// records 側の scope は定期と同じ所有（個人なら user_id、共有なら pair_id）なので
+// buildScopeWhere でそのまま絞れる。
 export async function deletePlannedRecordById(
   scope: SessionScope,
   id: Id
 ): Promise<{ ok: true } | { ok: false; error: 'notFound' }> {
-  const result = await prisma.plannedRecord.deleteMany({
-    where: { AND: [{ id }, buildScopeWhere(scope)] }
+  return prisma.$transaction(async (tx) => {
+    const target = await tx.plannedRecord.findFirst({
+      where: { AND: [{ id }, buildScopeWhere(scope)] },
+      select: { id: true }
+    });
+    if (target === null) {
+      return { ok: false, error: 'notFound' };
+    }
+    await tx.record.updateMany({
+      where: { AND: [{ plannedRecordId: id }, buildScopeWhere(scope)] },
+      data: { plannedRecordId: null }
+    });
+    await tx.plannedRecord.delete({ where: { id } });
+    return { ok: true };
   });
-  if (result.count === 0) {
-    return { ok: false, error: 'notFound' };
-  }
-  return { ok: true };
 }
 
 // 2 行の sort を $transaction の 2 update で入替。

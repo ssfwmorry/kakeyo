@@ -42,6 +42,7 @@ export function Segment<T extends string>({
   onChange,
   label,
   size = 'md',
+  tone = 'muted',
   className
 }: {
   options: readonly SegmentOption<T>[];
@@ -50,13 +51,20 @@ export function Segment<T extends string>({
   // スクリーンリーダー向けの群の名前。
   label: string;
   size?: keyof typeof SIZE_CLASS;
+  // 地の色。白いカードの中に置くときは画面の地色にする（面（弱）だと面と同化する）。
+  tone?: 'muted' | 'background';
   className?: string;
 }) {
   const sizeClass = SIZE_CLASS[size];
   return (
     <fieldset
       aria-label={label}
-      className={cn('flex bg-muted', sizeClass.outer, className)}
+      className={cn(
+        'flex',
+        tone === 'background' ? 'bg-background' : 'bg-muted',
+        sizeClass.outer,
+        className
+      )}
     >
       {options.map((option) => {
         const isSelected = option.value === value;

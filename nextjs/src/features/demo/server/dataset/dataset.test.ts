@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { resolveRecordType } from '@/lib/shared/domain/recordType';
 import { RecordType } from '@/lib/shared/types/recordType';
 import { bankBalanceRows, bankRows } from './banks';
 import { colorRows } from './colors';
@@ -102,7 +103,13 @@ describe('demo dataset の参照整合', () => {
       expectRef(dayIds, row.dayClassificationId);
       expectRef(methodIds, row.methodId);
       expectRef(typeIds, row.typeId);
-      expect(row.recordType === RecordType.pair).toBe(row.pairId !== null);
+      // 個人は user_id のみ、共有は pair_id のみ、立替は両方（立替者を特定する）。
+      expect(row.recordType).toBe(
+        resolveRecordType({
+          isPair: row.pairId !== null,
+          isInstead: row.pairId !== null && row.userUid !== null
+        })
+      );
     }
   });
 

@@ -10,10 +10,8 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconMemo,
-  IconRotateCcw,
   IconUpdate
 } from '@/components/icons';
-import { colorVar } from '@/features/master';
 import type { NoteRecordDefault } from '@/features/record';
 import { recordLabels } from '@/features/record/labels';
 import { recordUpsertSchema } from '@/features/record/schemas/record-schema';
@@ -35,8 +33,11 @@ import {
   editableDateRange
 } from '../domain/editable-dates';
 import { relativeDayLabel } from '../domain/relative-day';
+import { AmountRow } from './amount-row';
 import { Keypad } from './keypad';
+import { FieldLabel, MethodPills } from './method-pills';
 import type { NoteState } from './note-state';
+import { TypePill, typeLabel } from './type-pill';
 
 // 入力② 金額と詳細（原典 Note / NoteIncome / NotePair）。
 //
@@ -171,6 +172,7 @@ export function AmountStep({
 
       <AmountRow
         isPay={state.isPay}
+        label={`${state.isPay ? recordLabels.payToggle.pay : recordLabels.payToggle.income}の金額`}
         onClear={() => patch({ price: 0 })}
         price={state.price}
       />
@@ -186,14 +188,6 @@ export function AmountStep({
       />
     </form>
   );
-}
-
-// 「食費 › スーパー」。サブカテゴリが無ければカテゴリだけ。
-function typeLabel(selectedType: TypeCard, subTypeId: Id | null): string {
-  const sub = selectedType.subTypes.find((item) => item.id === subTypeId);
-  return sub === undefined
-    ? selectedType.name
-    : `${selectedType.name} › ${sub.name}`;
 }
 
 // 削除の確認の本文。画面に見えている日付・カテゴリ・金額をそのまま読み上げる
@@ -267,70 +261,6 @@ function HiddenFields({
       <input name='memo' readOnly type='hidden' value={state.memo} />
       <input name='price' readOnly type='hidden' value={String(state.price)} />
     </>
-  );
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span className='font-semibold text-[12px] text-muted-foreground'>
-      {children}
-    </span>
-  );
-}
-
-// 選んだカテゴリの丸いピル。押すと①に戻る（選び直しの導線）。
-function TypePill({
-  isPay,
-  isPair,
-  selectedType,
-  subTypeId,
-  onClick
-}: {
-  isPay: boolean;
-  isPair: boolean;
-  selectedType: TypeCard;
-  subTypeId: Id | null;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      aria-label='カテゴリを変える'
-      className='flex h-9 max-w-full items-center gap-2 rounded-full bg-card px-3.5 text-foreground'
-      onClick={onClick}
-      type='button'
-    >
-      <span
-        aria-hidden='true'
-        className='size-2.5 shrink-0 rounded-full'
-        style={{ backgroundColor: colorVar(selectedType.colorName) }}
-      />
-      <span className='truncate font-semibold text-[15px]'>
-        {typeLabel(selectedType, subTypeId)}
-      </span>
-      <Badge isAccent={!isPay}>
-        {isPay ? recordLabels.payToggle.pay : recordLabels.payToggle.income}
-      </Badge>
-      {isPair ? <Badge isAccent>共有</Badge> : null}
-    </button>
-  );
-}
-
-function Badge({
-  isAccent,
-  children
-}: {
-  isAccent: boolean;
-  children: string;
-}) {
-  return (
-    <span
-      className={cn(
-        'flex h-5 shrink-0 items-center rounded-md px-1.5 font-bold text-[11px]',
-        isAccent ? 'bg-secondary text-primary' : 'bg-muted text-foreground'
-      )}
-    >
-      {children}
-    </span>
   );
 }
 
@@ -537,89 +467,6 @@ function MethodField({
         methods={methods}
         onChange={(next) => patch({ methodId: next })}
       />
-    </div>
-  );
-}
-
-function MethodPills({
-  methods,
-  methodId,
-  onChange
-}: {
-  methods: MethodCard[];
-  methodId: Id | null;
-  onChange: (methodId: Id) => void;
-}) {
-  if (methods.length === 0) {
-    return (
-      <p className='px-1 text-muted-foreground text-sm'>
-        {recordLabels.empty.noMethod}
-      </p>
-    );
-  }
-  return (
-    <div className='-mx-4 flex gap-2 overflow-x-auto px-4'>
-      {methods.map((method) => {
-        const isSelected = method.id === methodId;
-        return (
-          <button
-            aria-pressed={isSelected}
-            className={cn(
-              'flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-3.5 font-semibold text-[14px]',
-              isSelected
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-card text-foreground'
-            )}
-            key={method.id}
-            onClick={() => onChange(method.id)}
-            type='button'
-          >
-            {method.name}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-// 金額。支出は「−」で文字色、収入は「+」でアクセント。
-function AmountRow({
-  isPay,
-  price,
-  onClear
-}: {
-  isPay: boolean;
-  price: number;
-  onClear: () => void;
-}) {
-  return (
-    <div className='mt-auto flex h-14 shrink-0 items-center gap-2 px-1'>
-      <button
-        aria-label='金額を0にする'
-        className='flex h-9 shrink-0 items-center gap-1.5 rounded-[18px] bg-muted py-0 pr-3.5 pl-[11px] font-semibold text-[13px] text-foreground'
-        onClick={onClear}
-        type='button'
-      >
-        <IconRotateCcw
-          aria-hidden='true'
-          className='size-[15px]'
-          strokeWidth={2.4}
-        />
-        クリア
-      </button>
-      <output
-        aria-label={`${isPay ? recordLabels.payToggle.pay : recordLabels.payToggle.income}の金額`}
-        className={cn(
-          'flex min-w-0 flex-grow items-baseline justify-end gap-1.5 tabular-nums',
-          isPay ? 'text-foreground' : 'text-primary'
-        )}
-      >
-        <span className='whitespace-nowrap font-bold text-[44px] tracking-[-0.01em]'>
-          {isPay ? '−' : '+'}
-          {price.toLocaleString('ja-JP')}
-        </span>
-        <span className='font-semibold text-lg'>円</span>
-      </output>
     </div>
   );
 }

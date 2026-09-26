@@ -96,14 +96,18 @@ export function TypeStep({
   );
 }
 
-function TypeGrid({
+// 4 列のカテゴリ格子。入力①のほか、定期の記録のカテゴリ選択も同じ格子を使う。
+// selectedId を渡すと、展開していないあいだそのセルに選択中の枠を出す（選び直しのとき）。
+export function TypeGrid({
   types,
   expandedId,
+  selectedId = null,
   onToggle,
   onPick
 }: {
   types: TypeCard[];
   expandedId: Id | null;
+  selectedId?: Id | null;
   onToggle: (typeId: Id) => void;
   onPick: (typeId: Id, subTypeId: Id | null) => void;
 }) {
@@ -124,6 +128,7 @@ function TypeGrid({
         <Fragment key={type.id}>
           <TypeCell
             isExpanded={type.id === expandedId}
+            isSelected={expandedId === null && type.id === selectedId}
             onClick={() =>
               type.subTypes.length === 0
                 ? onPick(type.id, null)
@@ -147,10 +152,12 @@ function TypeGrid({
 function TypeCell({
   type,
   isExpanded,
+  isSelected,
   onClick
 }: {
   type: TypeCard;
   isExpanded: boolean;
+  isSelected: boolean;
   onClick: () => void;
 }) {
   const hasSubTypes = type.subTypes.length > 0;
@@ -160,7 +167,7 @@ function TypeCell({
       className='flex h-20 flex-col items-center justify-center gap-1.5 rounded-[14px] bg-card'
       onClick={onClick}
       style={
-        isExpanded
+        isExpanded || isSelected
           ? { boxShadow: `inset 0 0 0 2px ${colorVar(type.colorName)}` }
           : undefined
       }

@@ -135,8 +135,8 @@ export async function upsertPlannedRecord(
   });
 }
 
-// 定期の削除。実体化済み record が紐づく場合は FK エラー → foreignKey で削除不可
-// （records.planned_record_id は on delete set null ではなく FK 参照が残るため）。
+// 定期の削除。実体化済み record は planned_record_id を外して残す（リポジトリ）。
+// それでも FK に当たったときは foreignKey に分類する。
 // scope 外は notInScope。
 export async function deletePlannedRecord(
   session: SessionData,

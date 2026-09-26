@@ -13,13 +13,12 @@ import {
   ToastType,
   toFormResult
 } from '@/lib/shared/types/formResult';
-import { plannedRecordLabels } from './labels';
+import { plannedRecordErrorMessage as errorMessage } from './domain/error-message';
 import {
   plannedRecordDeleteSchema,
   plannedRecordUpsertSchema
 } from './schemas';
 import * as service from './server/services';
-import type { PlannedRecordError } from './types';
 
 // planned-record（定期）の Server Actions。保存/削除は成功時に setting へ遷移するため
 // flash 通知、swap は遷移しないため FormActionResult.toast + revalidatePath。
@@ -27,20 +26,6 @@ import type { PlannedRecordError } from './types';
 // 定期の保存/削除後の遷移先。
 // /setting は未実装のため、それまでこの redirect は 404 になりうる（暫定状態）。
 const SETTING_PATH = '/setting';
-
-// service の失敗分類 → ユーザ向け文言。
-function errorMessage(error: PlannedRecordError): string | undefined {
-  switch (error) {
-    case 'foreignKey':
-      return L.error.hasRelatedData;
-    case 'pairRequired':
-      return plannedRecordLabels.error.pairRequired;
-    case 'notInScope':
-      return L.error.notFound;
-    default:
-      return undefined;
-  }
-}
 
 // 定期の登録・更新。成功→flash + setting 遷移、失敗→toast 返却（遷移しない）。
 export async function upsertPlannedRecordAction(

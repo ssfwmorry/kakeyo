@@ -5,7 +5,7 @@ import { days } from './day-classifications';
 import { methods } from './methods';
 import { defineTable, indexById } from './table';
 import { types } from './types';
-import { type Owned, owner } from './users';
+import { demoPair, demoUsers, type Owned, owner } from './users';
 
 // planned_records（定期）。records の定期由来 record は plannedRecords.<key>.id を参照する。
 // record_type は実処理と同じ resolveRecordType で導出する（0/10 を手書きしない）。
@@ -25,6 +25,7 @@ export type DemoPlannedRecord = Owned & {
 
 const selfType = resolveRecordType({ isPair: false, isInstead: false });
 const pairType = resolveRecordType({ isPair: true, isInstead: false });
+const insteadType = resolveRecordType({ isPair: true, isInstead: true });
 
 export const [plannedRecords, plannedRecordRows] = defineTable({
   housing: {
@@ -74,6 +75,20 @@ export const [plannedRecords, plannedRecordRows] = defineTable({
     memo: '手当',
     recordType: pairType,
     sort: 2
+  },
+  // 相手が立て替える定期。共有の一覧に「はなこさんの立替」として出て、自分は編集できない。
+  partnerInternet: {
+    userUid: demoUsers.partner.uid,
+    pairId: demoPair.id,
+    dayClassificationId: days.day15.id,
+    isPay: true,
+    methodId: methods.partnerCredit.id,
+    typeId: types.pairUtility.id,
+    subTypeId: null,
+    price: 5280,
+    memo: '光回線',
+    recordType: insteadType,
+    sort: 3
   }
 } satisfies Record<string, Omit<DemoPlannedRecord, 'id'>>);
 
