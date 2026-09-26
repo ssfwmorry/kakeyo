@@ -22,7 +22,6 @@ import type { ReactNode } from 'react';
 // footer は下端に張り付く帯（予定シートの保存ボタンなど）。スクロール領域の外に置き、
 // 中身が長くても常に見える。フォームの送信ボタンを置くときは form 属性でフォームに結ぶ。
 //
-// Portal で body 直下に出るため、トークンを効かせるために v2-root を付け直している。
 
 export const BottomSheet = Drawer.Root;
 export const BottomSheetTrigger = Drawer.Trigger;
@@ -45,13 +44,12 @@ export function BottomSheetContent({
   const hasFooter = footer !== undefined;
   return (
     <Drawer.Portal>
-      {/* 暗幕も Portal で body 直下に出るので、--overlay を引くために v2-root が要る。 */}
-      <Drawer.Backdrop className='v2-root fixed inset-0 z-50 bg-[var(--overlay)] transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0' />
+      <Drawer.Backdrop className='fixed inset-0 z-50 bg-[var(--overlay)] transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0' />
       <Drawer.Viewport className='fixed inset-0 z-50 flex items-end justify-center'>
         <Drawer.Popup
           className={cn(
             // シェルと同じ幅に収める。PC 幅で画面いっぱいに広がらないようにする。
-            'v2-root flex w-full max-w-md flex-col rounded-t-[20px] bg-background text-foreground',
+            'flex w-full max-w-md flex-col rounded-t-[20px] bg-background text-foreground',
             isFull ? 'h-[calc(100dvh-56px)]' : 'max-h-[94dvh]',
             className
           )}

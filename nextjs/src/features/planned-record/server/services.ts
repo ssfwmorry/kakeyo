@@ -158,26 +158,6 @@ export async function deletePlannedRecord(
   });
 }
 
-// 並び順の入替。対象 2 行が両方 scope 内であることを検証してから入替
-// （他ペアの並びを触らせない）。
-export async function swapPlannedRecord(
-  session: SessionData,
-  prevId: Id,
-  nextId: Id
-): Promise<Result<void, PlannedRecordError>> {
-  return withDemoWriteVoid(session, async () => {
-    const [a, b] = await Promise.all([
-      plannedRecordRepo.findPlannedRecordInScope(session, prevId),
-      plannedRecordRepo.findPlannedRecordInScope(session, nextId)
-    ]);
-    if (!a || !b) {
-      return err('notInScope');
-    }
-    await plannedRecordRepo.swapPlannedRecordSort(a, b);
-    return ok(undefined);
-  });
-}
-
 // 実体化バッチ。
 //
 // 実体化は Vercel Cron（日次 1 回）からこのサービスだけが行い、表示コードは

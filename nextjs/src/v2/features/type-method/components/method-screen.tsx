@@ -94,7 +94,7 @@ export function MethodScreen({
             {isEditing ? '完了' : '編集'}
           </ScreenHeaderAction>
         }
-        backHref='/v2/setting'
+        backHref='/setting'
         backLabel='設定'
       />
       <div className='flex flex-col gap-3 px-4'>

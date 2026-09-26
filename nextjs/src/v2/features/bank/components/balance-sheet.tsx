@@ -119,7 +119,7 @@ export function BalanceSheet({
 
           <Link
             className='flex h-10 items-center self-start px-1 font-semibold text-[15px] text-primary'
-            href='/v2/setting/bank?add=1'
+            href='/setting/bank?add=1'
           >
             ＋ 口座の行を追加
           </Link>

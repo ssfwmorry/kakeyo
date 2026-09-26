@@ -1,20 +1,29 @@
 import type { ReactNode } from 'react';
 import { requireAuth } from '@/features/auth/server/requireAuth';
-import { BottomNav } from '@/features/layout/components/bottom-nav';
-import { PairModeSwitch } from '@/features/layout/components/pair-mode-switch';
-import { ReminderBellSlot } from '@/features/layout/components/reminder-bell-slot';
 import { OfflineBanner } from '@/features/pwa/components/offline-banner';
-import { getPairMode } from '@/lib/server/pair/mode';
+import { getLastUsedMethodIds } from '@/features/record/server/services';
+import {
+  getMethodCardList,
+  getTypeCardList
+} from '@/features/type-method/server/services';
+import { getEffectivePairMode } from '@/lib/server/pair/mode';
+import { todayJst } from '@/lib/shared/domain/date';
+import { NoteModalProvider } from '@/v2/features/note/components/note-modal';
 
-// 認証必須画面の共有 layout。
-// - 認証ガード（requireAuth。Proxy に加えた多層防御）
-// - 上部バー: リマインダー通知ベル + ペア切替スイッチ（表示条件は各 Client 側）
-// - 下部: 共通ボトムナビ（固定）
-// 各画面（page.tsx）はこの shell の内側に描画され、shell には触れない。
+// 認証必須画面の共有 layout（アプリのシェル。docs/new-design/README.md）。
 //
-// リマインダー取得は ReminderBellSlot 内の Suspense 境界に隔離している。
-// ここで await するとベルのためだけの DB 往復が全画面のクリティカルパスに
-// 入るため、layout では待たない（詳細は reminder-bell-slot.tsx）。
+// 上部の共通バーは持たない。各画面が自分のヘッダを持ち、そこに「個人｜共有」と
+// ダーク切替を置く（位置は全画面で揃える）。
+//
+// 入力の全画面モーダルはここが持つ（README D1）。どのタブからでも開いて閉じると
+// 元のタブに戻るので、タブより外側に置く必要がある。候補（カテゴリ・方法・前回の方法）も
+// ここで 1 度だけ取る。
+//
+// 認証ガードは requireAuth。Proxy に加えた多層防御。
+//
+// 幅はスマホ専用（max-w-md = 448px）。PC で開いたときは shell ごと中央に寄せ、
+// sm 以上では左右の境界線で輪郭を出す。幅の制限は shell 1 箇所で持ち、
+// 各画面（page / *-screen）は max-w を持たない。
 
 export default async function PrivateLayout({
   children
@@ -23,43 +32,28 @@ export default async function PrivateLayout({
 }) {
   const session = await requireAuth();
 
-  // ペアの有無（isExistPair）と共有モードのトグル状態を SSR で解決してスイッチへ渡す。
-  const isExistPair = session.pairId !== null;
-  const isPair = await getPairMode();
+  const [typeList, methodList, lastUsedMethodIds, isPair] = await Promise.all([
+    getTypeCardList(session),
+    getMethodCardList(session),
+    getLastUsedMethodIds(session),
+    getEffectivePairMode(session)
+  ]);
 
   return (
-    // 画面ぴったりの縦フレックス（h-dvh）。これで main が「上部バーとボトムナビを
-    // 除いた残り」という確定した高さを持ち、上部バーとボトムナビが常に固定される。
-    // 各画面は内容の高さで積み、はみ出す分は main 側が overflow-y-auto でスクロールする。
-    //
-    // 幅はスマホ専用（max-w-md = 448px）。このアプリはスマホ幅だけを設計対象にしており、
-    // PC で開いたときは shell ごと中央に寄せ、外側は body の bg-muted（globals.css）で
-    // 地を変えてアプリ面を浮かせる。sm 以上では左右の境界線で輪郭も出す。
-    // 幅の制限は shell 1 箇所で持ち、各画面（page / *-screen）は max-w を持たない。
-    // header・main・ボトムナビが同じ幅に揃うのはこの構造による。
-    <div className='mx-auto flex h-dvh w-full max-w-md flex-col bg-background sm:border-x'>
-      {/* オフライン告知。h-dvh の縦フレックスの一員として header の上に積む
-          （ラッパーで囲むと main へ渡る高さの連鎖が変わるため囲まない）。
-          非表示時は null を返すので通常時のレイアウトには影響しない。 */}
-      <OfflineBanner />
-      <header className='sticky top-0 z-40 flex h-12 items-center justify-between gap-2 border-b bg-background px-4'>
-        <ReminderBellSlot />
-        <div className='flex items-center gap-2'>
-          {/* デモログイン中の視覚的手がかり。 */}
-          {session.isDemo ? (
-            <span className='rounded bg-red-600 px-2 py-0.5 font-bold text-white text-xs'>
-              デモ用
-            </span>
-          ) : null}
-          <PairModeSwitch isExistPair={isExistPair} isPair={isPair} />
-        </div>
-      </header>
-      {/* 上部バーとボトムナビを除いた残りが main の高さ。min-h-0 が無いと中身の
-          高さで膨らみ flex-1 が頭打ちにならない。 */}
-      <main className='flex min-h-0 flex-1 flex-col overflow-y-auto'>
+    <div className='mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-background sm:border-x'>
+      <NoteModalProvider
+        candidates={{
+          typeList,
+          methodList,
+          lastUsedMethodIds,
+          isPair,
+          hasPair: session.pairId !== null,
+          today: todayJst()
+        }}
+      >
+        <OfflineBanner />
         {children}
-      </main>
-      <BottomNav />
+      </NoteModalProvider>
     </div>
   );
 }

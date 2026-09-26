@@ -19,7 +19,7 @@ import { BankSheet } from './bank-sheet';
 // 設定 › 口座（原典 SetBank）。名前と色だけのマスタで、行を押すとシートで編集する。
 // 並べ替えと編集モードは無く、追加した順（id 順）に並ぶ。
 
-const SETTING_BANK_PATH = '/v2/setting/bank';
+const SETTING_BANK_PATH = '/setting/bank';
 
 type SheetState =
   | { kind: 'closed' }
@@ -51,7 +51,7 @@ export function BankSettingScreen({
 
   return (
     <div className='flex flex-col'>
-      <ScreenHeader backHref='/v2/setting' backLabel='設定' />
+      <ScreenHeader backHref='/setting' backLabel='設定' />
       <div className='flex flex-col gap-3 px-4'>
         <ScreenTitle badge='self'>口座</ScreenTitle>
         <ScreenLead>口座タブで残高を記録する口座です</ScreenLead>

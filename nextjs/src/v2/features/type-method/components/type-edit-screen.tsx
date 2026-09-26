@@ -40,7 +40,7 @@ import { SubTypeSheet } from './sub-type-sheet';
 // 新規のときはサブカテゴリの親 id がまだ無いので、その節は出さない。
 // 先にカテゴリを保存してから開き直す。
 
-const LIST_PATH = '/v2/setting/type';
+const LIST_PATH = '/setting/type';
 
 export function TypeEditScreen({
   type,

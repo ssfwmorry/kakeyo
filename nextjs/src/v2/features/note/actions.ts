@@ -29,10 +29,10 @@ import type { Id } from '@/lib/shared/types/id';
 // どのタブの上にも出る全画面モーダルで、保存しても元のタブに留まる。そのため遷移せず
 // FormActionResult.toast を返し、モーダルを閉じた側で月を取り直す（予定シートと同じ）。
 //
-// 再検証は /v2 の layout 単位。記録はカレンダーだけでなく集計・口座にも効くうえ、
+// 再検証はルートの layout 単位。記録はカレンダーだけでなく集計・口座にも効くうえ、
 // 入力はどのタブからでも開くため。
 
-const V2_ROOT_PATH = '/v2';
+const ROOT_PATH = '/';
 
 export async function upsertRecordAction(
   _prev: FormActionResult | null,
@@ -73,7 +73,7 @@ export async function upsertRecordAction(
     memo,
     isPair
   });
-  revalidatePath(V2_ROOT_PATH, 'layout');
+  revalidatePath(ROOT_PATH, 'layout');
   return toFormResult(result, {
     success: id === undefined ? L.snackbar.created : L.snackbar.updated,
     errorMessage: recordErrorMessage,
@@ -104,7 +104,7 @@ export async function deleteRecordAction(
   }
   const session = await requireAuth();
   const result = await deleteRecord(session, submission.value.id);
-  revalidatePath(V2_ROOT_PATH, 'layout');
+  revalidatePath(ROOT_PATH, 'layout');
   return toFormResult(result, {
     success: L.snackbar.deleted,
     errorMessage: recordErrorMessage,

@@ -6,7 +6,6 @@ export const snackbarLabels = {
   created: '登録しました',
   updated: '変更しました',
   deleted: '削除しました',
-  swapped: '入れ替えました',
   // リマインダーの消化（お知らせの「確認」）。対象名は quoted() で前に付ける。
   checked: '確認しました',
   failed: '処理に失敗しました'

@@ -30,10 +30,10 @@ type TabItem = {
 };
 
 const TAB_ITEMS: TabItem[] = [
-  { href: '/v2/calendar', label: 'カレンダー', icon: IconCalendar },
-  { href: '/v2/summary', label: '集計', icon: IconChartPie },
-  { href: '/v2/bank', label: '口座', icon: IconBank },
-  { href: '/v2/setting', label: '設定', icon: IconCog }
+  { href: '/calendar', label: 'カレンダー', icon: IconCalendar },
+  { href: '/summary', label: '集計', icon: IconChartPie },
+  { href: '/bank', label: '口座', icon: IconBank },
+  { href: '/setting', label: '設定', icon: IconCog }
 ];
 
 // ＋ の左右に 2 つずつ置くので、中央で分割する。

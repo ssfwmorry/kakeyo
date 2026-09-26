@@ -26,14 +26,10 @@ import type { TypeMethodError } from './types';
 // flash ではなく FormActionResult.toast を使う。保存後 revalidatePath で再取得。
 
 const SETTING_PATH = '/setting';
-// 新デザインの設定は詳細画面ごとにルートが分かれる（/v2/setting/type など）。
-// 移行が終わるまで旧 /setting と両方を再検証する。
-const V2_SETTING_PATH = '/v2/setting';
 
-// 設定画面（旧 1 枚 + 新デザインの各詳細）をまとめて再検証する。
+// 設定はトップ（件数）と詳細画面（一覧）に分かれるので、layout 単位でまとめて再検証する。
 function revalidateSetting(): void {
-  revalidatePath(SETTING_PATH);
-  revalidatePath(V2_SETTING_PATH, 'layout');
+  revalidatePath(SETTING_PATH, 'layout');
 }
 
 // service の失敗分類 → ユーザ向け文言。foreignKey は削除時の紐づきエラー。
@@ -173,37 +169,6 @@ export async function deleteMethodAction(
   const result = await service.deleteMethod(session, submission.value.id);
   revalidateSetting();
   return toResult(result, L.snackbar.deleted, submission.reply());
-}
-
-// ボタン起動のため Conform を通さず素の Server Action。id は number で受ける。
-export async function swapTypeAction(
-  prevId: number,
-  nextId: number
-): Promise<FormActionResult> {
-  const session = await requireAuth();
-  const result = await service.swapType(session, prevId, nextId);
-  revalidateSetting();
-  return toResult(result, L.snackbar.swapped);
-}
-
-export async function swapSubTypeAction(
-  prevId: number,
-  nextId: number
-): Promise<FormActionResult> {
-  const session = await requireAuth();
-  const result = await service.swapSubType(session, prevId, nextId);
-  revalidateSetting();
-  return toResult(result, L.snackbar.swapped);
-}
-
-export async function swapMethodAction(
-  prevId: number,
-  nextId: number
-): Promise<FormActionResult> {
-  const session = await requireAuth();
-  const result = await service.swapMethod(session, prevId, nextId);
-  revalidateSetting();
-  return toResult(result, L.snackbar.swapped);
 }
 
 // ドラッグ並べ替え。ids の並びが新しい順。ボタン起動と同じく Conform を通さず、

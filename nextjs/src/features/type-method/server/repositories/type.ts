@@ -6,7 +6,7 @@ import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
 // type/method レーンの「被参照 I/F」。
-// record / summary / shortcut が参照するため、シグネチャと戻り型は固定。
+// record / summary が参照するため、シグネチャと戻り型は固定。
 // 取得系は必ず buildScopeWhere を通す（scope 漏れ = 情報漏洩）。
 
 // 整形済みカテゴリ（サブカテゴリ・色込み）。他レーンが参照する最小の形。
@@ -77,7 +77,7 @@ export async function findTypeRows(scope: SessionScope): Promise<TypeRow[]> {
   }));
 }
 
-// scope 検証: 指定 type が scope 内か。swap / delete の対象確認に使う。
+// scope 検証: 指定 type が scope 内か。delete の対象確認に使う。
 export async function findTypeInScope(
   scope: SessionScope,
   id: Id
@@ -159,27 +159,6 @@ export async function updateSubType(input: {
 
 export async function deleteSubTypeById(id: Id): Promise<void> {
   await prisma.subType.delete({ where: { id } });
-}
-
-// SWAP（2 行の sort を入替）。両行が scope 内であることは service 層で検証済み前提。
-export async function swapTypeSort(
-  a: { id: Id; sort: number },
-  b: { id: Id; sort: number }
-): Promise<void> {
-  await prisma.$transaction([
-    prisma.type.update({ where: { id: a.id }, data: { sort: b.sort } }),
-    prisma.type.update({ where: { id: b.id }, data: { sort: a.sort } })
-  ]);
-}
-
-export async function swapSubTypeSort(
-  a: { id: Id; sort: number },
-  b: { id: Id; sort: number }
-): Promise<void> {
-  await prisma.$transaction([
-    prisma.subType.update({ where: { id: a.id }, data: { sort: b.sort } }),
-    prisma.subType.update({ where: { id: b.id }, data: { sort: a.sort } })
-  ]);
 }
 
 // REORDER（任意順）。並べ替え対象の行を scope 内から引く。集まり（isPay・pairId）の

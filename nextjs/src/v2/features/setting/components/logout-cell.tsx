@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactNode, useState, useTransition } from 'react';
-import { logoutAction } from '@/app/(private)/setting/logout-action';
+import { logoutAction } from '@/features/auth/actions/logout-action';
 import { ListCellButton } from '@/v2/components/list-cell';
 import { ConfirmAlert } from '@/v2/components/ui/confirm-alert';
 

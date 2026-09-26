@@ -46,10 +46,6 @@ export const planReminderLabels = {
     nextYearPrefix: '来年の',
     deleteConfirm: '予定への連携もなくなります。本当に削除してもよいですか？'
   },
-  // 並べ替えボタンの aria-label。
-  swap: {
-    down: '下と入れ替え'
-  },
   // plan/reminder 固有の失敗分類の文言。
   error: {
     pairRequired: 'ペア設定が必要です'

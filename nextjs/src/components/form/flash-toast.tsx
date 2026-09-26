@@ -2,9 +2,9 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { toast } from 'sonner';
 import { FLASH_COOKIE } from '@/lib/shared/toast/flashCookie';
 import { type ToastMessage, ToastType } from '@/lib/shared/types/formResult';
+import { useToastPresenter } from './toast-presenter';
 
 // ページ遷移をまたぐトースト（flash message）の消費側。
 // ルートレイアウトに常設し、遷移のたびに flash Cookie を読んで発火・即削除する。
@@ -41,6 +41,7 @@ function readAndClearFlash(): ToastMessage | null {
 
 export function FlashToast() {
   const pathname = usePathname();
+  const present = useToastPresenter();
 
   // pathname 自体は effect 内で使わないが、「遷移のたびに flash を確認する」ため
   // あえて依存に残す（除去すると初回のみになり redirect 後の通知を取りこぼす）。
@@ -48,9 +49,9 @@ export function FlashToast() {
   useEffect(() => {
     const flash = readAndClearFlash();
     if (flash) {
-      toast[flash.type](flash.message);
+      present(flash);
     }
-  }, [pathname]);
+  }, [pathname, present]);
 
   return null;
 }

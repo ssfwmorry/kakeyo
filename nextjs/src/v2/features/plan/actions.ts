@@ -24,7 +24,7 @@ import {
 // FormActionResult.toast を返し、シートを閉じた側で月を取り直す。
 // スキーマとサービスは旧と同じ。
 
-const V2_CALENDAR_PATH = '/v2/calendar';
+const CALENDAR_PATH = '/calendar';
 
 export async function savePlanAction(
   _prev: FormActionResult | null,
@@ -48,7 +48,7 @@ export async function savePlanAction(
     memo,
     isPair
   });
-  revalidatePath(V2_CALENDAR_PATH);
+  revalidatePath(CALENDAR_PATH);
   return toFormResult(result, {
     success: id === undefined ? L.snackbar.created : L.snackbar.updated,
     errorMessage: planReminderErrorMessage,
@@ -78,7 +78,7 @@ export async function deletePlanAction(
   }
   const session = await requireAuth();
   const result = await service.deletePlan(session, submission.value.id);
-  revalidatePath(V2_CALENDAR_PATH);
+  revalidatePath(CALENDAR_PATH);
   return toFormResult(result, {
     success: L.snackbar.deleted,
     errorMessage: planReminderErrorMessage,

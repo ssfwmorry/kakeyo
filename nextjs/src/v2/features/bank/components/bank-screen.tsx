@@ -61,7 +61,7 @@ export function BankScreen({
         </span>
         <Link
           className='flex h-8 items-center gap-0.5 font-semibold text-primary text-sm'
-          href='/v2/setting/bank'
+          href='/setting/bank'
         >
           口座を編集
           <IconChevronRight

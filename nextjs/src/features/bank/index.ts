@@ -5,8 +5,6 @@
 // 口座マスタの管理 UI（BankSettingTab）は設定画面（/setting）専用で、bank 画面には置かない。
 // setting 統合側は getBankList を @/features/bank/server/services から直接 import する。
 
-export { BankScreen } from './components/bank-screen';
-export { BankSettingTab } from './components/bank-setting-tab';
 export type {
   BalanceChartPoint,
   BankItem,

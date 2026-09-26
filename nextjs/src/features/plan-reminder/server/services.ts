@@ -137,30 +137,6 @@ export async function deletePlanType(
   });
 }
 
-export async function swapPlanType(
-  session: SessionData,
-  prevId: Id,
-  nextId: Id
-): Promise<Result<void, PlanReminderError>> {
-  return withDemoWriteVoid(session, async () => {
-    const [a, b] = await Promise.all([
-      planTypeRepo.findPlanTypeInScope(session, prevId),
-      planTypeRepo.findPlanTypeInScope(session, nextId)
-    ]);
-    if (!a || !b) {
-      return err('notInScope');
-    }
-    // self(pairId=null) と pair(pairId!=null) を跨いだ入替を禁止する。
-    // 一覧は [{ pairId }, { sort }] 順で、跨ぎ入替は並び順を壊す（Server Action は
-    // 任意の 2 id を受けられるため service で防御する）。
-    if (a.pairId !== b.pairId) {
-      return err('notInScope');
-    }
-    await planTypeRepo.swapPlanTypeSort(a, b);
-    return ok(undefined);
-  });
-}
-
 export async function upsertPlan(
   session: SessionData,
   input: {

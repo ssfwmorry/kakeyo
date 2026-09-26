@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { Geist_Mono } from 'next/font/google';
 import { FlashToast } from '@/components/form/flash-toast';
-import { LegacyToaster } from '@/features/layout/components/legacy-toaster';
 import { SwRegister } from '@/features/pwa/components/sw-register';
+import { ThemeProvider } from '@/v2/components/theme-provider';
+import { AppToaster } from '@/v2/components/toaster';
 import './globals.css';
 
 // 日本語フォントは Web フォントで配らず OS のものを使う。
@@ -28,17 +29,22 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    // next-themes（v2 の ThemeProvider）がクライアントで html に class と color-scheme を
-    // 付けるため、SSR の HTML と必ず食い違う。この 1 要素だけ警告を抑える（公式の対処）。
+    // next-themes がクライアントで html に class と color-scheme を付けるため、
+    // SSR の HTML と必ず食い違う。この 1 要素だけ警告を抑える（公式の対処）。
     <html
       className={`${geistMono.variable} h-full antialiased`}
       lang='ja'
       suppressHydrationWarning
     >
       <body className='min-h-full flex flex-col'>
-        {children}
-        <LegacyToaster />
-        <FlashToast />
+        <ThemeProvider>
+          {/* トーストは全画面で同じ見た目・同じ出し方（AppToaster が presenter を配る）。
+              redirect を挟む Action の通知（FlashToast）も同じ経路で出す。 */}
+          <AppToaster>
+            {children}
+            <FlashToast />
+          </AppToaster>
+        </ThemeProvider>
         <SwRegister />
       </body>
     </html>

@@ -14,7 +14,6 @@ import { cn } from 'cn';
 // 起動元がヘッダーのゴミ箱・行頭の −・行末のボタンとまちまちで、
 // 起動元の見た目をここで決めたくないため。
 //
-// Portal で body 直下に出るので v2-root を付け直す。
 
 export function ConfirmAlert({
   open,
@@ -51,12 +50,12 @@ export function ConfirmAlert({
     >
       <AlertDialog.Portal>
         <AlertDialog.Backdrop
-          className='v2-root fixed inset-0 z-[60] bg-[rgba(12,16,17,0.35)] transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0'
+          className='fixed inset-0 z-[60] bg-[rgba(12,16,17,0.35)] transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0'
           // シートの上に重ねて出すとき（入れ子）も暗幕を出す。デザインは確認の背面をさらに暗くしている。
           forceRender
         />
         <AlertDialog.Viewport className='fixed inset-0 z-[60] flex items-center justify-center'>
-          <AlertDialog.Popup className='v2-root w-[290px] overflow-hidden rounded-2xl bg-card text-foreground outline-none transition-[opacity,transform] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0'>
+          <AlertDialog.Popup className='w-[290px] overflow-hidden rounded-2xl bg-card text-foreground outline-none transition-[opacity,transform] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0'>
             <div className='flex flex-col gap-2 px-4.5 pt-5 pb-4 text-center'>
               <AlertDialog.Title className='font-bold text-[17px]'>
                 {title}

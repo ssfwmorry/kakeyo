@@ -58,7 +58,7 @@ export function TypeScreen({
             {isEditing ? '完了' : '編集'}
           </ScreenHeaderAction>
         }
-        backHref='/v2/setting'
+        backHref='/setting'
         backLabel='設定'
       />
       <div className='flex flex-col gap-3 px-4'>
@@ -90,7 +90,7 @@ export function TypeScreen({
         )}
 
         <AddRowLink
-          href={`/v2/setting/type/new?isPay=${payTab === 'pay'}`}
+          href={`/setting/type/new?isPay=${payTab === 'pay'}`}
           label='カテゴリを追加'
         />
 
@@ -127,7 +127,7 @@ function TypeRows({
           colorName={card.colorName}
           description={summarizeSubTypes(card.subTypes.map((sub) => sub.name))}
           handle={isEditing ? <SortableHandle {...handleProps} /> : undefined}
-          href={`/v2/setting/type/${card.id}?isPay=${payTab === 'pay'}`}
+          href={`/setting/type/${card.id}?isPay=${payTab === 'pay'}`}
           isEditing={isEditing}
           isFirst={card.id === ordered[0]?.id}
           isOpenableWhileEditing

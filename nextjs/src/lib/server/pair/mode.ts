@@ -65,8 +65,11 @@ export async function setPairMode(
   if (PATHS_WITHOUT_PAIR.includes(pathname)) {
     return;
   }
-  if (PAIR_SCOPED_PATHS.includes(pathname)) {
-    revalidatePath(pathname, 'layout');
+  const scoped = PAIR_SCOPED_PATHS.find(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
+  if (scoped !== undefined) {
+    revalidatePath(scoped, 'layout');
     return;
   }
   revalidatePath('/', 'layout');

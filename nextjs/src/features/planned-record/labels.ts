@@ -24,9 +24,6 @@ export const plannedRecordLabels = {
     // 収支・立替の組み合わせに使える方法が 1 件もないとき。
     noMethod: '設定画面で方法を追加してください'
   },
-  swap: {
-    down: '下と入れ替え'
-  },
   action: {
     add: '定期を追加'
   },

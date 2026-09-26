@@ -13,10 +13,9 @@ import { quoted } from '@/v2/lib/format';
 
 // お知らせシート（新デザイン）の「確認」。リマインダーを次の日付へ進める。
 //
-// 旧 checkReminderAction と service は同じだが、成功の文言に対象名を入れる
-// （「「電気代の支払い」を確認しました」）のと、再検証の対象が v2 配下
-// （ベルは設定・カレンダーの両方にあり、日別リストのリマインダー行も変わる）なので分けている。
-// 旧画面のベルと設定も当面は同時に再検証する。
+// 成功の文言に対象名を入れる（「「電気代の支払い」を確認しました」）。
+// ベルは全タブのヘッダーにあり、日別リストのリマインダー行や設定の件数も変わるので、
+// 再検証はルートの layout 単位。
 
 export async function checkReminderAction(
   reminderId: number
@@ -27,8 +26,6 @@ export async function checkReminderAction(
     (reminder) => reminder.id === reminderId
   );
   const result = await service.checkReminder(session, reminderId);
-  revalidatePath('/v2', 'layout');
-  revalidatePath('/setting');
   revalidatePath('/', 'layout');
   return toFormResult(result, {
     success:

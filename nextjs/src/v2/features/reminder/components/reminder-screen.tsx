@@ -47,7 +47,7 @@ export function ReminderScreen({
 
   return (
     <div className='flex flex-col'>
-      <ScreenHeader backHref='/v2/setting' backLabel='設定' />
+      <ScreenHeader backHref='/setting' backLabel='設定' />
       <div className='flex flex-col gap-3 px-4'>
         <ScreenTitle badge={isPair ? 'pair' : 'self'}>リマインダー</ScreenTitle>
         <ScreenLead>

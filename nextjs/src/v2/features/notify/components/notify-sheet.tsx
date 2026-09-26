@@ -22,7 +22,7 @@ import type { NotifyRow } from '../domain/notify-rows';
 // 行の消し込みは呼び出し側（ベル）が持つ。バッジの件数とシートの一覧が
 // 同じ元データから出るようにするため。
 
-const REMINDER_SETTING_PATH = '/v2/setting/reminder';
+const REMINDER_SETTING_PATH = '/setting/reminder';
 
 export function NotifySheet({
   isOpen,

@@ -34,10 +34,6 @@ export const typeMethodLabels = {
       both: '精算方法'
     }
   },
-  // 並べ替えボタンの aria-label。
-  swap: {
-    down: '下と入れ替え'
-  },
   // ペア設定が必要（type-method 固有の失敗分類）。
   error: {
     pairRequired: 'ペア設定が必要です'

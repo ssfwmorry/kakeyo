@@ -3,15 +3,12 @@
 import type { SubmissionResult } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { requireAuth } from '@/features/auth/server/requireAuth';
-import { setFlashToast } from '@/lib/server/flash';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { reorderIdsSchema } from '@/lib/shared/domain/reorder';
 import { L } from '@/lib/shared/labels';
 import {
   type FormActionResult,
-  ToastType,
   toFormResult
 } from '@/lib/shared/types/formResult';
 import type { Result } from '@/lib/shared/types/result';
@@ -19,27 +16,20 @@ import { planReminderErrorMessage } from './domain/error-message';
 import {
   deleteSchema,
   planTypeUpsertSchema,
-  planUpsertSchema,
   reminderInsertSchema
 } from './schemas';
 import * as service from './server/services';
 import type { PlanReminderError } from './types';
 
-// plan/reminder の Server Actions。
-// - PLAN（予定入力画面）: 保存/削除後に /calendar へ遷移するため flash トーストを使う。
-// - PLAN TYPE / REMINDER（設定「予定管理」タブ）: 同一画面内更新のため
-//   FormActionResult.toast を使い、保存後 revalidateSetting() で再取得する。
+// 予定カテゴリ・リマインダーの Server Actions。同一画面内更新のため
+// FormActionResult.toast を使い、保存後 revalidateSetting() で再取得する。
+// 予定（カレンダーのシート）の保存・削除は v2/features/plan/actions.ts が持つ。
 
 const SETTING_PATH = '/setting';
-const CALENDAR_PATH = '/calendar';
-// 新デザインの設定は詳細画面ごとにルートが分かれる（/v2/setting/reminder など）。
-// 移行が終わるまで旧 /setting と両方を再検証する。
-const V2_SETTING_PATH = '/v2/setting';
 
-// 設定画面（旧 1 枚 + 新デザインの各詳細）をまとめて再検証する。
+// 設定はトップ（件数）と詳細画面（一覧）に分かれるので、layout 単位でまとめて再検証する。
 function revalidateSetting(): void {
-  revalidatePath(SETTING_PATH);
-  revalidatePath(V2_SETTING_PATH, 'layout');
+  revalidatePath(SETTING_PATH, 'layout');
 }
 
 // Result → FormActionResult 変換（設定タブ用。遷移しないため toast を返す）。
@@ -94,71 +84,6 @@ export async function deletePlanTypeAction(
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
-// 並べ替え（ボタン起動。Conform を通さず素の Server Action）。
-export async function swapPlanTypeAction(
-  prevId: number,
-  nextId: number
-): Promise<FormActionResult> {
-  const session = await requireAuth();
-  const result = await service.swapPlanType(session, prevId, nextId);
-  revalidateSetting();
-  return toResult(result, L.snackbar.swapped);
-}
-
-// 保存/削除後は /calendar へ遷移する。遷移で戻り値が消えるため
-// redirect 直前に setFlashToast で通知を Cookie に載せる（二重発火回避のため toast は返さない）。
-export async function upsertPlanAction(
-  _prev: FormActionResult | null,
-  formData: FormData
-): Promise<FormActionResult> {
-  const submission = parseWithZod(formData, { schema: planUpsertSchema });
-  if (submission.status !== 'success') {
-    return { submission: submission.reply() };
-  }
-  const session = await requireAuth();
-  // ペアモードは Cookie 由来（自前で Cookie を読まない）。所有列は service で決める。
-  const isPair = await getEffectivePairMode(session);
-  const { id, name, startDate, endDate, planTypeId, memo } = submission.value;
-  const result = await service.upsertPlan(session, {
-    id,
-    name,
-    startDate,
-    endDate,
-    planTypeId,
-    memo,
-    isPair
-  });
-  if (!result.ok) {
-    return toResult(
-      result,
-      id === undefined ? L.snackbar.created : L.snackbar.updated,
-      submission.reply()
-    );
-  }
-  await setFlashToast({
-    type: ToastType.success,
-    message: id === undefined ? L.snackbar.created : L.snackbar.updated
-  });
-  redirect(CALENDAR_PATH);
-}
-
-export async function deletePlanAction(
-  _prev: FormActionResult | null,
-  formData: FormData
-): Promise<FormActionResult> {
-  const submission = parseWithZod(formData, { schema: deleteSchema });
-  if (submission.status !== 'success') {
-    return { submission: submission.reply() };
-  }
-  const session = await requireAuth();
-  const result = await service.deletePlan(session, submission.value.id);
-  if (!result.ok) {
-    return toResult(result, L.snackbar.deleted, submission.reply());
-  }
-  await setFlashToast({ type: ToastType.success, message: L.snackbar.deleted });
-  redirect(CALENDAR_PATH);
-}
-
 export async function insertReminderAction(
   _prev: FormActionResult | null,
   formData: FormData
@@ -205,21 +130,6 @@ export async function deleteReminderAction(
   const result = await service.deleteReminder(session, submission.value.id);
   revalidateSetting();
   return toResult(result, L.snackbar.deleted, submission.reply());
-}
-
-// リマインダーのチェック消化（ボタン起動。素の Server Action）。
-export async function checkReminderAction(
-  reminderId: number
-): Promise<FormActionResult> {
-  const session = await requireAuth();
-  const result = await service.checkReminder(session, reminderId);
-  // 設定画面のリマインダー一覧を再検証する。
-  revalidateSetting();
-  // 消化は共通レイアウトの通知ベル（全 (private) 画面のヘッダに常設）からも起動される。
-  // ベルの件数/一覧は (private)/layout.tsx が取得する dueReminders に依存するため、
-  // layout を再検証して消化結果を反映させる（setPairMode と同じ layout 再検証方式）。
-  revalidatePath('/', 'layout');
-  return toResult(result, L.snackbar.updated);
 }
 
 // ドラッグ並べ替え。ids の並びが新しい順。成功の文言は「変更しました」。

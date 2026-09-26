@@ -3,8 +3,8 @@
 import { useState, useTransition } from 'react';
 import { useFormToast } from '@/components/form/use-form-toast';
 import { IconClose, IconShare } from '@/components/icons';
-import type { MemoItem } from '@/features/memo-shortcut';
-import { deleteMemoAction } from '@/features/memo-shortcut/actions';
+import type { MemoItem } from '@/features/memo';
+import { deleteMemoAction } from '@/features/memo/actions';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 import { TodoSheet } from './todo-sheet';
 

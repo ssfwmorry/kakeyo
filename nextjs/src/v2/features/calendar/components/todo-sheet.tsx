@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useCloseOnSuccess } from '@/components/form/use-close-on-success';
 import { useFormAction } from '@/components/form/use-form-action';
 import { IconShare } from '@/components/icons';
-import { insertMemoAction } from '@/features/memo-shortcut/actions';
+import { insertMemoAction } from '@/features/memo/actions';
 import { SheetHeader } from '@/v2/components/sheet-header';
 import {
   BottomSheet,

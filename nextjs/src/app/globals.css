@@ -1,12 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-/* feature 側にコロケーションした素 CSS。Tailwind v4 は @import を先頭側に
-   まとめる必要があるため、コンポーネントではなくここから読む。 */
-@import "../features/calendar/styles/month-calendar.css";
-/* 新デザインの色トークン。.v2-root スコープなので既存画面には影響しない
-   （docs/new-design/README.md）。 */
-@import "../v2/styles/tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -20,19 +14,6 @@
     "Yu Gothic UI", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -49,7 +30,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* v2 の独自トークン（v2/styles/tokens.css）。.v2-root の中でだけ値を持つ。 */
+  /* shadcn に対応する変数がない独自トークン（下の :root / .dark に定義）。 */
   --color-saturday: var(--saturday);
   --color-line-soft: var(--line-soft);
   --color-fill-soft: var(--fill-soft);
@@ -71,83 +52,177 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: #f4f5f4;
+  --foreground: #16191a;
+  --card: #ffffff;
+  --card-foreground: #16191a;
+  --popover: #ffffff;
+  --popover-foreground: #16191a;
+  --primary: #0a7481;
+  --primary-foreground: #ffffff;
+  /* アクセント淡。アクセントを白へ 88% 混ぜた値。 */
+  --secondary: #e7f1f2;
+  --secondary-foreground: #16191a;
+  --accent: #e7f1f2;
+  --accent-foreground: #16191a;
+  /* 面（弱）。セグメントの地・キー・入力欄。 */
+  --muted: #e6e9e9;
+  --muted-foreground: #5f6668;
+  --destructive: #c4372b;
+  --destructive-foreground: #ffffff;
+  --border: #e3e6e6;
+  --input: #e3e6e6;
+  --ring: #0a7481;
+
+  /* 独自トークン（shadcn に対応する変数がないもの）。 */
+  --saturday: #1d64c4;
+  --bar: rgba(255, 255, 255, 0.86);
+  --overlay: rgba(12, 16, 17, 0.4);
+
+  /* デザイン各画面に繰り返し出る、shadcn に対応する変数がない色。 */
+  /* カード内の薄い区切り・カレンダーのセル罫線・タブバー選択ピルの地。 */
+  --line-soft: #eef0f0;
+  /* 日付ボタンの地・「他N件」の地。 */
+  --fill-soft: #f1f2f2;
+  /* 無効な主ボタンの地。 */
+  --disabled: #dde1e1;
+  /* シートのグラバー。 */
+  --grabber: #c9cfd0;
+  /* 破線チップの枠・「なし」のドット。 */
+  --dash: #b9c0c1;
+  /* シェブロン・ドラッグハンドル・×。 */
+  --icon-muted: #9aa2a4;
+  /* タブバーの非選択タブ。 */
+  --tab-muted: #6b7375;
+  /* セグメントの選択面。ダークでは面より一段明るい。 */
+  --segment-on: #ffffff;
+  /* 削除ボタンの淡い赤地。 */
+  --destructive-soft: #fbe9e7;
+  /* スイッチの OFF。 */
+  --switch-off: #d5dadb;
+  /* 設定トップの行頭タイル。行の意味づけの色で、カテゴリ色（--cat-*）とは別。 */
+  --tile-blue: #2463b5;
+  --tile-green: #197a4b;
+  --tile-purple: #6d4bc4;
+  --tile-orange: #c2610c;
+  --tile-red: #b83a3a;
+  /* 予定の帯などの淡い面を作るときに色へ混ぜる面の割合の補数。
+     ライトは白へ 80%（色 20%）、ダークは面へ 75%（色 25%）。 */
+  --band-mix: 20%;
+
+  /* 角丸。--radius から派生する shadcn の radius-* が
+     アイコン面 8 / ボタン 12 / カード 16 に並ぶよう 10px を基準に置く。 */
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* カテゴリ色（color_classifications の色名 19 色）。
+     DB は色名のまま。値はライト（白地）で、元の色相を保ったまま
+     コントラスト比 4.6 以上になるよう明度を調整したもの。 */
+  --cat-red: #dc3428;
+  --cat-pink: #d53269;
+  --cat-purple: #9235a2;
+  --cat-deep-purple: #6b46ab;
+  --cat-indigo: #4b59a9;
+  --cat-blue: #1f79c0;
+  --cat-light-blue: #157cab;
+  --cat-cyan: #10818f;
+  --cat-teal: #0f8378;
+  --cat-green: #448246;
+  --cat-light-green: #5d7f36;
+  --cat-lime: #727a22;
+  --cat-amber: #907010;
+  --cat-orange: #a26812;
+  --cat-brown: #74574d;
+  --cat-blue-grey: #627883;
+  --cat-grey: #757575;
+  --cat-black: #2b3033;
+  --cat-yellow: #82760e;
+  /* 未知の色名のフォールバック（grey と同値）。 */
+  --cat-fallback: #757575;
+
+  /* カテゴリ色の丸に載せる頭文字の色。ダークでは反転する。 */
+  --cat-on: #ffffff;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #0f1213;
+  --foreground: #ecefef;
+  --card: #1b1f21;
+  --card-foreground: #ecefef;
+  --popover: #1b1f21;
+  --popover-foreground: #ecefef;
+  /* ダークのアクセントは地との明度差を確保するため明るい側へ寄せる。
+     その上の文字（--primary-foreground）は地の色。 */
+  --primary: #4db6c1;
+  --primary-foreground: #0b1f22;
+  /* アクセント淡。アクセントを地へ 72% 混ぜた値。 */
+  --secondary: #203e42;
+  --secondary-foreground: #ecefef;
+  --accent: #203e42;
+  --accent-foreground: #ecefef;
+  --muted: #2a2f32;
+  --muted-foreground: #a1a9ab;
+  --destructive: #f2685c;
+  --destructive-foreground: #0f1213;
+  --border: #2f3538;
+  --input: #2f3538;
+  --ring: #4db6c1;
+
+  --saturday: #7fa8f0;
+  --bar: rgba(27, 31, 33, 0.86);
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --line-soft: #24292b;
+  --fill-soft: #24292b;
+  --disabled: #2a2f32;
+  --grabber: #3a4043;
+  --dash: #3a4043;
+  --icon-muted: #6b7375;
+  --tab-muted: #a1a9ab;
+  --segment-on: #3a4043;
+  --destructive-soft: #3a2321;
+  --switch-off: #3a4043;
+  /* 設定トップの行頭タイル。行の意味づけの色で、カテゴリ色（--cat-*）とは別。 */
+  --tile-blue: #2463b5;
+  --tile-green: #197a4b;
+  --tile-purple: #6d4bc4;
+  --tile-orange: #c2610c;
+  --tile-red: #b83a3a;
+  --band-mix: 25%;
+
+  /* カテゴリ色のダーク用。面（#1B1F21）に対してコントラスト比 4.6 以上。 */
+  --cat-red: #e7564b;
+  --cat-pink: #e15585;
+  --cat-purple: #c061d0;
+  --cat-deep-purple: #9678cb;
+  --cat-indigo: #7783c6;
+  --cat-blue: #3194e3;
+  --cat-light-blue: #15a2e2;
+  --cat-cyan: #10b0c4;
+  --cat-teal: #0c988b;
+  --cat-green: #53a857;
+  --cat-light-green: #8aba53;
+  --cat-lime: #c3d045;
+  --cat-amber: #ecb81a;
+  --cat-orange: #ec9413;
+  --cat-brown: #a37f71;
+  --cat-blue-grey: #728b98;
+  --cat-grey: #9e9e9e;
+  --cat-black: #c9cfd0;
+  --cat-yellow: #f0df4a;
+  --cat-fallback: #9e9e9e;
+
+  --cat-on: #0f1213;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  /* body はアプリ面の「外側」。スマホ幅を超える領域（PC 表示時の余白）を薄いグレーにし、
-     (private)/layout.tsx の shell（bg-background）を浮かせて見せる。
-     スマホ幅では shell が全面を覆うので、この色は見えない。 */
+  /* body はアプリ面の「外側」。スマホ幅を超える領域（PC 表示時の余白）も地の色で塗り、
+     (private)/layout.tsx の shell は左右の境界線だけで輪郭を出す。
+     金額・日付の桁が揃うよう、全体を等幅数字にする。 */
   body {
-    @apply bg-muted text-foreground;
+    @apply bg-background text-foreground tabular-nums;
   }
   html {
     @apply font-sans;

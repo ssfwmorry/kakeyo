@@ -22,15 +22,12 @@ import type { BankError } from './types';
 // revalidatePath('/bank') で再取得する（二重発火回避のため flash は使わない）。
 
 const BANK_PATH = '/bank';
-// 新デザインの口座は /v2/bank。移行が終わるまで両方を再検証する。
-const V2_BANK_PATH = '/v2/bank';
-// 口座は設定トップにも件数が出るので、そこも合わせて更新する。
-const V2_SETTING_PATH = '/v2/setting';
+// 口座は設定トップ（件数）と設定›口座（一覧）にも出るので、そこも合わせて更新する。
+const SETTING_PATH = '/setting';
 
 function revalidateBank(): void {
   revalidatePath(BANK_PATH);
-  revalidatePath(V2_BANK_PATH);
-  revalidatePath(V2_SETTING_PATH, 'layout');
+  revalidatePath(SETTING_PATH, 'layout');
 }
 
 // service の失敗分類 → ユーザ向け文言。

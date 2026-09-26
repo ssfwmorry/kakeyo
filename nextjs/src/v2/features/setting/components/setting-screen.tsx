@@ -63,14 +63,14 @@ export function SettingScreen({
 }) {
   const kakeiRows: SettingRow[] = [
     {
-      href: '/v2/setting/type',
+      href: '/setting/type',
       label: 'カテゴリ',
       icon: IconTag,
       tile: 'var(--primary)',
       count: typeCount
     },
     {
-      href: '/v2/setting/method',
+      href: '/setting/method',
       label: '方法',
       icon: IconCreditCard,
       tile: 'var(--tile-blue)',
@@ -81,7 +81,7 @@ export function SettingScreen({
       ? []
       : [
           {
-            href: '/v2/setting/bank',
+            href: '/setting/bank',
             label: '口座',
             icon: IconBank,
             tile: 'var(--tile-green)',
@@ -89,7 +89,7 @@ export function SettingScreen({
           }
         ]),
     {
-      href: '/v2/setting/planned-record',
+      href: '/setting/planned-record',
       label: '定期の記録',
       icon: IconUpdate,
       tile: 'var(--tile-purple)',
@@ -99,14 +99,14 @@ export function SettingScreen({
 
   const planRows: SettingRow[] = [
     {
-      href: '/v2/setting/plan-type',
+      href: '/setting/plan-type',
       label: '予定カテゴリ',
       icon: IconCalendar,
       tile: 'var(--tile-orange)',
       count: planTypeCount
     },
     {
-      href: '/v2/setting/reminder',
+      href: '/setting/reminder',
       label: 'リマインダー',
       icon: IconBell,
       tile: 'var(--tile-red)',

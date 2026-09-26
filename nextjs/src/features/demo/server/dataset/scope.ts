@@ -24,7 +24,7 @@ export function visibleTo<R extends Owned>(
   return rows.filter((row) => isVisibleTo(scope, row));
 }
 
-// 個人専用テーブル（banks / short_cuts）用（buildOwnerScopeWhere 相当）。
+// 個人専用テーブル（banks）用（buildOwnerScopeWhere 相当）。
 export function ownedBy<R extends Pick<Owned, 'userUid'>>(
   scope: Pick<SessionScope, 'userUid'>,
   rows: R[]

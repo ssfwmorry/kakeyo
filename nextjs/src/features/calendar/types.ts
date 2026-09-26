@@ -1,11 +1,10 @@
-import type { MemoItem, ShortCutItem } from '@/features/memo-shortcut';
+import type { MemoItem } from '@/features/memo';
 import type { PlanItem, ReminderItem } from '@/features/plan-reminder';
 import type { RecordListItem } from '@/features/record';
-import type { Id } from '@/lib/shared/types/id';
 
-// calendar 統合画面（ホーム）の FE 型（server-only を含まない）。
-// record / plan-reminder / memo-shortcut の公開型を束ね、カレンダー表示専用の
-// 整形結果（日別収支・イベント）をここで定義する。
+// calendar 画面（ホーム）の FE 型（server-only を含まない）。
+// record / plan-reminder / memo の公開型を束ね、カレンダー表示専用の
+// 整形結果（日別収支）をここで定義する。
 
 // 日別収支の 1 日分。日付クリックで records を出すため record 本体も保持する。
 export type DaySum = {
@@ -33,34 +32,13 @@ export type CalendarMonthData = {
   reminders: ReminderItem[];
 };
 
-// calendar 統合画面の初期表示に必要な全データ（page.tsx が SSR で解決して渡す）。
+// calendar 画面の初期表示に必要な全データ（page.tsx が SSR で解決して渡す）。
 export type CalendarInitialData = {
   month: CalendarMonthData;
   memos: MemoItem[];
-  shortcuts: ShortCutItem[];
   hasPair: boolean;
-  // ペアモード（共有 ON）。ショートカット記録・TODO 追加の isPair 既定に使う。
+  // ペアモード（共有 ON）。記録・予定・TODO 追加の isPair 既定に使う。
   isPair: boolean;
   // 初期フォーカス日（YYYY-MM-DD）。当日を SSR で解決して渡す。
   today: string;
-};
-
-// FullCalendar へ渡すイベント（Client 側で FullCalendar の EventInput へ変換する前段の
-// 素朴な形。Server→Client を JSON で跨げるようプリミティブのみ）。
-export type CalendarEventKind = 'plan' | 'reminder' | 'daySum';
-
-export type CalendarEvent = {
-  kind: CalendarEventKind;
-  // YYYY-MM-DD。
-  start: string;
-  // plan の終了日（YYYY-MM-DD）。単日イベントは start と同じ。
-  end: string;
-  title: string;
-  // 枠線/文字色に使う hex（daySum は色なし=null）。
-  colorHex: string | null;
-  // 参照元の id（plan / reminder のクリック識別に使う。daySum は null）。
-  planId: Id | null;
-  reminderId: Id | null;
-  // daySum の向き（収入超過なら 'income'）。plan / reminder は null。
-  tone: 'income' | 'expense' | null;
 };

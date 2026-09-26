@@ -24,14 +24,12 @@ import type { Id } from '@/lib/shared/types/id';
 // 一覧の上に出るシートで、保存しても一覧に留まる。そのため遷移せず
 // FormActionResult.toast を返す。
 //
-// 再検証は旧 /setting と /v2/setting の両方（移行が終わるまで）。
+// 設定はトップ（件数）と一覧に分かれるので layout 単位で再検証する。
 
 const SETTING_PATH = '/setting';
-const V2_SETTING_PATH = '/v2/setting';
 
 function revalidateSetting(): void {
-  revalidatePath(SETTING_PATH);
-  revalidatePath(V2_SETTING_PATH, 'layout');
+  revalidatePath(SETTING_PATH, 'layout');
 }
 
 export async function savePlannedRecordAction(

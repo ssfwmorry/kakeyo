@@ -39,7 +39,7 @@ export async function findPlanTypeRows(
   }));
 }
 
-// scope 検証: 指定 plan_type が scope 内か。swap / update / delete の対象確認に使う。
+// scope 検証: 指定 plan_type が scope 内か。update / delete の対象確認に使う。
 export async function findPlanTypeInScope(
   scope: SessionScope,
   id: Id
@@ -83,18 +83,6 @@ export async function updatePlanType(input: {
 
 export async function deletePlanTypeById(id: Id): Promise<void> {
   await prisma.planType.delete({ where: { id } });
-}
-
-// SWAP（2 行の sort を入替）。両行が scope 内であることは service 層で検証済み前提。
-// 2 行の sort 入替を Prisma $transaction でまとめて行う。
-export async function swapPlanTypeSort(
-  a: { id: Id; sort: number },
-  b: { id: Id; sort: number }
-): Promise<void> {
-  await prisma.$transaction([
-    prisma.planType.update({ where: { id: a.id }, data: { sort: b.sort } }),
-    prisma.planType.update({ where: { id: b.id }, data: { sort: a.sort } })
-  ]);
 }
 
 // REORDER（任意順）。集まり（pairId）の検証は service 層で行う。

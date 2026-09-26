@@ -98,7 +98,7 @@ export function PlannedRecordScreen({
             {isSorting ? '完了' : '並べ替え'}
           </ScreenHeaderAction>
         }
-        backHref='/v2/setting'
+        backHref='/setting'
         backLabel='設定'
       />
       <div className='flex flex-col gap-3 px-4'>

@@ -11,7 +11,6 @@ import { plannedRecordRows } from './planned-records';
 import { planRows } from './plans';
 import { recordRows } from './records';
 import { reminderRows } from './reminders';
-import { shortCutRows } from './short-cuts';
 import { subTypeRows, typeRows } from './types';
 import { demoPair, demoUsers, type Owned } from './users';
 
@@ -47,7 +46,7 @@ function expectOwned(row: Owned) {
   }
 }
 
-// サブカテゴリが親カテゴリに属する（record / short_cut の type と sub_type の組が整合する）。
+// サブカテゴリが親カテゴリに属する（record の type と sub_type の組が整合する）。
 function expectSubTypeOf(typeId: number | null, subTypeId: number | null) {
   if (subTypeId === null) {
     return;
@@ -118,15 +117,6 @@ describe('demo dataset の参照整合', () => {
       expectRef(methodIds, row.methodId);
       expectRef(typeIds, row.typeId);
       expectRef(plannedRecordIds, row.plannedRecordId);
-      expectSubTypeOf(row.typeId, row.subTypeId);
-    }
-  });
-
-  it('short_cuts は実在するマスタを参照する', () => {
-    for (const row of shortCutRows) {
-      expect(userUids.has(row.userUid)).toBe(true);
-      expectRef(methodIds, row.methodId);
-      expectRef(typeIds, row.typeId);
       expectSubTypeOf(row.typeId, row.subTypeId);
     }
   });

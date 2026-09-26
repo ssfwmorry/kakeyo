@@ -114,7 +114,7 @@ export async function findPlannedRecordForEdit(
   };
 }
 
-// scope 検証: 指定 planned_record が scope 内か。update / swap の対象確認に使う
+// scope 検証: 指定 planned_record が scope 内か。update の対象確認に使う
 // （他ペアの行を触らせない）。
 export async function findPlannedRecordInScope(
   scope: SessionScope,
@@ -196,21 +196,6 @@ export async function deletePlannedRecordById(
     await tx.plannedRecord.delete({ where: { id } });
     return { ok: true };
   });
-}
-
-// 2 行の sort を $transaction の 2 update で入替。
-// 両行が scope 内であることは service 層で検証済み前提。
-export async function swapPlannedRecordSort(
-  a: { id: Id; sort: number },
-  b: { id: Id; sort: number }
-): Promise<void> {
-  await prisma.$transaction([
-    prisma.plannedRecord.update({
-      where: { id: a.id },
-      data: { sort: b.sort }
-    }),
-    prisma.plannedRecord.update({ where: { id: b.id }, data: { sort: a.sort } })
-  ]);
 }
 
 // REORDER（任意順）。集まり（pairId）の検証は service 層で行う。

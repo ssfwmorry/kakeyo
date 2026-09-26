@@ -6,13 +6,12 @@ import { ToastPresenterProvider } from '@/components/form/toast-presenter';
 import { IconAlertCircle, IconCheck, IconClose } from '@/components/icons';
 import { SUCCESS_DURATION, showToast } from '@/v2/lib/toast';
 
-// 新デザインのトースト（原典 Toast.dc.html）。画面上端のステータスバー直下に、
+// トースト（原典 Toast.dc.html）。画面上端のステータスバー直下に、
 // 左右 16px を空けて幅いっぱいに出す。シート・暗幕・確認アラートより手前。
 //
 // sonner の Toaster を unstyled にして、種類ごとの色とアイコンをここで描く。
-// こうしておくと、useFormToast 経由でも FlashToast 経由でも v2 の中では
-// 同じ見た目になる。表示時間と置き換えは showToast が決め、useFormToast には
-// presenter として配る。
+// こうしておくと、useFormToast 経由でも FlashToast 経由でも同じ見た目になる。
+// 表示時間と置き換えは showToast が決め、useFormToast には presenter として配る。
 //
 // 地の色はライト・ダークで変えない。完了の黒（#16191A）はダークの面と同じ
 // 明るさで、エラーの赤は白文字が読める側の値を固定にする。影は D17 の例外。
@@ -41,7 +40,7 @@ function ErrorIcon() {
   );
 }
 
-export function V2Toaster({ children }: { children: ReactNode }) {
+export function AppToaster({ children }: { children: ReactNode }) {
   return (
     <ToastPresenterProvider present={showToast}>
       {children}

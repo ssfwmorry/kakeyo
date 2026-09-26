@@ -58,7 +58,7 @@ export async function findMethodRows(
   }));
 }
 
-// scope 検証: 指定 method が scope 内か。swap / delete の対象確認に使う。
+// scope 検証: 指定 method が scope 内か。delete の対象確認に使う。
 export async function findMethodInScope(
   scope: SessionScope,
   id: Id
@@ -104,17 +104,6 @@ export async function updateMethod(input: {
 
 export async function deleteMethodById(id: Id): Promise<void> {
   await prisma.method.delete({ where: { id } });
-}
-
-// SWAP（2 行の sort を入替）。両行が scope 内であることは service 層で検証済み前提。
-export async function swapMethodSort(
-  a: { id: Id; sort: number },
-  b: { id: Id; sort: number }
-): Promise<void> {
-  await prisma.$transaction([
-    prisma.method.update({ where: { id: a.id }, data: { sort: b.sort } }),
-    prisma.method.update({ where: { id: b.id }, data: { sort: a.sort } })
-  ]);
 }
 
 // REORDER（任意順）。集まり（isPay・pairId）の検証は service 層で行う。
