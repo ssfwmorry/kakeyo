@@ -4,7 +4,6 @@ import { requireAuth } from '@/features/auth/server/requireAuth';
 import {
   colorHex,
   NO_SUB_TYPE_COLOR,
-  SETTLEMENT_COLOR_NAME,
   SETTLEMENT_NAME,
   subTypeColor
 } from './color';
@@ -13,7 +12,6 @@ import {
   buildPayIncomeBar,
   buildSubTypeStack,
   buildTypePeriodStack,
-  buildTypePie,
   type PayIncomeShowData,
   type PieShowData,
   type StackShowData
@@ -42,13 +40,7 @@ export async function fetchPieAction(input: {
   };
 
   if (input.isType) {
-    const items = await service.getTypeSummary(session, query);
-    return buildTypePie(
-      items,
-      colorHex,
-      SETTLEMENT_COLOR_NAME,
-      SETTLEMENT_NAME
-    );
+    return service.getTypePie(session, query);
   }
   const items = await service.getMethodSummary(session, query);
   return buildMethodPie(items, colorHex);

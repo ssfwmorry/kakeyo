@@ -6,6 +6,8 @@ import {
   getTypeCardList
 } from '@/features/type-method/server/services';
 import type { SessionData } from '@/lib/shared/types/auth';
+import { colorHex, SETTLEMENT_COLOR_NAME, SETTLEMENT_NAME } from '../color';
+import { buildTypePie, type PieShowData } from '../domain/chart-data';
 import { foldTypeSummary } from '../domain/type-summary';
 import type {
   MethodSummaryItem,
@@ -45,6 +47,16 @@ export async function getTypeSummary(
       );
     }
   );
+}
+
+// 内訳（カテゴリ別）を円グラフ＋一覧の形まで整形して返す。ページの初期表示と
+// 月移動の Server Action が同じ整形を通る。
+export async function getTypePie(
+  session: SessionData,
+  query: PieSummaryQuery
+): Promise<PieShowData> {
+  const items = await getTypeSummary(session, query);
+  return buildTypePie(items, colorHex, SETTLEMENT_COLOR_NAME, SETTLEMENT_NAME);
 }
 
 // 内訳（方法別）。
