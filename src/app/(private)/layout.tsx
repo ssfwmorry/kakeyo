@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { OfflineBanner } from '@/features/pwa/components/offline-banner';
 import { NoteModalProvider } from '@/features/record/components/note-modal';
-import { getLastUsedMethodIds } from '@/features/record/server/services';
 import {
   getMethodCardList,
   getTypeCardList
@@ -16,7 +15,7 @@ import { todayJst } from '@/lib/shared/domain/date';
 // ダーク切替を置く（位置は全画面で揃える）。
 //
 // 入力の全画面モーダルはここが持つ（README D1）。どのタブからでも開いて閉じると
-// 元のタブに戻るので、タブより外側に置く必要がある。候補（カテゴリ・方法・前回の方法）も
+// 元のタブに戻るので、タブより外側に置く必要がある。候補（カテゴリ・方法）も
 // ここで 1 度だけ取る。
 //
 // 認証ガードは requireAuth。Proxy に加えた多層防御。
@@ -32,10 +31,9 @@ export default async function PrivateLayout({
 }) {
   const session = await requireAuth();
 
-  const [typeList, methodList, lastUsedMethodIds, isPair] = await Promise.all([
+  const [typeList, methodList, isPair] = await Promise.all([
     getTypeCardList(session),
     getMethodCardList(session),
-    getLastUsedMethodIds(session),
     getEffectivePairMode(session)
   ]);
 
@@ -45,7 +43,6 @@ export default async function PrivateLayout({
         candidates={{
           typeList,
           methodList,
-          lastUsedMethodIds,
           isPair,
           hasPair: session.pairId !== null,
           today: todayJst()

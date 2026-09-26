@@ -8,7 +8,7 @@ import {
   useMemo,
   useState
 } from 'react';
-import type { LastUsedMethodIds, NoteRecordDefault } from '@/features/record';
+import type { NoteRecordDefault } from '@/features/record';
 import type {
   GroupedMethodList,
   GroupedTypeList
@@ -17,12 +17,11 @@ import { RecordSheet } from './record-sheet';
 
 // 入力の全画面モーダル（README D1）。タブバーの ＋ はどのタブからでも入力を開き、
 // 閉じると元のタブに戻る。そのため開閉の状態を (private)/layout.tsx の Context に置き、
-// 候補データ（カテゴリ・方法・前回の方法）も layout で 1 度だけ取って配る。
+// 候補データ（カテゴリ・方法）も layout で 1 度だけ取って配る。
 
 export type NoteModalCandidates = {
   typeList: GroupedTypeList;
   methodList: GroupedMethodList;
-  lastUsedMethodIds: LastUsedMethodIds;
   isPair: boolean;
   hasPair: boolean;
   today: string;

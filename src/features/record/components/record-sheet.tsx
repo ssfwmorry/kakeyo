@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import type { NoteRecordDefault } from '@/features/record';
 import { useTypeSelection } from '@/features/type-method';
-import { pickLastUsedMethodId } from '../domain/last-used-method';
+import { resolveMethodId } from '../domain/method-order';
 import { AmountStep } from './amount-step';
 import type { NoteModalCandidates } from './note-modal';
 import type { NoteState } from './note-state';
@@ -28,8 +28,7 @@ export function RecordSheet({
   onClose: () => void;
   onSaved?: () => void;
 }) {
-  const { typeList, methodList, lastUsedMethodIds, hasPair, today } =
-    candidates;
+  const { typeList, methodList, hasPair, today } = candidates;
   // 編集対象の共有／個人は対象自身の区分に従う（作成時に決まり後から移せない）。
   const isPair = editing?.isPair ?? candidates.isPair;
 
@@ -66,12 +65,7 @@ export function RecordSheet({
   const methodId = resolveMethodId({
     methods: selection.methods,
     selected: state.methodId,
-    isEditing: editing !== undefined,
-    lastUsed: pickLastUsedMethodId(lastUsedMethodIds, {
-      isPay: state.isPay,
-      isPair,
-      isInstead: state.isInstead
-    })
+    isEditing: editing !== undefined
   });
 
   const goToAmount = (next: Partial<NoteState>) => {
@@ -127,36 +121,4 @@ export function RecordSheet({
       </BottomSheetContent>
     </BottomSheet>
   );
-}
-
-// 候補に対して選択中の方法を解決する。未選択なら前回使った方法、それも候補に無ければ
-// 候補の先頭（＝設定画面の並び順の先頭）で埋める。描画のたびに導出する
-// （effect だと前の候補が 1 フレーム残る）。
-//
-// 編集中の記録が持つ方法が候補外のとき（記録の所有と共有モードが食い違う場合に起きる）は
-// 先頭で埋めず未選択にする。黙って別の方法に置き換えると、ユーザーが方法を触っていないのに
-// 保存済みの値が書き換わるため。未選択は送信ボタン側が止める。
-function resolveMethodId({
-  methods,
-  selected,
-  isEditing,
-  lastUsed
-}: {
-  methods: { id: number }[];
-  selected: number | null;
-  isEditing: boolean;
-  lastUsed: number | null;
-}): number | null {
-  const has = (id: number | null) =>
-    id !== null && methods.some((method) => method.id === id);
-  if (has(selected)) {
-    return selected;
-  }
-  if (isEditing && selected !== null) {
-    return null;
-  }
-  if (has(lastUsed)) {
-    return lastUsed;
-  }
-  return methods[0]?.id ?? null;
 }

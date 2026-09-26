@@ -18,7 +18,6 @@
 
 export { SETTLEMENT_DISPLAY } from './labels';
 export type {
-  LastUsedMethodIds,
   NoteRecordDefault,
   PairedRecordItem,
   RecordError,

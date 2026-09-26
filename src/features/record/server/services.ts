@@ -8,7 +8,6 @@ import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
 import { resolveRecordOwnership } from '../domain/record-fields';
 import type {
-  LastUsedMethodIds,
   NoteRecordDefault,
   PairedRecordItem,
   RecordError,
@@ -74,17 +73,6 @@ export async function getRecordForEdit(
     session,
     () => demoRecord.getRecordForEdit(session, id),
     () => recordRepo.findRecordForEdit(session, id)
-  );
-}
-
-// 入力フロー用: 組み合わせごとの直近の方法。
-export async function getLastUsedMethodIds(
-  session: SessionData
-): Promise<LastUsedMethodIds> {
-  return withDemoRead(
-    session,
-    () => demoRecord.getLastUsedMethodIds(session),
-    () => recordRepo.findLastUsedMethodIds(session)
   );
 }
 

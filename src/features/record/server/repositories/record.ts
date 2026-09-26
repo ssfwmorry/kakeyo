@@ -17,7 +17,6 @@ import {
 } from '../../domain/record-fields';
 import { SETTLEMENT_DISPLAY } from '../../labels';
 import type {
-  LastUsedMethodIds,
   NoteRecordDefault,
   PairedRecordItem,
   RecordListItem,
@@ -511,28 +510,3 @@ export async function deleteRecordById(
 // 入力フローの方法の初期選択に使う。組み合わせごとに findFirst を並べるのは、
 // 1 クエリの groupBy では「集まりごとに最新の 1 行」を取れないため（集約関数は
 // max(datetime) までしか返せず、その行の method_id は引けない）。
-export async function findLastUsedMethodIds(
-  scope: SessionScope
-): Promise<LastUsedMethodIds> {
-  const latestMethodId = async (
-    where: Prisma.RecordWhereInput
-  ): Promise<Id | null> => {
-    const row = await prisma.record.findFirst({
-      where: { AND: [buildScopeWhere(scope), where] },
-      // 同じ日に複数あるときは後から入れたものを優先する。
-      orderBy: [{ datetime: 'desc' }, { id: 'desc' }],
-      select: { methodId: true }
-    });
-    return row?.methodId ?? null;
-  };
-
-  const [paySelf, incomeSelf, payPairInstead, payPairShared, incomePair] =
-    await Promise.all([
-      latestMethodId({ isPay: true, recordType: RecordType.self }),
-      latestMethodId({ isPay: false, recordType: RecordType.self }),
-      latestMethodId({ isPay: true, recordType: RecordType.instead }),
-      latestMethodId({ isPay: true, recordType: RecordType.pair }),
-      latestMethodId({ isPay: false, recordType: RecordType.pair })
-    ]);
-  return { paySelf, incomeSelf, payPairInstead, payPairShared, incomePair };
-}

@@ -120,13 +120,3 @@ export type RecordError =
   | 'sameMonthOnly'
   | 'noTarget'
   | 'unknown';
-
-// 入力フローの方法の初期選択。組み合わせ（共有・収支・立替）ごとに、直近で使った方法。
-// 一度も記録が無い組み合わせは null（呼び出し側が候補の先頭で埋める）。
-export type LastUsedMethodIds = {
-  paySelf: Id | null;
-  incomeSelf: Id | null;
-  payPairInstead: Id | null;
-  payPairShared: Id | null;
-  incomePair: Id | null;
-};

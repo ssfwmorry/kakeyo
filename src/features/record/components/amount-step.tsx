@@ -164,7 +164,6 @@ export function AmountStep({
       {isFromPlanned ? <PlannedBanner /> : null}
 
       <MethodField
-        isEditing={editingId !== undefined}
         isInstead={state.isInstead}
         isPay={state.isPay}
         methodId={methodId}
@@ -425,12 +424,10 @@ function MemoRow({
 }
 
 // 方法の候補。共有の支出だけは、その前に「だれのお金で払った？」で候補ごと切り替える。
-// 新規は前回の方法が入っていることをラベルで伝える。編集は保存済みの方法なので付けない。
 function MethodField({
   showInstead,
   isInstead,
   isPay,
-  isEditing,
   methods,
   methodId,
   patch
@@ -438,7 +435,6 @@ function MethodField({
   showInstead: boolean;
   isInstead: boolean;
   isPay: boolean;
-  isEditing: boolean;
   methods: MethodCard[];
   methodId: Id | null;
   patch: (next: Partial<NoteState>) => void;
@@ -461,9 +457,7 @@ function MethodField({
           />
         </>
       ) : (
-        <FieldLabel>
-          {isEditing ? methodLabel : `${methodLabel}（前回の方法を自動で選択）`}
-        </FieldLabel>
+        <FieldLabel>{methodLabel}</FieldLabel>
       )}
       <MethodPills
         methodId={methodId}
