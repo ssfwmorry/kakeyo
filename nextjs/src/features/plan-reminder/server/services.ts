@@ -273,7 +273,7 @@ export async function deleteReminder(
       return err('notInScope');
     }
     try {
-      await reminderRepo.deleteReminderWithCondition({
+      await reminderRepo.deleteReminderWithCondition(session, {
         reminderId: target.id,
         conditionId: target.conditionId
       });

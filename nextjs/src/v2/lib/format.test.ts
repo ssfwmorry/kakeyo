@@ -12,6 +12,15 @@ describe('formatMonthDayWeekJa', () => {
   it('全角括弧の曜日付きで月日を出す', () => {
     expect(formatMonthDayWeekJa('2026-09-25')).toBe('9月25日（金）');
   });
+
+  it('today を渡すと今年以外にだけ年を付ける', () => {
+    expect(formatMonthDayWeekJa('2026-09-25', { today: '2026-09-25' })).toBe(
+      '9月25日（金）'
+    );
+    expect(formatMonthDayWeekJa('2027-01-05', { today: '2026-09-25' })).toBe(
+      '2027年1月5日（火）'
+    );
+  });
 });
 
 describe('formatSlashDateWeekJa', () => {

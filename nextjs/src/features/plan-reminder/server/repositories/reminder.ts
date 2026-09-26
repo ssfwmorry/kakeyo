@@ -130,12 +130,24 @@ export async function insertReminderWithCondition(input: {
 }
 
 // DELETE（2 テーブル跨ぎ）。reminder → condition の順で消す（FK 依存の逆順）。
-// 紐づく plan の reminder_id は FK 制約次第だが、まず reminder を消す。
-export async function deleteReminderWithCondition(input: {
-  reminderId: Id;
-  conditionId: Id;
-}): Promise<void> {
+//
+// 「予定に残す」で作られた plan は残す（「予定に残した分は消えません」）。plans の
+// reminder_id を先に外してから消すので、FK 制約に当たらない。plan の所有は
+// reminder と同じ（個人なら user_id、共有なら pair_id）なので、scope で絞れる。
+export async function deleteReminderWithCondition(
+  scope: SessionScope,
+  input: {
+    reminderId: Id;
+    conditionId: Id;
+  }
+): Promise<void> {
   await prisma.$transaction([
+    prisma.plan.updateMany({
+      where: {
+        AND: [{ reminderId: input.reminderId }, buildScopeWhere(scope)]
+      },
+      data: { reminderId: null }
+    }),
     prisma.reminder.delete({ where: { id: input.reminderId } }),
     prisma.condition.delete({ where: { id: input.conditionId } })
   ]);

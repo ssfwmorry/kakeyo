@@ -1,174 +1,138 @@
 'use client';
 
-import { cn } from 'cn';
-import { useState, useTransition } from 'react';
-import { IconCheck } from '@/components/icons';
+import { useState } from 'react';
+import type { ColorClassification } from '@/features/master';
 import type { ReminderItem } from '@/features/plan-reminder';
-import { checkReminderAction } from '@/features/plan-reminder/actions';
-import { formatDateWithWeekdayJst } from '@/lib/shared/domain/date';
-import { AddRowLink } from '@/v2/components/add-row';
+import { AddRow } from '@/v2/components/add-row';
+import { InitialCircle } from '@/v2/components/initial-circle';
 import { ListCellButton } from '@/v2/components/list-cell';
 import { ScreenHeader } from '@/v2/components/screen-header';
-import { ScreenTitle } from '@/v2/components/screen-title';
-import { SectionList } from '@/v2/components/section-list';
-import { showToast } from '@/v2/lib/toast';
+import {
+  ScreenLead,
+  ScreenNote,
+  ScreenTitle
+} from '@/v2/components/screen-title';
+import { SectionList, SectionListEmpty } from '@/v2/components/section-list';
+import { formatSlashDateWeekJa } from '@/v2/lib/format';
+import { ruleText, upcomingReminders } from '../domain/describe';
+import { ReminderAddSheet } from './reminder-add-sheet';
+import { ReminderDetailSheet } from './reminder-detail-sheet';
 
-// リマインダー設定（新デザイン）。
+// 設定 › リマインダー（原典 SetReminder）。
 //
-// 旧タブはカード 1 枚ずつに条件を全部並べていたが、新デザインでは
-// 「期日を過ぎたもの / これから」の 2 グループのリストにして、丸を押すと消化する。
-// 消化は次回日付への繰り越し（checkReminder）なので、成功するとその行は
-// 「これから」へ移る。楽観的にチェックを点けておき、サーバ確定で並びが入れ替わる。
+// 一覧はこれから（今日以降）のものだけを近い順に並べる。期日を過ぎたものは
+// お知らせ（ベル）で消化するので、ここには出さない。行を押すと詳細シート、
+// 追加行で追加シート。編集は無い（削除して追加し直す）。
+
+type SheetState =
+  | { kind: 'closed' }
+  | { kind: 'create'; key: number }
+  | { kind: 'detail'; reminder: ReminderItem };
 
 export function ReminderScreen({
   reminders,
+  colors,
+  isPair,
   today
 }: {
   reminders: ReminderItem[];
-  // 期日超過の判定基準。JST の今日を SSR 側で確定して渡す
-  // （クライアントの時計と端末 tz に判定を委ねない）。
+  colors: ColorClassification[];
+  isPair: boolean;
+  // 「これから」の判定基準。SSR で確定して渡す（端末の時計に委ねない）。
   today: string;
 }) {
-  const overdue = reminders.filter((reminder) => reminder.date <= today);
-  const upcoming = reminders.filter((reminder) => reminder.date > today);
+  const [sheet, setSheet] = useState<SheetState>({ kind: 'closed' });
+  const rows = upcomingReminders(reminders, today);
+  const close = () => setSheet({ kind: 'closed' });
 
   return (
     <div className='flex flex-col'>
       <ScreenHeader backHref='/v2/setting' backLabel='設定' />
       <div className='flex flex-col gap-3 px-4'>
-        <ScreenTitle badge='self'>リマインダー</ScreenTitle>
+        <ScreenTitle badge={isPair ? 'pair' : 'self'}>リマインダー</ScreenTitle>
+        <ScreenLead>
+          決まった間隔でくり返すお知らせです。近い日付の順に並びます
+        </ScreenLead>
 
-        {overdue.length > 0 ? (
-          <SectionList
-            title={
-              <span className='font-bold text-destructive'>
-                期日を過ぎたもの
-              </span>
-            }
-          >
-            {overdue.map((reminder, index) => (
+        <SectionList>
+          {rows.length === 0 ? (
+            <SectionListEmpty>
+              これからのリマインダーはありません
+            </SectionListEmpty>
+          ) : (
+            rows.map((reminder, index) => (
               <ReminderRow
                 isFirst={index === 0}
-                isOverdue
                 key={reminder.id}
+                onOpen={() => setSheet({ kind: 'detail', reminder })}
                 reminder={reminder}
+                today={today}
               />
-            ))}
-          </SectionList>
-        ) : null}
+            ))
+          )}
+        </SectionList>
 
-        {upcoming.length > 0 ? (
-          <SectionList title='これから'>
-            {upcoming.map((reminder, index) => (
-              <ReminderRow
-                isFirst={index === 0}
-                isOverdue={false}
-                key={reminder.id}
-                reminder={reminder}
-              />
-            ))}
-          </SectionList>
-        ) : null}
+        <AddRow
+          label='リマインダーを追加'
+          onClick={() =>
+            setSheet({
+              kind: 'create',
+              key: (sheet.kind === 'create' ? sheet.key : 0) + 1
+            })
+          }
+        />
 
-        {reminders.length === 0 ? (
-          <p className='px-1 text-muted-foreground text-sm'>
-            リマインダーはまだありません。
-          </p>
-        ) : null}
-
-        {/* 追加フォームは条件分岐が多く、v2 の入力部品一式が要る。それが揃うまでは
-            旧設定画面へ送る（押せない行を置くより、追加できる場所へ導く）。 */}
-        <AddRowLink href='/setting' label='リマインダーを追加' />
-
-        <p className='px-1 text-muted-foreground text-xs leading-relaxed'>
-          丸を押すと消化済みになります。期日を過ぎたものはお知らせ（ベル）にも出ます。
-        </p>
+        <ScreenNote>
+          期日を過ぎたものはここには出ません。お知らせ（ベル）から確認できます。
+        </ScreenNote>
       </div>
+
+      {sheet.kind === 'create' ? (
+        <ReminderAddSheet
+          colors={colors}
+          key={sheet.key}
+          onOpenChange={(isOpen) => !isOpen && close()}
+          today={today}
+        />
+      ) : null}
+      {sheet.kind === 'detail' ? (
+        <ReminderDetailSheet
+          key={sheet.reminder.id}
+          onOpenChange={(isOpen) => !isOpen && close()}
+          reminder={sheet.reminder}
+          today={today}
+        />
+      ) : null}
     </div>
   );
 }
 
 function ReminderRow({
   reminder,
-  isOverdue,
-  isFirst
+  today,
+  isFirst,
+  onOpen
 }: {
   reminder: ReminderItem;
-  isOverdue: boolean;
+  today: string;
   isFirst: boolean;
+  onOpen: () => void;
 }) {
-  const [isPending, startTransition] = useTransition();
-  // 送信中だけチェックを点けて打ち消し線にする。成功すれば再検証で行ごと
-  // 「これから」へ移るため、確定後にこの値を持ち続ける必要はない。
-  const [isChecking, setIsChecking] = useState(false);
-
-  const check = () => {
-    startTransition(async () => {
-      setIsChecking(true);
-      const result = await checkReminderAction(reminder.id);
-      if (result.toast) {
-        showToast(result.toast);
-      }
-      // 失敗時はチェックを戻す（成功時は行が入れ替わるので戻す必要がない）。
-      if (result.toast?.type === 'error') {
-        setIsChecking(false);
-      }
-    });
-  };
-
+  const date = formatSlashDateWeekJa(reminder.date, { today });
   return (
     <ListCellButton
-      aria-label={`${reminder.name}を消化`}
-      disabled={isPending}
-      height={60}
+      aria-label={`${reminder.name}（${date}）の詳細`}
+      description={ruleText(reminder)}
+      height={64}
       isFirst={isFirst}
-      label={
-        <span
-          className={cn(isChecking && 'text-muted-foreground line-through')}
-        >
-          {reminder.name}
-        </span>
+      label={reminder.name}
+      leading={
+        <InitialCircle colorName={reminder.colorName} name={reminder.name} />
       }
-      description={
-        <span className={cn(isOverdue && !isChecking && 'text-destructive')}>
-          {formatDateWithWeekdayJst(reminder.date)}
-        </span>
+      onClick={onOpen}
+      value={
+        <span className='font-semibold text-foreground text-sm'>{date}</span>
       }
-      leading={<CheckCircle isChecked={isChecking} isOverdue={isOverdue} />}
-      onClick={check}
-      // この行は「押すと消化」で、進む先がない。既定のシェブロンは
-      // 詳細画面へ進めると誤解させるので出さない。
-      trailing={null}
     />
-  );
-}
-
-// 消化ボタンの丸。未消化は輪郭だけ（期日超過は赤）、消化中はアクセントで塗ってチェック。
-function CheckCircle({
-  isChecked,
-  isOverdue
-}: {
-  isChecked: boolean;
-  isOverdue: boolean;
-}) {
-  return (
-    <span
-      aria-hidden='true'
-      className={cn(
-        'flex size-6.5 shrink-0 items-center justify-center rounded-full border-2',
-        isChecked
-          ? 'border-transparent bg-primary'
-          : isOverdue
-            ? 'border-destructive'
-            : 'border-muted-foreground/50'
-      )}
-    >
-      {isChecked ? (
-        <IconCheck
-          className='size-3.5 text-primary-foreground'
-          strokeWidth={3}
-        />
-      ) : null}
-    </span>
   );
 }

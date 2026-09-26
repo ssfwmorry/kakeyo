@@ -17,9 +17,18 @@ function weekday(dateStr: string): string {
 }
 
 // 'YYYY-MM-DD' → '9月25日（金）'。日別見出し・入力の日付・削除確認の本文。
-export function formatMonthDayWeekJa(dateStr: string): string {
-  const { month, day } = parts(dateStr);
-  return `${month}月${day}日（${weekday(dateStr)}）`;
+// withYear を渡すと '2027年1月5日（火）' のように年を前置する（省略時は付けない）。
+// today を渡すと今年以外の日付にだけ年を付ける（リマインダーの日付）。
+export function formatMonthDayWeekJa(
+  dateStr: string,
+  options: { withYear?: boolean; today?: string } = {}
+): string {
+  const { year, month, day } = parts(dateStr);
+  const withYear =
+    options.withYear ??
+    (options.today !== undefined && parts(options.today).year !== year);
+  const prefix = withYear ? `${year}年` : '';
+  return `${prefix}${month}月${day}日（${weekday(dateStr)}）`;
 }
 
 // 'YYYY-MM-DD' → '9/25（金）'。予定の日付ボタン・リマインダー・お知らせ。
