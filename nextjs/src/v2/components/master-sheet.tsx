@@ -59,6 +59,7 @@ export function MasterSheet<Schema extends ZodType>({
   upsertSchema,
   deleteAction,
   onForeignKey,
+  isDeleteBlocked = false,
   onDeleted,
   children
 }: {
@@ -91,6 +92,9 @@ export function MasterSheet<Schema extends ZodType>({
   // 省略すると削除の入口を出さない。
   deleteAction?: DeleteAction;
   onForeignKey?: ForeignKeyHandling;
+  // 編集対象に紐づくデータがあって消せないことが分かっているとき（口座の残高）。
+  // 確認の後、Action を呼ばずに onForeignKey の出し方で説明する。
+  isDeleteBlocked?: boolean;
   onDeleted?: () => void;
   // 名前欄と色のあいだに差し込む要素。
   children?: ReactNode;
@@ -112,6 +116,7 @@ export function MasterSheet<Schema extends ZodType>({
   const remove = useDeleteFlow({
     deleteAction,
     onForeignKey,
+    isKnownBlocked: () => isDeleteBlocked,
     onDeleted: () => {
       onOpenChange(false);
       onDeleted?.();

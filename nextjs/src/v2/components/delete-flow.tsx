@@ -39,12 +39,17 @@ export type DeleteFlow = ReturnType<typeof useDeleteFlow>;
 export function useDeleteFlow({
   deleteAction,
   onForeignKey,
-  onDeleted
+  onDeleted,
+  isKnownBlocked
 }: {
   // 省略すると ask しても何も起きない（削除の入口を出さない画面向け）。
   deleteAction?: DeleteAction;
   onForeignKey?: ForeignKeyHandling;
   onDeleted?: (target: DeleteTarget) => void;
+  // 紐づくデータがあって消せないことが一覧の時点で分かっているとき。確認の後、
+  // Action を呼ばずに onForeignKey の出し方で説明する（デモは削除が no-op 成功になるため、
+  // サーバの分類だけに頼ると案内が出ない）。
+  isKnownBlocked?: (target: DeleteTarget) => boolean;
 }) {
   const [target, setTarget] = useState<DeleteTarget | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -83,6 +88,13 @@ export function useDeleteFlow({
       return;
     }
     setIsConfirming(false);
+    if (isKnownBlocked?.(target)) {
+      setResult({ error: 'foreignKey' });
+      if (onForeignKey?.kind === 'alert') {
+        setIsBlocked(true);
+      }
+      return;
+    }
     startTransition(async () => {
       const formData = new FormData();
       formData.set('id', String(target.id));

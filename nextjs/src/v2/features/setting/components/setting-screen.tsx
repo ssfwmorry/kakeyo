@@ -81,7 +81,7 @@ export function SettingScreen({
       ? []
       : [
           {
-            href: '/v2/bank',
+            href: '/v2/setting/bank',
             label: '口座',
             icon: IconBank,
             tile: 'var(--tile-green)',

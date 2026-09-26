@@ -1,6 +1,7 @@
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { getBankScreenData } from '@/features/bank/server/services';
 import { todayJst } from '@/lib/shared/domain/date';
+import { NotificationBell } from '@/v2/components/notification-bell';
 import { BankScreen } from '@/v2/features/bank/components/bank-screen';
 
 // 口座（新デザイン）。
@@ -12,5 +13,12 @@ export default async function V2BankPage() {
   const session = await requireAuth();
   const { banks, tableRows } = await getBankScreenData(session);
 
-  return <BankScreen banks={banks} tableRows={tableRows} today={todayJst()} />;
+  return (
+    <BankScreen
+      banks={banks}
+      headerLeft={<NotificationBell />}
+      tableRows={tableRows}
+      today={todayJst()}
+    />
+  );
 }

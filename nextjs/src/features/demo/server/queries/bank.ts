@@ -20,7 +20,8 @@ export function getBankList(scope: SessionScope): BankItem[] {
     id: row.id,
     name: row.name,
     colorClassificationId: row.colorId,
-    colorName: colorName(row.colorId)
+    colorName: colorName(row.colorId),
+    hasBalance: bankBalanceRows.some((balance) => balance.bankId === row.id)
   }));
 }
 

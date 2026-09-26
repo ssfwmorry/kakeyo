@@ -9,6 +9,8 @@ export type BankItem = {
   name: string;
   colorClassificationId: Id;
   colorName: string;
+  // 残高の記録が 1 件でもあるか。あれば削除できない（FK）ので、設定›口座が事前に案内する。
+  hasBalance: boolean;
 };
 
 // 残高チャートの 1 点（積み上げ Area 用）。x=記録日(YYYY-MM-DD)、系列は bankId をキーに持つ。

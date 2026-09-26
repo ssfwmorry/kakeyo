@@ -18,6 +18,7 @@ export type BankListItem = {
   name: string;
   colorClassificationId: Id;
   colorName: string;
+  hasBalance: boolean;
 };
 
 // upsert の失敗種別（機械可読）。UI 文言はサービス/アクション層で付与する。
@@ -25,20 +26,24 @@ export type BankUpsertError = 'notFound';
 // delete の失敗種別。foreignKey = 紐づく残高があり削除不可。
 export type BankDeleteError = 'notFound' | 'foreignKey';
 
-// 色マスタを include し id 昇順で安定させる。
+// 色マスタを include し id 昇順で安定させる。残高の有無は件数で引く（行は要らない）。
 export async function getBankList(
   scope: SessionScope
 ): Promise<BankListItem[]> {
   const rows = await prisma.bank.findMany({
     where: buildOwnerScopeWhere(scope),
-    include: { colorClassification: { select: { id: true, name: true } } },
+    include: {
+      colorClassification: { select: { id: true, name: true } },
+      _count: { select: { bankBalances: true } }
+    },
     orderBy: { id: 'asc' }
   });
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
     colorClassificationId: row.colorClassificationId,
-    colorName: row.colorClassification.name
+    colorName: row.colorClassification.name,
+    hasBalance: row._count.bankBalances > 0
   }));
 }
 
