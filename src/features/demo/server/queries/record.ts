@@ -183,6 +183,11 @@ export function getPairedRecords(
     }));
 }
 
+// findCounterpartUserName 相当: ペアの相手の名前。solo デモは相手がいない。
+export function getPairPartnerName(scope: SessionScope): string | null {
+  return scope.pairId === null ? null : demoUsers.partner.name;
+}
+
 // findRecordForEdit 相当（note = 記録編集用）: scope 内の record 1 件をプリフィル初期値へ写す。
 // 精算 record（record_type=15）は編集導線に乗らない前提（本体と同様）。
 export function getRecordForEdit(

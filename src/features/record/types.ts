@@ -119,4 +119,5 @@ export type RecordError =
   | 'foreignKey'
   | 'sameMonthOnly'
   | 'noTarget'
+  | 'methodRequired'
   | 'unknown';

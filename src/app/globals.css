@@ -110,6 +110,20 @@
      ライトは白へ 80%（色 20%）、ダークは面へ 75%（色 25%）。 */
   --band-mix: 20%;
 
+  /* 精算率の色（集計›精算。自分寄りは橙、割り勘は紫、相手寄りは青の 11 段階）。
+     カテゴリ色とは別系統で、率の index で引く（summary/domain/settlement-rate.ts）。 */
+  --rate-0: #8f4406;
+  --rate-1: #a8520a;
+  --rate-2: #c2610c;
+  --rate-3: #d27a2e;
+  --rate-4: #dd9552;
+  --rate-5: #6a4fb0;
+  --rate-6: #6f97d6;
+  --rate-7: #4f80cc;
+  --rate-8: #2f68be;
+  --rate-9: #1f55a6;
+  --rate-10: #153f80;
+
   /* 角丸。--radius から派生する shadcn の radius-* が
      アイコン面 8 / ボタン 12 / カード 16 に並ぶよう 10px を基準に置く。 */
   --radius: 0.625rem;
@@ -188,6 +202,19 @@
   --tile-orange: #c2610c;
   --tile-red: #b83a3a;
   --band-mix: 25%;
+
+  /* 精算率の色のダーク用。面に対して読める明度へ寄せる（--cat-* と同じ考え方）。 */
+  --rate-0: #f0a060;
+  --rate-1: #ee9a52;
+  --rate-2: #ec9413;
+  --rate-3: #e8a25a;
+  --rate-4: #e6b07a;
+  --rate-5: #a28be0;
+  --rate-6: #8fb2e8;
+  --rate-7: #7aa3e6;
+  --rate-8: #5f93e0;
+  --rate-9: #4f86d8;
+  --rate-10: #3f78cc;
 
   /* カテゴリ色のダーク用。面（#1B1F21）に対してコントラスト比 4.6 以上。 */
   --cat-red: #e7564b;

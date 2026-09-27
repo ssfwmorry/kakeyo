@@ -16,6 +16,8 @@ export function recordErrorMessage(error: RecordError): string | undefined {
       return L.error.notFound;
     case 'noTarget':
       return recordLabels.error.noTarget;
+    case 'methodRequired':
+      return recordLabels.error.methodRequired;
     default:
       return undefined;
   }

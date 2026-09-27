@@ -64,6 +64,22 @@ export async function getPairedRecords(
   );
 }
 
+// 精算画面用: ペアの相手の名前。ペア未設定なら null。
+export async function getPairPartnerName(
+  session: SessionData
+): Promise<string | null> {
+  return withDemoRead(
+    session,
+    () => demoRecord.getPairPartnerName(session),
+    async () => {
+      if (session.pairId === null) {
+        return null;
+      }
+      return recordRepo.findCounterpartUserName(session, session.pairId);
+    }
+  );
+}
+
 // note（記録編集）用: 初期値 1 件。scope 外・不存在は null（呼び出し側が新規扱い）。
 export async function getRecordForEdit(
   session: SessionData,
@@ -203,6 +219,40 @@ export async function settleRecords(
       return err('notInScope');
     }
     return ok(undefined);
+  });
+}
+
+type CompleteSettlementInput = Omit<SettlementInput, 'methodId'> & {
+  // 精算済みにする立替の id 群。
+  ids: Id[];
+  // 精算額が 0（差額なし）のときは記録を作らないので null でよい。
+  methodId: Id | null;
+};
+
+// 月の精算を完了する: 分類した立替を精算済みにし、精算額があれば精算 record を作る。
+//
+// 2 つの書き込みは別々に行う。先に立替を精算済みにするので、scope 外の id が混ざって
+// いれば記録を作る前に止まる。記録の作成だけが落ちたときは立替が精算済みのまま残るが、
+// 同じ立替を二重に精算する事故にはならない（記録は手で足せる）。
+export async function completeSettlement(
+  session: SessionData,
+  input: CompleteSettlementInput
+): Promise<Result<void, RecordError>> {
+  if (input.price > 0 && input.methodId === null) {
+    return err('methodRequired');
+  }
+  const settled = await settleRecords(session, input.ids);
+  if (!settled.ok) {
+    return settled;
+  }
+  if (input.price === 0 || input.methodId === null) {
+    return ok(undefined);
+  }
+  return createSettlementRecord(session, {
+    datetime: input.datetime,
+    isPay: input.isPay,
+    methodId: input.methodId,
+    price: input.price
   });
 }
 

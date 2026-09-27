@@ -7,7 +7,6 @@ import { summaryLabels } from '../labels';
 // 集計の 3 タブ（内訳・推移・精算）。原典では別画面なので、選ぶとそのルートへ移る。
 //
 // 精算はペアがいるときだけ出す（原典 SumSettle。ペアが無ければタブは 2 つになる）。
-// 中身は T16 で作るので、いまは押せない状態で枠だけ置く。
 
 export type SummaryTab = 'breakdown' | 'trend' | 'settlement';
 
@@ -33,8 +32,7 @@ export function SummaryTabs({
   if (hasPair) {
     options.push({
       value: 'settlement',
-      label: summaryLabels.tab.settlement,
-      disabled: true
+      label: summaryLabels.tab.settlement
     });
   }
 

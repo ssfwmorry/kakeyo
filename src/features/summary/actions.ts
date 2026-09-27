@@ -1,8 +1,11 @@
 'use server';
 
 import { requireAuth } from '@/features/auth/server/requireAuth';
-import type { SummarizedRecordItem } from '@/features/record';
-import { getSummarizedRecords } from '@/features/record/server/services';
+import type { PairedRecordItem, SummarizedRecordItem } from '@/features/record';
+import {
+  getPairedRecords,
+  getSummarizedRecords
+} from '@/features/record/server/services';
 import {
   colorHex,
   NO_SUB_TYPE_COLOR,
@@ -132,4 +135,12 @@ export async function fetchSummarizedRecordsAction(input: {
     id: input.id,
     subTypeId: input.isType ? input.subTypeId : null
   });
+}
+
+// 精算（月移動）のペアの record を返す。ペア未設定なら空（サービス層が判定する）。
+export async function fetchPairedRecordsAction(input: {
+  yearMonth: string;
+}): Promise<PairedRecordItem[]> {
+  const session = await requireAuth();
+  return getPairedRecords(session, input.yearMonth);
 }

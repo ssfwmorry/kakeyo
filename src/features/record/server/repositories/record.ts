@@ -452,6 +452,31 @@ export async function findCounterpartUserId(
   return pair.user1Id === scope.userUid ? pair.user2Id : pair.user1Id;
 }
 
+// 精算の相手の名前を引く（精算画面のバッジ「◯◯との精算」）。findCounterpartUserId と
+// 同じく session.pairId で自分のペアに限定する。
+export async function findCounterpartUserName(
+  scope: SessionScope,
+  pairId: Id
+): Promise<string | null> {
+  const pair = await prisma.pair.findFirst({
+    where: {
+      AND: [
+        { id: pairId },
+        { OR: [{ user1Id: scope.userUid }, { user2Id: scope.userUid }] }
+      ]
+    },
+    select: {
+      user1Id: true,
+      user1: { select: { name: true } },
+      user2: { select: { name: true } }
+    }
+  });
+  if (!pair) {
+    return null;
+  }
+  return pair.user1Id === scope.userUid ? pair.user2.name : pair.user1.name;
+}
+
 // CREATE（精算 record）。record_type=15・is_pay=null・type なし。
 // user_id は「精算を負担する側」= 支払時は自分、受取時は相手（service が解決）。
 export async function insertSettlementRecord(input: {

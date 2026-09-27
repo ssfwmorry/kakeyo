@@ -36,7 +36,8 @@ export const recordLabels = {
   error: {
     pairRequired: 'ペア設定が必要です',
     sameMonthOnly: '定期的なものは同月中のみ変更可能です',
-    noTarget: '対象がありません'
+    noTarget: '対象がありません',
+    methodRequired: '精算方法を選んでください'
   }
 } as const;
 
