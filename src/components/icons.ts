@@ -16,6 +16,8 @@ export {
   ChartColumn as IconChartBar, // mdiChartBar
   ChartPie as IconChartPie, // mdiChartPie
   Check as IconCheck, // mdiCheck
+  // 「開く」ことを示す（集計の月ラベルなど）。
+  ChevronDown as IconChevronDown,
   // 「戻る」導線に使う。
   ChevronLeft as IconChevronLeft,
   ChevronRight as IconChevronRight,

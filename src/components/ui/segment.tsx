@@ -43,6 +43,7 @@ export function Segment<T extends string>({
   label,
   size = 'md',
   tone = 'muted',
+  fit = false,
   className
 }: {
   options: readonly SegmentOption<T>[];
@@ -53,6 +54,9 @@ export function Segment<T extends string>({
   size?: keyof typeof SIZE_CLASS;
   // 地の色。白いカードの中に置くときは画面の地色にする（面（弱）だと面と同化する）。
   tone?: 'muted' | 'background';
+  // 幅を文字に合わせる（等分しない）。1 行に 2 つ並べるときに使う
+  // （集計の「カテゴリ｜方法」と「立替込み｜自分のみ」。等分だと文字が折り返す）。
+  fit?: boolean;
   className?: string;
 }) {
   const sizeClass = SIZE_CLASS[size];
@@ -72,7 +76,8 @@ export function Segment<T extends string>({
           <button
             aria-pressed={isSelected}
             className={cn(
-              'flex flex-grow basis-0 flex-col items-center justify-center font-semibold disabled:opacity-40',
+              'flex flex-col items-center justify-center font-semibold disabled:opacity-40',
+              fit ? 'shrink-0 whitespace-nowrap' : 'flex-grow basis-0',
               sizeClass.item,
               isSelected
                 ? 'bg-segment-on text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.12)]'

@@ -1,4 +1,7 @@
-import type { PieListRow } from '@/features/summary/domain/chart-data';
+import {
+  type PieListRow,
+  SETTLEMENT_ROW_ID
+} from '@/features/summary/domain/chart-data';
 
 // 内訳（カテゴリ別）の一覧行とドーナツの弧を、集計結果から導く純粋関数。
 // 割合は小数 1 桁に丸め、弧は原典 Summary の描き方（半径 70・弧の間に 2px の隙間・
@@ -18,7 +21,28 @@ export type BreakdownRow = {
   // 全体に対する割合（%・小数 1 桁）。
   pct: number;
   pctText: string;
+  // 共有の行（名前の後ろに共有アイコンを出す）。
+  isPair: boolean;
+  // 方法軸で立替の行に出す、立て替えた人の名前。
+  pairUserName: string | null;
+  // 精算（type 未設定）の行。輪郭だけの丸で描き、明細へは進めない。
+  isSettlement: boolean;
+  subs: BreakdownSubRow[];
 };
+
+// サブカテゴリの子行。割合は親比ではなく全体に対する割合
+// （原典 SumBreakdown の pctOf は total 基準）。
+export type BreakdownSubRow = {
+  // 「サブカテゴリなし」は実体が無いので null。
+  id: number | null;
+  name: string;
+  value: number;
+  pct: number;
+  pctText: string;
+};
+
+// サブカテゴリが付いていない分をまとめる行の名前。
+export const NO_SUB_TYPE_NAME = 'サブカテゴリなし';
 
 export type DonutArc = {
   key: string;
@@ -43,6 +67,39 @@ function round2(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+// サブカテゴリの子行を作る。金額降順に並べ、サブカテゴリが付いていない残りが
+// あれば「サブカテゴリなし」として末尾に足す（サービス層はサブカテゴリの付いた分
+// しか返さないため、親との差がそのまま「なし」の分になる）。
+// サブカテゴリを 1 つも持たないカテゴリには子行を出さない（親だけで足りる）。
+function buildSubRows(
+  row: PieListRow,
+  pctOf: (value: number) => number
+): BreakdownSubRow[] {
+  if (row.subs.length === 0) {
+    return [];
+  }
+
+  const toSubRow = (
+    id: number | null,
+    name: string,
+    value: number
+  ): BreakdownSubRow => {
+    const pct = pctOf(value);
+    return { id, name, value, pct, pctText: `${pct.toFixed(1)}%` };
+  };
+
+  const subs = [...row.subs]
+    .sort((a, b) => b.value - a.value)
+    .map((sub) => toSubRow(sub.id, sub.name, sub.value));
+
+  const assigned = subs.reduce((sum, sub) => sum + sub.value, 0);
+  const rest = row.value - assigned;
+  if (rest > 0) {
+    subs.push(toSubRow(null, NO_SUB_TYPE_NAME, rest));
+  }
+  return subs;
+}
+
 // 金額の大きい順に並べ、割合と弧を付ける。total が 0 のときは行も弧も空。
 export function buildBreakdown(list: PieListRow[]): Breakdown {
   const sorted = [...list].sort((a, b) => b.value - a.value);
@@ -51,15 +108,21 @@ export function buildBreakdown(list: PieListRow[]): Breakdown {
     return { total: 0, rows: [], arcs: [] };
   }
 
+  const pctOf = (value: number) => Math.round((value / total) * 1000) / 10;
+
   const rows: BreakdownRow[] = sorted.map((row) => {
-    const pct = Math.round((row.value / total) * 1000) / 10;
+    const pct = pctOf(row.value);
     return {
       id: row.id,
       name: row.name,
       colorName: row.colorName,
       value: row.value,
       pct,
-      pctText: `${pct.toFixed(1)}%`
+      pctText: `${pct.toFixed(1)}%`,
+      isPair: row.isPair,
+      pairUserName: row.pairUserName,
+      isSettlement: row.id === SETTLEMENT_ROW_ID,
+      subs: buildSubRows(row, pctOf)
     };
   });
 

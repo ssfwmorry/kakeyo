@@ -2,7 +2,12 @@
 
 import { cn } from 'cn';
 import { type ReactNode, useMemo, useState, useTransition } from 'react';
-import { IconChevronLeft, IconChevronRight } from '@/components/icons';
+import {
+  IconChevronDown,
+  IconChevronLeft,
+  IconChevronRight,
+  IconShare
+} from '@/components/icons';
 import { PairModeSegment } from '@/components/pair-mode-segment';
 import { SectionListEmpty } from '@/components/section-list';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -11,25 +16,33 @@ import { colorVar } from '@/features/master';
 import { fetchPieAction } from '@/features/summary/actions';
 import type { PieShowData } from '@/features/summary/domain/chart-data';
 import { monthLabel, shiftMonth } from '@/features/summary/domain/period';
-import { type BreakdownRow, buildBreakdown } from '../domain/breakdown';
+import {
+  type BreakdownRow,
+  type BreakdownSubRow,
+  buildBreakdown,
+  NO_SUB_TYPE_NAME
+} from '../domain/breakdown';
+import { breakdownFootnote, summaryLabels, totalLabel } from '../labels';
 import { Donut } from './donut';
+import { MonthPickerSheet } from './month-picker-sheet';
 
-// 集計（原典 Summary）。内訳だけを持ち、推移・精算はデザインが無いので押せないまま置く
-// （README D10）。月移動と支出／収入の切替でカテゴリ別の集計を取り直す。
-//
-// カテゴリ／方法・立替込みの切替、サブカテゴリ行、明細への遷移はデザインに無いので
-// 出さない。立替は個人モードは込み、共有モードは含めない。
+// 集計 › 内訳（原典 SumBreakdown）。カテゴリ／方法の軸、立替の扱い、サブカテゴリの
+// 子行、年月ピッカーを持つ。推移・精算は別ルート（T15 / T16）。
 //
 // 「個人｜共有」の切替はページが再描画されて初期データが変わる。この画面の state は
 // ページ側の key で作り直す。
 
-type SummaryKind = 'breakdown' | 'trend' | 'settlement';
+type SummaryTab = 'breakdown' | 'trend' | 'settlement';
 
-const KIND_OPTIONS: readonly SegmentOption<SummaryKind>[] = [
-  { value: 'breakdown', label: '内訳' },
-  { value: 'trend', label: '推移', disabled: true },
-  { value: 'settlement', label: '精算', disabled: true }
-];
+// 軸（カテゴリ／方法）と支出収入の組で、ピルとドーナツ中央の呼び名が変わる。
+function kindLabel(isType: boolean, isPay: boolean): string {
+  if (isType) {
+    return isPay ? summaryLabels.kind.pay : summaryLabels.kind.income;
+  }
+  return isPay
+    ? summaryLabels.kind.payByMethod
+    : summaryLabels.kind.receiveByMethod;
+}
 
 export function SummaryScreen({
   hasPair,
@@ -41,34 +54,60 @@ export function SummaryScreen({
   hasPair: boolean;
   isPair: boolean;
   initialYearMonth: string;
-  // 初期表示の月・支出の集計（Server で取得済み）。
+  // 初期表示の月・支出・カテゴリ軸の集計（Server で取得済み）。
   initialData: PieShowData;
   // ヘッダー左に置くもの（お知らせのベル）。
   headerLeft?: ReactNode;
 }) {
   const [yearMonth, setYearMonth] = useState(initialYearMonth);
   const [isPay, setIsPay] = useState(true);
+  const [isType, setIsType] = useState(true);
+  // 共有モードは立替を区別しないので、この state は個人モードでのみ効く。
+  const [isIncludeInstead, setIsIncludeInstead] = useState(true);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [data, setData] = useState(initialData);
   const [isPending, startTransition] = useTransition();
 
+  type Query = {
+    yearMonth: string;
+    isPay: boolean;
+    isType: boolean;
+    isIncludeInstead: boolean;
+  };
+
   // 取得中も前の内容を出したままにし、画面が空白になるのを避ける。
-  const load = (next: { yearMonth: string; isPay: boolean }) => {
+  const load = (next: Query) => {
     setYearMonth(next.yearMonth);
     setIsPay(next.isPay);
+    setIsType(next.isType);
+    setIsIncludeInstead(next.isIncludeInstead);
     startTransition(async () => {
       setData(
         await fetchPieAction({
-          isType: true,
+          isType: next.isType,
           isPay: next.isPay,
           isPair,
-          isIncludeInstead: !isPair,
+          isIncludeInstead: next.isIncludeInstead,
           yearMonth: next.yearMonth
         })
       );
     });
   };
 
+  const current: Query = { yearMonth, isPay, isType, isIncludeInstead };
   const breakdown = useMemo(() => buildBreakdown(data.list), [data.list]);
+  const kind = kindLabel(isType, isPay);
+  const footnote = breakdownFootnote(hasPair, isPair, isIncludeInstead, kind);
+
+  const tabOptions: readonly SegmentOption<SummaryTab>[] = [
+    { value: 'breakdown', label: summaryLabels.tab.breakdown },
+    { value: 'trend', label: summaryLabels.tab.trend, disabled: true },
+    {
+      value: 'settlement',
+      label: summaryLabels.tab.settlement,
+      disabled: true
+    }
+  ];
 
   return (
     <div className='flex flex-col gap-3 px-4'>
@@ -80,12 +119,12 @@ export function SummaryScreen({
         </div>
       </div>
 
-      <h1 className='font-bold text-3xl'>集計</h1>
+      <h1 className='font-bold text-3xl'>{summaryLabels.heading.summary}</h1>
 
       <Segment
         label='集計の種類'
         onChange={() => undefined}
-        options={KIND_OPTIONS}
+        options={tabOptions}
         value='breakdown'
       />
 
@@ -93,26 +132,74 @@ export function SummaryScreen({
         <MonthNavButton
           direction='prev'
           isPending={isPending}
-          onClick={() => load({ yearMonth: shiftMonth(yearMonth, -1), isPay })}
+          onClick={() =>
+            load({ ...current, yearMonth: shiftMonth(yearMonth, -1) })
+          }
         />
-        <span className='font-semibold text-base'>{monthLabel(yearMonth)}</span>
+        <button
+          aria-label='表示する月を選ぶ'
+          className='flex h-9 items-center gap-1 rounded-lg px-1.5 font-semibold text-base text-foreground'
+          onClick={() => setIsPickerOpen(true)}
+          type='button'
+        >
+          {monthLabel(yearMonth)}
+          <IconChevronDown
+            aria-hidden='true'
+            className='size-3.5 text-icon-muted'
+            strokeWidth={2.4}
+          />
+        </button>
         <MonthNavButton
           direction='next'
           isPending={isPending}
-          onClick={() => load({ yearMonth: shiftMonth(yearMonth, 1), isPay })}
+          onClick={() =>
+            load({ ...current, yearMonth: shiftMonth(yearMonth, 1) })
+          }
         />
         <fieldset aria-label='支出か収入か' className='ml-auto flex gap-1.5'>
           <PayPill
             isSelected={isPay}
-            label='支出'
-            onSelect={() => load({ yearMonth, isPay: true })}
+            label={kindLabel(isType, true)}
+            onSelect={() => load({ ...current, isPay: true })}
           />
           <PayPill
             isSelected={!isPay}
-            label='収入'
-            onSelect={() => load({ yearMonth, isPay: false })}
+            label={kindLabel(isType, false)}
+            onSelect={() => load({ ...current, isPay: false })}
           />
         </fieldset>
+      </div>
+
+      <div className='flex items-center gap-2'>
+        <Segment
+          fit
+          label={summaryLabels.axis.label}
+          onChange={(value) => load({ ...current, isType: value === 'type' })}
+          options={[
+            { value: 'type', label: summaryLabels.axis.type },
+            { value: 'method', label: summaryLabels.axis.method }
+          ]}
+          size='sm'
+          value={isType ? 'type' : 'method'}
+        />
+        {/* 共有モードは二人の家計を見るので、立替の区別そのものが無い。
+            ペア未設定なら立て替える相手がいないので、どちらを選んでも同じ数字になる（D6）。 */}
+        {isPair || !hasPair ? null : (
+          <Segment
+            className='ml-auto'
+            fit
+            label={summaryLabels.instead.label}
+            onChange={(value) =>
+              load({ ...current, isIncludeInstead: value === 'include' })
+            }
+            options={[
+              { value: 'include', label: summaryLabels.instead.include },
+              { value: 'onlyMe', label: summaryLabels.instead.onlyMe }
+            ]}
+            size='sm'
+            value={isIncludeInstead ? 'include' : 'onlyMe'}
+          />
+        )}
       </div>
 
       <div
@@ -122,14 +209,14 @@ export function SummaryScreen({
         <div className='flex justify-center rounded-2xl bg-card py-[18px]'>
           <Donut
             arcs={breakdown.arcs}
-            label={isPay ? '支出合計' : '収入合計'}
+            label={totalLabel(kind)}
             total={breakdown.total}
           />
         </div>
 
         <div className='overflow-hidden rounded-2xl bg-card'>
           {breakdown.rows.length === 0 ? (
-            <SectionListEmpty>表示するデータがありません</SectionListEmpty>
+            <SectionListEmpty>{summaryLabels.empty.noData}</SectionListEmpty>
           ) : (
             breakdown.rows.map((row, index) => (
               <BreakdownCell
@@ -141,6 +228,23 @@ export function SummaryScreen({
           )}
         </div>
       </div>
+
+      {footnote === null ? null : (
+        <span className='px-1 text-muted-foreground text-xs leading-relaxed'>
+          {footnote}
+        </span>
+      )}
+
+      {isPickerOpen ? (
+        <MonthPickerSheet
+          onOpenChange={setIsPickerOpen}
+          onSelect={(next) => {
+            setIsPickerOpen(false);
+            load({ ...current, yearMonth: next });
+          }}
+          yearMonth={yearMonth}
+        />
+      ) : null}
     </div>
   );
 }
@@ -195,7 +299,7 @@ function PayPill({
   );
 }
 
-// 内訳の 1 行。明細への遷移はデザインが無いので押せない（シェブロンは原典どおり出す）。
+// 内訳の 1 行（＋サブカテゴリの子行）。明細への遷移は T14。
 function BreakdownCell({
   row,
   isFirst
@@ -205,37 +309,86 @@ function BreakdownCell({
 }) {
   const color = colorVar(row.colorName);
   return (
-    <div
-      className={cn(
-        'flex h-14 items-center gap-3 px-3.5',
-        !isFirst && 'border-border border-t'
-      )}
-    >
-      <span
-        aria-hidden='true'
-        className='size-2.5 shrink-0 rounded-full'
-        style={{ backgroundColor: color }}
-      />
-      <span className='flex flex-grow flex-col gap-1.5'>
-        <span className='flex items-baseline gap-2'>
-          <span className='text-[15px]'>{row.name}</span>
-          <span className='text-muted-foreground text-xs'>{row.pctText}</span>
+    <div className={cn(!isFirst && 'border-border border-t')}>
+      <div className='flex h-14 items-center gap-3 px-3.5'>
+        {/* 精算は実体のあるカテゴリではないので、塗らず輪郭だけで描く。 */}
+        <span
+          aria-hidden='true'
+          className='size-2.5 shrink-0 rounded-full'
+          style={
+            row.isSettlement
+              ? { border: `2px solid ${color}` }
+              : { backgroundColor: color }
+          }
+        />
+        <span className='flex min-w-0 flex-grow flex-col gap-1.5'>
+          <span className='flex items-baseline gap-1.5 whitespace-nowrap'>
+            {row.pairUserName === null ? null : (
+              <span className='text-muted-foreground text-xs'>
+                {row.pairUserName}
+              </span>
+            )}
+            <span className='text-[15px]'>{row.name}</span>
+            {row.isPair ? (
+              <IconShare
+                aria-label='共有'
+                className='size-3.5 self-center text-primary'
+                role='img'
+                strokeWidth={2.2}
+              />
+            ) : null}
+            <span className='text-muted-foreground text-xs'>{row.pctText}</span>
+          </span>
+          <span className='block h-1 rounded-sm bg-line-soft'>
+            <span
+              className='block h-1 rounded-sm'
+              style={{ backgroundColor: color, width: `${row.pct}%` }}
+            />
+          </span>
         </span>
-        <span className='block h-1 rounded-sm bg-line-soft'>
-          <span
-            className='block h-1 rounded-sm'
-            style={{ backgroundColor: color, width: `${row.pct}%` }}
+        <span className='font-semibold text-[15px]'>
+          {row.value.toLocaleString('ja-JP')}
+        </span>
+        {/* 精算は明細へ進めないので、シェブロンの分だけ空ける。 */}
+        {row.isSettlement ? (
+          <span aria-hidden='true' className='w-3.5 shrink-0' />
+        ) : (
+          <IconChevronRight
+            aria-hidden='true'
+            className='size-3.5 shrink-0 text-icon-muted'
+            strokeWidth={2.4}
           />
+        )}
+      </div>
+
+      {row.subs.map((sub) => (
+        <SubCell key={sub.id ?? NO_SUB_TYPE_NAME} sub={sub} />
+      ))}
+    </div>
+  );
+}
+
+function SubCell({ sub }: { sub: BreakdownSubRow }) {
+  // 「サブカテゴリなし」は実体のある分類ではないので、文字を落として区別する。
+  const isNoSubType = sub.id === null;
+  return (
+    <div className='flex h-10 items-center pr-3.5 pl-9'>
+      <span className='flex flex-grow items-center gap-2.5 self-stretch border-line-soft border-t'>
+        <span className='flex flex-grow items-baseline gap-1.5'>
+          <span
+            className={cn('text-sm', isNoSubType && 'text-muted-foreground')}
+          >
+            {sub.name}
+          </span>
+          <span className='text-muted-foreground text-xs'>{sub.pctText}</span>
         </span>
+        <span className='text-sm'>{sub.value.toLocaleString('ja-JP')}</span>
+        <IconChevronRight
+          aria-hidden='true'
+          className='size-3.5 shrink-0 text-icon-muted'
+          strokeWidth={2.4}
+        />
       </span>
-      <span className='font-semibold text-[15px]'>
-        {row.value.toLocaleString('ja-JP')}
-      </span>
-      <IconChevronRight
-        aria-hidden='true'
-        className='size-3.5 shrink-0 text-icon-muted'
-        strokeWidth={2.4}
-      />
     </div>
   );
 }

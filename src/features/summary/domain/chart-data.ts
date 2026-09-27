@@ -21,6 +21,10 @@ export type PieSlice = {
   fill: string;
 };
 
+// 精算（type 未設定）の行に振る id。実 type_id は正の値しか取らないので、
+// 負の番兵で「明細へ進めない行」を表す。
+export const SETTLEMENT_ROW_ID = -1;
+
 // 内訳一覧の 1 行（テーブル + 「＞」遷移用）。
 export type PieListRow = {
   id: number;
@@ -65,9 +69,9 @@ export function buildTypePie(
     const colorName = item.colorName ?? settlementColorName;
     slices.push({ name, value: item.sum, fill: toHex(item.colorName) });
     list.push({
-      // typeId=null（精算）は id=-1 にして、呼び出し側が id<0 で「＞」（records への
-      // 遷移）不可を判定できるようにする。通常カテゴリは typeId をそのまま採用。
-      id: item.typeId ?? -1,
+      // typeId=null（精算）は番兵の id にして、呼び出し側が「＞」（明細への遷移）
+      // 不可を判定できるようにする。通常カテゴリは typeId をそのまま採用。
+      id: item.typeId ?? SETTLEMENT_ROW_ID,
       name,
       value: item.sum,
       colorName,
