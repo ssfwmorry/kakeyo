@@ -136,6 +136,7 @@ export async function getSubTypeSummary(
       return rows.map((row) => ({
         yearMonth: row.year_month,
         subTypeId: row.sub_type_id,
+        subTypeName: row.sub_type_name,
         sum: row.sum
       }));
     }

@@ -220,6 +220,7 @@ export function getSubTypeSummary(
     .map(({ first, sum }) => ({
       yearMonth: first.yearMonth,
       subTypeId: first.subTypeId,
+      subTypeName: first.subTypeName,
       sum
     }))
     .sort(

@@ -142,12 +142,13 @@ describe('buildTypePeriodStack', () => {
     const { rows: bars, series } = buildTypePeriodStack(
       rows,
       2026,
-      hex,
+      'yellow',
       '精算'
     );
     expect(series).toEqual([
-      { key: '1', label: '食費', color: '#orange' },
-      { key: 'null', label: '精算', color: '#ffeb3b' }
+      { key: '1', label: '食費', colorName: 'orange' },
+      // 精算は色を持たないので精算色に寄せる。
+      { key: 'null', label: '精算', colorName: 'yellow' }
     ]);
     expect(bars).toHaveLength(12);
     expect(bars[0]).toEqual({ month: '1', '1': 100, null: 50 });
@@ -158,24 +159,23 @@ describe('buildTypePeriodStack', () => {
 describe('buildSubTypeStack', () => {
   it('「なし」系列を先頭に、他は循環パレット', () => {
     const rows: SubTypeSummaryRow[] = [
-      { yearMonth: '2026-01', subTypeId: 11, sum: 60 },
-      { yearMonth: '2026-01', subTypeId: null, sum: 40 },
-      { yearMonth: '2026-02', subTypeId: 11, sum: 30 }
+      { yearMonth: '2026-01', subTypeId: 11, subTypeName: '外食', sum: 60 },
+      { yearMonth: '2026-01', subTypeId: null, subTypeName: null, sum: 40 },
+      { yearMonth: '2026-02', subTypeId: 11, subTypeName: '外食', sum: 30 }
     ];
     const { rows: bars, series } = buildSubTypeStack(
       rows,
       2026,
-      (id) => (id === null ? 'なし' : `sub${id}`),
       (i) => `p${i}`,
-      '#grey',
+      'grey',
       'サブカテゴリなし'
     );
     expect(series[0]).toEqual({
       key: 'null',
       label: 'サブカテゴリなし',
-      color: '#grey'
+      colorName: 'grey'
     });
-    expect(series[1]).toEqual({ key: '11', label: 'sub11', color: 'p0' });
+    expect(series[1]).toEqual({ key: '11', label: '外食', colorName: 'p0' });
     expect(bars[0]).toEqual({ month: '1', null: 40, '11': 60 });
     expect(bars[1]).toEqual({ month: '2', null: 0, '11': 30 });
   });

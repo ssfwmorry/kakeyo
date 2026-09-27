@@ -12,7 +12,7 @@ import {
 import { PairModeSegment } from '@/components/pair-mode-segment';
 import { SectionListEmpty } from '@/components/section-list';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Segment, type SegmentOption } from '@/components/ui/segment';
+import { Segment } from '@/components/ui/segment';
 import { colorVar } from '@/features/master';
 import { fetchPieAction } from '@/features/summary/actions';
 import type { PieShowData } from '@/features/summary/domain/chart-data';
@@ -26,14 +26,13 @@ import {
 import { breakdownFootnote, summaryLabels, totalLabel } from '../labels';
 import { Donut } from './donut';
 import { MonthPickerSheet } from './month-picker-sheet';
+import { SummaryTabs } from './summary-tabs';
 
 // 集計 › 内訳（原典 SumBreakdown）。カテゴリ／方法の軸、立替の扱い、サブカテゴリの
-// 子行、年月ピッカーを持つ。推移・精算は別ルート（T15 / T16）。
+// 子行、年月ピッカーを持つ。推移・精算は別ルート。
 //
 // 「個人｜共有」の切替はページが再描画されて初期データが変わる。この画面の state は
 // ページ側の key で作り直す。
-
-type SummaryTab = 'breakdown' | 'trend' | 'settlement';
 
 // 明細への遷移先。いま見ている絞り込みをそのまま引き継ぐ。
 // id / 年月は数字に効くのでサーバが検証し直す。名前と色は表示のためだけに渡す。
@@ -135,16 +134,6 @@ export function SummaryScreen({
   const kind = kindLabel(isType, isPay);
   const footnote = breakdownFootnote(hasPair, isPair, isIncludeInstead, kind);
 
-  const tabOptions: readonly SegmentOption<SummaryTab>[] = [
-    { value: 'breakdown', label: summaryLabels.tab.breakdown },
-    { value: 'trend', label: summaryLabels.tab.trend, disabled: true },
-    {
-      value: 'settlement',
-      label: summaryLabels.tab.settlement,
-      disabled: true
-    }
-  ];
-
   return (
     <div className='flex flex-col gap-3 px-4'>
       <div className='flex h-11 items-center justify-between'>
@@ -157,12 +146,7 @@ export function SummaryScreen({
 
       <h1 className='font-bold text-3xl'>{summaryLabels.heading.summary}</h1>
 
-      <Segment
-        label='集計の種類'
-        onChange={() => undefined}
-        options={tabOptions}
-        value='breakdown'
-      />
+      <SummaryTabs current='breakdown' hasPair={hasPair} />
 
       <div className='flex items-center gap-1'>
         <MonthNavButton

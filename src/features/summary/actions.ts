@@ -6,9 +6,11 @@ import { getSummarizedRecords } from '@/features/record/server/services';
 import {
   colorHex,
   NO_SUB_TYPE_COLOR,
+  SETTLEMENT_COLOR_NAME,
   SETTLEMENT_NAME,
   subTypeColor
 } from './color';
+import { NO_SUB_TYPE_NAME } from './domain/breakdown';
 import {
   buildMethodPie,
   buildPayIncomeBar,
@@ -77,12 +79,15 @@ export async function fetchTypePeriodAction(input: {
     isPay: input.isPay,
     isPair
   });
-  return buildTypePeriodStack(rows, input.year, colorHex, SETTLEMENT_NAME);
+  return buildTypePeriodStack(
+    rows,
+    input.year,
+    SETTLEMENT_COLOR_NAME,
+    SETTLEMENT_NAME
+  );
 }
 
 // 推移 > カテゴリ別（特定カテゴリ選択時 = 年次サブカテゴリ別 積み上げ棒）を返す。
-// service（getSubTypeSummary）はサブカテゴリ名を返さないため、凡例は id ベースの
-// 安定ラベル（'サブ#id'）で補う（積み上げの見分けが目的で、集計値には影響しない）。
 export async function fetchSubTypeAction(input: {
   year: number;
   typeId: number;
@@ -95,11 +100,9 @@ export async function fetchSubTypeAction(input: {
   return buildSubTypeStack(
     rows,
     input.year,
-    (subTypeId) =>
-      subTypeId === null ? 'サブカテゴリなし' : `サブ${subTypeId}`,
     subTypeColor,
     NO_SUB_TYPE_COLOR,
-    'サブカテゴリなし'
+    NO_SUB_TYPE_NAME
   );
 }
 

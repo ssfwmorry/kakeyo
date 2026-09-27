@@ -14,20 +14,21 @@ export function colorHex(name: string | null): string {
   return baseColorHex(name ?? SETTLEMENT_COLOR_NAME);
 }
 
-// サブカテゴリ積み上げ棒用の固定色。type 別の色（color_classifications）とは
-// 別系統で、1 カテゴリ内のサブカテゴリを見分けるための循環パレット。
-// Recharts の fill に直接渡すため hex で持つ。
+// サブカテゴリ積み上げ棒用の色。サブカテゴリは DB に色を持たないので、
+// 1 カテゴリ内で見分けるための循環パレットを当てる。
+// 色名で持つのは type 別の色と同じ扱いにするため（描画時に colorVar で
+// --cat-* へ解決し、ライト／ダークに追従させる）。
 export const SUB_TYPE_COLORS = [
-  '#ffd700',
-  '#3cb371',
-  '#8a2be2',
-  '#ffb6c1',
-  '#4169e1',
-  '#d2691e'
+  'amber',
+  'green',
+  'deep-purple',
+  'pink',
+  'indigo',
+  'brown'
 ] as const;
 
-// 「サブカテゴリなし」系列の色。
-export const NO_SUB_TYPE_COLOR = '#9e9e9e';
+// 「サブカテゴリなし」系列の色名。実体のある分類ではないのでグレーに落とす。
+export const NO_SUB_TYPE_COLOR = 'grey';
 
 export function subTypeColor(index: number): string {
   return SUB_TYPE_COLORS[index % SUB_TYPE_COLORS.length];

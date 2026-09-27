@@ -202,12 +202,13 @@ export function buildPayIncomeBar(
 
 // 積み上げ棒（推移 > カテゴリ別・「全て」= カテゴリ別）
 
-// 系列メタ（凡例・色・Bar dataKey）。key は type/sub_type の id を文字列化したもの。
+// 系列メタ（凡例・色・積み上げの dataKey）。key は type/sub_type の id を文字列化したもの。
 export type StackSeries = {
   key: string;
   label: string;
-  // hex 色（type は color_classifications 由来、sub_type は循環パレット）。
-  color: string;
+  // 色名（type は color_classifications 由来、sub_type は循環パレット）。
+  // 描画時に colorVar で --cat-* へ解決する。
+  colorName: string;
 };
 
 // 積み上げ棒の 1 行（Recharts Bar の data 要素）。x=月ラベル、各系列 key に金額。
@@ -226,7 +227,7 @@ export type StackShowData = {
 export function buildTypePeriodStack(
   periodRows: TypeSummaryPeriodRow[],
   year: number,
-  toHex: (name: string | null) => string,
+  settlementColorName: string,
   settlementName: string
 ): StackShowData {
   // 系列（typeId）の出現順を保持しつつ重複排除。
@@ -240,7 +241,8 @@ export function buildTypePeriodStack(
       seriesByKey.set(key, {
         key,
         label: row.typeName ?? settlementName,
-        color: toHex(row.typeColorClassificationName)
+        // 精算（typeId=null）は色を持たないので精算色に寄せる。
+        colorName: row.typeColorClassificationName ?? settlementColorName
       });
     }
     let monthMap = valuesByMonth.get(row.yearMonth);
@@ -262,9 +264,8 @@ export function buildTypePeriodStack(
 export function buildSubTypeStack(
   subRows: SubTypeSummaryRow[],
   year: number,
-  subTypeName: (subTypeId: number | null) => string,
   paletteColor: (index: number) => string,
-  noSubTypeColor: string,
+  noSubTypeColorName: string,
   noSubTypeLabel: string
 ): StackShowData {
   // 「なし」を先頭系列に固定するため、まず null を登録する。
@@ -281,13 +282,14 @@ export function buildSubTypeStack(
         seriesByKey.set(key, {
           key,
           label: noSubTypeLabel,
-          color: noSubTypeColor
+          colorName: noSubTypeColorName
         });
       } else {
         seriesByKey.set(key, {
           key,
-          label: subTypeName(row.subTypeId),
-          color: paletteColor(paletteIndex)
+          // 名前が無いサブカテゴリは無いが、型上は null を取りうるので id で補う。
+          label: row.subTypeName ?? `#${row.subTypeId}`,
+          colorName: paletteColor(paletteIndex)
         });
         paletteIndex += 1;
       }

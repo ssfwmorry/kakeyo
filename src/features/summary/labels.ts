@@ -27,6 +27,29 @@ export const summaryLabels = {
     payByMethod: '支払',
     receiveByMethod: '受取'
   },
+  // 推移タブ（原典 SumTrend）。
+  trend: {
+    kindLabel: '推移の種類',
+    all: '全体',
+    byType: 'カテゴリ別',
+    // 全体のピル。収支は正負をまたぐ棒、支出のみは上向きだけ。
+    balance: '収支',
+    payOnly: '支出のみ',
+    // カテゴリ別のピル。
+    pay: '支出',
+    income: '収入',
+    // カテゴリのチップの先頭（カテゴリを絞らない）。
+    allTypes: '全て',
+    chipsLabel: '見るカテゴリ',
+    yearTotal: '年間',
+    table: {
+      month: '月',
+      pay: '支出',
+      income: '収入',
+      balance: '収支',
+      total: '年計'
+    }
+  },
   empty: {
     noData: '表示するデータがありません'
   },
@@ -41,6 +64,12 @@ export const summaryLabels = {
 // 合計の見出し（ドーナツ中央）。「支出合計」「受取合計」など。
 export function totalLabel(kind: string): string {
   return `${kind}合計`;
+}
+
+// 推移の見出し（「2026年の収支」「9月の支出」など）。
+// 全体は収支か支出、カテゴリ別は選んだカテゴリの名前を対象にする。
+export function trendHeadLabel(period: string, target: string): string {
+  return `${period}の${target}`;
 }
 
 // 内訳の脚注。立替をどう含めたかを説明する（原典 SumBreakdown の footnote）。

@@ -53,6 +53,8 @@ export type TypeSummaryPeriodRow = {
 export type SubTypeSummaryRow = {
   yearMonth: string;
   subTypeId: Id | null;
+  // 「サブカテゴリなし」（subTypeId=null）は名前を持たない。
+  subTypeName: string | null;
   sum: number;
 };
 
