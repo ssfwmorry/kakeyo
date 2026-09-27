@@ -24,7 +24,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'かけよ',
-  description: '個人・ペア向けの家計簿アプリ'
+  description: '個人・ペア向けの家計簿アプリ',
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false
+    }
+  }
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

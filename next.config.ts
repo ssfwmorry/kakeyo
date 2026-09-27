@@ -6,6 +6,20 @@ import type { NextConfig } from 'next';
 // 合わせれば（東京なら hnd1）遷移ごとの遅延を大きく削れる。設定先は vercel.json の
 // "regions"（JSON はコメント不可のためここに記す）。今回は変更しない判断。
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive, nosnippet'
+          }
+        ]
+      }
+    ];
+  }
+};
 
 export default nextConfig;
