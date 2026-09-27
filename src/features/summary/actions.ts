@@ -1,6 +1,8 @@
 'use server';
 
 import { requireAuth } from '@/features/auth/server/requireAuth';
+import type { SummarizedRecordItem } from '@/features/record';
+import { getSummarizedRecords } from '@/features/record/server/services';
 import {
   colorHex,
   NO_SUB_TYPE_COLOR,
@@ -99,4 +101,32 @@ export async function fetchSubTypeAction(input: {
     NO_SUB_TYPE_COLOR,
     'サブカテゴリなし'
   );
+}
+
+// 明細（内訳の行をタップした先）の記録一覧を返す。
+// 絞り込み条件はクライアント由来だが、scope はリポジトリ層（buildScopeWhere）が
+// 担保するため、他人の記録は id を推測されても返らない。isPair だけはセッションで
+// 上書きし、ペアのいないユーザが共有の数字を要求できないようにする。
+export async function fetchSummarizedRecordsAction(input: {
+  isType: boolean;
+  isPay: boolean;
+  isPair: boolean;
+  isIncludeInstead: boolean;
+  yearMonth: string;
+  id: number;
+  subTypeId: number | null;
+}): Promise<SummarizedRecordItem[]> {
+  const session = await requireAuth();
+  const isPair = session.pairId !== null && input.isPair;
+  return getSummarizedRecords(session, {
+    isType: input.isType,
+    isPay: input.isPay,
+    isPair,
+    // 共有モードで必ず立替を含める理由は domain/records-query.ts に書いてある
+    // （内訳の集計と明細で立替の扱いが違うため、合計を一致させるにはここで揃える）。
+    isIncludeInstead: isPair ? true : input.isIncludeInstead,
+    yearMonth: input.yearMonth,
+    id: input.id,
+    subTypeId: input.isType ? input.subTypeId : null
+  });
 }

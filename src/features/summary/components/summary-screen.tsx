@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
+import Link from 'next/link';
 import { type ReactNode, useMemo, useState, useTransition } from 'react';
 import {
   IconChevronDown,
@@ -33,6 +34,41 @@ import { MonthPickerSheet } from './month-picker-sheet';
 // ページ側の key で作り直す。
 
 type SummaryTab = 'breakdown' | 'trend' | 'settlement';
+
+// 明細への遷移先。いま見ている絞り込みをそのまま引き継ぐ。
+// id / 年月は数字に効くのでサーバが検証し直す。名前と色は表示のためだけに渡す。
+function recordsHref({
+  isType,
+  isPay,
+  isIncludeInstead,
+  yearMonth,
+  row,
+  subTypeId,
+  subTypeName
+}: {
+  isType: boolean;
+  isPay: boolean;
+  isIncludeInstead: boolean;
+  yearMonth: string;
+  row: BreakdownRow;
+  subTypeId: number | null;
+  subTypeName: string | null;
+}): string {
+  const params = new URLSearchParams({
+    axis: isType ? 'type' : 'method',
+    id: String(row.id),
+    name: row.name,
+    color: row.colorName,
+    isPay: isPay ? '1' : '0',
+    instead: isIncludeInstead ? '1' : '0',
+    ym: yearMonth
+  });
+  if (subTypeId !== null) {
+    params.set('subTypeId', String(subTypeId));
+    params.set('subTypeName', subTypeName ?? '');
+  }
+  return `/summary/records?${params.toString()}`;
+}
 
 // 軸（カテゴリ／方法）と支出収入の組で、ピルとドーナツ中央の呼び名が変わる。
 function kindLabel(isType: boolean, isPay: boolean): string {
@@ -223,6 +259,17 @@ export function SummaryScreen({
                 isFirst={index === 0}
                 key={`${row.id}-${row.name}`}
                 row={row}
+                toHref={(subTypeId, subTypeName) =>
+                  recordsHref({
+                    isType,
+                    isPay,
+                    isIncludeInstead,
+                    yearMonth,
+                    row,
+                    subTypeId,
+                    subTypeName
+                  })
+                }
               />
             ))
           )}
@@ -299,96 +346,142 @@ function PayPill({
   );
 }
 
-// 内訳の 1 行（＋サブカテゴリの子行）。明細への遷移は T14。
+// 内訳の 1 行（＋サブカテゴリの子行）。押すとその絞り込みの明細へ進む。
 function BreakdownCell({
   row,
-  isFirst
+  isFirst,
+  toHref
 }: {
   row: BreakdownRow;
   isFirst: boolean;
+  toHref: (subTypeId: number | null, subTypeName: string | null) => string;
 }) {
   const color = colorVar(row.colorName);
-  return (
-    <div className={cn(!isFirst && 'border-border border-t')}>
-      <div className='flex h-14 items-center gap-3 px-3.5'>
-        {/* 精算は実体のあるカテゴリではないので、塗らず輪郭だけで描く。 */}
-        <span
-          aria-hidden='true'
-          className='size-2.5 shrink-0 rounded-full'
-          style={
-            row.isSettlement
-              ? { border: `2px solid ${color}` }
-              : { backgroundColor: color }
-          }
-        />
-        <span className='flex min-w-0 flex-grow flex-col gap-1.5'>
-          <span className='flex items-baseline gap-1.5 whitespace-nowrap'>
-            {row.pairUserName === null ? null : (
-              <span className='text-muted-foreground text-xs'>
-                {row.pairUserName}
-              </span>
-            )}
-            <span className='text-[15px]'>{row.name}</span>
-            {row.isPair ? (
-              <IconShare
-                aria-label='共有'
-                className='size-3.5 self-center text-primary'
-                role='img'
-                strokeWidth={2.2}
-              />
-            ) : null}
-            <span className='text-muted-foreground text-xs'>{row.pctText}</span>
-          </span>
-          <span className='block h-1 rounded-sm bg-line-soft'>
-            <span
-              className='block h-1 rounded-sm'
-              style={{ backgroundColor: color, width: `${row.pct}%` }}
+  const rowClass = 'flex h-14 items-center gap-3 px-3.5 text-foreground';
+  const inner = (
+    <>
+      {/* 精算は実体のあるカテゴリではないので、塗らず輪郭だけで描く。 */}
+      <span
+        aria-hidden='true'
+        className='size-2.5 shrink-0 rounded-full'
+        style={
+          row.isSettlement
+            ? { border: `2px solid ${color}` }
+            : { backgroundColor: color }
+        }
+      />
+      <span className='flex min-w-0 flex-grow flex-col gap-1.5'>
+        <span className='flex items-baseline gap-1.5 whitespace-nowrap'>
+          {row.pairUserName === null ? null : (
+            <span className='text-muted-foreground text-xs'>
+              {row.pairUserName}
+            </span>
+          )}
+          <span className='text-[15px]'>{row.name}</span>
+          {row.isPair ? (
+            <IconShare
+              aria-label='共有'
+              className='size-3.5 self-center text-primary'
+              role='img'
+              strokeWidth={2.2}
             />
-          </span>
+          ) : null}
+          <span className='text-muted-foreground text-xs'>{row.pctText}</span>
         </span>
-        <span className='font-semibold text-[15px]'>
-          {row.value.toLocaleString('ja-JP')}
-        </span>
-        {/* 精算は明細へ進めないので、シェブロンの分だけ空ける。 */}
-        {row.isSettlement ? (
-          <span aria-hidden='true' className='w-3.5 shrink-0' />
-        ) : (
-          <IconChevronRight
-            aria-hidden='true'
-            className='size-3.5 shrink-0 text-icon-muted'
-            strokeWidth={2.4}
-          />
-        )}
-      </div>
-
-      {row.subs.map((sub) => (
-        <SubCell key={sub.id ?? NO_SUB_TYPE_NAME} sub={sub} />
-      ))}
-    </div>
-  );
-}
-
-function SubCell({ sub }: { sub: BreakdownSubRow }) {
-  // 「サブカテゴリなし」は実体のある分類ではないので、文字を落として区別する。
-  const isNoSubType = sub.id === null;
-  return (
-    <div className='flex h-10 items-center pr-3.5 pl-9'>
-      <span className='flex flex-grow items-center gap-2.5 self-stretch border-line-soft border-t'>
-        <span className='flex flex-grow items-baseline gap-1.5'>
+        <span className='block h-1 rounded-sm bg-line-soft'>
           <span
-            className={cn('text-sm', isNoSubType && 'text-muted-foreground')}
-          >
-            {sub.name}
-          </span>
-          <span className='text-muted-foreground text-xs'>{sub.pctText}</span>
+            className='block h-1 rounded-sm'
+            style={{ backgroundColor: color, width: `${row.pct}%` }}
+          />
         </span>
-        <span className='text-sm'>{sub.value.toLocaleString('ja-JP')}</span>
+      </span>
+      <span className='font-semibold text-[15px]'>
+        {row.value.toLocaleString('ja-JP')}
+      </span>
+      {/* 精算は明細へ進めないので、シェブロンの分だけ空ける。 */}
+      {row.isSettlement ? (
+        <span aria-hidden='true' className='w-3.5 shrink-0' />
+      ) : (
         <IconChevronRight
           aria-hidden='true'
           className='size-3.5 shrink-0 text-icon-muted'
           strokeWidth={2.4}
         />
-      </span>
+      )}
+    </>
+  );
+
+  return (
+    <div className={cn(!isFirst && 'border-border border-t')}>
+      {/* 精算は type を持たないので明細で絞り込めない。行は出すが押せない。 */}
+      {row.isSettlement ? (
+        <div className={rowClass}>{inner}</div>
+      ) : (
+        <Link
+          aria-label={`${row.name}の明細を見る`}
+          className={rowClass}
+          href={toHref(null, null)}
+        >
+          {inner}
+        </Link>
+      )}
+
+      {row.subs.map((sub) => (
+        <SubCell
+          href={toHref(sub.id, sub.name)}
+          key={sub.id ?? NO_SUB_TYPE_NAME}
+          parentName={row.name}
+          sub={sub}
+        />
+      ))}
     </div>
+  );
+}
+
+function SubCell({
+  sub,
+  href,
+  parentName
+}: {
+  sub: BreakdownSubRow;
+  href: string;
+  parentName: string;
+}) {
+  // 「サブカテゴリなし」は実体のある分類ではないので、文字を落として区別する。
+  // 絞り込みの id が無いため明細へは進めない（親の明細がその分も含む）。
+  const isNoSubType = sub.id === null;
+  const rowClass = 'flex h-10 items-center pr-3.5 pl-9 text-foreground';
+  const inner = (
+    <span className='flex flex-grow items-center gap-2.5 self-stretch border-line-soft border-t'>
+      <span className='flex flex-grow items-baseline gap-1.5'>
+        <span className={cn('text-sm', isNoSubType && 'text-muted-foreground')}>
+          {sub.name}
+        </span>
+        <span className='text-muted-foreground text-xs'>{sub.pctText}</span>
+      </span>
+      <span className='text-sm'>{sub.value.toLocaleString('ja-JP')}</span>
+      {isNoSubType ? (
+        <span aria-hidden='true' className='w-3.5 shrink-0' />
+      ) : (
+        <IconChevronRight
+          aria-hidden='true'
+          className='size-3.5 shrink-0 text-icon-muted'
+          strokeWidth={2.4}
+        />
+      )}
+    </span>
+  );
+
+  if (isNoSubType) {
+    return <div className={rowClass}>{inner}</div>;
+  }
+  return (
+    <Link
+      aria-label={`${parentName} › ${sub.name}の明細を見る`}
+      className={rowClass}
+      href={href}
+    >
+      {inner}
+    </Link>
   );
 }
