@@ -1,4 +1,5 @@
 import 'server-only';
+import { cacheLife } from 'next/cache';
 import { cache } from 'react';
 import type { SessionData } from '@/lib/shared/types/auth';
 import { readDemoMode, toDemoSessionData } from './demoCookie';
@@ -38,9 +39,19 @@ import { findUserBySupabaseUid } from './user';
 // Settings > JWT Keys で ECC 鍵を CURRENT KEY に昇格（Rotate keys）させること。
 //
 // 多層防御方針（各 Server Component / Server Action の先頭で毎回呼ぶ）のため、
-// React cache() で per-request メモ化し、1 レンダリング内の重複 I/O
-// （JWT 検証 + DB 2 クエリ）を 1 回に畳む。
+// 2 層でキャッシュする。
+// - React cache(): 1 レンダリング内の重複 I/O（JWT 検証 + DB 2 クエリ）を 1 回に畳む
+// - use cache: private: リクエストを跨いで再利用する。Cookie を読むためサーバ
+//   キャッシュ（素の use cache）は使えず、private が唯一の選択肢。結果はブラウザに
+//   のみ保持されサーバには残らないので、ペアのデータが他セッションへ漏れない。
+//
+// 寿命は minutes（stale 5 分 / revalidate 1 分 / expire 1 時間）。上のトレードオフで
+// 許容したアクセストークンの exp（既定 1 時間）より短いので、失効の反映が今より
+// 遅くなることはない。
 export const getSessionData = cache(async (): Promise<SessionData | null> => {
+  'use cache: private';
+  cacheLife('minutes');
+
   const demoMode = await readDemoMode();
   if (demoMode) {
     return toDemoSessionData(demoMode);

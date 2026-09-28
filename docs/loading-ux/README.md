@@ -156,8 +156,8 @@ UX の原則として、**人は「待つこと」には耐えられるが「反
 | --- | --- | --- | --- | --- |
 | [x] | L01 | Vercel Function を東京リージョン（`hnd1`）へ | 🔴 全クエリの往復を短縮 | なし |
 | [x] | L02 | カレンダー月送りの楽観的更新（集計のパターンに揃える） | 🔴 無反応を解消 | なし |
-| [ ] | L03 | `(private)/layout.tsx` の await をモーダルへ押し下げ | 🔴 静的シェルを作り prefetch を実効化 | なし |
-| [ ] | L04 | Cache Components 導入（session の `use cache: private` ＋静的マスタ） | 🔴 全操作に乗る DB 2 クエリを削減 | L03 と一体 |
+| [x] | L03 | `(private)/layout.tsx` の await をモーダルへ押し下げ | 🔴 静的シェルを作り prefetch を実効化 | なし |
+| [x] | L04 | Cache Components 導入（session の `use cache: private` ＋静的マスタ） | 🔴 全操作に乗る DB 2 クエリを削減 | L03 と一体 |
 | [ ] | L05 | 押下フィードバック（タブバー・設定の行） | 🟡 0.1 秒の反応 | L03 |
 | [ ] | L06 | `Skeleton` 部品と `loading.tsx`（形が確定した画面のみ） | 🔵 最後の保険 | L03, L05 |
 
@@ -470,6 +470,33 @@ session のキャッシュと、静的マスタの `use cache` までに留め�
   ペアモードを切り替えて**古いスコープのデータが残らない**ことを必ず確認する
   （これは情報漏洩に直結するので、本タスクで最も慎重に見る点）。
 - **Server Action からの再検証**: 記録の保存・削除後に一覧が更新されることを確認する。
+### 着手して分かったこと（L03 / L04 の確定事項）
+
+- **`getSessionData` は DB を引いていた**。L03 の「要確認」は黒。`use cache: private`
+  （`cacheLife('minutes')`）を React `cache()` の内側に重ねた。両者は層が違い共存する。
+  寿命は JWT の `exp`（既定 1 時間）より短いので、失効の反映が今より遅くなることはない。
+- **`requireAuth()` を Suspense 内へ落とす判断は裏が取れた**。[proxy.ts](../../src/proxy.ts) の
+  matcher は静的アセットを除く全パスを通し、未ログインは `/login` へリダイレクトする。
+  実際に未認証で `/calendar` を叩くと 307 で弾かれることを確認した。加えて生成された
+  `calendar.html`（3KB）に記録・金額・TODO のいずれも含まれないことを grep で確認済み。
+- **段階導入は共通 layout まででシェルが出た**。`(private)/layout.tsx` の `instant = false`
+  を外しただけで `(private)` 配下の全ルートが `ƒ`（動的）から `◐`（Partial Prerender）に
+  変わり、`calendar.html` などの静的シェルが生成された。各画面の `instant = false` 剥がしは
+  未着手のまま残してよい。
+- **`instant = false` が要らなかった箇所は戻した**。codemod は全 `page`/`layout` に入れるが、
+  データを読まない `(auth)` 配下・ルート・`(tabs)/layout.tsx` は外してもビルドが通る。
+  結果、印が残るのは「セッション由来の取得を持つ 15 画面」だけになっている。
+- **`route.ts` は codemod の対象外**。`api/cron/post-records` の
+  `export const dynamic = 'force-dynamic'` が `cacheComponents` と非互換でビルドが落ちる。
+  Cache Components では全ページが既定で動的なので、この宣言は削除した。
+- **ペアモード切替・デモの無害性は実挙動で確認した**。キャッシュに載せたのは
+  「全ユーザ共通・不変の色マスタ（素の `use cache`）」と「ブラウザにのみ残る session
+  （`private`）」だけで、scope を持つデータ（records / types / methods）は一切キャッシュ
+  していない。デモの入力モーダルで候補が個人／共有で入れ替わること、保存が no-op で
+  成功することをデモログインで確認した。
+
+---
+
 ## L05 🟡 押下フィードバック
 
 ### やること

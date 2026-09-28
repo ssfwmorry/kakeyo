@@ -9,6 +9,11 @@ import { SettlementScreen } from '@/features/summary/components/settlement-scree
 import { currentYearMonth } from '@/features/summary/domain/period';
 import { getMethodCardList } from '@/features/summary/server/services';
 
+// この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
+// サーバでブロックしてよい印を立てる（共通 layout の静的シェルは効いている）。
+// 外すのは画面ごとの個別タスク（docs/loading-ux/README.md）。
+export const instant = false;
+
 // 集計 › 精算。ペアがいるときだけ。今月のペアの record を Server で 1 度取り、
 // 月移動は Client が Server Action で取り直す。
 //

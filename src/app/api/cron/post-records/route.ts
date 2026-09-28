@@ -9,9 +9,6 @@ import { serverEnv } from '@/lib/server/env.server';
 // 誤設定なので 503（無防備な公開を避ける）。この Route は /api なのでログインガードを通らず、
 // ここでの Bearer 検証が唯一の防御となる。
 
-// 実体化は毎回異なる結果になりうる副作用処理のため、静的化・キャッシュを禁止する。
-export const dynamic = 'force-dynamic';
-
 export async function GET(request: Request): Promise<Response> {
   const secret = serverEnv.cronSecret;
   if (!secret) {

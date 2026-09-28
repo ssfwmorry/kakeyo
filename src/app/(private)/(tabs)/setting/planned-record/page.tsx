@@ -11,6 +11,11 @@ import {
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { todayJst } from '@/lib/shared/domain/date';
 
+// この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
+// サーバでブロックしてよい印を立てる（共通 layout の静的シェルは効いている）。
+// 外すのは画面ごとの個別タスク（docs/loading-ux/README.md）。
+export const instant = false;
+
 // 設定 › 定期の記録。追加・編集のシートが使う候補（カテゴリ・方法・毎月何日か）も
 // ここで取る。
 
