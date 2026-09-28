@@ -47,3 +47,6 @@ next-env.d.ts
 
 # screenshots (動作確認用の一時ファイル)
 /.screenshots/
+
+# Playwright MCP の作業ファイル（スナップショット・コンソールログ）
+/.playwright-mcp/

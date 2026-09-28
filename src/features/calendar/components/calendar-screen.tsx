@@ -12,7 +12,8 @@ import { PairModeSegment } from '@/components/pair-mode-segment';
 import { ThemeToggle } from '@/components/theme-toggle';
 import type {
   CalendarInitialData,
-  CalendarMonthData
+  CalendarMonthData,
+  DaySum
 } from '@/features/calendar';
 import { getCalendarMonthAction } from '@/features/calendar/actions';
 import {
@@ -40,8 +41,9 @@ import { TodoChips } from './todo-chips';
 // セルが「日付・収支・予定の帯」の 3 段で帯が複数日にまたがるため、暦ライブラリの
 // レイアウトに載せず自前のグリッドで組む（段の割り当ては domain/event-lanes.ts）。
 //
-// 月移動は Server Action で取り直す。取得中も前の月を出したままにして、
-// 画面が空白になるのを避ける。
+// 月移動は Server Action で取り直すが、応答を待たずに見出しとグリッドの枠を先に送る
+// （枠は年月だけで決まる）。日別の収支・予定はデータが追いつくまで空にする。前の月の値を
+// 残すと新しい枠に古い数字が乗るため。
 //
 // お知らせシートの開閉はこの画面が持つ。ヘッダーのベルと日別リストのリマインダー行の
 // 両方から同じシートを開くため。
@@ -65,6 +67,9 @@ export function CalendarScreen({
   // ヘッダー左に置く要素（お知らせのベル）。Server Component を page から渡す。
   headerLeft?: ReactNode;
 }) {
+  // 表示中の年月。月送りではこちらを先に進め、データ（month）は後から追いつかせる。
+  // 月見出しとグリッドの枠は年月だけで決まるので、サーバを待たずに描ける。
+  const [yearMonth, setYearMonth] = useState(initial.month.yearMonth);
   const [month, setMonth] = useState<CalendarMonthData>(initial.month);
   const [selectedDate, setSelectedDate] = useState(initial.today);
   const [isPending, startTransition] = useTransition();
@@ -73,13 +78,26 @@ export function CalendarScreen({
   });
   const noteModal = useNoteModal();
 
+  // データが表示中の月に追いつくまでは日別の値を出さない。
+  // 出すと新しい月の枠に前月の収支・予定が乗ってしまう。
+  const isStale = month.yearMonth !== yearMonth;
+
+  // 月を取り直す。対象の年月を引数で受け、応答が返った時点でまだその月を見ているときだけ
+  // 反映する。月を連続で送ると応答の順序が入れ替わることがあり、無条件に入れると表示が
+  // 前の月へ巻き戻る。
+  const loadMonth = useCallback((target: string) => {
+    startTransition(async () => {
+      const next = await getCalendarMonthAction(target);
+      setMonth((prev) => (next.yearMonth === target ? next : prev));
+    });
+  }, []);
+
   // 記録・予定を保存・削除したら、いま見ている月を取り直す。月データはこの画面の state
   // なので、サーバ側の再検証だけでは画面に反映されない。
-  const reloadMonth = useCallback(() => {
-    startTransition(async () => {
-      setMonth(await getCalendarMonthAction(month.yearMonth));
-    });
-  }, [month.yearMonth]);
+  const reloadMonth = useCallback(
+    () => loadMonth(yearMonth),
+    [loadMonth, yearMonth]
+  );
 
   // 入力は layout の全画面モーダルで開く。記録を足す・直すとこの画面の月データが
   // 古くなるので、保存後に取り直す。
@@ -91,26 +109,29 @@ export function CalendarScreen({
     });
 
   const moveMonth = (delta: number) => {
-    const nextYearMonth = shiftMonth(month.yearMonth, delta);
-    startTransition(async () => {
-      setMonth(await getCalendarMonthAction(nextYearMonth));
-    });
+    const nextYearMonth = shiftMonth(yearMonth, delta);
+    // 見出しとグリッドの枠を先に送る。データはこの後で追いつく。
+    setYearMonth(nextYearMonth);
     // 月を変えたら選択日もその月の 1 日へ送る（前月の日を選んだままにしない）。
     setSelectedDate(`${nextYearMonth}-01`);
+    loadMonth(nextYearMonth);
   };
 
-  const cells = useMemo(
-    () => buildMonthGrid(month.yearMonth),
-    [month.yearMonth]
-  );
+  const cells = useMemo(() => buildMonthGrid(yearMonth), [yearMonth]);
 
   const daySums = useMemo(
-    () => new Map(month.days.map((day) => [day.dateStr, day])),
-    [month.days]
+    () =>
+      isStale
+        ? new Map<string, DaySum>()
+        : new Map(month.days.map((day) => [day.dateStr, day])),
+    [isStale, month.days]
   );
 
   // 予定とリマインダーを同じ形に寄せてから段を割り当てる。
   const lanes = useMemo(() => {
+    if (isStale) {
+      return assignEventLanes([], MAX_LANES);
+    }
     const events: LaneEvent[] = [
       ...month.plans.map((plan) => ({
         colorName: plan.planTypeColorName ?? 'grey',
@@ -130,9 +151,9 @@ export function CalendarScreen({
       }))
     ];
     return assignEventLanes(events, MAX_LANES);
-  }, [month.plans, month.reminders]);
+  }, [isStale, month.plans, month.reminders]);
 
-  const [year, monthPart] = month.yearMonth.split('-');
+  const [year, monthPart] = yearMonth.split('-');
 
   return (
     <NotifySheetStateProvider>
@@ -155,32 +176,35 @@ export function CalendarScreen({
           </span>
           <span className='mt-2 flex items-baseline gap-1'>
             <span className='text-muted-foreground text-xs'>収支</span>
-            {/* monthSum は「支出=正」向きなので符号を反転して出す。色は符号によらず本文色。 */}
+            {/* monthSum は「支出=正」向きなので符号を反転して出す。色は符号によらず本文色。
+                その月の値が届くまでは出さない（前月の金額が新しい見出しに残るのを防ぐ）。 */}
             <span className='font-semibold text-[15px]'>
-              {formatSignedPrice(Math.abs(month.monthSum), month.monthSum > 0)}
+              {isStale
+                ? null
+                : formatSignedPrice(
+                    Math.abs(month.monthSum),
+                    month.monthSum > 0
+                  )}
             </span>
           </span>
           <div className='ml-auto flex gap-1.5'>
-            <MonthNavButton
-              direction='prev'
-              isPending={isPending}
-              onClick={() => moveMonth(-1)}
-            />
-            <MonthNavButton
-              direction='next'
-              isPending={isPending}
-              onClick={() => moveMonth(1)}
-            />
+            <MonthNavButton direction='prev' onClick={() => moveMonth(-1)} />
+            <MonthNavButton direction='next' onClick={() => moveMonth(1)} />
           </div>
         </div>
 
-        <MonthGrid
-          cells={cells}
-          daySums={daySums}
-          lanes={lanes}
-          onSelect={setSelectedDate}
-          selectedDate={selectedDate}
-        />
+        {/* 枠と日付は yearMonth だけで決まるので月送りの直後に正しくなる。
+            収支と予定の帯は daySums / lanes が空になるぶんだけ欠け、届いた時点で埋まる。
+            日付まで薄くなるのは避けたいので opacity は掛けず、更新中は aria-busy で示す。 */}
+        <div aria-busy={isPending}>
+          <MonthGrid
+            cells={cells}
+            daySums={daySums}
+            lanes={lanes}
+            onSelect={setSelectedDate}
+            selectedDate={selectedDate}
+          />
+        </div>
 
         <div className='grid grid-cols-2 gap-2.5'>
           <button
@@ -218,10 +242,13 @@ export function CalendarScreen({
 
         <DayDetailList
           daySum={daySums.get(selectedDate)}
+          isLoading={isStale}
           onEditPlan={(plan) => setPlanSheet({ kind: 'edit', plan })}
           onEditRecord={(record) => openNote(record)}
-          plans={selectDayPlans(month.plans, selectedDate)}
-          reminders={selectDayReminders(month.reminders, selectedDate)}
+          plans={isStale ? [] : selectDayPlans(month.plans, selectedDate)}
+          reminders={
+            isStale ? [] : selectDayReminders(month.reminders, selectedDate)
+          }
         />
 
         <CalendarPlanSheet
@@ -277,20 +304,19 @@ function CalendarPlanSheet({
   );
 }
 
+// 取得中も押せるままにする。月送りは連打してその場で数か月進めたい操作で、
+// 1 往復ごとに待たせると体験が悪い。後から届いた古い月の応答は loadMonth が捨てる。
 function MonthNavButton({
   direction,
-  isPending,
   onClick
 }: {
   direction: 'prev' | 'next';
-  isPending: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       aria-label={direction === 'prev' ? '前の月' : '次の月'}
-      className='flex size-9 items-center justify-center rounded-full bg-card text-foreground disabled:opacity-50'
-      disabled={isPending}
+      className='flex size-9 items-center justify-center rounded-full bg-card text-foreground'
       onClick={onClick}
       type='button'
     >
