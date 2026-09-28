@@ -158,8 +158,8 @@ UX の原則として、**人は「待つこと」には耐えられるが「反
 | [x] | L02 | カレンダー月送りの楽観的更新（集計のパターンに揃える） | 🔴 無反応を解消 | なし |
 | [x] | L03 | `(private)/layout.tsx` の await をモーダルへ押し下げ | 🔴 静的シェルを作り prefetch を実効化 | なし |
 | [x] | L04 | Cache Components 導入（session の `use cache: private` ＋静的マスタ） | 🔴 全操作に乗る DB 2 クエリを削減 | L03 と一体 |
-| [ ] | L05 | 押下フィードバック（タブバー・設定の行） | 🟡 0.1 秒の反応 | L03 |
-| [ ] | L06 | `Skeleton` 部品と `loading.tsx`（形が確定した画面のみ） | 🔵 最後の保険 | L03, L05 |
+| [x] | L05 | 押下フィードバック（タブバー・設定の行） | 🟡 0.1 秒の反応 | L03 |
+| [x] | L06 | `Skeleton` 部品と `loading.tsx`（形が確定した画面のみ） | 🔵 最後の保険 | L03, L05 |
 
 ---
 
@@ -567,6 +567,25 @@ export function Skeleton({ className }: { className?: string }) {
 #### 3. `(tabs)/layout.tsx` 直下に共通の `loading.tsx` は置かない
 
 置くと 4 タブすべてに同じ骨格が出てしまい、形の違う画面で嘘になる。**画面ごとに置く**。
+
+---
+
+### 着手して分かったこと（L05 / L06 の確定事項）
+
+- **`useLinkStatus` は Next.js 16.3.5 に存在した**。代替（`usePathname` + `useTransition`）は不要。
+  ただし `Link` の子孫でしか使えないので、タブの中身と行の地をそれぞれ小さなクライアント
+  部品（`TabContent` / `ListCellPending`）に切り出している。
+- **Tailwind v4 では `[animation:...]` の任意値が効かなかった**。`@keyframes` を
+  `globals.css` の末尾に素で書き、ユーティリティを任意値で当てる書き方だと、
+  キーフレームは出力されるのにユーティリティのルールが生成されず、
+  `prefers-reduced-motion` の上書きだけが残る（= アニメーションが無いのに
+  `animation-duration: 0s` を当てる）状態になった。`@theme inline` に
+  `--animate-skeleton-in` として登録し、`@keyframes` もその中に置くのが正解。
+  ビルド後の CSS に `.animate-skeleton-in{animation:.16s .12s both skeleton-in}` が
+  出ることで確認した。
+- **速い遷移では骨格は一度も出ない**。設定への遷移を MutationObserver で観測すると
+  骨格の挿入は 1 回起きるが、150ms 後にはもう実体に入れ替わっている。120ms の遅延が
+  意図どおり効いており、L06 が「最後の保険」である位置づけは実測とも合う。
 
 ---
 
