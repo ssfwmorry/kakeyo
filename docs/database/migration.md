@@ -386,3 +386,11 @@ alter table develop.users add column supabase_user_uid uuid unique; -- NULL 許�
 -- 開発用テストユーザに Supabase Auth 作成後の UID を紐付ける（値は Supabase 画面で確認して手動 update）
 -- update develop.users set supabase_user_uid = '<uuid>' where uid = '<firebase uid>';
 ```
+
+## 20260928_public DB の users に supabase_user_uid を追加する作業
+
+```sql
+alter table public.users add column supabase_user_uid uuid unique; -- NULL 許容
+-- Supabase Auth 作成後の UID を紐付ける（値は Supabase 画面で確認して手動 update）
+-- update public.users set supabase_user_uid = '<uuid>' where uid = '<firebase uid>';
+```
