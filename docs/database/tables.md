@@ -30,11 +30,12 @@
 
 #### schema
 
-| name |  type  | size | required | auto_increment | key | remarks                                                     |
-| :--- | :----: | :--: | :------: | :------------: | :-: | :---------------------------------------------------------- |
-| uid  | string |  28  |    v     |       -        | PK  | 固定長だが、JS から操作する時にエラーとなるので自由長とする |
-| mail | string |  -   |    v     |       -        |  -  | -                                                           |
-| name | string |  10  |    v     |       -        |  -  | -                                                           |
+| name              |  type  | size | required | auto_increment | key | remarks                                                                                         |
+| :---------------- | :----: | :--: | :------: | :------------: | :-: | :---------------------------------------------------------------------------------------------- |
+| uid               | string |  28  |    v     |       -        | PK  | 固定長だが、JS から操作する時にエラーとなるので自由長とする（Firebase UID）                     |
+| mail              | string |  -   |    v     |       -        |  -  | -                                                                                               |
+| name              | string |  10  |    v     |       -        |  -  | -                                                                                               |
+| supabase_user_uid |  uuid  |  -   |    -     |       -        | UK  | Supabase Auth の UID。Firebase→Supabase Auth 移行のため付与（NULL 許容。既存 FK は uid のまま） |
 
 #### migration
 
@@ -45,7 +46,9 @@ drop table if exists develop.users cascade;
 create table develop.users (
     uid   varchar(28)    primary key,
     mail  varchar(100)   not null check (length(mail) <= 100),
-    name  varchar(10)    not null check (length(name) <= 10)
+    name  varchar(10)    not null check (length(name) <= 10),
+    -- Supabase Auth 移行用。Firebase UID(uid) を FK キーとして残したまま Supabase UID を併存させる
+    supabase_user_uid uuid unique
 );
 
 alter table develop.users

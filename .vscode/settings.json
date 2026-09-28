@@ -1,45 +1,32 @@
 {
-  // 以下でSave時の動きを設定
+  // 保存時の整形は Biome（biome.json）に一本化する
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit",
-    "source.fixAll.eslint": "explicit",
-    "source.fixAll.stylelint": "explicit"
+    "source.organizeImports.biome": "explicit",
+    "source.fixAll.biome": "explicit"
   },
-  // 以下でVSCodeの他の機能によるフォーマットとの競合を防ぐ
-  "vetur.format.enable": false,
-  "html.format.enable": false,
-  "vetur.validation.template": false,
-  "javascript.format.enable": false,
-  "json.format.enable": false,
-  "vetur.validation.script": false,
-  "css.validate": false,
-  "scss.validate": false,
-  "vetur.validation.style": false,
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": [
-    "chartjs",
-    "composables",
-    "datatime",
-    "Datetime",
-    "daygrid",
-    "firebaserc",
-    "fullcalendar",
-    "iconsets",
-    "Kakei",
-    "kakeibo",
+    "conform",
+    "dnd",
     "Kakeyo",
-    "materialdesignicons",
-    "Nuxt",
-    "persistedstate",
-    "pinia",
+    "lucide",
     "Postgrest",
-    "scrollgrid",
-    "Strs",
+    "sonner",
     "Supabase",
-    "touchless",
-    "vuetify",
-    "Webstoryboy",
-    "zindex"
+    "tabular"
   ]
 }

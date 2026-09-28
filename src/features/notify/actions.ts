@@ -1,0 +1,38 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { requireAuth } from '@/features/auth/server/requireAuth';
+import { planReminderErrorMessage } from '@/features/plan-reminder/domain/error-message';
+import * as service from '@/features/plan-reminder/server/services';
+import { quoted } from '@/lib/shared/domain/format';
+import { L } from '@/lib/shared/labels';
+import {
+  type FormActionResult,
+  toFormResult
+} from '@/lib/shared/types/formResult';
+
+// お知らせシートの「確認」。リマインダーを次の日付へ進める。
+//
+// 成功の文言に対象名を入れる（「「電気代の支払い」を確認しました」）。
+// ベルは全タブのヘッダーにあり、日別リストのリマインダー行や設定の件数も変わるので、
+// 再検証はルートの layout 単位。
+
+export async function checkReminderAction(
+  reminderId: number
+): Promise<FormActionResult> {
+  const session = await requireAuth();
+  // 文言用の名前は scope 内の一覧から引く（クライアントから受けた値は表示にも使わない）。
+  const target = (await service.getReminderList(session)).all.find(
+    (reminder) => reminder.id === reminderId
+  );
+  const result = await service.checkReminder(session, reminderId);
+  revalidatePath('/', 'layout');
+  return toFormResult(result, {
+    success:
+      target === undefined
+        ? L.snackbar.checked
+        : `${quoted(target.name)}を${L.snackbar.checked}`,
+    errorMessage: planReminderErrorMessage,
+    fallbackError: L.snackbar.failed
+  });
+}

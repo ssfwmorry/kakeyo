@@ -1,0 +1,56 @@
+// アプリ共通のアイコン定義。
+//
+// lucide-react を各所で個別 import すると、同じ意味に別アイコンが当たる事故
+// （共有を Share2 / 色ドット / 文字で三分裂）が起きるため、ここを唯一の正とする。
+// 新しくアイコンが要るときは lucide を直 import せずここに足す。
+//
+// 1 つのオブジェクトに束ねると `Icons.X` がプロパティ参照になり静的解析で
+// 個別 export へ還元できず、1 個しか使わない画面（login 等）にも全アイコンが
+// 載る。tree-shaking を効かせるため名前付き re-export にする。
+// 行末コメントの MDI 名は、同じ意味のアイコンを探すときの手がかり。
+export {
+  ArrowDown as IconArrowDown, // mdiArrowDown
+  Bell as IconBell, // mdiBell
+  BookOpen as IconManual, // mdiBookOpenOutline（とりせつ）
+  Calendar as IconCalendar, // mdiCalendar
+  ChartColumn as IconChartBar, // mdiChartBar
+  ChartPie as IconChartPie, // mdiChartPie
+  Check as IconCheck, // mdiCheck
+  // 「開く」ことを示す（集計の月ラベルなど）。
+  ChevronDown as IconChevronDown,
+  // 「戻る」導線に使う。
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
+  CircleAlert as IconAlertCircle, // mdiAlertCircleOutline（エラートースト）
+  CreditCard as IconCreditCard, // mdiCreditCardOutline（方法）
+  Delete as IconBackspace, // mdiBackspaceOutline
+  // 並べ替えのドラッグハンドル（2 本線）。
+  Equal as IconGrip,
+  Eye as IconEye, // mdiEye
+  EyeOff as IconEyeOff, // mdiEyeOff
+  Landmark as IconBank, // mdiBank（口座）
+  Lock as IconLock, // mdiLock（編集中の固定）
+  LogOut as IconLogout, // mdiLogout
+  Mail as IconMail, // mdiEmailOutline（お問い合わせ）
+  MessageSquareText as IconMemo, // mdiCommentTextOutline（メモ）
+  Minus as IconMinus, // mdiMinus（編集中の削除マーク・ステッパー）
+  Moon as IconMoon, // mdiWeatherNight（ダークへ切替）
+  Pencil as IconPencil, // mdiPencil
+  PiggyBank as IconPiggyBank, // mdiPiggyBank
+  Plus as IconPlus, // mdiPlus
+  PlusSquare as IconPlusBox, // mdiPlusBox
+  Repeat as IconUpdate, // mdiUpdate（定期）
+  RotateCcw as IconRotateCcw, // mdiRestore（金額のクリア）
+  Settings as IconCog, // mdiCog
+  Shapes as IconShape, // mdiShape
+  SquareArrowOutUpRight as IconOpenInNew, // mdiOpenInNew
+  Sun as IconSun, // mdiWeatherSunny（ライトへ切替）
+  Tag as IconTag, // mdiTagOutline（カテゴリ）
+  Trash2 as IconTrash, // mdiTrashCanOutline
+  TrendingUp as IconAnalytics, // mdiGoogleAnalytics
+  // 共有(ペア)の唯一の正。2 人アイコンを使う
+  // （lucide の Share2 は共有ノード図で意図が異なる）。
+  Users as IconShare, // mdiAccountMultiple
+  Wallet as IconCash, // mdiCashMultiple
+  X as IconClose // mdiClose
+} from 'lucide-react';
