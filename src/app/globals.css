@@ -34,6 +34,19 @@
   --color-saturday: var(--saturday);
   --color-line-soft: var(--line-soft);
   --color-fill-soft: var(--fill-soft);
+
+  /* スケルトンの出現。脈打たせず（共通仕様の抑制に合わせる）、120ms 遅れて
+     フェードインさせるので、速く解決したときは一度も見えない。 */
+  --animate-skeleton-in: skeleton-in 160ms 120ms both;
+
+  @keyframes skeleton-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
   --color-disabled: var(--disabled);
   --color-grabber: var(--grabber);
   --color-dash: var(--dash);
@@ -253,5 +266,12 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* 動きを抑える設定では、遅延だけ残してフェードを消す（出現そのものは保つ）。 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-skeleton-in {
+    animation-duration: 0ms;
   }
 }
