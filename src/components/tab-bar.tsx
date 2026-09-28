@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
-import Link from 'next/link';
+import Link, { useLinkStatus } from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   IconBank,
@@ -45,22 +45,38 @@ function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function Tab({ item, isActive }: { item: TabItem; isActive: boolean }) {
+// 押したタブを、遷移の完了を待たずに選択中の見た目へ寄せる。スピナーは足さない
+// （「押したタブがもう選ばれている」と分かれば十分で、回るアイコンより静か）。
+// useLinkStatus は Link の子孫でしか使えないため、中身をこの部品に切り出している。
+function TabContent({ item, isActive }: { item: TabItem; isActive: boolean }) {
+  const { pending } = useLinkStatus();
   const Icon = item.icon;
+  const isSelected = isActive || pending;
+
+  return (
+    <span
+      className={cn(
+        'flex h-12 w-full flex-col items-center justify-center gap-0.5 rounded-3xl transition-colors motion-reduce:transition-none',
+        isSelected ? 'bg-line-soft text-primary' : 'text-tab-muted'
+      )}
+    >
+      <Icon aria-hidden='true' className='size-6' strokeWidth={2} />
+      <span className={cn('text-[10px]', isSelected && 'font-semibold')}>
+        {item.label}
+      </span>
+    </span>
+  );
+}
+
+function Tab({ item, isActive }: { item: TabItem; isActive: boolean }) {
   return (
     <Link
       aria-current={isActive ? 'page' : undefined}
-      className={cn(
-        'flex h-12 flex-1 basis-0 flex-col items-center justify-center gap-0.5 rounded-3xl',
-        isActive ? 'bg-line-soft text-primary' : 'text-tab-muted'
-      )}
+      className='flex h-12 flex-1 basis-0 items-center justify-center rounded-3xl'
       href={item.href}
       prefetch={true}
     >
-      <Icon aria-hidden='true' className='size-6' strokeWidth={2} />
-      <span className={cn('text-[10px]', isActive && 'font-semibold')}>
-        {item.label}
-      </span>
+      <TabContent isActive={isActive} item={item} />
     </Link>
   );
 }
