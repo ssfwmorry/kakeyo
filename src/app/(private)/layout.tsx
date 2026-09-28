@@ -18,6 +18,11 @@ import { todayJst } from '@/lib/shared/domain/date';
 // 元のタブに戻るので、タブより外側に置く必要がある。候補（カテゴリ・方法）も
 // ここで 1 度だけ取る。
 //
+// 候補の DB 3 クエリは await せず Promise のまま渡す。候補が要るのは入力モーダルを
+// 開いたときだけで、ここで await すると (private) 配下の全画面がその解決を待って
+// 1px も描画できない（= 静的シェルが生まれず tab-bar の prefetch が空振りする）。
+// 取得はこの時点で始まるので、＋ を押す頃にはほぼ解決済み。
+//
 // 認証ガードは requireAuth。Proxy に加えた多層防御。
 //
 // 幅はスマホ専用（max-w-md = 448px）。PC で開いたときは shell ごと中央に寄せ、
@@ -31,23 +36,20 @@ export default async function PrivateLayout({
 }) {
   const session = await requireAuth();
 
-  const [typeList, methodList, isPair] = await Promise.all([
+  const candidates = Promise.all([
     getTypeCardList(session),
     getMethodCardList(session),
     getEffectivePairMode(session)
-  ]);
+  ]).then(([typeList, methodList, isPair]) => ({
+    typeList,
+    methodList,
+    isPair,
+    hasPair: session.pairId !== null
+  }));
 
   return (
     <div className='mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-background sm:border-x'>
-      <NoteModalProvider
-        candidates={{
-          typeList,
-          methodList,
-          isPair,
-          hasPair: session.pairId !== null,
-          today: todayJst()
-        }}
-      >
+      <NoteModalProvider candidates={candidates} today={todayJst()}>
         <OfflineBanner />
         {children}
       </NoteModalProvider>

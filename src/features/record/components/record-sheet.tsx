@@ -20,15 +20,17 @@ export function RecordSheet({
   editing,
   initialDate,
   onClose,
-  onSaved
+  onSaved,
+  today
 }: {
   candidates: NoteModalCandidates;
   editing?: NoteRecordDefault;
   initialDate: string;
   onClose: () => void;
   onSaved?: () => void;
+  today: string;
 }) {
-  const { typeList, methodList, hasPair, today } = candidates;
+  const { typeList, methodList, hasPair } = candidates;
   // 編集対象の共有／個人は対象自身の区分に従う（作成時に決まり後から移せない）。
   const isPair = editing?.isPair ?? candidates.isPair;
 
