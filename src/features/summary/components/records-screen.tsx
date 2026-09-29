@@ -237,8 +237,6 @@ function RecordRow({
 }) {
   const isLocked = isLockedRecord(record);
   const color = colorVar(record.typeColorClassificationName);
-  // 2 行目（メモ · 方法）。メモが無ければ方法だけ。
-  const sub = [record.memo, record.methodName].filter(Boolean).join(' · ');
   const amount = formatPrice(record.price);
   const title = record.subTypeName ?? record.typeName ?? '';
 
@@ -296,11 +294,22 @@ function RecordRow({
               strokeWidth={2.4}
             />
           ) : null}
-          {sub}
+          {record.memo}
         </span>
       </span>
-      <span className={cn('font-semibold text-base', amountToneClass(isPay))}>
-        {amount}
+      {/* 方法はメモと混ざらないよう金額の下に置く（メモの有無で位置が動かないよう常に右寄せ）。 */}
+      <span
+        className={cn(
+          'flex shrink-0 flex-col items-end justify-center gap-0.5 self-stretch',
+          !isFirst && 'border-border border-t'
+        )}
+      >
+        <span className={cn('font-semibold text-base', amountToneClass(isPay))}>
+          {amount}
+        </span>
+        <span className='text-muted-foreground text-xs'>
+          {record.methodName}
+        </span>
       </span>
     </>
   );

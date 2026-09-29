@@ -210,10 +210,6 @@ function RecordRow({
     record.subTypeName === null
       ? (record.typeName ?? '')
       : `${record.typeName} · ${record.subTypeName}`;
-  const description =
-    record.memo === null
-      ? record.methodName
-      : `${record.memo} · ${record.methodName}`;
   const color = colorVar(record.typeColorClassificationName);
 
   const rowClass =
@@ -235,18 +231,26 @@ function RecordRow({
       </span>
       <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
         <span className='truncate text-[15px]'>{title}</span>
-        <span className='truncate text-muted-foreground text-xs'>
-          {description}
-        </span>
-      </span>
-      {/* 支出・収入の判定は集計と同じ関数に揃える（精算や isPay=null は自分が送金側かで決まる）。 */}
-      <span
-        className={cn(
-          'shrink-0 font-semibold text-base',
-          amountToneClass(resolveDisplayIsPay(record))
+        {record.memo === null ? null : (
+          <span className='truncate text-muted-foreground text-xs'>
+            {record.memo}
+          </span>
         )}
-      >
-        {formatPrice(record.price)}
+      </span>
+      {/* 方法はメモと混ざらないよう金額の下に置く（メモの有無で位置が動かないよう常に右寄せ）。 */}
+      <span className='flex shrink-0 flex-col items-end gap-0.5'>
+        {/* 支出・収入の判定は集計と同じ関数に揃える（精算や isPay=null は自分が送金側かで決まる）。 */}
+        <span
+          className={cn(
+            'font-semibold text-base',
+            amountToneClass(resolveDisplayIsPay(record))
+          )}
+        >
+          {formatPrice(record.price)}
+        </span>
+        <span className='text-muted-foreground text-xs'>
+          {record.methodName}
+        </span>
       </span>
     </>
   );

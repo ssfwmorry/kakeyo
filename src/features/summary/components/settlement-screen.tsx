@@ -869,7 +869,6 @@ function CoupleRow({
   const color = colorVar(item.typeColorClassificationName);
   const sub = [
     formatSlashDateWeekJa(toDateStringJst(item.datetime)),
-    item.methodName,
     // 精算 record は user_id が負担する側なので、isSelf が「自分から」を表す。
     item.isSettlement ? settlementTransferText(item.isSelf, partner) : null
   ]
@@ -906,14 +905,18 @@ function CoupleRow({
         </span>
         <span className='truncate text-muted-foreground text-xs'>{sub}</span>
       </span>
-      <span
-        className={cn(
-          'font-semibold text-base',
-          // 精算は立替の受け渡しで支出・収入の別を持たないため、色を付けず本文色のまま。
-          item.isSettlement ? null : amountToneClass(item.isPay ?? true)
-        )}
-      >
-        {formatPrice(item.price)}
+      {/* 方法は日付・送金先と混ざらないよう金額の下に置く（内訳の明細と同じ並び）。 */}
+      <span className='flex shrink-0 flex-col items-end gap-0.5'>
+        <span
+          className={cn(
+            'font-semibold text-base',
+            // 精算は立替の受け渡しで支出・収入の別を持たないため、色を付けず本文色のまま。
+            item.isSettlement ? null : amountToneClass(item.isPay ?? true)
+          )}
+        >
+          {formatPrice(item.price)}
+        </span>
+        <span className='text-muted-foreground text-xs'>{item.methodName}</span>
       </span>
     </div>
   );
