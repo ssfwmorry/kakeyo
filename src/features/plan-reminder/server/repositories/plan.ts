@@ -1,14 +1,14 @@
 import 'server-only';
 import { prisma } from '@/lib/server/db/client';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
-import { startOfDayJst, toDateStringJst } from '@/lib/shared/domain/date';
+import { dateOnlyValueJst, toDateStringJst } from '@/lib/shared/domain/date';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
 // plan リポジトリ（一覧取得 / upsert / 削除）。
 // 取得系は必ず buildScopeWhere を通す。日付（start_date/end_date）は date.ts 経由で
-// 扱う。DB は Date（@db.Date）で保持するため、
-// 読み取りは YYYY-MM-DD 文字列へ、書き込みは JST 日付境界の Date へ変換する。
+// 扱う。DB は @db.Date のため、書き込みは UTC 基準の『その日付』へ変換し、
+// 読み取りは YYYY-MM-DD 文字列へ戻す。
 
 // 画面用の plan 行（plan_type 色・reminder 色を結合）。
 export type PlanRow = {
@@ -82,8 +82,8 @@ export async function findPlanRows(
         buildScopeWhere(scope),
         {
           startDate: {
-            gte: startOfDayJst(range.start),
-            lte: startOfDayJst(range.end)
+            gte: dateOnlyValueJst(range.start),
+            lte: dateOnlyValueJst(range.end)
           }
         }
       ]
@@ -129,8 +129,8 @@ export async function insertPlan(input: {
   await prisma.plan.create({
     data: {
       name: input.name,
-      startDate: startOfDayJst(input.startDate),
-      endDate: startOfDayJst(input.endDate),
+      startDate: dateOnlyValueJst(input.startDate),
+      endDate: dateOnlyValueJst(input.endDate),
       planTypeId: input.planTypeId,
       memo: input.memo,
       userId: input.userId,
@@ -154,8 +154,8 @@ export async function updatePlan(input: {
     where: { id: input.id },
     data: {
       name: input.name,
-      startDate: startOfDayJst(input.startDate),
-      endDate: startOfDayJst(input.endDate),
+      startDate: dateOnlyValueJst(input.startDate),
+      endDate: dateOnlyValueJst(input.endDate),
       planTypeId: input.planTypeId,
       memo: input.memo,
       userId: input.userId,

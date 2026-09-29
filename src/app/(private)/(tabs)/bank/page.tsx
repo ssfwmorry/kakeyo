@@ -4,6 +4,11 @@ import { BankScreen } from '@/features/bank/components/bank-screen';
 import { getBankScreenData } from '@/features/bank/server/services';
 import { todayJst } from '@/lib/shared/domain/date';
 
+// この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
+// サーバでブロックしてよい印を立てる（共通 layout の静的シェルは効いている）。
+// 外すのは画面ごとの個別タスク（docs/loading-ux/README.md）。
+export const instant = false;
+
 // 口座タブ。
 //
 // 総資産 1 本の推移を出すので、口座ごとの積み上げ用 chartPoints は使わない。

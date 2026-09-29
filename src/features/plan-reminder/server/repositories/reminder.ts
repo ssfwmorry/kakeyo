@@ -1,7 +1,7 @@
 import 'server-only';
 import { prisma } from '@/lib/server/db/client';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
-import { startOfDayJst, toDateStringJst } from '@/lib/shared/domain/date';
+import { dateOnlyValueJst, toDateStringJst } from '@/lib/shared/domain/date';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
@@ -119,7 +119,7 @@ export async function insertReminderWithCondition(input: {
         name: input.name,
         reminderType: input.reminderType,
         conditionId: condition.id,
-        date: startOfDayJst(input.date),
+        date: dateOnlyValueJst(input.date),
         memo: input.memo,
         colorClassificationId: input.colorClassificationId,
         userId: input.userId,
@@ -173,8 +173,8 @@ export async function checkReminderUpdate(input: {
         data: {
           userId: input.plan.userId,
           pairId: input.plan.pairId,
-          startDate: startOfDayJst(input.plan.date),
-          endDate: startOfDayJst(input.plan.date),
+          startDate: dateOnlyValueJst(input.plan.date),
+          endDate: dateOnlyValueJst(input.plan.date),
           planTypeId: null,
           name: input.plan.name,
           memo: input.plan.memo,
@@ -184,7 +184,7 @@ export async function checkReminderUpdate(input: {
     }
     await tx.reminder.update({
       where: { id: input.reminderId },
-      data: { date: startOfDayJst(input.nextDate) }
+      data: { date: dateOnlyValueJst(input.nextDate) }
     });
   });
 }

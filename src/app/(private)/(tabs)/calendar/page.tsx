@@ -7,6 +7,11 @@ import { getPlanTypeCardList } from '@/features/plan-reminder/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { todayJst, toYearMonthJst } from '@/lib/shared/domain/date';
 
+// この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
+// サーバでブロックしてよい印を立てる（共通 layout の静的シェルは効いている）。
+// 外すのは画面ごとの個別タスク（docs/loading-ux/README.md）。
+export const instant = false;
+
 // カレンダー（ホーム）。
 // 予定シートをこの画面の上に出すので、その候補（予定カテゴリ）もここで取る。
 // 記録の候補は入力モーダルを持つ (private)/layout.tsx 側で取る。

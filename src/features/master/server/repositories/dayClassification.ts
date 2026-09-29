@@ -1,4 +1,5 @@
 import 'server-only';
+import { cacheLife, cacheTag } from 'next/cache';
 import { prisma } from '@/lib/server/db/client';
 import type { Id } from '@/lib/shared/types/id';
 
@@ -14,7 +15,12 @@ export type DayClassification = {
 };
 
 // 全ユーザ共通マスタ。id 昇順で安定させる（選択 UI の並びを固定）。
+// Cookie を読まず全ユーザ共通・不変なのでサーバキャッシュに載る（色マスタと同方針）。
 export async function getDayClassificationList(): Promise<DayClassification[]> {
+  'use cache';
+  cacheLife('days');
+  cacheTag('day-classification');
+
   return prisma.dayClassification.findMany({
     select: { id: true, name: true, value: true },
     orderBy: { id: 'asc' }

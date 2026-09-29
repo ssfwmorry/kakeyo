@@ -1,6 +1,7 @@
 import { cn } from 'cn';
 import Link from 'next/link';
 import type { ComponentProps, ReactNode } from 'react';
+import { ListCellPending } from './list-cell-pending';
 
 // 白いカードの中に積む 1 行。設定・一覧・リマインダーなど画面をまたいで同じ形で使う。
 //
@@ -101,7 +102,7 @@ export function ListCellLink({
   return (
     <Link
       className={cn(
-        'flex items-center gap-3 px-3.5 text-foreground',
+        'relative flex items-center gap-3 px-3.5 text-foreground',
         HEIGHT_CLASS[height],
         className
       )}
@@ -109,6 +110,7 @@ export function ListCellLink({
       rel={rel}
       target={target}
     >
+      <ListCellPending />
       <ListCellInner {...inner} />
     </Link>
   );

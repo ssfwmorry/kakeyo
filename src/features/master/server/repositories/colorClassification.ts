@@ -1,4 +1,5 @@
 import 'server-only';
+import { cacheLife, cacheTag } from 'next/cache';
 import { cache } from 'react';
 import { prisma } from '@/lib/server/db/client';
 import type { Id } from '@/lib/shared/types/id';
@@ -14,11 +15,19 @@ export type ColorClassification = {
 };
 
 // 全ユーザ共通マスタ。id 昇順で安定させる（色選択 UI の並びを固定）。
-// React cache() で per-request メモ化し、1 レンダリング内の重複 I/O を防ぐ
-// （getSessionData / getReminderList と同方針。設定配下では
-//  ページ直下と type/method カード取得の双方から呼ばれ 2〜3 回発火するため）。
+//
+// 2 層でキャッシュする。
+// - React cache(): 1 レンダリング内の重複 I/O を防ぐ（設定配下ではページ直下と
+//   type/method カード取得の双方から呼ばれ 2〜3 回発火するため）
+// - use cache: Cookie を読まず全ユーザ共通・不変なのでサーバキャッシュに載せられる。
+//   全ユーザで共有されるため最も効率がいい。マスタの更新は DB 直編集なので、
+//   反映が要るときは cacheTag 経由で revalidateTag する。
 export const getColorClassificationList = cache(
   async (): Promise<ColorClassification[]> => {
+    'use cache';
+    cacheLife('days');
+    cacheTag('color-classification');
+
     return prisma.colorClassification.findMany({
       select: { id: true, name: true },
       orderBy: { id: 'asc' }

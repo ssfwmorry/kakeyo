@@ -21,12 +21,15 @@ export function DayDetailList({
   daySum,
   plans,
   reminders,
+  isLoading = false,
   onEditPlan,
   onEditRecord
 }: {
   daySum: DaySum | undefined;
   plans: PlanItem[];
   reminders: ReminderItem[];
+  // その日のデータがまだ届いていない（月送りの直後など）。
+  isLoading?: boolean;
   onEditPlan: (plan: PlanItem) => void;
   onEditRecord: (record: NoteRecordDefault) => void;
 }) {
@@ -35,7 +38,8 @@ export function DayDetailList({
     plans.length === 0 && reminders.length === 0 && records.length === 0;
 
   if (isEmpty) {
-    return (
+    // 届いていないだけの状態で「ありません」と言い切らない。場所だけ空けて待つ。
+    return isLoading ? null : (
       <p className='px-1 text-muted-foreground text-sm'>
         この日の記録・予定はありません。
       </p>
