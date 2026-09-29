@@ -1,9 +1,11 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist_Mono } from 'next/font/google';
 import { FlashToast } from '@/components/form/flash-toast';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AppToaster } from '@/components/toaster';
 import { SwRegister } from '@/features/pwa/components/sw-register';
+import { ThemeColorMeta } from '@/features/pwa/components/theme-color-meta';
+import { THEME_COLOR } from '@/features/pwa/theme-color';
 import './globals.css';
 
 // 日本語フォントは Web フォントで配らず OS のものを使う。
@@ -27,6 +29,14 @@ export const metadata: Metadata = {
   description: '個人・ペア向けの家計簿アプリ'
 };
 
+// OS の設定に応じたステータスバーの色。アプリ内での上書きは ThemeColorMeta が担う。
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: THEME_COLOR.light },
+    { media: '(prefers-color-scheme: dark)', color: THEME_COLOR.dark }
+  ]
+};
+
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     // next-themes がクライアントで html に class と color-scheme を付けるため、
@@ -38,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     >
       <body className='min-h-full flex flex-col'>
         <ThemeProvider>
+          <ThemeColorMeta />
           {/* トーストは全画面で同じ見た目・同じ出し方（AppToaster が presenter を配る）。
               redirect を挟む Action の通知（FlashToast）も同じ経路で出す。 */}
           <AppToaster>
