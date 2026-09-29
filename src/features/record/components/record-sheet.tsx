@@ -31,8 +31,8 @@ export function RecordSheet({
   today: string;
 }) {
   const { typeList, methodList, hasPair } = candidates;
-  // 編集対象の共有／個人は対象自身の区分に従う（作成時に決まり後から移せない）。
-  const isPair = editing?.isPair ?? candidates.isPair;
+  // 個人／共有はシートの中で移せる。初期値は編集なら対象の区分、新規は今のモード。
+  const [isPair, setIsPair] = useState(editing?.isPair ?? candidates.isPair);
 
   const [state, setState] = useState<NoteState>(() => ({
     isPay: editing?.isPay ?? true,
@@ -48,11 +48,14 @@ export function RecordSheet({
   const patch = (next: Partial<NoteState>) =>
     setState((prev) => ({ ...prev, ...next }));
 
-  // 個人｜共有を切り替えるとカテゴリ・方法の候補ごと入れ替わるので、選択を捨てて
-  // ①に戻す。render 中に前回値と比べて捨てる（effect では 1 フレーム残る）。
-  const [prevIsPair, setPrevIsPair] = useState(isPair);
-  if (prevIsPair !== isPair) {
-    setPrevIsPair(isPair);
+  // カテゴリ・方法は個人用と共有用が別レコードで横断できないため、切り替えたら
+  // 捨てて①へ戻す。金額・日付・メモは残す（間違えた区分で作ったものを、
+  // 消さずに移せるようにするため）。
+  const changeIsPair = (next: boolean) => {
+    if (next === isPair) {
+      return;
+    }
+    setIsPair(next);
     setIsAmountStep(false);
     setState((prev) => ({
       ...prev,
@@ -61,7 +64,7 @@ export function RecordSheet({
       methodId: null,
       isInstead: true
     }));
-  }
+  };
 
   const selection = useTypeSelection(typeList, methodList, isPair, state);
   const methodId = resolveMethodId({
@@ -108,8 +111,8 @@ export function RecordSheet({
           <TypeStep
             hasPair={hasPair}
             isPair={isPair}
-            // 共有か個人かは作成時に決まり後から移せないので、編集中は切り替えさせない。
-            isPairLocked={editing !== undefined}
+            isPairLocked={editing?.isScopeLocked ?? false}
+            onPairChange={changeIsPair}
             isPay={state.isPay}
             onClose={onClose}
             onPayChange={(isPay) =>

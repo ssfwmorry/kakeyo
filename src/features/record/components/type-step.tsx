@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from 'react';
 import { InitialCircle } from '@/components/initial-circle';
-import { PairModeSegment } from '@/components/pair-mode-segment';
+import { ScopeSegment } from '@/components/scope-segment';
 import { SheetHeader } from '@/components/sheet-header';
 import { Segment } from '@/components/ui/segment';
 import { colorVar } from '@/features/master';
@@ -30,6 +30,7 @@ export function TypeStep({
   isPay,
   types,
   onClose,
+  onPairChange,
   onPayChange,
   onPick
 }: {
@@ -39,6 +40,7 @@ export function TypeStep({
   isPay: boolean;
   types: TypeCard[];
   onClose: () => void;
+  onPairChange: (isPair: boolean) => void;
   onPayChange: (isPay: boolean) => void;
   // サブカテゴリを選ばずに進んだときは subTypeId が null。
   onPick: (typeId: Id, subTypeId: Id | null) => void;
@@ -52,10 +54,14 @@ export function TypeStep({
         left='close'
         onLeft={onClose}
         right={
-          <PairModeSegment
+          <ScopeSegment
             hasPair={hasPair}
             isLocked={isPairLocked}
             isPair={isPair}
+            onChange={(next) => {
+              setExpandedId(null);
+              onPairChange(next);
+            }}
           />
         }
         // 原典にタイトル文字は無い。Drawer のアクセシブルネームだけ付ける。

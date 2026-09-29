@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 // 面（弱）の地に、選択中だけ面の色で浮かせる。
 //
 // 大きさはデザインの画面ごとに違うので size で選ぶ:
-// - sm: h28 / 13px（個人｜共有。PairModeSegment が使う）
+// - sm: h28 / 13px（個人｜共有。ScopeSegment が使う）
 // - md: h32 / 14px（集計の内訳｜推移｜精算、カテゴリの支出｜収入）
 // - lg: h34 / 15px（入力フローの支出｜収入）
 // - xl: h40〜44 で 2 段表記（「自分が立替／あとで精算する」）。option.sub に副文を渡す。
@@ -15,8 +15,8 @@ import type { ReactNode } from 'react';
 // disabled な選択肢は押せない見た目で残す（集計の推移・精算のように、
 // デザインはあるが中身が保留のもの）。
 //
-// 「個人｜共有」だけは全画面共通で挙動も違う（Server Action で Cookie を書く）ため、
-// この部品ではなく PairModeSegment を使う。
+// 「個人｜共有」だけは全画面共通で形が決まっているため、この部品ではなく
+// ScopeSegment を使う。
 
 export type SegmentOption<T extends string> = {
   value: T;

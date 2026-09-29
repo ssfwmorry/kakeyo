@@ -8,7 +8,6 @@ import {
   useTransition
 } from 'react';
 import { IconChevronLeft, IconPlus } from '@/components/icons';
-import { PairModeSegment } from '@/components/pair-mode-segment';
 import { ThemeToggle } from '@/components/theme-toggle';
 import type {
   CalendarInitialData,
@@ -160,13 +159,7 @@ export function CalendarScreen({
       <div className='flex flex-col gap-3 px-4'>
         <div className='flex h-11 items-center justify-between'>
           <span>{headerLeft}</span>
-          <div className='flex items-center gap-1.5'>
-            <ThemeToggle />
-            <PairModeSegment
-              hasPair={initial.hasPair}
-              isPair={initial.isPair}
-            />
-          </div>
+          <ThemeToggle />
         </div>
 
         <div className='flex items-center gap-2'>
@@ -252,6 +245,7 @@ export function CalendarScreen({
         />
 
         <CalendarPlanSheet
+          hasPair={initial.hasPair}
           initialDate={selectedDate}
           isPairMode={initial.isPair}
           onClose={() => setPlanSheet({ kind: 'closed' })}
@@ -264,12 +258,12 @@ export function CalendarScreen({
   );
 }
 
-// 予定シートの出し分け。共有か個人かは作成時に決まるので、編集は対象に合わせ、
-// カテゴリの候補もその側を出す。
+// 予定シートの出し分け。区分の初期値は編集なら対象に合わせ、新規は今のモード。
 function CalendarPlanSheet({
   state,
   planTypeList,
   isPairMode,
+  hasPair,
   initialDate,
   onClose,
   onSaved
@@ -277,6 +271,7 @@ function CalendarPlanSheet({
   state: PlanSheetState;
   planTypeList: GroupedPlanTypeList;
   isPairMode: boolean;
+  hasPair: boolean;
   initialDate: string;
   onClose: () => void;
   onSaved: () => void;
@@ -285,11 +280,11 @@ function CalendarPlanSheet({
     return null;
   }
   const plan = state.kind === 'edit' ? state.plan : undefined;
-  const isPair = plan?.isPair ?? isPairMode;
   return (
     <PlanSheet
+      hasPair={hasPair}
       initialDate={initialDate}
-      isPair={isPair}
+      initialIsPair={plan?.isPair ?? isPairMode}
       // 編集対象ごとにフォームを作り直す。
       key={plan?.id ?? 'create'}
       onOpenChange={(isOpen) => {
@@ -299,7 +294,7 @@ function CalendarPlanSheet({
       }}
       onSaved={onSaved}
       plan={plan}
-      planTypes={isPair ? planTypeList.pair : planTypeList.self}
+      planTypeList={planTypeList}
     />
   );
 }

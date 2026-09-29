@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { RecordType } from '@/lib/shared/types/recordType';
-import { resolveRecordEditable, resolveRecordOwnership } from './record-fields';
+import {
+  resolveRecordEditable,
+  resolveRecordOwnership,
+  resolveScopeLocked
+} from './record-fields';
 
 // record の所有者・精算フラグ・record_type 導出の単体テスト。
-// ※ 現行 vitest.config.mts の include は src/lib/** のためこのファイルはデフォルト
-//   実行対象外だが、ドメイン分岐の意図を固定する回帰テストとして併置する。
 
 const UID = 'user-uid';
 const PAIR_ID = 42;
@@ -101,6 +103,38 @@ describe('resolveRecordEditable', () => {
   it('isSettlement を持たない型（精算除外済み）は他条件で判定', () => {
     expect(
       resolveRecordEditable({ isSelf: false, isPair: true, isInstead: false })
+    ).toBe(true);
+  });
+});
+
+describe('resolveScopeLocked', () => {
+  it('個人 record は移せる（精算に関与しない）', () => {
+    expect(
+      resolveScopeLocked({ isInstead: false, isSettled: null, isSelf: true })
+    ).toBe(false);
+  });
+
+  it('共有の非立替（PAIR）は移せる', () => {
+    expect(
+      resolveScopeLocked({ isInstead: false, isSettled: null, isSelf: false })
+    ).toBe(false);
+  });
+
+  it('自分の未精算の立替は移せる', () => {
+    expect(
+      resolveScopeLocked({ isInstead: true, isSettled: false, isSelf: true })
+    ).toBe(false);
+  });
+
+  it('精算済みの立替は移せない（精算済み金額の裏付けが消えるため）', () => {
+    expect(
+      resolveScopeLocked({ isInstead: true, isSettled: true, isSelf: true })
+    ).toBe(true);
+  });
+
+  it('ペア相手が起票した立替は移せない', () => {
+    expect(
+      resolveScopeLocked({ isInstead: true, isSettled: false, isSelf: false })
     ).toBe(true);
   });
 });

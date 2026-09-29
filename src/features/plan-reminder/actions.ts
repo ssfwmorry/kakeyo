@@ -7,7 +7,6 @@ import { requireAuth } from '@/features/auth/server/requireAuth';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import { reorderIdsSchema } from '@/lib/shared/domain/reorder';
 import { L } from '@/lib/shared/labels';
-import type { SessionData } from '@/lib/shared/types/auth';
 import {
   type FormActionResult,
   toFormResult
@@ -148,9 +147,9 @@ export async function reorderPlanTypeAction(
   return toResult(result, L.snackbar.updated);
 }
 
-// 予定（カレンダーのシート）。共有か個人かは作成時に決まり後から移せない。新規は今のモード、
-// 編集は対象自身の区分に従う（フォーム値は信用しない）。scope 外・不存在なら service が
-// notInScope を返す。
+// 予定（カレンダーのシート）。編集はフォームの選択を採り（シート内で移せるため）、
+// 新規は今のモード。フォーム値を信用しても、scope 外・不存在なら service が
+// notInScope を返すので他ペアの予定は書き換えられない。
 export async function savePlanAction(
   _prev: FormActionResult | null,
   formData: FormData
@@ -161,7 +160,10 @@ export async function savePlanAction(
   }
   const session = await requireAuth();
   const { id, name, startDate, endDate, planTypeId, memo } = submission.value;
-  const isPair = await resolveIsPair(session, id);
+  const isPair =
+    id === undefined
+      ? await getEffectivePairMode(session)
+      : submission.value.isPair;
   const result = await service.upsertPlan(session, {
     id,
     name,
@@ -178,17 +180,6 @@ export async function savePlanAction(
     fallbackError: L.snackbar.failed,
     submission: submission.reply()
   });
-}
-
-async function resolveIsPair(
-  session: SessionData,
-  id: number | undefined
-): Promise<boolean> {
-  if (id === undefined) {
-    return getEffectivePairMode(session);
-  }
-  const target = await service.getPlanForEdit(session, id);
-  return target?.isPair ?? false;
 }
 
 export async function deletePlanAction(

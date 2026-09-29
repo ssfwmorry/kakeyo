@@ -26,6 +26,7 @@ function record(overrides: Partial<RecordListItem> = {}): RecordListItem {
     pairUserName: null,
     isInstead: null,
     isSettlement: false,
+    isScopeLocked: false,
     ...overrides
   };
 }
@@ -43,6 +44,7 @@ describe('toRecordDefault', () => {
       price: 1280,
       isInstead: false,
       isPair: false,
+      isScopeLocked: false,
       plannedRecordId: null
     });
   });

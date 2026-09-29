@@ -5,6 +5,7 @@ import type { DateRange } from 'react-day-picker';
 import { useFormAction } from '@/components/form/use-form-action';
 import { useFormToast } from '@/components/form/use-form-toast';
 import { useSubmissionErrorToast } from '@/components/form/use-submission-error-toast';
+import { ScopeSegment } from '@/components/scope-segment';
 import { SheetHeader, SheetTrashButton } from '@/components/sheet-header';
 import { BottomSheet, BottomSheetContent } from '@/components/ui/bottom-sheet';
 import { ConfirmAlert } from '@/components/ui/confirm-alert';
@@ -13,7 +14,11 @@ import { SheetSubmitButton } from '@/components/ui/sheet-submit-button';
 import { Switch } from '@/components/ui/switch';
 import { colorVar } from '@/features/master';
 import { planReminderLabels } from '@/features/plan-reminder/labels';
-import type { PlanItem, PlanTypeCard } from '@/features/plan-reminder/types';
+import type {
+  GroupedPlanTypeList,
+  PlanItem,
+  PlanTypeCard
+} from '@/features/plan-reminder/types';
 import { addDaysJst, listDatesJst } from '@/lib/shared/domain/date';
 import { formatSlashDateWeekJa, quoted } from '@/lib/shared/domain/format';
 import { formatLocalDate, parseLocalDate } from '@/lib/shared/domain/localDate';
@@ -22,7 +27,7 @@ import { deletePlanAction, savePlanAction } from '../actions';
 
 // 予定の追加・編集シート（原典 PlanAdd / PlanEdit）。カレンダーの上に出る。
 //
-// 上から「×｜予定を追加（共有）｜ゴミ箱」、予定名、日付（単日／期間）と期間スイッチ、
+// 上から「×｜予定を追加｜ゴミ箱」、個人｜共有、予定名、日付（単日／期間）と期間スイッチ、
 // カテゴリのチップ、メモ。下端に張り付く保存ボタン。削除はヘッダー右のゴミ箱から
 // 中央の確認を経て行う。
 //
@@ -37,17 +42,20 @@ import { deletePlanAction, savePlanAction } from '../actions';
 
 export function PlanSheet({
   plan,
-  planTypes,
-  isPair,
+  planTypeList,
+  initialIsPair,
+  hasPair,
   initialDate,
   onOpenChange,
   onSaved
 }: {
   // 編集対象。追加のときは undefined。
   plan?: PlanItem;
-  // 今のモードで選べる予定カテゴリ。
-  planTypes: PlanTypeCard[];
-  isPair: boolean;
+  // シートの中で区分を移せるため両側の候補を受ける。
+  planTypeList: GroupedPlanTypeList;
+  // 編集は対象の区分、追加は今のモード。
+  initialIsPair: boolean;
+  hasPair: boolean;
   // 追加時の初期日付（カレンダーの選択日）。
   initialDate: string;
   onOpenChange: (isOpen: boolean) => void;
@@ -63,6 +71,8 @@ export function PlanSheet({
     }
   }, [result, onSaved, onOpenChange]);
 
+  const [isPair, setIsPair] = useState(initialIsPair);
+  const planTypes = isPair ? planTypeList.pair : planTypeList.self;
   const initial = toInitialValues(plan, initialDate, planTypes);
   const [name, setName] = useState(initial.name);
   const [memo, setMemo] = useState(initial.memo);
@@ -70,6 +80,18 @@ export function PlanSheet({
   const [startDate, setStartDate] = useState(initial.startDate);
   const [endDate, setEndDate] = useState(initial.endDate);
   const [planTypeId, setPlanTypeId] = useState(initial.planTypeId);
+
+  // カテゴリは個人用と共有用が別レコードなので、移したら新しい側の先頭を選び直す。
+  // 予定名・日付・メモは残す（間違えた区分で作ったものを、消さずに移せるように）。
+  const changeIsPair = (next: boolean) => {
+    if (next === isPair) {
+      return;
+    }
+    setIsPair(next);
+    setPlanTypeId(
+      (next ? planTypeList.pair : planTypeList.self)[0]?.id ?? null
+    );
+  };
 
   // 単日（期間 OFF）のとき終了日は開始日に揃えて送る。
   const submittedEndDate = isPeriod ? endDate : startDate;
@@ -111,9 +133,17 @@ export function PlanSheet({
               />
             ) : undefined
           }
-          tag={isPair ? '共有' : undefined}
           title={title}
         />
+
+        {/* ヘッダー右はゴミ箱が使うので、見出しの下に独立した行で置く。 */}
+        <div className='mb-3 flex justify-end'>
+          <ScopeSegment
+            hasPair={hasPair}
+            isPair={isPair}
+            onChange={changeIsPair}
+          />
+        </div>
 
         <form action={action} className='flex flex-col gap-3.5' id={formId}>
           <HiddenFields

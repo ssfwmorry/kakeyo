@@ -13,6 +13,7 @@ import {
   getRecordForEdit,
   upsertRecord
 } from '@/features/record/server/services';
+import type { RecordError } from '@/features/record/types';
 import { getPairMode } from '@/lib/server/pair/mode';
 import { startOfDayJst } from '@/lib/shared/domain/date';
 import { L } from '@/lib/shared/labels';
@@ -22,6 +23,7 @@ import {
   toFormResult
 } from '@/lib/shared/types/formResult';
 import type { Id } from '@/lib/shared/types/id';
+import { err } from '@/lib/shared/types/result';
 
 // 入力モーダルの登録・更新・削除。
 //
@@ -55,10 +57,15 @@ export async function upsertRecordAction(
     memo
   } = submission.value;
 
-  // 共有／個人は記録の作成時に決まり後から移せない。編集は対象自身の区分に従い、
-  // 新規だけ Cookie のペアモードから決める（どちらもフォーム値は信用しない）。
-  // 対象が引けないときは false で進め、scope の判定は upsertRecord に任せる。
-  const isPair = await resolveIsPair(session, id);
+  const isPair = await resolveIsPair(session, id, submission.value.isPair);
+  if (isPair === null) {
+    return toFormResult(err<RecordError>('scopeLocked'), {
+      success: L.snackbar.updated,
+      errorMessage: recordErrorMessage,
+      fallbackError: L.snackbar.failed,
+      submission: submission.reply()
+    });
+  }
 
   const result = await upsertRecord(session, {
     id,
@@ -81,16 +88,25 @@ export async function upsertRecordAction(
   });
 }
 
-// 編集は対象の区分、新規は Cookie のペアモード。
+// 新規は Cookie のペアモード、編集はフォームの選択を採る（シート内で移せるため）。
+// 移せない対象に別の区分が来たら null を返して弾く。
+// 対象が引けないときは false で進め、scope の判定は upsertRecord に任せる。
 async function resolveIsPair(
   session: SessionData,
-  id: Id | undefined
-): Promise<boolean> {
+  id: Id | undefined,
+  requested: boolean
+): Promise<boolean | null> {
   if (id === undefined) {
     return getPairMode();
   }
   const target = await getRecordForEdit(session, id);
-  return target?.isPair ?? false;
+  if (target === null) {
+    return false;
+  }
+  if (target.isScopeLocked && requested !== target.isPair) {
+    return null;
+  }
+  return requested;
 }
 
 export async function deleteRecordAction(

@@ -30,7 +30,8 @@ function record(id: number, dateStr: string, price: number): RecordListItem {
     isPair: false,
     pairUserName: null,
     isInstead: null,
-    isSettlement: null
+    isSettlement: null,
+    isScopeLocked: false
   };
 }
 

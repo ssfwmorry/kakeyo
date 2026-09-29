@@ -60,6 +60,24 @@ export function resolveRecordEditable(record: {
   return record.isSelf || (record.isPair && record.isInstead !== true);
 }
 
+// 個人⇔共有を移せない record か（移すと pair_id と is_settled が落ちる）。
+// 精算済みの立替は精算済み金額の裏付けが消え、相手が起票した立替は相手の債権を
+// 自分の個人記録へ引き取る形になるため、どちらも移させない。
+export function resolveScopeLocked({
+  isInstead,
+  isSettled,
+  isSelf
+}: {
+  isInstead: boolean;
+  isSettled: boolean | null;
+  isSelf: boolean;
+}): boolean {
+  if (!isInstead) {
+    return false;
+  }
+  return isSettled === true || !isSelf;
+}
+
 // 以下は取得行 → 公開 DTO の表示導出。リポジトリ（実 DB）とデモのモック生成が同じ規則を使う。
 
 // 立替かどうか（個人 record は判定不能のため null）。

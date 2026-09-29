@@ -29,6 +29,7 @@ function item(
     isPair: false,
     pairUserName: null,
     isInstead: null,
+    isScopeLocked: false,
     ...extra
   };
 }

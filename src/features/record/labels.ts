@@ -36,6 +36,7 @@ export const recordLabels = {
   error: {
     pairRequired: 'ペア設定が必要です',
     sameMonthOnly: '定期的なものは同月中のみ変更可能です',
+    scopeLocked: '精算に関わる記録は個人・共有を変更できません',
     noTarget: '対象がありません',
     methodRequired: '精算方法を選んでください'
   }

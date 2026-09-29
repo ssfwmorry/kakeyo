@@ -11,6 +11,7 @@ import type { Id } from '@/lib/shared/types/id';
 import { RecordType } from '@/lib/shared/types/recordType';
 import type { Prisma } from '@/prisma/generated/client';
 import {
+  resolveScopeLocked,
   toDisplayTypeName,
   toIsInstead,
   toIsSettlement
@@ -235,7 +236,12 @@ function toRecordListItem(
     // pair_id ありのとき records.user 名を引く（立替者名）。
     pairUserName: isPair ? (row.user?.name ?? null) : null,
     isInstead: toIsInstead(isPair, recordType),
-    isSettlement: toIsSettlement(isPair, recordType)
+    isSettlement: toIsSettlement(isPair, recordType),
+    isScopeLocked: resolveScopeLocked({
+      isInstead: toIsInstead(isPair, recordType) === true,
+      isSettled: row.isSettled,
+      isSelf: row.userId === userUid
+    })
   };
 }
 
@@ -264,7 +270,12 @@ function toSummarizedRecordItem(
     typeColorClassificationName: row.type?.colorClassification.name ?? null,
     isPair,
     pairUserName: isPair ? (row.user?.name ?? null) : null,
-    isInstead: toIsInstead(isPair, recordType)
+    isInstead: toIsInstead(isPair, recordType),
+    isScopeLocked: resolveScopeLocked({
+      isInstead: toIsInstead(isPair, recordType) === true,
+      isSettled: row.isSettled,
+      isSelf: row.userId === userUid
+    })
   };
 }
 
@@ -339,6 +350,7 @@ export async function findRecordForEdit(
     return null;
   }
   const isPair = row.pairId !== null;
+  const isInstead = isPair && row.userId !== null;
   return {
     id: Number(row.id),
     // 記録タブで編集する通常 record は is_pay を持つ（精算は上の where で除外済み）。
@@ -350,8 +362,13 @@ export async function findRecordForEdit(
     subTypeId: row.subTypeId,
     memo: row.memo,
     price: row.price,
-    isInstead: isPair && row.userId !== null,
+    isInstead,
     isPair,
+    isScopeLocked: resolveScopeLocked({
+      isInstead,
+      isSettled: row.isSettled,
+      isSelf: row.userId === scope.userUid
+    }),
     plannedRecordId: row.plannedRecordId
   };
 }

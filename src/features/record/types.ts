@@ -30,6 +30,7 @@ export type RecordListItem = {
   // 個人 record（!isPair）は null。共有 record では立替/精算かどうかを保持する。
   isInstead: boolean | null;
   isSettlement: boolean | null;
+  isScopeLocked: boolean;
 };
 
 // get_summarized_record_list の 1 行（records 明細画面用・精算=15 は除外される）。
@@ -54,6 +55,7 @@ export type SummarizedRecordItem = {
   isPair: boolean;
   pairUserName: string | null;
   isInstead: boolean | null;
+  isScopeLocked: boolean;
 };
 
 // get_paired_record_list の 1 行（精算画面用）。is_settled 以外は編集不可のため
@@ -92,6 +94,8 @@ export type NoteRecordDefault = {
   isInstead: boolean;
   // 共有（pair_id あり）の record か。開いたときに画面のモードを合わせるために使う。
   isPair: boolean;
+  // 個人⇔共有を移せない record か（判定は resolveScopeLocked）。
+  isScopeLocked: boolean;
   // 定期の記録から実体化された record なら元の planned_records.id。日付を同じ月の中に
   // 留める案内を編集画面が出すために使う（判定そのものはサービス層が行う）。
   plannedRecordId: Id | null;
@@ -118,6 +122,7 @@ export type RecordError =
   | 'notInScope'
   | 'foreignKey'
   | 'sameMonthOnly'
+  | 'scopeLocked'
   | 'noTarget'
   | 'methodRequired'
   | 'unknown';

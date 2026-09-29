@@ -29,6 +29,7 @@ export function toRecordDefault(
     price: record.price,
     isInstead: record.isInstead ?? false,
     isPair: record.isPair,
+    isScopeLocked: record.isScopeLocked,
     plannedRecordId: record.plannedRecordId
   };
 }

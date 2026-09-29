@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  resolveScopeLocked,
   toDisplayTypeName,
   toIsInstead,
   toIsSettlement
@@ -62,6 +63,11 @@ function toView(row: DemoRecord): DemoRecordView {
     pairUserName: isPair ? findDemoUserName(row.userUid) : null,
     isInstead: toIsInstead(isPair, row.recordType),
     isSettlement: toIsSettlement(isPair, row.recordType),
+    isScopeLocked: resolveScopeLocked({
+      isInstead: toIsInstead(isPair, row.recordType) === true,
+      isSettled: row.isSettled,
+      isSelf: row.userUid === demoUsers.self.uid
+    }),
     isSettled: row.isSettled
   };
 }
@@ -211,6 +217,7 @@ export function getRecordForEdit(
     price: view.price,
     isInstead: view.isInstead ?? false,
     isPair: view.isPair,
+    isScopeLocked: view.isScopeLocked,
     plannedRecordId: view.plannedRecordId
   };
 }
