@@ -34,6 +34,14 @@ export function toYearMonthJst(value: Date | string): string {
   return jst(value).format(YEAR_MONTH_FORMAT);
 }
 
+// YYYY-MM-DD のみを DB の @db.Date へそのまま保存するための UTC 基準値。
+// JS の Date は UTC を基準にするため、JST 0:00 そのものを表す 00:00Z を作り、
+// 画面の選択日が 1 日ズレて保存されることを防ぐ。
+export function dateOnlyValueJst(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
 // YYYY-MM-DD（JST の暦日）を、その日の JST 0:00 に対応する UTC の Date にする。
 // Timestamptz カラム（records.datetime 等）へ「JST のこの日」を保存する起点。
 export function startOfDayJst(dateString: string): Date {

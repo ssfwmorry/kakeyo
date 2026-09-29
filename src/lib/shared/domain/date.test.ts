@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   addDaysJst,
   dateInMonthJst,
+  dateOnlyValueJst,
   diffDaysJst,
   endOfDayJst,
   firstDayOfMonthJst,
@@ -16,6 +17,14 @@ import {
   toDateStringJst,
   toYearMonthJst
 } from './date';
+
+describe('dateOnlyValueJst', () => {
+  it('DB Date の日付だけは UTC の 00:00 にして選択日を保持する', () => {
+    expect(dateOnlyValueJst('2024-03-10').toISOString()).toBe(
+      '2024-03-10T00:00:00.000Z'
+    );
+  });
+});
 
 describe('toDateStringJst', () => {
   it('UTC の日時を JST の暦日に丸める（日跨ぎ）', () => {
