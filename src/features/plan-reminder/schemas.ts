@@ -34,7 +34,7 @@ export const planTypeUpsertSchema = z.object({
   isPair: z.stringbool()
 });
 
-// 予定 upsert。単日/期間。start <= end を superRefine で検証。planTypeId は任意（null 許容）。
+// 予定 upsert。単日/期間。start <= end を superRefine で検証。
 export const planUpsertSchema = z
   .object({
     id: entityIdSchema().optional(),
@@ -45,11 +45,7 @@ export const planUpsertSchema = z
       .max(30, validation.planNameMax),
     startDate: z.string().min(1, validation.dateRequired),
     endDate: z.string().min(1, validation.dateRequired),
-    // 空文字/未送出は「カテゴリなし」= null に写す。
-    planTypeId: z
-      .union([entityIdSchema(), z.literal('')])
-      .optional()
-      .transform((v) => (v === undefined || v === '' ? null : v)),
+    planTypeId: entityIdSchema(validation.planTypeRequired),
     memo: optionalTrimmedText,
     isPair: z.stringbool()
   })

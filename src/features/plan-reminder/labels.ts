@@ -54,6 +54,7 @@ export const planReminderLabels = {
   validation: {
     planNameRequired: '予定名を入力してください',
     planNameMax: '予定名は 30 文字以内です',
+    planTypeRequired: 'カテゴリを選択してください',
     planTypeNameRequired: 'カテゴリ名を入力してください',
     planTypeNameMax: 'カテゴリ名は 10 文字以内です',
     reminderNameRequired: '定期的な予定名を入力してください',

@@ -26,6 +26,9 @@ import { deletePlanAction, savePlanAction } from '../actions';
 // カテゴリのチップ、メモ。下端に張り付く保存ボタン。削除はヘッダー右のゴミ箱から
 // 中央の確認を経て行う。
 //
+// カテゴリは必須。新規は先頭のカテゴリを初期選択にする。カテゴリが 1 つも無いときは
+// 選びようがないため、設定画面での追加を促して保存を止める。
+//
 // 日付は行のボタンを押すとすぐ下に暦が開く（README D8）。シートの上にさらにシートを重ねない。
 // 保存しても遷移せず、閉じた側（カレンダー）が月を取り直す。
 //
@@ -60,7 +63,7 @@ export function PlanSheet({
     }
   }, [result, onSaved, onOpenChange]);
 
-  const initial = toInitialValues(plan, initialDate);
+  const initial = toInitialValues(plan, initialDate, planTypes);
   const [name, setName] = useState(initial.name);
   const [memo, setMemo] = useState(initial.memo);
   const [isPeriod, setIsPeriod] = useState(initial.isPeriod);
@@ -70,7 +73,7 @@ export function PlanSheet({
 
   // 単日（期間 OFF）のとき終了日は開始日に揃えて送る。
   const submittedEndDate = isPeriod ? endDate : startDate;
-  const canSave = name.trim() !== '';
+  const canSave = name.trim() !== '' && planTypeId !== null;
   const isEdit = plan !== undefined;
   const verb = isEdit ? '保存' : '追加';
   const title = isEdit ? '予定を編集' : '予定を追加';
@@ -90,7 +93,7 @@ export function PlanSheet({
         footer={
           <SheetSubmitButton
             disabled={!canSave || isPending}
-            disabledLabel={`予定名を入れると${verb}できます`}
+            disabledLabel={disabledSaveLabel(name, verb)}
             form={formId}
             label={`${verb}する`}
           />
@@ -188,9 +191,11 @@ export function PlanSheet({
 }
 
 // 新規／編集の初期値。編集は対象の値、新規はカレンダーの選択日を単日で。
+// 新規のカテゴリは先頭を初期選択にする（候補が無ければ null のまま＝保存不可）。
 function toInitialValues(
   plan: PlanItem | undefined,
-  initialDate: string
+  initialDate: string,
+  planTypes: PlanTypeCard[]
 ): {
   name: string;
   memo: string;
@@ -206,7 +211,7 @@ function toInitialValues(
       isPeriod: false,
       startDate: initialDate,
       endDate: initialDate,
-      planTypeId: null
+      planTypeId: planTypes[0]?.id ?? null
     };
   }
   return {
@@ -222,6 +227,14 @@ function toInitialValues(
 // 'YYYY-MM-DD' は辞書順が日付順。
 function maxDate(a: string, b: string): string {
   return a > b ? a : b;
+}
+
+// 保存できない理由。予定名を先に案内し、次にカテゴリ。
+function disabledSaveLabel(name: string, verb: string): string {
+  if (name.trim() === '') {
+    return `予定名を入れると${verb}できます`;
+  }
+  return `カテゴリを選ぶと${verb}できます`;
 }
 
 // Server Action へ送る hidden 群。スキーマの名前に合わせる。
@@ -351,7 +364,7 @@ function DateSection({
   );
 }
 
-// カテゴリのチップ。「なし」+ 今のモードのカテゴリ。選択中は色の淡い地に色の枠。
+// カテゴリのチップ。今のモードのカテゴリから必ず 1 つ選ぶ。選択中は色の淡い地に色の枠。
 function TypeChips({
   planTypes,
   value,
@@ -359,32 +372,30 @@ function TypeChips({
 }: {
   planTypes: PlanTypeCard[];
   value: number | null;
-  onChange: (planTypeId: number | null) => void;
+  onChange: (planTypeId: number) => void;
 }) {
   return (
     <div className='flex flex-col gap-2'>
       <span className='pl-1 text-[13px] text-muted-foreground'>
         {planReminderLabels.heading.planType}
       </span>
-      <div className='flex flex-wrap gap-2'>
-        <TypeChip
-          color='var(--dash)'
-          isSelected={value === null}
-          label='なし'
-          onSelect={() => onChange(null)}
-          // 「なし」は色を持たないので、選択中も文字は本文色のまま。
-          selectedTextColor='var(--foreground)'
-        />
-        {planTypes.map((type) => (
-          <TypeChip
-            color={colorVar(type.colorName)}
-            isSelected={value === type.id}
-            key={type.id}
-            label={type.name}
-            onSelect={() => onChange(type.id)}
-          />
-        ))}
-      </div>
+      {planTypes.length === 0 ? (
+        <span className='pl-1 text-[13px] text-muted-foreground'>
+          {planReminderLabels.plan.noPlanType}
+        </span>
+      ) : (
+        <div className='flex flex-wrap gap-2'>
+          {planTypes.map((type) => (
+            <TypeChip
+              color={colorVar(type.colorName)}
+              isSelected={value === type.id}
+              key={type.id}
+              label={type.name}
+              onSelect={() => onChange(type.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -393,14 +404,12 @@ function TypeChip({
   label,
   color,
   isSelected,
-  onSelect,
-  selectedTextColor = color
+  onSelect
 }: {
   label: string;
   color: string;
   isSelected: boolean;
   onSelect: () => void;
-  selectedTextColor?: string;
 }) {
   return (
     <button
@@ -412,7 +421,7 @@ function TypeChip({
           ? {
               backgroundColor: `color-mix(in srgb, ${color} 15%, var(--card))`,
               borderColor: color,
-              color: selectedTextColor
+              color
             }
           : {
               backgroundColor: 'var(--card)',

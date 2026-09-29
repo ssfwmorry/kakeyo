@@ -144,7 +144,7 @@ export async function upsertPlan(
     name: string;
     startDate: string;
     endDate: string;
-    planTypeId: Id | null;
+    planTypeId: Id;
     memo: string | null;
     isPair: boolean;
   }
