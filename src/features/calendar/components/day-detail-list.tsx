@@ -9,7 +9,7 @@ import { useOpenNotifySheet } from '@/features/notify/components/notify-sheet-st
 import type { PlanItem, ReminderItem } from '@/features/plan-reminder';
 import type { NoteRecordDefault, RecordListItem } from '@/features/record';
 import { toRecordDefault } from '@/features/record/domain/record-default';
-import { formatSignedPrice } from '@/lib/shared/domain/format';
+import { amountToneClass, formatPrice } from '@/lib/shared/domain/format';
 
 // 選んだ日の予定・リマインダー・記録を 1 枚のカードに積む（原典 Calendar の日別カード）。
 //
@@ -97,6 +97,9 @@ function Chevron() {
 
 // 押すと編集シートが開く。リマインダー由来の予定（reminderId あり）も同じシートで
 // 直せる（元のリマインダーには影響しない）。
+//
+// メモは行の 2 段目に出す。シートを開かないと読めないと、日を眺めるだけで毎回開くことになる。
+// 無い予定は 1 行のままにして、行を名前の分の高さに留める。
 function PlanRow({
   plan,
   isLast,
@@ -106,10 +109,14 @@ function PlanRow({
   isLast: boolean;
   onEdit: () => void;
 }) {
+  const memo = plan.memo === null || plan.memo === '' ? null : plan.memo;
   return (
     <>
       <button
-        className='flex h-12 w-full items-center gap-3 px-3.5 text-left text-foreground'
+        className={cn(
+          'flex w-full items-center gap-3 px-3.5 text-left text-foreground',
+          memo === null ? 'h-12' : 'h-15'
+        )}
         onClick={onEdit}
         type='button'
       >
@@ -122,7 +129,14 @@ function PlanRow({
             )
           }}
         />
-        <span className='flex-grow truncate text-[15px]'>{plan.name}</span>
+        <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
+          <span className='truncate text-[15px]'>{plan.name}</span>
+          {memo === null ? null : (
+            <span className='truncate text-muted-foreground text-xs'>
+              {memo}
+            </span>
+          )}
+        </span>
         <span className='shrink-0 text-muted-foreground text-xs'>予定</span>
         <Chevron />
       </button>
@@ -140,6 +154,8 @@ function ReminderRow({
   isLast: boolean;
 }) {
   const openNotify = useOpenNotifySheet();
+  const memo =
+    reminder.memo === null || reminder.memo === '' ? null : reminder.memo;
   const body = (
     <>
       <IconBell
@@ -148,15 +164,22 @@ function ReminderRow({
         strokeWidth={2}
         style={{ color: colorVar(reminder.colorName) }}
       />
-      <span className='flex-grow truncate text-[15px]'>{reminder.name}</span>
+      <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
+        <span className='truncate text-[15px]'>{reminder.name}</span>
+        {memo === null ? null : (
+          <span className='truncate text-muted-foreground text-xs'>{memo}</span>
+        )}
+      </span>
       <span className='shrink-0 text-muted-foreground text-xs'>
         リマインダー
       </span>
       <Chevron />
     </>
   );
-  const rowClass =
-    'flex h-12 w-full items-center gap-3 px-3.5 text-left text-foreground';
+  const rowClass = cn(
+    'flex w-full items-center gap-3 px-3.5 text-left text-foreground',
+    memo === null ? 'h-12' : 'h-15'
+  );
 
   return (
     <>
@@ -216,9 +239,14 @@ function RecordRow({
           {description}
         </span>
       </span>
-      {/* 符号は集計と同じ判定に揃える（精算や isPay=null は自分が送金側かで決まる）。 */}
-      <span className='shrink-0 font-semibold text-base'>
-        {formatSignedPrice(record.price, resolveDisplayIsPay(record))}
+      {/* 支出・収入の判定は集計と同じ関数に揃える（精算や isPay=null は自分が送金側かで決まる）。 */}
+      <span
+        className={cn(
+          'shrink-0 font-semibold text-base',
+          amountToneClass(resolveDisplayIsPay(record))
+        )}
+      >
+        {formatPrice(record.price)}
       </span>
     </>
   );

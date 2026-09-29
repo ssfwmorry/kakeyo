@@ -21,7 +21,7 @@ import type {
   GroupedMethodList,
   GroupedTypeList
 } from '@/features/type-method';
-import { formatSignedPrice } from '@/lib/shared/domain/format';
+import { amountToneClass, formatPrice } from '@/lib/shared/domain/format';
 import { dismissToast } from '@/lib/shared/toast/show-toast';
 import {
   isLockedItem,
@@ -214,10 +214,10 @@ function TotalCard({
       <span
         className={cn(
           'font-bold text-lg tabular-nums',
-          isIncome ? 'text-primary' : 'text-foreground'
+          amountToneClass(!isIncome)
         )}
       >
-        {formatSignedPrice(amount, !isIncome)}
+        {formatPrice(amount)}
       </span>
     </div>
   );
@@ -259,12 +259,9 @@ function PlannedRow({
     leading: <DayBadge day={dayValue} />,
     value: (
       <span
-        className={cn(
-          'font-semibold text-base',
-          item.isPay ? 'text-foreground' : 'text-primary'
-        )}
+        className={cn('font-semibold text-base', amountToneClass(item.isPay))}
       >
-        {formatSignedPrice(item.price, item.isPay)}
+        {formatPrice(item.price)}
       </span>
     )
   };

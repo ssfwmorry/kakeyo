@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from 'cn';
 import {
   type ReactNode,
   useCallback,
@@ -27,7 +28,8 @@ import type { NoteRecordDefault } from '@/features/record';
 import { useNoteModal } from '@/features/record/components/note-modal';
 import {
   formatMonthDayWeekJa,
-  formatSignedPrice
+  formatPrice,
+  sumToneClass
 } from '@/lib/shared/domain/format';
 import { assignEventLanes, type LaneEvent } from '../domain/event-lanes';
 import { buildMonthGrid } from '../domain/month-grid';
@@ -152,6 +154,8 @@ export function CalendarScreen({
     return assignEventLanes(events, MAX_LANES);
   }, [isStale, month.plans, month.reminders]);
 
+  const selectedHolidayName = daySums.get(selectedDate)?.holidayName ?? null;
+
   const [year, monthPart] = yearMonth.split('-');
 
   return (
@@ -169,15 +173,14 @@ export function CalendarScreen({
           </span>
           <span className='mt-2 flex items-baseline gap-1'>
             <span className='text-muted-foreground text-xs'>収支</span>
-            {/* monthSum は「支出=正」向きなので符号を反転して出す。色は符号によらず本文色。
-                その月の値が届くまでは出さない（前月の金額が新しい見出しに残るのを防ぐ）。 */}
-            <span className='font-semibold text-[15px]'>
-              {isStale
-                ? null
-                : formatSignedPrice(
-                    Math.abs(month.monthSum),
-                    month.monthSum > 0
-                  )}
+            {/* その月の値が届くまでは出さない（前月の金額が新しい見出しに残るのを防ぐ）。 */}
+            <span
+              className={cn(
+                'font-semibold text-[15px]',
+                sumToneClass(month.monthSum)
+              )}
+            >
+              {isStale ? null : formatPrice(month.monthSum)}
             </span>
           </span>
           <div className='ml-auto flex gap-1.5'>
@@ -196,6 +199,7 @@ export function CalendarScreen({
             lanes={lanes}
             onSelect={setSelectedDate}
             selectedDate={selectedDate}
+            today={initial.today}
           />
         </div>
 
@@ -228,9 +232,15 @@ export function CalendarScreen({
 
         <TodoChips hasPair={initial.hasPair} memos={initial.memos} />
 
-        {/* 「すべての記録」への導線はデザインが無いので出さない（README D10）。 */}
-        <h2 className='mt-1 font-semibold text-[17px]'>
+        {/* 「すべての記録」への導線はデザインが無いので出さない（README D10）。
+            祝日名はここに添える。色はマスの日付と揃えて、どの日のことか結び付ける。 */}
+        <h2 className='mt-1 flex items-baseline gap-2 font-semibold text-[17px]'>
           {formatMonthDayWeekJa(selectedDate)}
+          {selectedHolidayName === null ? null : (
+            <span className='font-semibold text-[13px] text-destructive'>
+              {selectedHolidayName}
+            </span>
+          )}
         </h2>
 
         <DayDetailList

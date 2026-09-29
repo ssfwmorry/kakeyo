@@ -19,8 +19,9 @@ import { monthLabel, shiftMonth } from '@/features/summary/domain/period';
 import type { MethodCard } from '@/features/type-method';
 import { lastDayOfMonthJst, toDateStringJst } from '@/lib/shared/domain/date';
 import {
+  amountToneClass,
   formatMonthDayWeekJa,
-  formatSignedPrice,
+  formatPrice,
   formatSlashDateWeekJa
 } from '@/lib/shared/domain/format';
 import { parsePrice } from '@/lib/shared/domain/price';
@@ -905,10 +906,14 @@ function CoupleRow({
         </span>
         <span className='truncate text-muted-foreground text-xs'>{sub}</span>
       </span>
-      <span className='font-semibold text-base'>
-        {item.isSettlement
-          ? item.price.toLocaleString('ja-JP')
-          : formatSignedPrice(item.price, item.isPay ?? true)}
+      <span
+        className={cn(
+          'font-semibold text-base',
+          // 精算は立替の受け渡しで支出・収入の別を持たないため、色を付けず本文色のまま。
+          item.isSettlement ? null : amountToneClass(item.isPay ?? true)
+        )}
+      >
+        {formatPrice(item.price)}
       </span>
     </div>
   );

@@ -2,9 +2,9 @@
 
 import { cn } from 'cn';
 import { IconRotateCcw } from '@/components/icons';
-import { formatSignedPrice } from '@/lib/shared/domain/format';
+import { amountToneClass, formatPrice } from '@/lib/shared/domain/format';
 
-// テンキーの上の金額。左に「クリア」、右に大きな金額。支出は「−」で文字色、収入は「+」でアクセント。
+// テンキーの上の金額。左に「クリア」、右に大きな金額。
 // mt-auto を持ち、上の内容が短くてもテンキーごと下に張り付く。
 
 export function AmountRow({
@@ -38,11 +38,11 @@ export function AmountRow({
         aria-label={label}
         className={cn(
           'flex min-w-0 flex-grow items-baseline justify-end gap-1.5 tabular-nums',
-          isPay ? 'text-foreground' : 'text-primary'
+          amountToneClass(isPay)
         )}
       >
         <span className='whitespace-nowrap font-bold text-[44px] tracking-[-0.01em]'>
-          {formatSignedPrice(price, isPay)}
+          {formatPrice(price)}
         </span>
         <span className='font-semibold text-lg'>円</span>
       </output>

@@ -23,10 +23,7 @@ import { recordLabels } from '@/features/record/labels';
 import { recordUpsertSchema } from '@/features/record/schemas/record-schema';
 import type { MethodCard, TypeCard } from '@/features/type-method';
 import { addDaysJst } from '@/lib/shared/domain/date';
-import {
-  formatMonthDayWeekJa,
-  formatSignedPrice
-} from '@/lib/shared/domain/format';
+import { formatMonthDayWeekJa, formatPrice } from '@/lib/shared/domain/format';
 import { formatLocalDate, parseLocalDate } from '@/lib/shared/domain/localDate';
 import { showToast } from '@/lib/shared/toast/show-toast';
 import type { Id } from '@/lib/shared/types/id';
@@ -195,7 +192,8 @@ export function AmountStep({
 // 削除の確認の本文。画面に見えている日付・カテゴリ・金額をそのまま読み上げる
 // （原典 RecordEdit の confirm と同じ）。
 function deleteDescription(state: NoteState, selectedType: TypeCard): string {
-  const target = `${typeLabel(selectedType, state.subTypeId)} ${formatSignedPrice(state.price, state.isPay)}円`;
+  // 本文は色を持てないので、支出・収入を語で示す（画面では色で分けている）。
+  const target = `${typeLabel(selectedType, state.subTypeId)} ${state.isPay ? '支出' : '収入'} ${formatPrice(state.price)}円`;
   return `${formatMonthDayWeekJa(state.date)}の「${target}」を削除します。削除すると元に戻せません。`;
 }
 

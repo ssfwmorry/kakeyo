@@ -18,7 +18,6 @@ import type {
 } from '@/features/summary/domain/chart-data';
 import { shiftYear, yearLabel } from '@/features/summary/domain/period';
 import type { TypeChip } from '@/features/summary/types';
-import { formatSignedPrice } from '@/lib/shared/domain/format';
 import { NO_SUB_TYPE_NAME } from '../domain/breakdown';
 import {
   buildLegend,
@@ -319,9 +318,14 @@ function buildChart({
   return buildStackedBars(stack.rows, stack.series, colorVar);
 }
 
-// 収支は正負を持つので符号つきで出す（+130,000 / −45,000）。
+// 収支は「黒字か赤字か」で、他画面の「支出か収入か」とは別の軸。色（balanceColor）だけでは
+// どちらに振れたか読み取れないので、この画面に限り符号を添える（+130,000 / −45,000）。
 function signedAmount(value: number): string {
-  return formatSignedPrice(value, value < 0);
+  const abs = Math.abs(value).toLocaleString('ja-JP');
+  if (value === 0) {
+    return abs;
+  }
+  return `${value < 0 ? '−' : '+'}${abs}`;
 }
 
 function YearNavButton({

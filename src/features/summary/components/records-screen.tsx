@@ -18,8 +18,9 @@ import { toRecordDefault } from '@/features/record/domain/record-default';
 import { fetchSummarizedRecordsAction } from '@/features/summary/actions';
 import { monthLabel, shiftMonth } from '@/features/summary/domain/period';
 import {
+  amountToneClass,
   formatMonthDayWeekJa,
-  formatSignedPrice
+  formatPrice
 } from '@/lib/shared/domain/format';
 import {
   groupRecordsByDay,
@@ -204,8 +205,8 @@ function DayGroup({
         <h2 className='font-semibold text-muted-foreground text-[13px]'>
           {formatMonthDayWeekJa(day.date)}
         </h2>
-        <span className='ml-auto text-muted-foreground text-xs'>
-          {formatSignedPrice(day.sum, isPay)}
+        <span className={cn('ml-auto text-xs', amountToneClass(isPay))}>
+          {formatPrice(day.sum)}
         </span>
       </div>
       <div className='overflow-hidden rounded-2xl bg-card'>
@@ -238,7 +239,7 @@ function RecordRow({
   const color = colorVar(record.typeColorClassificationName);
   // 2 行目（メモ · 方法）。メモが無ければ方法だけ。
   const sub = [record.memo, record.methodName].filter(Boolean).join(' · ');
-  const amount = formatSignedPrice(record.price, isPay);
+  const amount = formatPrice(record.price);
   const title = record.subTypeName ?? record.typeName ?? '';
 
   const body = (
@@ -298,7 +299,9 @@ function RecordRow({
           {sub}
         </span>
       </span>
-      <span className='font-semibold text-base'>{amount}</span>
+      <span className={cn('font-semibold text-base', amountToneClass(isPay))}>
+        {amount}
+      </span>
     </>
   );
 
@@ -312,7 +315,7 @@ function RecordRow({
 
   return (
     <button
-      aria-label={`${title} ${amount} を編集`}
+      aria-label={`${title} ${isPay ? '支出' : '収入'} ${amount} を編集`}
       className='flex h-[60px] w-full items-center gap-3 px-3.5 text-left'
       onClick={() => onEdit(record)}
       type='button'

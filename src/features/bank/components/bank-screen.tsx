@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from 'cn';
 import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
 import { IconChevronRight } from '@/components/icons';
@@ -7,7 +8,8 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import type { BankItem, TableRow } from '@/features/bank';
 import { colorVar } from '@/features/master';
 import {
-  formatSignedPrice,
+  diffToneClass,
+  formatPrice,
   formatSlashMonthDay
 } from '@/lib/shared/domain/format';
 import { buildMonthEndTrend } from '../domain/month-ends';
@@ -117,8 +119,13 @@ function TotalCard({
         </span>
         <span className='font-semibold text-[15px]'>円</span>
         {diff === null ? null : (
-          <span className='ml-auto font-semibold text-[13px] text-primary'>
-            先月比 {formatSignedPrice(Math.abs(diff), diff < 0)}
+          <span
+            className={cn(
+              'ml-auto font-semibold text-[13px]',
+              diffToneClass(diff)
+            )}
+          >
+            先月比 {formatPrice(diff)}
           </span>
         )}
       </div>

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  amountToneClass,
+  diffToneClass,
   formatMonthDayWeekJa,
-  formatSignedPrice,
+  formatPrice,
   formatSlashDate,
   formatSlashDateWeekJa,
   formatSlashMonthDay,
@@ -53,14 +55,26 @@ describe('formatSlashDate / formatSlashMonthDay', () => {
   });
 });
 
-describe('formatSignedPrice', () => {
-  it('支出は U+2212、収入は + を付ける', () => {
-    expect(formatSignedPrice(2480, true)).toBe('−2,480');
-    expect(formatSignedPrice(320000, false)).toBe('+320,000');
+describe('formatPrice', () => {
+  it('符号を付けず桁区切りで出す', () => {
+    expect(formatPrice(2480)).toBe('2,480');
+    expect(formatPrice(-320000)).toBe('320,000');
+    expect(formatPrice(0)).toBe('0');
   });
+});
 
-  it('0 は符号を付けない', () => {
-    expect(formatSignedPrice(0, true)).toBe('0');
+describe('amountToneClass', () => {
+  it('支出は本文色、収入はアクセント', () => {
+    expect(amountToneClass(true)).toBe('text-foreground');
+    expect(amountToneClass(false)).toBe('text-primary');
+  });
+});
+
+describe('diffToneClass', () => {
+  it('増えたときだけアクセントを当て、0 と減少は本文色', () => {
+    expect(diffToneClass(1200)).toBe('text-primary');
+    expect(diffToneClass(0)).toBe('text-foreground');
+    expect(diffToneClass(-1200)).toBe('text-foreground');
   });
 });
 

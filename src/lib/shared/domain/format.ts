@@ -56,17 +56,25 @@ export function formatSlashMonthDay(dateStr: string): string {
   return `${month}/${day}`;
 }
 
-// U+2212。ハイフンより幅があり数字と並べたときに揃う。デザインはこれで統一している。
-export const MINUS_SIGN = '−';
+// 金額を桁区切りだけで出す。支出・収入の別は符号ではなく文字色で示す。
+export function formatPrice(price: number): string {
+  return Math.abs(price).toLocaleString('ja-JP');
+}
 
-// 金額に符号を付けて桁区切りで出す。支出は '−2,480'、収入は '+320,000'。
-// 0 は符号無し。
-export function formatSignedPrice(price: number, isPay: boolean): string {
-  const abs = Math.abs(price).toLocaleString('ja-JP');
-  if (price === 0) {
-    return abs;
-  }
-  return `${isPay ? MINUS_SIGN : '+'}${abs}`;
+// 金額の文字色。支出が基調なので、例外である収入の側だけを色で立たせる。
+export function amountToneClass(isPay: boolean): string {
+  return isPay ? 'text-foreground' : 'text-primary';
+}
+
+// 増減（残高の先月比など）の文字色。増えた側を立たせる。0 は増減なしなので色を当てない。
+export function diffToneClass(diff: number): string {
+  return amountToneClass(diff <= 0);
+}
+
+// 収支合計の文字色。合計は「支出=正」向きなので、収入超過（負）だけを立たせる。
+// 0 は収支なしなので色を当てない。
+export function sumToneClass(sum: number): string {
+  return amountToneClass(sum >= 0);
 }
 
 // 対象名をかぎかっこで囲む。トーストや確認の本文で使う（「通院」を削除しました）。

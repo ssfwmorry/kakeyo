@@ -5,7 +5,8 @@ import { recordLabels } from '@/features/record/labels';
 import type { MethodCard } from '@/features/type-method';
 import type { Id } from '@/lib/shared/types/id';
 
-// 方法の候補を横に並べたピル。選択中はアクセントで塗る。候補が画面幅を超えたら横にスクロールする。
+// 方法の候補を並べたピル。選択中はアクセントで塗る。候補は折り返して全件見せ、
+// 数が多くても下の金額・テンキーを押し出さないよう高さを 3 行相当で頭打ちにして縦スクロールする。
 
 export function MethodPills({
   methods,
@@ -24,7 +25,7 @@ export function MethodPills({
     );
   }
   return (
-    <div className='-mx-4 flex gap-2 overflow-x-auto px-4'>
+    <div className='-mx-4 flex max-h-[7.75rem] flex-wrap gap-2 overflow-y-auto px-4'>
       {methods.map((method) => {
         const isSelected = method.id === methodId;
         return (

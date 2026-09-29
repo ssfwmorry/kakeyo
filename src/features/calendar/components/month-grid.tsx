@@ -3,16 +3,20 @@
 import { cn } from 'cn';
 import type { DaySum } from '@/features/calendar';
 import { colorVar } from '@/features/master';
-import { formatSignedPrice } from '@/lib/shared/domain/format';
+import { formatPrice, sumToneClass } from '@/lib/shared/domain/format';
 import type { LaneMap, LaneSlot } from '../domain/event-lanes';
 import type { MonthCell } from '../domain/month-grid';
 
 // 月のカレンダーグリッド（原典 Calendar）。セルは「日付・その日の収支・予定の帯」を
 // 縦に積む。帯が複数日にまたがるので、ライブラリのレイアウトに載せず自前で組む。
 //
+// 祝日は日付を赤くするだけで、名前は出さない（1 マスに入れると帯を削ることになる）。
+//
 // 段（lane）の割り当ては domain/event-lanes.ts が持つ。ここは描くだけ。
 //
-// 月外の日はマスだけ置いて中身を描かない。今日の強調も無い（README D13）。
+// 月外の日も中身ごと描く。グリッドに出ている日はすべて押せて中身が見える方が、月末・月初を
+// またぐ予定や収支を追いやすい（データは前月21日〜翌月9日で取得済みで、グリッドの端は
+// 必ずその内側に収まる）。ただし対象月より淡くして、どこが今月かは一目で分かるようにする。
 
 const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as const;
 
@@ -21,6 +25,7 @@ export function MonthGrid({
   daySums,
   lanes,
   selectedDate,
+  today,
   onSelect
 }: {
   cells: MonthCell[];
@@ -28,6 +33,8 @@ export function MonthGrid({
   daySums: Map<string, DaySum>;
   lanes: LaneMap;
   selectedDate: string;
+  // 今日（YYYY-MM-DD）。選択日とは別の印で示す。
+  today: string;
   onSelect: (dateStr: string) => void;
 }) {
   return (
@@ -48,24 +55,17 @@ export function MonthGrid({
         ))}
       </div>
       <div className='grid grid-cols-7'>
-        {cells.map((cell) =>
-          cell.isCurrentMonth ? (
-            <DayCell
-              cell={cell}
-              daySum={daySums.get(cell.dateStr)}
-              isSelected={cell.dateStr === selectedDate}
-              key={cell.dateStr}
-              onSelect={onSelect}
-              slots={lanes.get(cell.dateStr) ?? []}
-            />
-          ) : (
-            <div
-              aria-hidden='true'
-              className='h-18 border-line-soft border-t'
-              key={cell.dateStr}
-            />
-          )
-        )}
+        {cells.map((cell) => (
+          <DayCell
+            cell={cell}
+            daySum={daySums.get(cell.dateStr)}
+            isSelected={cell.dateStr === selectedDate}
+            isToday={cell.dateStr === today}
+            key={cell.dateStr}
+            onSelect={onSelect}
+            slots={lanes.get(cell.dateStr) ?? []}
+          />
+        ))}
       </div>
     </div>
   );
@@ -74,10 +74,12 @@ export function MonthGrid({
 // 日付の文字色。選択中・日曜/祝日・土曜の順に決まる。
 function dayNumberClass({
   isSelected,
+  isToday,
   isHoliday,
   weekday
 }: {
   isSelected: boolean;
+  isToday: boolean;
   isHoliday: boolean;
   weekday: number;
 }): string {
@@ -85,13 +87,15 @@ function dayNumberClass({
     // 選択中はアクセントで塗る。曜日の色より優先する。
     return 'bg-primary font-bold text-primary-foreground';
   }
+  // 今日は塗らずに枠線で示す。塗りは「押した結果」に取っておき、印が重ならないようにする。
+  const todayRing = isToday ? 'font-bold ring-1 ring-primary ring-inset' : '';
   if (weekday === 0 || isHoliday) {
-    return 'text-destructive';
+    return cn('text-destructive', todayRing);
   }
   if (weekday === 6) {
-    return 'text-[var(--saturday)]';
+    return cn('text-[var(--saturday)]', todayRing);
   }
-  return 'text-foreground';
+  return cn('text-foreground', todayRing);
 }
 
 function DayCell({
@@ -99,43 +103,53 @@ function DayCell({
   daySum,
   slots,
   isSelected,
+  isToday,
   onSelect
 }: {
   cell: MonthCell;
   daySum: DaySum | undefined;
   slots: LaneSlot[];
   isSelected: boolean;
+  isToday: boolean;
   onSelect: (dateStr: string) => void;
 }) {
-  const isHoliday = daySum?.holidayName != null;
+  const holidayName = daySum?.holidayName ?? null;
   const sum = daySum?.sum ?? 0;
 
   return (
     <button
       aria-current={isSelected ? 'date' : undefined}
-      aria-label={`${cell.dateStr}${isHoliday ? ` ${daySum?.holidayName}` : ''}`}
-      className='flex h-18 flex-col gap-px border-line-soft border-t pt-[3px]'
+      aria-label={`${cell.dateStr}${holidayName === null ? '' : ` ${holidayName}`}`}
+      className={cn(
+        'flex h-18 flex-col gap-px border-line-soft border-t pt-[3px]',
+        // 月外の日は中身ごと薄くして、今月との境目を保つ。
+        !cell.isCurrentMonth && 'opacity-45'
+      )}
       onClick={() => onSelect(cell.dateStr)}
       type='button'
     >
       <span
         className={cn(
           'flex size-6 items-center justify-center self-center rounded-full text-[13px]',
-          dayNumberClass({ isHoliday, isSelected, weekday: cell.weekday })
+          dayNumberClass({
+            isHoliday: holidayName !== null,
+            isSelected,
+            isToday,
+            weekday: cell.weekday
+          })
         )}
       >
         {cell.day}
       </span>
 
-      {/* 収支の行。値が無い日も高さを確保して帯の位置を揃える。
-          sum は「支出=正」向きなので、符号を反転して出し、収入超過（負）のときにアクセントを当てる。 */}
+      {/* 値が無い日も高さを確保して帯の位置を揃える。 */}
       <span
         className={cn(
-          'h-[11px] text-center text-[9px] leading-[11px]',
-          sum < 0 ? 'text-primary' : 'text-muted-foreground'
+          'h-[13px] text-center font-semibold text-[11px] leading-[13px]',
+          sumToneClass(sum)
         )}
       >
-        {sum === 0 ? '' : formatSignedPrice(Math.abs(sum), sum > 0)}
+        {sum === 0 ? '' : formatPrice(sum)}
       </span>
 
       <span className='flex flex-col gap-0.5'>
