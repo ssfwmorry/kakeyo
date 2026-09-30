@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   addDaysJst,
   dateInMonthJst,
   dateOnlyValueJst,
+  dateWithCurrentTimeJst,
   diffDaysJst,
   endOfDayJst,
   firstDayOfMonthJst,
@@ -51,6 +52,32 @@ describe('startOfDayJst', () => {
     expect(startOfDayJst('2024-03-10').toISOString()).toBe(
       '2024-03-09T15:00:00.000Z'
     );
+  });
+});
+
+describe('dateWithCurrentTimeJst', () => {
+  it('選択した暦日を保ち、時刻は現在の JST 時刻を載せる', () => {
+    vi.useFakeTimers();
+    // 2024-03-15 08:30:15 JST の瞬間に 3/10 を選んだケース。
+    vi.setSystemTime(new Date('2024-03-14T23:30:15.000Z'));
+
+    const result = dateWithCurrentTimeJst('2024-03-10');
+
+    expect(toDateStringJst(result)).toBe('2024-03-10');
+    // 2024-03-10 08:30:15 JST = 2024-03-09T23:30:15Z
+    expect(result.toISOString()).toBe('2024-03-09T23:30:15.000Z');
+    vi.useRealTimers();
+  });
+
+  it('JST 0 時台でも選択した暦日が前日へずれない', () => {
+    vi.useFakeTimers();
+    // 2024-03-15 00:10:00 JST = 2024-03-14T15:10:00Z
+    vi.setSystemTime(new Date('2024-03-14T15:10:00.000Z'));
+
+    expect(toDateStringJst(dateWithCurrentTimeJst('2024-03-15'))).toBe(
+      '2024-03-15'
+    );
+    vi.useRealTimers();
   });
 });
 

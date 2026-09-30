@@ -54,6 +54,21 @@ export function endOfDayJst(dateString: string): Date {
   return dayjs.tz(dateString, JST).endOf('day').toDate();
 }
 
+// YYYY-MM-DD（JST の暦日）に「今の JST 時刻」を載せた UTC の Date。
+// 入力フォームは暦日しか持たないため、登録した時刻を残す record の datetime はここで合成する。
+// 暦日は選択されたものを必ず保つ（now 側の日付は使わない）ので、日を跨ぐ瞬間でもマスの
+// 所属日はズレない。
+export function dateWithCurrentTimeJst(dateString: string): Date {
+  const now = jst();
+  return dayjs
+    .tz(dateString, JST)
+    .hour(now.hour())
+    .minute(now.minute())
+    .second(now.second())
+    .millisecond(now.millisecond())
+    .toDate();
+}
+
 // 基準年月（YYYY-MM）から monthOffset ヶ月ずらした月の day 日を YYYY-MM-DD で返す。
 // 「前月 21 日」「翌月 9 日」のようなカレンダー表示範囲端の算出に使う。
 // day が対象月の日数を超える場合は dayjs が翌月へ繰り上げる点に注意（呼び出し側は

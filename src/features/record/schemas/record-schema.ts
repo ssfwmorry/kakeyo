@@ -19,7 +19,7 @@ const optionalMemo = z
 // record upsert。id 空 = 新規、数値 = 更新。isPay / isInstead / isPair は hidden で送る。
 export const recordUpsertSchema = z.object({
   id: entityIdSchema().optional(),
-  // YYYY-MM-DD（JST の暦日）。startOfDayJst で timestamptz へ変換する。
+  // YYYY-MM-DD（JST の暦日）。dateWithCurrentTimeJst で timestamptz へ変換する。
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日付を選択してください'),
   isPay: z.stringbool(),
   isPair: z.stringbool(),

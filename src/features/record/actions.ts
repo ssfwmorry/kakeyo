@@ -15,7 +15,7 @@ import {
 } from '@/features/record/server/services';
 import type { RecordError } from '@/features/record/types';
 import { getPairMode } from '@/lib/server/pair/mode';
-import { startOfDayJst } from '@/lib/shared/domain/date';
+import { dateWithCurrentTimeJst } from '@/lib/shared/domain/date';
 import { L } from '@/lib/shared/labels';
 import type { SessionData } from '@/lib/shared/types/auth';
 import {
@@ -69,7 +69,7 @@ export async function upsertRecordAction(
 
   const result = await upsertRecord(session, {
     id,
-    datetime: startOfDayJst(date),
+    datetime: dateWithCurrentTimeJst(date),
     isPay,
     isInstead,
     methodId,

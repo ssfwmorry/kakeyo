@@ -2,7 +2,7 @@ import 'server-only';
 import { withDemoRead, withDemoWriteVoid } from '@/features/demo/server/inject';
 import * as demoRecord from '@/features/demo/server/queries/record';
 import { isForeignKeyError } from '@/lib/server/db/errors';
-import { toYearMonthJst } from '@/lib/shared/domain/date';
+import { toDateStringJst, toYearMonthJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
@@ -155,7 +155,15 @@ export async function upsertRecord(
     ) {
       return err('sameMonthOnly');
     }
-    await recordRepo.updateRecord(input.id, fields);
+    // 暦日を変えていない編集では元の時刻を残す（金額やメモを直しただけで登録時刻が
+    // 編集時刻に飛ぶのを防ぐ）。日付を動かしたときは入力側が載せた現在時刻を採る。
+    await recordRepo.updateRecord(input.id, {
+      ...fields,
+      datetime:
+        toDateStringJst(target.datetime) === toDateStringJst(input.datetime)
+          ? target.datetime
+          : input.datetime
+    });
     return ok(undefined);
   });
 }

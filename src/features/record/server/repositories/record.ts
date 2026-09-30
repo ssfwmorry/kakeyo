@@ -155,7 +155,7 @@ export async function getPairedRecordList(
 // 取得系: where 断片ヘルパ
 
 // datetime を JST 暦月 [monthStart, nextMonthStart) で絞る。
-// 保存も startOfDayJst（JST 0:00）で行うため、読み取りも date.ts の JST 月境界に揃える
+// 保存も JST の暦日を保つ時刻で行うため、読み取りも date.ts の JST 月境界に揃える
 // （UTC 境界だと JST 月初/月末の 9 時間分がズレて集計から漏れ/混入する）。
 function buildSummarizedYearMonthWhere(
   yearMonth: string
