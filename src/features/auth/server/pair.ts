@@ -1,5 +1,7 @@
 import 'server-only';
-import { prisma } from '@/lib/server/db/client';
+import { eq, or } from 'drizzle-orm';
+import { db } from '@/lib/server/db/client';
+import { pairs as pairsTable } from '@/lib/server/db/schema';
 import type { Id } from '@/lib/shared/types/id';
 
 // ペア ID の取得。getSessionData がセッションごとに呼ぶ。
@@ -11,13 +13,11 @@ import type { Id } from '@/lib/shared/types/id';
 // （どちらのペアの共有データを見せるか一意に決められない）、黙って先頭を採用すると
 // 誤ったペアのデータを混ぜて表示しかねないため、静かに握りつぶさず throw する。
 export async function getPairId(userUid: string): Promise<Id | null> {
-  const pairs = await prisma.pair.findMany({
-    where: {
-      OR: [{ user1Id: userUid }, { user2Id: userUid }]
-    },
-    select: { id: true },
-    take: 2
-  });
+  const pairs = await db
+    .select({ id: pairsTable.id })
+    .from(pairsTable)
+    .where(or(eq(pairsTable.user1Id, userUid), eq(pairsTable.user2Id, userUid)))
+    .limit(2);
   if (pairs.length > 1) {
     throw new Error(
       `pair の状態が不正です（uid=${userUid} に複数の pair が紐づいています）`

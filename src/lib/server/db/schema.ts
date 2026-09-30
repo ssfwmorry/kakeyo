@@ -54,7 +54,7 @@ export const methods = pgTable('methods', {
   // 送金方法（精算）では null。
   isPay: boolean('is_pay'),
   colorClassificationId: smallint('color_classification_id').notNull(),
-  sort: integer('sort').notNull()
+  sort: serial('sort')
 });
 
 export const types = pgTable('types', {
@@ -64,14 +64,14 @@ export const types = pgTable('types', {
   name: varchar('name', { length: 10 }).notNull(),
   isPay: boolean('is_pay').notNull(),
   colorClassificationId: smallint('color_classification_id').notNull(),
-  sort: integer('sort').notNull()
+  sort: serial('sort')
 });
 
 export const subTypes = pgTable('sub_types', {
   id: serial('id').primaryKey(),
   typeId: integer('type_id').notNull(),
   name: varchar('name', { length: 10 }).notNull(),
-  sort: integer('sort').notNull()
+  sort: serial('sort')
 });
 
 export const records = pgTable('records', {
@@ -105,7 +105,7 @@ export const plannedRecords = pgTable('planned_records', {
   subTypeId: integer('sub_type_id'),
   price: integer('price').notNull(),
   memo: text('memo'),
-  sort: integer('sort').notNull(),
+  sort: serial('sort'),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' })
     .defaultNow()
     .notNull(),
@@ -129,7 +129,7 @@ export const planTypes = pgTable('plan_types', {
   userId: varchar('user_id', { length: 28 }),
   name: varchar('name', { length: 10 }).notNull(),
   colorClassificationId: smallint('color_classification_id').notNull(),
-  sort: integer('sort').notNull(),
+  sort: serial('sort'),
   pairId: integer('pair_id')
 });
 
