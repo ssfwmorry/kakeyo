@@ -12,8 +12,8 @@ import type { SessionScope } from '@/lib/shared/types/auth';
 // を持つ。pairId はログイン時に確定済みなので `user_id = 自分 OR pair_id = pairId`
 // で「自分 or ペア」を表現できる。
 //
-// Prisma の where はテーブル非依存だったが、条件式はカラム参照を要するため
-// 対象テーブルの user_id / pair_id 列を呼び出し側から渡す。
+// 条件式はカラム参照を要するため、対象テーブルの user_id / pair_id 列を
+// 呼び出し側から渡す。
 type UserPairColumns = {
   userId: PgColumn;
   pairId: PgColumn;

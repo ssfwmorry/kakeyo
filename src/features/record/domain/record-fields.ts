@@ -5,7 +5,7 @@ import { SETTLEMENT_DISPLAY } from '../labels';
 
 // record の永続化フィールド（user_id / pair_id / is_settled / record_type）を
 // isPair・isInstead から導出する純粋関数・record ドメインの核。この 1 箇所へ集約し、
-// SQL/Prisma/React に触れないため単体テスト可能。record_type は resolveRecordType
+// SQL/DB/React に触れないため単体テスト可能。record_type は resolveRecordType
 // 経由で算出し、各所で 0/5/10/15 を手書きしない。
 
 type ResolveRecordOwnershipInput = {
