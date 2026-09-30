@@ -12,11 +12,6 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      // prisma 生成物は src 外（prisma/generated）にあるため src エイリアスより先に解決する。
-      {
-        find: /^@\/prisma\//,
-        replacement: `${fileURLToPath(new URL('./prisma', import.meta.url))}/`
-      },
       {
         find: /^@\//,
         replacement: `${fileURLToPath(new URL('./src', import.meta.url))}/`
