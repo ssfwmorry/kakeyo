@@ -1,7 +1,9 @@
 import 'server-only';
+import { asc } from 'drizzle-orm';
 import { cacheLife, cacheTag } from 'next/cache';
 import { cache } from 'react';
-import { prisma } from '@/lib/server/db/client';
+import { db } from '@/lib/server/db/client';
+import { colorClassifications } from '@/lib/server/db/schema';
 import type { Id } from '@/lib/shared/types/id';
 
 // マスタ（color_classification）リポジトリ。
@@ -28,9 +30,12 @@ export const getColorClassificationList = cache(
     cacheLife('days');
     cacheTag('color-classification');
 
-    return prisma.colorClassification.findMany({
-      select: { id: true, name: true },
-      orderBy: { id: 'asc' }
-    });
+    return db
+      .select({
+        id: colorClassifications.id,
+        name: colorClassifications.name
+      })
+      .from(colorClassifications)
+      .orderBy(asc(colorClassifications.id));
   }
 );

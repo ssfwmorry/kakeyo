@@ -1,5 +1,7 @@
 import 'server-only';
-import { prisma } from '@/lib/server/db/client';
+import { and, asc, eq } from 'drizzle-orm';
+import { db } from '@/lib/server/db/client';
+import { memos } from '@/lib/server/db/schema';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionData, SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
@@ -19,10 +21,11 @@ export type MemoDeleteError = 'notFound';
 export async function getMemoList(
   scope: SessionScope
 ): Promise<MemoListItem[]> {
-  const rows = await prisma.memo.findMany({
-    where: buildScopeWhere(scope),
-    orderBy: { id: 'asc' }
-  });
+  const rows = await db
+    .select()
+    .from(memos)
+    .where(buildScopeWhere(memos, scope))
+    .orderBy(asc(memos.id));
   return rows.map((row) => ({
     id: row.id,
     memo: row.memo,
@@ -38,24 +41,23 @@ export async function insertMemo(
   input: { memo: string; isPair: boolean }
 ): Promise<void> {
   const usePair = input.isPair && session.pairId !== null;
-  await prisma.memo.create({
-    data: {
-      memo: input.memo,
-      userId: usePair ? null : session.userUid,
-      pairId: usePair ? session.pairId : null
-    }
+  await db.insert(memos).values({
+    memo: input.memo,
+    userId: usePair ? null : session.userUid,
+    pairId: usePair ? session.pairId : null
   });
 }
 
-// deleteMany + scope を AND（IDOR 防止）。count===0 = 他人 or 不存在 = notFound。
+// 削除条件に scope を AND（IDOR 防止）。0 件 = 他人 or 不存在 = notFound。
 export async function deleteMemo(
   scope: SessionScope,
   id: Id
 ): Promise<{ ok: true } | { ok: false; error: MemoDeleteError }> {
-  const result = await prisma.memo.deleteMany({
-    where: { AND: [{ id }, buildScopeWhere(scope)] }
-  });
-  if (result.count === 0) {
+  const deleted = await db
+    .delete(memos)
+    .where(and(eq(memos.id, id), buildScopeWhere(memos, scope)))
+    .returning({ id: memos.id });
+  if (deleted.length === 0) {
     return { ok: false, error: 'notFound' };
   }
   return { ok: true };

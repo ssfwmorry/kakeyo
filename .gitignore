@@ -50,3 +50,6 @@ next-env.d.ts
 
 # Playwright MCP の作業ファイル（スナップショット・コンソールログ）
 /.playwright-mcp/
+
+# drizzle 移行中の一時検証スクリプト
+.tmp-migration/
