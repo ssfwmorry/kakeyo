@@ -1,4 +1,5 @@
 import 'server-only';
+import { sql } from 'drizzle-orm';
 import { withDemoRead, withDemoWriteVoid } from '@/features/demo/server/inject';
 import * as demoMaster from '@/features/demo/server/queries/master';
 import * as demoPlannedRecord from '@/features/demo/server/queries/planned-record';
@@ -6,9 +7,8 @@ import {
   type DayClassification,
   getDayClassificationList
 } from '@/features/master/server/repositories/dayClassification';
-import { prisma } from '@/lib/server/db/client';
+import { db } from '@/lib/server/db/client';
 import { isForeignKeyError } from '@/lib/server/db/errors';
-import { schemaSql } from '@/lib/server/db/schema-sql';
 import { todayJst, toYearMonthJst } from '@/lib/shared/domain/date';
 import { planReorder } from '@/lib/shared/domain/reorder';
 import type { SessionData } from '@/lib/shared/types/auth';
@@ -166,30 +166,25 @@ export async function deletePlannedRecord(
 // SQL は CASE WHEN・day_classifications による日付組み立て・updated_at / now()
 // 条件をそのまま用いる。全ユーザー対象の日次バッチのため、ここは buildScopeWhere を
 // 通さない唯一の箇所（ユーザー絞り込みなし）。
-// スキーマ修飾 `develop.` を環境変数のスキーマ名（develop / public）に差し替えるのは、
-// adapter-pg の schema オプションが ORM クエリにしか効かず、$queryRaw の生 SQL には
-// search_path が適用されないため明示修飾が必須なため。
 
 // 1 ヶ月分の実体化。挿入行数を返す。
-// スキーマ修飾は共有ヘルパ schemaSql()（末尾ドット付き `develop.` を返す）を使う。
 async function insertRecordsFromPlannedRecords(
   yearMonth: string
 ): Promise<number> {
-  const schema = schemaSql();
-  return prisma.$executeRaw`
+  const result = await db.execute(sql`
     -- すでに planned_record_id が設定されている record を取り出す
     with summarized_records as (
         select
             planned_record_id
-        from ${schema}records
-        left join ${schema}pairs on
+        from records
+        left join pairs on
             records.pair_id = pairs.id
         where
             to_char(cast(datetime as date),'YYYY-MM') = ${yearMonth}
             and planned_record_id is not null
     )
     -- コピーされたものを登録する
-    insert into ${schema}records (
+    insert into records (
         user_id,
         pair_id,
         datetime,
@@ -224,18 +219,19 @@ async function insertRecordsFromPlannedRecords(
             when planned_records.pair_id is not null and planned_records.user_id is null then 10
             else 15 -- 起こり得ない
         end as record_type
-    from ${schema}planned_records
-    inner join ${schema}day_classifications on
+    from planned_records
+    inner join day_classifications on
         planned_records.day_classification_id = day_classifications.id
     left join summarized_records on
         planned_records.id = summarized_records.planned_record_id
-    left join ${schema}pairs on
+    left join pairs on
         planned_records.pair_id = pairs.id
     where
         summarized_records.planned_record_id is null -- planned_record_id が登録されていないものを抽出
         and cast(planned_records.updated_at as date) <=  cast((${yearMonth} || '-01') as date) -- planned_record が登録された後の期間でのみ、record 登録を行う
         and cast(${yearMonth} || '-' || lpad(cast(day_classifications.value as character varying), 2, '0') as timestamp) > now() -- 登録される datetime が未来の場合のみrecord 登録を行う
-  `;
+  `);
+  return result.rowCount ?? 0;
 }
 
 // 日次バッチの入口（Cron Route 専用）。当月〜7 ヶ月後を月ごとに実体化し、

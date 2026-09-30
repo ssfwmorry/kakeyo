@@ -1,11 +1,22 @@
 import 'server-only';
-import { prisma } from '@/lib/server/db/client';
+import { and, asc, eq, inArray } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+import { db } from '@/lib/server/db/client';
+import {
+  colorClassifications,
+  dayClassifications,
+  methods,
+  plannedRecords,
+  records,
+  subTypes,
+  types,
+  users
+} from '@/lib/server/db/schema';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SortAssignment } from '@/lib/shared/domain/reorder';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import type { RecordType } from '@/lib/shared/types/recordType';
-import type { Prisma } from '@/prisma/generated/client';
 import type {
   NotePlannedRecordDefault,
   PlannedRecordListItem
@@ -30,37 +41,77 @@ export type PlannedRecordUpsertFields = {
 
 // マッパーが読む列だけ select で絞る
 // （day 名、method/type の名前＋色名、subType 名、立替者の user 名）。
-const plannedRecordInclude = {
-  dayClassification: { select: { name: true } },
-  method: {
-    select: { name: true, colorClassification: { select: { name: true } } }
-  },
-  type: {
-    select: { name: true, colorClassification: { select: { name: true } } }
-  },
-  subType: { select: { name: true } },
-  user: { select: { name: true } }
-} satisfies Prisma.PlannedRecordInclude;
+// method と type はそれぞれ別の色行を引くため color_classifications を別名で 2 回 join する。
+const methodColor = alias(colorClassifications, 'method_color');
+const typeColor = alias(colorClassifications, 'type_color');
 
-type PlannedRecordWithRelations = Prisma.PlannedRecordGetPayload<{
-  include: typeof plannedRecordInclude;
-}>;
+const plannedRecordColumns = {
+  id: plannedRecords.id,
+  userId: plannedRecords.userId,
+  pairId: plannedRecords.pairId,
+  isPay: plannedRecords.isPay,
+  price: plannedRecords.price,
+  memo: plannedRecords.memo,
+  sort: plannedRecords.sort,
+  dayClassificationId: plannedRecords.dayClassificationId,
+  dayClassificationName: dayClassifications.name,
+  methodId: plannedRecords.methodId,
+  methodName: methods.name,
+  methodColorName: methodColor.name,
+  typeId: plannedRecords.typeId,
+  typeName: types.name,
+  typeColorName: typeColor.name,
+  subTypeId: plannedRecords.subTypeId,
+  subTypeName: subTypes.name,
+  userName: users.name
+} as const;
+
+type PlannedRecordSelectedRow = {
+  id: Id;
+  userId: string | null;
+  pairId: Id | null;
+  isPay: boolean;
+  price: number;
+  memo: string | null;
+  sort: number;
+  dayClassificationId: Id;
+  dayClassificationName: string;
+  methodId: Id;
+  methodName: string;
+  methodColorName: string;
+  typeId: Id;
+  typeName: string;
+  typeColorName: string;
+  subTypeId: Id | null;
+  subTypeName: string | null;
+  userName: string | null;
+};
 
 // READ: 定期一覧（設定タブ用）。
 // self/pair の分けは service 側のグルーピングで行い、ここは各グループ内の sort 昇順のみ担う。
 export async function findPlannedRecordRows(
   scope: SessionScope
 ): Promise<PlannedRecordListItem[]> {
-  const rows = await prisma.plannedRecord.findMany({
-    where: buildScopeWhere(scope),
-    include: plannedRecordInclude,
-    orderBy: { sort: 'asc' }
-  });
+  const rows = await db
+    .select(plannedRecordColumns)
+    .from(plannedRecords)
+    .innerJoin(
+      dayClassifications,
+      eq(plannedRecords.dayClassificationId, dayClassifications.id)
+    )
+    .innerJoin(methods, eq(plannedRecords.methodId, methods.id))
+    .innerJoin(methodColor, eq(methods.colorClassificationId, methodColor.id))
+    .innerJoin(types, eq(plannedRecords.typeId, types.id))
+    .innerJoin(typeColor, eq(types.colorClassificationId, typeColor.id))
+    .leftJoin(subTypes, eq(plannedRecords.subTypeId, subTypes.id))
+    .leftJoin(users, eq(plannedRecords.userId, users.uid))
+    .where(buildScopeWhere(plannedRecords, scope))
+    .orderBy(asc(plannedRecords.sort));
   return rows.map((row) => toPlannedRecordListItem(row, scope.userUid));
 }
 
 function toPlannedRecordListItem(
-  row: PlannedRecordWithRelations,
+  row: PlannedRecordSelectedRow,
   userUid: string
 ): PlannedRecordListItem {
   const isPair = row.pairId !== null;
@@ -73,17 +124,17 @@ function toPlannedRecordListItem(
     sort: row.sort,
     isPair,
     // pair_id ありのときのみ立替者名を引く。
-    pairUserName: isPair ? (row.user?.name ?? null) : null,
+    pairUserName: isPair ? row.userName : null,
     dayClassificationId: row.dayClassificationId,
-    dayClassificationName: row.dayClassification.name,
+    dayClassificationName: row.dayClassificationName,
     methodId: row.methodId,
-    methodName: row.method.name,
-    methodColorClassificationName: row.method.colorClassification.name,
+    methodName: row.methodName,
+    methodColorClassificationName: row.methodColorName,
     typeId: row.typeId,
-    typeName: row.type.name,
-    typeColorClassificationName: row.type.colorClassification.name,
+    typeName: row.typeName,
+    typeColorClassificationName: row.typeColorName,
     subTypeId: row.subTypeId,
-    subTypeName: row.subType?.name ?? null
+    subTypeName: row.subTypeName
   };
 }
 
@@ -93,9 +144,13 @@ export async function findPlannedRecordForEdit(
   scope: SessionScope,
   id: Id
 ): Promise<NotePlannedRecordDefault | null> {
-  const row = await prisma.plannedRecord.findFirst({
-    where: { AND: [{ id }, buildScopeWhere(scope)] }
-  });
+  const [row] = await db
+    .select()
+    .from(plannedRecords)
+    .where(
+      and(eq(plannedRecords.id, id), buildScopeWhere(plannedRecords, scope))
+    )
+    .limit(1);
   if (!row) {
     return null;
   }
@@ -120,29 +175,31 @@ export async function findPlannedRecordInScope(
   scope: SessionScope,
   id: Id
 ): Promise<{ id: Id; sort: number } | null> {
-  return prisma.plannedRecord.findFirst({
-    where: { AND: [{ id }, buildScopeWhere(scope)] },
-    select: { id: true, sort: true }
-  });
+  const [row] = await db
+    .select({ id: plannedRecords.id, sort: plannedRecords.sort })
+    .from(plannedRecords)
+    .where(
+      and(eq(plannedRecords.id, id), buildScopeWhere(plannedRecords, scope))
+    )
+    .limit(1);
+  return row ?? null;
 }
 
 // CREATE。所有列（user_id/pair_id/record_type）は service が導出済み。
 export async function insertPlannedRecord(
   input: PlannedRecordUpsertFields
 ): Promise<void> {
-  await prisma.plannedRecord.create({
-    data: {
-      userId: input.userId,
-      pairId: input.pairId,
-      dayClassificationId: input.dayClassificationId,
-      isPay: input.isPay,
-      methodId: input.methodId,
-      typeId: input.typeId,
-      subTypeId: input.subTypeId,
-      price: input.price,
-      memo: input.memo,
-      recordType: input.recordType
-    }
+  await db.insert(plannedRecords).values({
+    userId: input.userId,
+    pairId: input.pairId,
+    dayClassificationId: input.dayClassificationId,
+    isPay: input.isPay,
+    methodId: input.methodId,
+    typeId: input.typeId,
+    subTypeId: input.subTypeId,
+    price: input.price,
+    memo: input.memo,
+    recordType: input.recordType
   });
 }
 
@@ -152,9 +209,9 @@ export async function updatePlannedRecord(
   id: Id,
   input: PlannedRecordUpsertFields
 ): Promise<void> {
-  await prisma.plannedRecord.update({
-    where: { id },
-    data: {
+  await db
+    .update(plannedRecords)
+    .set({
       userId: input.userId,
       pairId: input.pairId,
       dayClassificationId: input.dayClassificationId,
@@ -165,12 +222,12 @@ export async function updatePlannedRecord(
       price: input.price,
       memo: input.memo,
       recordType: input.recordType
-    }
-  });
+    })
+    .where(eq(plannedRecords.id, id));
 }
 
 // DELETE（1 件）。scope を where に AND し、削除できたかを返す
-// （scope 外の行は count===0 で notFound）。
+// （scope 外の行は 0 件で notFound）。
 //
 // 実体化済み record は残す（「これまでに記録された分は残ります」）。records の
 // planned_record_id を先に NULL にしてから消すので、FK 制約に当たらない。
@@ -181,19 +238,24 @@ export async function deletePlannedRecordById(
   scope: SessionScope,
   id: Id
 ): Promise<{ ok: true } | { ok: false; error: 'notFound' }> {
-  return prisma.$transaction(async (tx) => {
-    const target = await tx.plannedRecord.findFirst({
-      where: { AND: [{ id }, buildScopeWhere(scope)] },
-      select: { id: true }
-    });
-    if (target === null) {
+  return db.transaction(async (tx) => {
+    const [target] = await tx
+      .select({ id: plannedRecords.id })
+      .from(plannedRecords)
+      .where(
+        and(eq(plannedRecords.id, id), buildScopeWhere(plannedRecords, scope))
+      )
+      .limit(1);
+    if (target === undefined) {
       return { ok: false, error: 'notFound' };
     }
-    await tx.record.updateMany({
-      where: { AND: [{ plannedRecordId: id }, buildScopeWhere(scope)] },
-      data: { plannedRecordId: null }
-    });
-    await tx.plannedRecord.delete({ where: { id } });
+    await tx
+      .update(records)
+      .set({ plannedRecordId: null })
+      .where(
+        and(eq(records.plannedRecordId, id), buildScopeWhere(records, scope))
+      );
+    await tx.delete(plannedRecords).where(eq(plannedRecords.id, id));
     return { ok: true };
   });
 }
@@ -203,18 +265,30 @@ export async function findPlannedRecordRowsForReorder(
   scope: SessionScope,
   ids: Id[]
 ): Promise<{ id: Id; sort: number; pairId: Id | null }[]> {
-  return prisma.plannedRecord.findMany({
-    where: { AND: [{ id: { in: ids } }, buildScopeWhere(scope)] },
-    select: { id: true, sort: true, pairId: true }
-  });
+  return db
+    .select({
+      id: plannedRecords.id,
+      sort: plannedRecords.sort,
+      pairId: plannedRecords.pairId
+    })
+    .from(plannedRecords)
+    .where(
+      and(
+        inArray(plannedRecords.id, ids),
+        buildScopeWhere(plannedRecords, scope)
+      )
+    );
 }
 
 export async function updatePlannedRecordSorts(
   assignments: SortAssignment[]
 ): Promise<void> {
-  await prisma.$transaction(
-    assignments.map(({ id, sort }) =>
-      prisma.plannedRecord.update({ where: { id }, data: { sort } })
-    )
-  );
+  await db.transaction(async (tx) => {
+    for (const { id, sort } of assignments) {
+      await tx
+        .update(plannedRecords)
+        .set({ sort })
+        .where(eq(plannedRecords.id, id));
+    }
+  });
 }
