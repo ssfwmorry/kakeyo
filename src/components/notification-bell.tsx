@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { IconBell } from '@/components/icons';
 import { requireAuth } from '@/features/auth/server/requireAuth';
+import { getDemoReferenceDate } from '@/features/demo/server/date';
 import { NotificationBellButton } from '@/features/notify/components/notification-bell-button';
 import { buildNotifyRows } from '@/features/notify/domain/notify-rows';
 import { getReminderList } from '@/features/plan-reminder/server/services';
-import { todayJst } from '@/lib/shared/domain/date';
 
 // ヘッダー左のベル。期日を過ぎたリマインダーの件数を赤いバッジで出し、押すと
 // お知らせシートが開く（原典 Calendar / Setting のヘッダーと Notify）。
@@ -38,7 +38,7 @@ function BellFallback() {
 async function BellContent() {
   const session = await requireAuth();
   const { all } = await getReminderList(session);
-  const rows = buildNotifyRows(all, todayJst());
+  const rows = buildNotifyRows(all, getDemoReferenceDate(session));
 
   return <NotificationBellButton rows={rows} />;
 }

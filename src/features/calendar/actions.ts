@@ -1,7 +1,7 @@
 'use server';
 
 import { requireAuth } from '@/features/auth/server/requireAuth';
-import { todayJst } from '@/lib/shared/domain/date';
+import { getDemoReferenceYearMonth } from '@/features/demo/server/date';
 import { getCalendarMonth } from './server/services';
 import type { CalendarMonthData } from './types';
 
@@ -14,6 +14,6 @@ export async function getCalendarMonthAction(
   const session = await requireAuth();
   const normalized = /^\d{4}-\d{2}$/.test(yearMonth)
     ? yearMonth
-    : todayJst().slice(0, 7);
+    : getDemoReferenceYearMonth(session);
   return getCalendarMonth(session, normalized);
 }

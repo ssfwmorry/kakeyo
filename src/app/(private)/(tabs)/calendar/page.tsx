@@ -1,11 +1,16 @@
+import { Suspense } from 'react';
 import { NotificationBell } from '@/components/notification-bell';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { CalendarScreen } from '@/features/calendar/components/calendar-screen';
 import { getCalendarMonth } from '@/features/calendar/server/services';
+import {
+  getDemoReferenceDate,
+  getDemoReferenceYearMonth
+} from '@/features/demo/server/date';
 import { getMemoList } from '@/features/memo/server/services';
 import { getPlanTypeCardList } from '@/features/plan-reminder/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
-import { todayJst, toYearMonthJst } from '@/lib/shared/domain/date';
+import CalendarLoading from './loading';
 
 // この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
 // サーバでブロックしてよい印を立てる（共通 layout の静的シェルは効いている）。
@@ -16,10 +21,18 @@ export const instant = false;
 // 予定シートをこの画面の上に出すので、その候補（予定カテゴリ）もここで取る。
 // 記録の候補は入力モーダルを持つ (private)/layout.tsx 側で取る。
 
-export default async function CalendarPage() {
+export default function CalendarPage() {
+  return (
+    <Suspense fallback={<CalendarLoading />}>
+      <CalendarPageContent />
+    </Suspense>
+  );
+}
+
+async function CalendarPageContent() {
   const session = await requireAuth();
-  const today = todayJst();
-  const yearMonth = toYearMonthJst(new Date());
+  const today = getDemoReferenceDate(session);
+  const yearMonth = getDemoReferenceYearMonth(session);
 
   const [month, memos, isPair, planTypeList] = await Promise.all([
     getCalendarMonth(session, yearMonth),
