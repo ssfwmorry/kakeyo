@@ -400,38 +400,6 @@ create policy "develop.memos all"
 ;
 
 -- migration-sort: 65
-drop table if exists develop.short_cuts cascade;
-create table develop.short_cuts (
-    id                bigserial    primary key,
-    user_id           varchar(28)  not null,
-    pair_id           integer,
-    is_pay            boolean      not null,
-    method_id         integer      not null,
-    type_id           integer      not null,
-    sub_type_id       integer,
-    price             integer      not null check (price <= 1000000),
-    memo              text,
-    record_type       smallint     not null default 0,
-
-    foreign key (user_id) references develop.users (uid),
-    foreign key (pair_id) references develop.pairs (id),
-    foreign key (method_id) references develop.methods (id),
-    foreign key (type_id) references develop.types (id),
-    foreign key (sub_type_id) references develop.sub_types (id)
-);
-
-alter table develop.short_cuts
-    enable row level security;
-
-create policy "develop.short_cuts all"
-    on develop.short_cuts for all
-    to anon
-    using (
-        true
-    )
-;
-
--- migration-sort: 70
 drop table if exists develop.banks cascade;
 create table develop.banks (
     id                      serial      primary key,
@@ -454,7 +422,7 @@ create policy "develop.banks all"
     )
 ;
 
--- migration-sort: 75
+-- migration-sort: 70
 drop table if exists develop.bank_balances cascade;
 create table develop.bank_balances (
     id         serial      primary key,

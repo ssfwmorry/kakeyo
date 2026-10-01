@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // 金額（price: Int）の共有パーススキーマ（ドメイン計算の単一の正）。
-// 家計の数字の入口。record / planned_record / short_cut / bank_balance など
+// 家計の数字の入口。record / planned_record / bank_balance など
 // 金額を持つ全レーンは、素の Number() を使わず必ずこのスキーマを経由する。
 //
 // FormData はすべて文字列で届くため、"1,000"（カンマ）・全角数字（"１０００"）・

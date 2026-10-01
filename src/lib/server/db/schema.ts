@@ -140,19 +140,6 @@ export const memos = pgTable('memos', {
   memo: varchar('memo', { length: 30 }).notNull()
 });
 
-export const shortCuts = pgTable('short_cuts', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  userId: varchar('user_id', { length: 28 }).notNull(),
-  pairId: integer('pair_id'),
-  isPay: boolean('is_pay').notNull(),
-  methodId: integer('method_id').notNull(),
-  typeId: integer('type_id').notNull(),
-  subTypeId: integer('sub_type_id'),
-  price: integer('price').notNull(),
-  memo: text('memo'),
-  recordType: smallint('record_type').default(0).notNull()
-});
-
 export const banks = pgTable('banks', {
   id: serial('id').primaryKey(),
   userId: varchar('user_id', { length: 28 }).notNull(),

@@ -394,3 +394,11 @@ alter table public.users add column supabase_user_uid uuid unique; -- NULL 許�
 -- Supabase Auth 作成後の UID を紐付ける（値は Supabase 画面で確認して手動 update）
 -- update public.users set supabase_user_uid = '<uuid>' where uid = '<firebase uid>';
 ```
+
+## 20261001\_開発 DB から short_cuts を削除する
+
+```sql
+drop table develop.short_cuts;
+```
+
+本番 DB はまだ VUE 実装から三章されているので NG

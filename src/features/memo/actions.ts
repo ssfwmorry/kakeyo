@@ -17,10 +17,6 @@ import type { MemoError } from './types';
 
 // memo（TODO）の Server Actions。bank/type-method を手本に
 // parseWithZod → service（Result）→ toFormResult。
-// TODO は calendar 内の同一画面内更新（遷移なし）のため flash ではなく
-// FormActionResult.toast を使い、保存後 revalidatePath('/calendar') で再取得する。
-// ※ calendar 本体の統合は P5。ここでは revalidatePath 先を /calendar に固定し、
-//   統合レーンがそのパスに memo/shortcut を表示する前提で用意する。
 
 const CALENDAR_PATH = '/calendar';
 

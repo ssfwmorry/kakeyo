@@ -8,7 +8,7 @@ import type { SessionScope } from '@/lib/shared/types/auth';
 // scope 漏れは他ペアのデータ露出（情報漏洩）に直結する。
 
 // 多くのテーブル（methods / types / plan_types / records / planned_records /
-// plans / memos / short_cuts / reminders）は user_id と pair_id の "どちらか一方"
+// plans / memos / reminders）は user_id と pair_id の "どちらか一方"
 // を持つ。pairId はログイン時に確定済みなので `user_id = 自分 OR pair_id = pairId`
 // で「自分 or ペア」を表現できる。
 //
@@ -35,9 +35,9 @@ export function buildScopeWhere(
 
 // どちらのヘルパを使うかの対応（誤選択は scope 漏れ＝情報漏洩に直結）:
 // - records は pair_id を持ち「自分 or ペア」で見えるべき → buildScopeWhere（pair 込み）
-// - banks / bank_balances / short_cuts は個人専用（pair で共有しない） → buildOwnerScopeWhere
+// - banks / bank_balances は個人専用（pair で共有しない） → buildOwnerScopeWhere
 
-// 個人専用テーブル（banks / bank_balances 経由 / short_cuts 取得）用。
+// 個人専用テーブル（banks / bank_balances 経由取得）用。
 // pair は考慮せず自分の user_id 一致のみ。
 export function buildOwnerScopeWhere(
   userId: PgColumn,

@@ -1,5 +1,5 @@
 // record_type（家計計算の起点）の定義。
-// records / planned_records / short_cuts が共有する分類。
+// records / planned_records が共有する分類。
 //
 // - 0  SELF       : 個人の記録
 // - 5  INSTEAD    : ペアで一方が立て替えた記録（is_pay=true 固定・精算対象）

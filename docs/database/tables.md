@@ -20,9 +20,8 @@
 - 53: [reminders(conditions の後)](#reminders)
 - 55: [plans(plan_types, reminders の後)](#plans)
 - 60: [memos](#memos)
-- 65: [short_cuts](#short_cuts)
-- 70: [banks](#banks)
-- 75: [bank_balances(banks の後)](#bank_balances)
+- 65: [banks](#banks)
+- 70: [bank_balances(banks の後)](#bank_balances)
 
 ## transaction tables
 
@@ -30,12 +29,12 @@
 
 #### schema
 
-| name              |  type  | size | required | auto_increment | key | remarks                                                                                         |
-| :---------------- | :----: | :--: | :------: | :------------: | :-: | :---------------------------------------------------------------------------------------------- |
-| uid               | string |  28  |    v     |       -        | PK  | 固定長だが、JS から操作する時にエラーとなるので自由長とする（Firebase UID）                     |
-| mail              | string |  -   |    v     |       -        |  -  | -                                                                                               |
-| name              | string |  10  |    v     |       -        |  -  | -                                                                                               |
-| supabase_user_uid |  uuid  |  -   |    -     |       -        | UK  | Supabase Auth の UID。Firebase→Supabase Auth 移行のため付与（NULL 許容。既存 FK は uid のまま） |
+| name              |  type  | size  | required | auto_increment |  key  | remarks                                                                                         |
+| :---------------- | :----: | :---: | :------: | :------------: | :---: | :---------------------------------------------------------------------------------------------- |
+| uid               | string |  28   |    v     |       -        |  PK   | 固定長だが、JS から操作する時にエラーとなるので自由長とする（Firebase UID）                     |
+| mail              | string |   -   |    v     |       -        |   -   | -                                                                                               |
+| name              | string |  10   |    v     |       -        |   -   | -                                                                                               |
+| supabase_user_uid |  uuid  |   -   |    -     |       -        |  UK   | Supabase Auth の UID。Firebase→Supabase Auth 移行のため付与（NULL 許容。既存 FK は uid のまま） |
 
 #### migration
 
@@ -74,11 +73,11 @@ create policy "develop.users all"
 
 #### schema
 
-| name     |  type  | size | required | auto_increment |    key    | remarks |
-| :------- | :----: | :--: | :------: | :------------: | :-------: | :------ |
-| id       |  int   |  -   |    v     |       v        |    PK     | -       |
-| user1_id | string |  28  |    v     |       -        | users.uid | -       |
-| user2_id | string |  28  |    v     |       -        | users.uid | -       |
+| name     |  type  | size  | required | auto_increment |    key    | remarks |
+| :------- | :----: | :---: | :------: | :------------: | :-------: | :------ |
+| id       |  int   |   -   |    v     |       v        |    PK     | -       |
+| user1_id | string |  28   |    v     |       -        | users.uid | -       |
+| user2_id | string |  28   |    v     |       -        | users.uid | -       |
 
 #### migration
 
@@ -109,9 +108,9 @@ create policy "develop.pairs all"
 
 #### example
 
-| id  |           user1_id           |           user2_id           |
-| :-- | :--------------------------: | :--------------------------: |
-| 1   | OsoPkexxPDTjocAIhpXgfvsswTg1 | HWcdx07GOzdMNqBhHlL65wRFoK73 |
+| id   |           user1_id           |           user2_id           |
+| :--- | :--------------------------: | :--------------------------: |
+| 1    | OsoPkexxPDTjocAIhpXgfvsswTg1 | HWcdx07GOzdMNqBhHlL65wRFoK73 |
 
 ### methods
 
@@ -169,13 +168,13 @@ create policy "develop.methods all"
 
 #### example
 
-| id  | user_id | pair_id |    name    | is_pay | color_classification_id | sort |
-| :-- | :-----: | :-----: | :--------: | :----: | :---------------------: | :--: |
-| 1   |    2    |    -    |    現金    |   T    |            1            |  1   |
-| 2   |    2    |    -    | 電子マネー |   T    |            2            |  2   |
-| 3   |    2    |    -    |   クレカ   |   T    |            3            |  3   |
-| 4   |    -    |    1    |    現金    |   F    |            4            |  4   |
-| 5   |    -    |    1    |  振り込み  |   F    |            5            |  5   |
+| id   | user_id | pair_id |    name    | is_pay | color_classification_id | sort  |
+| :--- | :-----: | :-----: | :--------: | :----: | :---------------------: | :---: |
+| 1    |    2    |    -    |    現金    |   T    |            1            |   1   |
+| 2    |    2    |    -    | 電子マネー |   T    |            2            |   2   |
+| 3    |    2    |    -    |   クレカ   |   T    |            3            |   3   |
+| 4    |    -    |    1    |    現金    |   F    |            4            |   4   |
+| 5    |    -    |    1    |  振り込み  |   F    |            5            |   5   |
 
 ### types
 
@@ -224,13 +223,13 @@ create policy "develop.types all"
 
 #### example
 
-| id  | user_id | pair_id |  name  | is_pay | color_classification_id | sort |
-| :-- | :-----: | :-----: | :----: | :----: | :---------------------: | :--: |
-| 1   |    2    |    -    |  食費  |   T    |            1            |  1   |
-| 2   |    2    |    -    | 交通費 |   T    |            2            |  2   |
-| 3   |    -    |    1    |  雑費  |   T    |            3            |  3   |
-| 4   |    -    |    1    |  給与  |   F    |            1            |  4   |
-| 5   |    -    |    1    |  賞与  |   F    |            2            |  5   |
+| id   | user_id | pair_id |  name  | is_pay | color_classification_id | sort  |
+| :--- | :-----: | :-----: | :----: | :----: | :---------------------: | :---: |
+| 1    |    2    |    -    |  食費  |   T    |            1            |   1   |
+| 2    |    2    |    -    | 交通費 |   T    |            2            |   2   |
+| 3    |    -    |    1    |  雑費  |   T    |            3            |   3   |
+| 4    |    -    |    1    |  給与  |   F    |            1            |   4   |
+| 5    |    -    |    1    |  賞与  |   F    |            2            |   5   |
 
 ### sub_types
 
@@ -272,30 +271,30 @@ create policy "develop.sub_types all"
 
 #### example
 
-| id  | type_id |     name     | sort |
-| :-- | :-----: | :----------: | :--: |
-| 1   |    2    |    通勤費    |  1   |
-| 2   |    2    | プライベート |  2   |
+| id   | type_id |     name     | sort  |
+| :--- | :-----: | :----------: | :---: |
+| 1    |    2    |    通勤費    |   1   |
+| 2    |    2    | プライベート |   2   |
 
 ### records
 
 #### schema
 
-| name              |   type   | size | required | auto_increment |        key         | remarks                                       |
-| :---------------- | :------: | :--: | :------: | :------------: | :----------------: | :-------------------------------------------- |
-| id                |   int    |  -   |    v     |       v        |         PK         | -                                             |
-| user_id           |  string  |  28  |    -     |       -        |     users.uid      | [起こり得る状況](#起こり得る状況) 参照        |
-| pair_id           |   int    |  -   |    -     |       -        |      pairs.id      | -                                             |
-| datetime          | datetime |  -   |    v     |       -        |         UK         | -                                             |
-| is_pay            |   bool   |  -   |    -     |       -        |         -          | record_type=5 の時 true 固定                  |
-| method_id         |   int    |  -   |    v     |       -        |     methods.id     | -                                             |
-| type_id           |   int    |  -   |    -     |       -        |      types.id      | -                                             |
-| sub_type_id       |   int    |  -   |    -     |       -        |    sub_types.id    | -                                             |
-| price             |   int    |  -   |    v     |       -        |         -          | -                                             |
-| memo              |  string  |  -   |    -     |       -        |         -          | -                                             |
-| planned_record_id |   int    |  -   |    -     |       -        | planned_records.id | 外部キーが削除されると、null となる           |
-| is_settled        |   bool   |  -   |    -     |       -        |         -          | record_type=5 の時、精算済みかどうかを示す    |
-| record_type       |   int    |  -   |    v     |       -        |         -          | 0: SELF, 5: INSTEAD, 10: PAIR, 15: SETTLEMENT |
+| name              |   type   | size  | required | auto_increment |        key         | remarks                                       |
+| :---------------- | :------: | :---: | :------: | :------------: | :----------------: | :-------------------------------------------- |
+| id                |   int    |   -   |    v     |       v        |         PK         | -                                             |
+| user_id           |  string  |  28   |    -     |       -        |     users.uid      | [起こり得る状況](#起こり得る状況) 参照        |
+| pair_id           |   int    |   -   |    -     |       -        |      pairs.id      | -                                             |
+| datetime          | datetime |   -   |    v     |       -        |         UK         | -                                             |
+| is_pay            |   bool   |   -   |    -     |       -        |         -          | record_type=5 の時 true 固定                  |
+| method_id         |   int    |   -   |    v     |       -        |     methods.id     | -                                             |
+| type_id           |   int    |   -   |    -     |       -        |      types.id      | -                                             |
+| sub_type_id       |   int    |   -   |    -     |       -        |    sub_types.id    | -                                             |
+| price             |   int    |   -   |    v     |       -        |         -          | -                                             |
+| memo              |  string  |   -   |    -     |       -        |         -          | -                                             |
+| planned_record_id |   int    |   -   |    -     |       -        | planned_records.id | 外部キーが削除されると、null となる           |
+| is_settled        |   bool   |   -   |    -     |       -        |         -          | record_type=5 の時、精算済みかどうかを示す    |
+| record_type       |   int    |   -   |    v     |       -        |         -          | 0: SELF, 5: INSTEAD, 10: PAIR, 15: SETTLEMENT |
 
 ※ is_pay は、method_id からわかるので不要かも、あった方が便利そう  
 ※ pair_id, user_id からわかるので不要かも、あった方が便利そう
@@ -354,30 +353,30 @@ create policy "develop.records all"
 
 #### example
 
-| id  | user_id | pair_id |      datetime       | is_pay | method_id | type_id | sub_type_id | price  | memo | plannde_record_id |
-| :-- | :-----: | :-----: | :-----------------: | :----: | :-------: | :-----: | :---------: | :----: | :--: | :---------------: |
-| 1   |    2    |    -    | 2022-01-01 12:00:11 |   T    |     1     |    2    |      2      |  320   |  -   |         -         |
-| 2   |    -    |    1    | 2022-01-01 12:00:22 |   F    |     4     |    4    |      -      | 200000 | 月給 |         1         |
+| id   | user_id | pair_id |      datetime       | is_pay | method_id | type_id | sub_type_id | price  | memo  | plannde_record_id |
+| :--- | :-----: | :-----: | :-----------------: | :----: | :-------: | :-----: | :---------: | :----: | :---: | :---------------: |
+| 1    |    2    |    -    | 2022-01-01 12:00:11 |   T    |     1     |    2    |      2      |  320   |   -   |         -         |
+| 2    |    -    |    1    | 2022-01-01 12:00:22 |   F    |     4     |    4    |      -      | 200000 | 月給  |         1         |
 
 ### planned_records
 
 #### schema
 
-| name                  |   type   | size | required | auto_increment |          key           | remarks                                                                          |
-| :-------------------- | :------: | :--: | :------: | :------------: | :--------------------: | :------------------------------------------------------------------------------- |
-| id                    |   int    |  -   |    v     |       v        |           PK           | -                                                                                |
-| user_id               |  string  |  28  |    -     |       -        |       users.uid        | pair_id とどちらか必須                                                           |
-| pair_id               |   int    |  -   |    -     |       -        |        pairs.id        | user_id とどちらか必須                                                           |
-| day_classification_id | tinyint  |  -   |    v     |       -        | day_classifications.id | [定義](#day_classification)を参照                                                |
-| is_pay                |   bool   |  -   |    v     |       -        |           -            | -                                                                                |
-| method_id             |   int    |  -   |    v     |       -        |       methods.id       | -                                                                                |
-| type_id               |   int    |  -   |    v     |       -        |        types.id        | -                                                                                |
-| sub_type_id           |   int    |  -   |          |       -        |      sub_types.id      | -                                                                                |
-| price                 |   int    |  -   |    v     |       -        |           -            | -                                                                                |
-| memo                  |  string  |  -   |    -     |       -        |           -            | -                                                                                |
-| sort                  |   int    |  -   |    v     |       v        |           -            | クエリひとつでスワップするために UK としない                                     |
-| updated_at            | datetime |  -   |    v     |       -        |           -            | supabase [固有の設定](https://zenn.dev/matken/articles/supabase-timestamp)が必要 |
-| record_type           |   int    |  -   |    v     |       -        |           -            | records テーブルと同様                                                           |
+| name                  |   type   | size  | required | auto_increment |          key           | remarks                                                                          |
+| :-------------------- | :------: | :---: | :------: | :------------: | :--------------------: | :------------------------------------------------------------------------------- |
+| id                    |   int    |   -   |    v     |       v        |           PK           | -                                                                                |
+| user_id               |  string  |  28   |    -     |       -        |       users.uid        | pair_id とどちらか必須                                                           |
+| pair_id               |   int    |   -   |    -     |       -        |        pairs.id        | user_id とどちらか必須                                                           |
+| day_classification_id | tinyint  |   -   |    v     |       -        | day_classifications.id | [定義](#day_classification)を参照                                                |
+| is_pay                |   bool   |   -   |    v     |       -        |           -            | -                                                                                |
+| method_id             |   int    |   -   |    v     |       -        |       methods.id       | -                                                                                |
+| type_id               |   int    |   -   |    v     |       -        |        types.id        | -                                                                                |
+| sub_type_id           |   int    |   -   |          |       -        |      sub_types.id      | -                                                                                |
+| price                 |   int    |   -   |    v     |       -        |           -            | -                                                                                |
+| memo                  |  string  |   -   |    -     |       -        |           -            | -                                                                                |
+| sort                  |   int    |   -   |    v     |       v        |           -            | クエリひとつでスワップするために UK としない                                     |
+| updated_at            | datetime |   -   |    v     |       -        |           -            | supabase [固有の設定](https://zenn.dev/matken/articles/supabase-timestamp)が必要 |
+| record_type           |   int    |   -   |    v     |       -        |           -            | records テーブルと同様                                                           |
 
 ※ planned_records は record_type=15 となることがないので、is_pay と type_id は NotNull である
 
@@ -429,9 +428,9 @@ create policy "develop.planned_records all"
 
 #### example
 
-| id  | user_id | pair_id | day_classification_d | is_pay | method_id | type_id | sub_type_id | price  | memo | sort |     updated_at      |
-| :-- | :-----: | :-----: | :------------------: | :----: | :-------: | :-----: | :---------: | :----: | :--: | :--: | :-----------------: |
-| 1   |    2    |    -    |          4           |   T    |     4     |    4    |      -      | 200000 | 月給 |  1   | 2022-01-01 10:00:00 |
+| id   | user_id | pair_id | day_classification_d | is_pay | method_id | type_id | sub_type_id | price  | memo  | sort  |     updated_at      |
+| :--- | :-----: | :-----: | :------------------: | :----: | :-------: | :-----: | :---------: | :----: | :---: | :---: | :-----------------: |
+| 1    |    2    |    -    |          4           |   T    |     4     |    4    |      -      | 200000 | 月給  |   1   | 2022-01-01 10:00:00 |
 
 ### plans
 
@@ -486,9 +485,9 @@ create policy "develop.plans all"
 
 #### example
 
-| id  | user_id | pair_id |     start_date      |      end_date       | plan_type_id |   name   | memmo |
-| :-- | :-----: | :-----: | :-----------------: | :-----------------: | :----------: | :------: | :---: |
-| 1   |    2    |    -    | 2022-01-01 12:00:00 | 2022-01-02 12:00:00 |      1       | WEB 会議 | zoom  |
+| id   | user_id | pair_id |     start_date      |      end_date       | plan_type_id |   name   | memmo |
+| :--- | :-----: | :-----: | :-----------------: | :-----------------: | :----------: | :------: | :---: |
+| 1    |    2    |    -    | 2022-01-01 12:00:00 | 2022-01-02 12:00:00 |      1       | WEB 会議 | zoom  |
 
 ### plan_types
 
@@ -535,9 +534,9 @@ create policy "develop.plan_types all"
 
 #### example
 
-| id  | user_id | pair_id | name | color_classification_id | sort |
-| :-- | :-----: | :-----: | :--: | :---------------------: | :--: |
-| 1   |    2    |    -    | 仕事 |            1            |  1   |
+| id   | user_id | pair_id | name  | color_classification_id | sort  |
+| :--- | :-----: | :-----: | :---: | :---------------------: | :---: |
+| 1    |    2    |    -    | 仕事  |            1            |   1   |
 
 ### memos
 
@@ -579,62 +578,9 @@ create policy "develop.memos all"
 
 #### example
 
-| id  | user_id | pair_id |   memo   |
-| :-- | :-----: | :-----: | :------: |
-| 1   |    2    |    -    | 歯磨き粉 |
-
-### short_cuts
-
-#### schema
-
-| name        |  type  | size | required | auto_increment |     key      | remarks                |
-| :---------- | :----: | :--: | :------: | :------------: | :----------: | :--------------------- |
-| id          |  int   |  -   |    v     |       v        |      PK      | -                      |
-| user_id     | string |  28  |    -     |       -        |  users.uid   | pair_id とどちらか必須 |
-| pair_id     |  int   |  -   |    -     |       -        |   pairs.id   | user_id とどちらか必須 |
-| is_pay      |  bool  |  -   |    v     |       -        |      -       | -                      |
-| method_id   |  int   |  -   |    v     |       -        |  methods.id  | -                      |
-| type_id     |  int   |  -   |    v     |       -        |   types.id   | -                      |
-| sub_type_id |  int   |  -   |    -     |       -        | sub_types.id | -                      |
-| price       |  int   |  -   |    v     |       -        |      -       | -                      |
-| memo        | string |  -   |    -     |       -        |      -       | -                      |
-| record_type |  int   |  -   |    v     |       -        |      -       | records テーブルと同様 |
-
-#### migration
-
-```sql
--- migration-sort: 65
-drop table if exists develop.short_cuts cascade;
-create table develop.short_cuts (
-    id                bigserial    primary key,
-    user_id           varchar(28)  not null,
-    pair_id           integer,
-    is_pay            boolean      not null,
-    method_id         integer      not null,
-    type_id           integer      not null,
-    sub_type_id       integer,
-    price             integer      not null check (price <= 1000000),
-    memo              text,
-    record_type       smallint     not null default 0,
-
-    foreign key (user_id) references develop.users (uid),
-    foreign key (pair_id) references develop.pairs (id),
-    foreign key (method_id) references develop.methods (id),
-    foreign key (type_id) references develop.types (id),
-    foreign key (sub_type_id) references develop.sub_types (id)
-);
-
-alter table develop.short_cuts
-    enable row level security;
-
-create policy "develop.short_cuts all"
-    on develop.short_cuts for all
-    to anon
-    using (
-        true
-    )
-;
-```
+| id   | user_id | pair_id |   memo   |
+| :--- | :-----: | :-----: | :------: |
+| 1    |    2    |    -    | 歯磨き粉 |
 
 ### banks
 
@@ -678,12 +624,12 @@ create policy "develop.banks all"
 
 #### schema
 
-| name       |   type   | size | required | auto_increment |   key    | remarks |
-| :--------- | :------: | :--: | :------: | :------------: | :------: | :------ |
-| id         |   int    |  -   |    v     |       v        |    PK    | -       |
-| bank_id    |   int    |  -   |    v     |       -        | banks.id | -       |
-| price      |   int    |  -   |    v     |       -        |    -     | -       |
-| created_at | datetime |  -   |    v     |       -        |    -     | -       |
+| name       |   type   | size  | required | auto_increment |   key    | remarks |
+| :--------- | :------: | :---: | :------: | :------------: | :------: | :------ |
+| id         |   int    |   -   |    v     |       v        |    PK    | -       |
+| bank_id    |   int    |   -   |    v     |       -        | banks.id | -       |
+| price      |   int    |   -   |    v     |       -        |    -     | -       |
+| created_at | datetime |   -   |    v     |       -        |    -     | -       |
 
 #### migration
 
@@ -715,13 +661,13 @@ create policy "develop.bank_balances all"
 
 #### schema
 
-| name           |  type   | size | required | auto_increment | key | remarks                                       |
-| :------------- | :-----: | :--: | :------: | :------------: | :-: | :-------------------------------------------- |
-| id             |   int   |  -   |    v     |       v        | PK  | -                                             |
-| condition_type | tinyint |  -   |    -     |       -        |  -  | 5(MONTH): ~ヶ月後, 10(MONTH_DAY): 月日        |
-| month          |   int   |  -   |    -     |       -        |  -  | N ヶ月後                                      |
-| month_day      | string  |  -   |    -     |       -        |  -  | 'MM-DD'                                       |
-| base_type      | tinyint |  -   |    -     |       -        |  -  | 5(NOW): 基準が現在日付, 10(DATE): 基準が date |
+| name           |  type   | size  | required | auto_increment |  key  | remarks                                       |
+| :------------- | :-----: | :---: | :------: | :------------: | :---: | :-------------------------------------------- |
+| id             |   int   |   -   |    v     |       v        |  PK   | -                                             |
+| condition_type | tinyint |   -   |    -     |       -        |   -   | 5(MONTH): ~ヶ月後, 10(MONTH_DAY): 月日        |
+| month          |   int   |   -   |    -     |       -        |   -   | N ヶ月後                                      |
+| month_day      | string  |   -   |    -     |       -        |   -   | 'MM-DD'                                       |
+| base_type      | tinyint |   -   |    -     |       -        |   -   | 5(NOW): 基準が現在日付, 10(DATE): 基準が date |
 
 ##### 起こり得る状況
 
@@ -812,12 +758,12 @@ create policy "develop.reminders all"
 
 毎月何日とするかを指定する
 
-| id  | name(string) | value(int) |
-| :-- | :----------: | :--------: |
-| 1   |  毎月 1 日   |     1      |
-| 2   |  毎月 10 日  |     10     |
-| 3   |  毎月 15 日  |     15     |
-| 4   |  毎月 25 日  |     25     |
+| id   | name(string) | value(int) |
+| :--- | :----------: | :--------: |
+| 1    |  毎月 1 日   |     1      |
+| 2    |  毎月 10 日  |     10     |
+| 3    |  毎月 15 日  |     15     |
+| 4    |  毎月 25 日  |     25     |
 
 #### migration
 
@@ -853,26 +799,26 @@ create policy "develop.day_classifications select"
 
 ### color_classifications
 
-| id  | name(string) |
-| :-- | :----------: |
-| 1   |     red      |
-| 2   |     pink     |
-| 3   |    purple    |
-| 4   | deep-purple  |
-| 5   |    indigo    |
-| 6   |     blue     |
-| 7   |  light-blue  |
-| 8   |     cyan     |
-| 9   |     teal     |
-| 10  |    green     |
-| 11  | light-green  |
-| 12  |     lime     |
-| 13  |    amber     |
-| 14  |    orange    |
-| 15  |    brown     |
-| 16  |  blue-brown  |
-| 17  |     grey     |
-| 18  |    black     |
+| id   | name(string) |
+| :--- | :----------: |
+| 1    |     red      |
+| 2    |     pink     |
+| 3    |    purple    |
+| 4    | deep-purple  |
+| 5    |    indigo    |
+| 6    |     blue     |
+| 7    |  light-blue  |
+| 8    |     cyan     |
+| 9    |     teal     |
+| 10   |    green     |
+| 11   | light-green  |
+| 12   |     lime     |
+| 13   |    amber     |
+| 14   |    orange    |
+| 15   |    brown     |
+| 16   |  blue-brown  |
+| 17   |     grey     |
+| 18   |    black     |
 
 #### migration
 
