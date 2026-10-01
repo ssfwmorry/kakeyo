@@ -10,7 +10,7 @@ import { getEffectivePairMode } from '@/lib/server/pair/mode';
 
 // この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
 // サーバでブロックしてよい印を立てる（共通 layout の静的シェルは効いている）。
-// 外すのは画面ごとの個別タスク（docs/loading-ux/README.md）。
+// 外すのは画面ごとの個別タスク。
 export const instant = false;
 
 // 集計 › 明細。内訳の行から絞り込みを引き継いで開く。

@@ -10,7 +10,7 @@ import {
 } from '@/features/type-method/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 
-// 認証必須画面の共有 layout（アプリのシェル。docs/new-design/README.md）。
+// 認証必須画面の共有 layout（アプリのシェル）。
 //
 // 上部の共通バーは持たない。各画面が自分のヘッダを持ち、そこに「個人｜共有」と
 // ダーク切替を置く（位置は全画面で揃える）。

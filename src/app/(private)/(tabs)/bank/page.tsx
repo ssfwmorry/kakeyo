@@ -7,7 +7,7 @@ import { getDemoReferenceDate } from '@/features/demo/server/date';
 
 // この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
 // サーバでブロックしてよい印を立てる（共通 layout の静的シェルは効いている）。
-// 外すのは画面ごとの個別タスク（docs/loading-ux/README.md）。
+// 外すのは画面ごとの個別タスク。
 export const instant = false;
 
 // 口座タブ。

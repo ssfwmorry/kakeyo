@@ -5,7 +5,7 @@ import { getColorClassifications } from '@/features/master/server/services';
 
 // この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
 // サーバでブロックしてよい印を立てる（共通 layout の静的シェルは効いている）。
-// 外すのは画面ごとの個別タスク（docs/loading-ux/README.md）。
+// 外すのは画面ごとの個別タスク。
 export const instant = false;
 
 // 設定 › 口座。口座は個人専用のマスタなのでペアモードは見ない。
