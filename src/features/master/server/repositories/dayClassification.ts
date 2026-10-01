@@ -1,6 +1,8 @@
 import 'server-only';
+import { asc } from 'drizzle-orm';
 import { cacheLife, cacheTag } from 'next/cache';
-import { prisma } from '@/lib/server/db/client';
+import { db } from '@/lib/server/db/client';
+import { dayClassifications } from '@/lib/server/db/schema';
 import type { Id } from '@/lib/shared/types/id';
 
 // マスタ（day_classification）リポジトリ。
@@ -21,8 +23,12 @@ export async function getDayClassificationList(): Promise<DayClassification[]> {
   cacheLife('days');
   cacheTag('day-classification');
 
-  return prisma.dayClassification.findMany({
-    select: { id: true, name: true, value: true },
-    orderBy: { id: 'asc' }
-  });
+  return db
+    .select({
+      id: dayClassifications.id,
+      name: dayClassifications.name,
+      value: dayClassifications.value
+    })
+    .from(dayClassifications)
+    .orderBy(asc(dayClassifications.id));
 }

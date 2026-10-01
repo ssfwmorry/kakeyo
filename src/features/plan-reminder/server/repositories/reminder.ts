@@ -1,12 +1,19 @@
 import 'server-only';
-import { prisma } from '@/lib/server/db/client';
+import { and, asc, eq } from 'drizzle-orm';
+import { db } from '@/lib/server/db/client';
+import {
+  colorClassifications,
+  conditions,
+  plans,
+  reminders
+} from '@/lib/server/db/schema';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
 import { dateOnlyValueJst, toDateStringJst } from '@/lib/shared/domain/date';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
 // reminder / condition リポジトリ。reminder は必ず condition（発生条件）を伴い、
-// 作成・削除・チェックは 2 テーブルにまたがるため $transaction で原子性を担保する。
+// 作成・削除・チェックは 2 テーブルにまたがるためトランザクションで原子性を担保する。
 
 // 画面用の reminder 行（condition と色名を結合）。
 export type ReminderRow = {
@@ -25,34 +32,50 @@ export type ReminderRow = {
   baseType: number | null;
 };
 
+// 一覧・単一取得で共通の select（condition と色名を結合）。
+const reminderColumns = {
+  id: reminders.id,
+  name: reminders.name,
+  reminderType: reminders.reminderType,
+  date: reminders.date,
+  memo: reminders.memo,
+  colorClassificationId: reminders.colorClassificationId,
+  colorName: colorClassifications.name,
+  pairId: reminders.pairId,
+  conditionId: reminders.conditionId,
+  conditionType: conditions.conditionType,
+  month: conditions.month,
+  monthDay: conditions.monthDay,
+  baseType: conditions.baseType
+} as const;
+
+function selectReminders() {
+  return db
+    .select(reminderColumns)
+    .from(reminders)
+    .innerJoin(conditions, eq(reminders.conditionId, conditions.id))
+    .innerJoin(
+      colorClassifications,
+      eq(reminders.colorClassificationId, colorClassifications.id)
+    );
+}
+
+// date だけ YYYY-MM-DD へ落とす（他の列は ReminderRow と同じ形で引いている）。
+function toReminderRow(
+  row: Omit<ReminderRow, 'date'> & { date: Date }
+): ReminderRow {
+  return { ...row, date: toDateStringJst(row.date) };
+}
+
 // READ。reminder + condition + color を結合し color_classification_id 昇順で返す。
 // self/pair/all の振り分けは service 層で行う。
 export async function findReminderRows(
   scope: SessionScope
 ): Promise<ReminderRow[]> {
-  const rows = await prisma.reminder.findMany({
-    where: buildScopeWhere(scope),
-    include: {
-      condition: true,
-      colorClassification: { select: { name: true } }
-    },
-    orderBy: { colorClassificationId: 'asc' }
-  });
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    reminderType: row.reminderType,
-    date: toDateStringJst(row.date),
-    memo: row.memo,
-    colorClassificationId: row.colorClassificationId,
-    colorName: row.colorClassification.name,
-    pairId: row.pairId,
-    conditionId: row.conditionId,
-    conditionType: row.condition.conditionType,
-    month: row.condition.month,
-    monthDay: row.condition.monthDay,
-    baseType: row.condition.baseType
-  }));
+  const rows = await selectReminders()
+    .where(buildScopeWhere(reminders, scope))
+    .orderBy(asc(reminders.colorClassificationId));
+  return rows.map(toReminderRow);
 }
 
 // scope 検証: 指定 reminder が scope 内か。check / delete の対象確認に使う。
@@ -61,35 +84,14 @@ export async function findReminderInScope(
   scope: SessionScope,
   id: Id
 ): Promise<ReminderRow | null> {
-  const row = await prisma.reminder.findFirst({
-    where: { AND: [{ id }, buildScopeWhere(scope)] },
-    include: {
-      condition: true,
-      colorClassification: { select: { name: true } }
-    }
-  });
-  if (row === null) {
-    return null;
-  }
-  return {
-    id: row.id,
-    name: row.name,
-    reminderType: row.reminderType,
-    date: toDateStringJst(row.date),
-    memo: row.memo,
-    colorClassificationId: row.colorClassificationId,
-    colorName: row.colorClassification.name,
-    pairId: row.pairId,
-    conditionId: row.conditionId,
-    conditionType: row.condition.conditionType,
-    month: row.condition.month,
-    monthDay: row.condition.monthDay,
-    baseType: row.condition.baseType
-  };
+  const [row] = await selectReminders()
+    .where(and(eq(reminders.id, id), buildScopeWhere(reminders, scope)))
+    .limit(1);
+  return row ? toReminderRow(row) : null;
 }
 
 // CREATE（2 テーブル跨ぎ）。condition を作り、その id で reminder を作る。
-// 片方だけ成功する不整合を防ぐため $transaction で 2 行をまとめて insert する。
+// 片方だけ成功する不整合を防ぐためトランザクションで 2 行をまとめて insert する。
 export async function insertReminderWithCondition(input: {
   name: string;
   reminderType: number;
@@ -105,26 +107,25 @@ export async function insertReminderWithCondition(input: {
     baseType: number | null;
   };
 }): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    const condition = await tx.condition.create({
-      data: {
+  await db.transaction(async (tx) => {
+    const [condition] = await tx
+      .insert(conditions)
+      .values({
         conditionType: input.condition.conditionType,
         month: input.condition.month,
         monthDay: input.condition.monthDay,
         baseType: input.condition.baseType
-      }
-    });
-    await tx.reminder.create({
-      data: {
-        name: input.name,
-        reminderType: input.reminderType,
-        conditionId: condition.id,
-        date: dateOnlyValueJst(input.date),
-        memo: input.memo,
-        colorClassificationId: input.colorClassificationId,
-        userId: input.userId,
-        pairId: input.pairId
-      }
+      })
+      .returning({ id: conditions.id });
+    await tx.insert(reminders).values({
+      name: input.name,
+      reminderType: input.reminderType,
+      conditionId: condition.id,
+      date: dateOnlyValueJst(input.date),
+      memo: input.memo,
+      colorClassificationId: input.colorClassificationId,
+      userId: input.userId,
+      pairId: input.pairId
     });
   });
 }
@@ -141,20 +142,23 @@ export async function deleteReminderWithCondition(
     conditionId: Id;
   }
 ): Promise<void> {
-  await prisma.$transaction([
-    prisma.plan.updateMany({
-      where: {
-        AND: [{ reminderId: input.reminderId }, buildScopeWhere(scope)]
-      },
-      data: { reminderId: null }
-    }),
-    prisma.reminder.delete({ where: { id: input.reminderId } }),
-    prisma.condition.delete({ where: { id: input.conditionId } })
-  ]);
+  await db.transaction(async (tx) => {
+    await tx
+      .update(plans)
+      .set({ reminderId: null })
+      .where(
+        and(
+          eq(plans.reminderId, input.reminderId),
+          buildScopeWhere(plans, scope)
+        )
+      );
+    await tx.delete(reminders).where(eq(reminders.id, input.reminderId));
+    await tx.delete(conditions).where(eq(conditions.id, input.conditionId));
+  });
 }
 
 // CHECK（消化処理）。次回日付は service 層（ドメイン計算）で算出済みを受ける。
-// reminder.date を更新し、Stock 型なら plan を作る（2 テーブル跨ぎ）ため $transaction。
+// reminder.date を更新し、Stock 型なら plan を作る（2 テーブル跨ぎ）ためトランザクション。
 export async function checkReminderUpdate(input: {
   reminderId: Id;
   nextDate: string;
@@ -167,24 +171,22 @@ export async function checkReminderUpdate(input: {
     memo: string | null;
   } | null;
 }): Promise<void> {
-  await prisma.$transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     if (input.plan !== null) {
-      await tx.plan.create({
-        data: {
-          userId: input.plan.userId,
-          pairId: input.plan.pairId,
-          startDate: dateOnlyValueJst(input.plan.date),
-          endDate: dateOnlyValueJst(input.plan.date),
-          planTypeId: null,
-          name: input.plan.name,
-          memo: input.plan.memo,
-          reminderId: input.reminderId
-        }
+      await tx.insert(plans).values({
+        userId: input.plan.userId,
+        pairId: input.plan.pairId,
+        startDate: dateOnlyValueJst(input.plan.date),
+        endDate: dateOnlyValueJst(input.plan.date),
+        planTypeId: null,
+        name: input.plan.name,
+        memo: input.plan.memo,
+        reminderId: input.reminderId
       });
     }
-    await tx.reminder.update({
-      where: { id: input.reminderId },
-      data: { date: dateOnlyValueJst(input.nextDate) }
-    });
+    await tx
+      .update(reminders)
+      .set({ date: dateOnlyValueJst(input.nextDate) })
+      .where(eq(reminders.id, input.reminderId));
   });
 }

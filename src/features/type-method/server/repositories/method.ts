@@ -1,5 +1,7 @@
 import 'server-only';
-import { prisma } from '@/lib/server/db/client';
+import { and, asc, eq, inArray } from 'drizzle-orm';
+import { db } from '@/lib/server/db/client';
+import { methods } from '@/lib/server/db/schema';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SortAssignment } from '@/lib/shared/domain/reorder';
 import type { SessionScope } from '@/lib/shared/types/auth';
@@ -44,10 +46,11 @@ export async function getMethodList(
 export async function findMethodRows(
   scope: SessionScope
 ): Promise<MethodRow[]> {
-  const rows = await prisma.method.findMany({
-    where: buildScopeWhere(scope),
-    orderBy: { sort: 'asc' }
-  });
+  const rows = await db
+    .select()
+    .from(methods)
+    .where(buildScopeWhere(methods, scope))
+    .orderBy(asc(methods.sort));
   return rows.map((method) => ({
     id: method.id,
     name: method.name,
@@ -63,10 +66,12 @@ export async function findMethodInScope(
   scope: SessionScope,
   id: Id
 ): Promise<{ id: Id; sort: number } | null> {
-  return prisma.method.findFirst({
-    where: { AND: [{ id }, buildScopeWhere(scope)] },
-    select: { id: true, sort: true }
-  });
+  const [row] = await db
+    .select({ id: methods.id, sort: methods.sort })
+    .from(methods)
+    .where(and(eq(methods.id, id), buildScopeWhere(methods, scope)))
+    .limit(1);
+  return row ?? null;
 }
 
 // CREATE / UPDATE
@@ -77,14 +82,12 @@ export async function insertMethod(input: {
   userId: string | null;
   pairId: Id | null;
 }): Promise<void> {
-  await prisma.method.create({
-    data: {
-      name: input.name,
-      isPay: input.isPay,
-      colorClassificationId: input.colorClassificationId,
-      userId: input.userId,
-      pairId: input.pairId
-    }
+  await db.insert(methods).values({
+    name: input.name,
+    isPay: input.isPay,
+    colorClassificationId: input.colorClassificationId,
+    userId: input.userId,
+    pairId: input.pairId
   });
 }
 
@@ -93,17 +96,17 @@ export async function updateMethod(input: {
   name: string;
   colorClassificationId: Id;
 }): Promise<void> {
-  await prisma.method.update({
-    where: { id: input.id },
-    data: {
+  await db
+    .update(methods)
+    .set({
       name: input.name,
       colorClassificationId: input.colorClassificationId
-    }
-  });
+    })
+    .where(eq(methods.id, input.id));
 }
 
 export async function deleteMethodById(id: Id): Promise<void> {
-  await prisma.method.delete({ where: { id } });
+  await db.delete(methods).where(eq(methods.id, id));
 }
 
 // REORDER（任意順）。集まり（isPay・pairId）の検証は service 層で行う。
@@ -113,18 +116,23 @@ export async function findMethodRowsForReorder(
 ): Promise<
   { id: Id; sort: number; isPay: boolean | null; pairId: Id | null }[]
 > {
-  return prisma.method.findMany({
-    where: { AND: [{ id: { in: ids } }, buildScopeWhere(scope)] },
-    select: { id: true, sort: true, isPay: true, pairId: true }
-  });
+  return db
+    .select({
+      id: methods.id,
+      sort: methods.sort,
+      isPay: methods.isPay,
+      pairId: methods.pairId
+    })
+    .from(methods)
+    .where(and(inArray(methods.id, ids), buildScopeWhere(methods, scope)));
 }
 
 export async function updateMethodSorts(
   assignments: SortAssignment[]
 ): Promise<void> {
-  await prisma.$transaction(
-    assignments.map(({ id, sort }) =>
-      prisma.method.update({ where: { id }, data: { sort } })
-    )
-  );
+  await db.transaction(async (tx) => {
+    for (const { id, sort } of assignments) {
+      await tx.update(methods).set({ sort }).where(eq(methods.id, id));
+    }
+  });
 }

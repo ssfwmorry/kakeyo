@@ -42,11 +42,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma generated client
-/prisma/generated/
-
 # screenshots (動作確認用の一時ファイル)
 /.screenshots/
 
 # Playwright MCP の作業ファイル（スナップショット・コンソールログ）
 /.playwright-mcp/
+
+# drizzle 移行中の一時検証スクリプト
+.tmp-migration/
+
+# drizzle-kit introspect の出力（参考用・コミットしない）
+/.drizzle/

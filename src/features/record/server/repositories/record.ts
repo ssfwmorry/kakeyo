@@ -1,5 +1,30 @@
 import 'server-only';
-import { prisma } from '@/lib/server/db/client';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  ne,
+  or,
+  type SQL
+} from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+import { db } from '@/lib/server/db/client';
+import {
+  colorClassifications,
+  methods,
+  pairs,
+  records,
+  subTypes,
+  types,
+  users
+} from '@/lib/server/db/schema';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
 import {
   startOfMonthJst,
@@ -9,7 +34,6 @@ import {
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { RecordType } from '@/lib/shared/types/recordType';
-import type { Prisma } from '@/prisma/generated/client';
 import {
   resolveScopeLocked,
   toDisplayTypeName,
@@ -62,23 +86,69 @@ export type RecordUpsertInput = {
   recordType: RecordType;
 };
 
-// 取得系の共通 include。マッパーが読む列だけを select で絞る（method/type の名前＋色名、
-// subType 名、ペア相手の user 名。pair 行自体は使わない＝scalar の pairId で判定するため
-// include しない）。
-const recordInclude = {
-  method: {
-    select: { name: true, colorClassification: { select: { name: true } } }
-  },
-  type: {
-    select: { name: true, colorClassification: { select: { name: true } } }
-  },
-  subType: { select: { name: true } },
-  user: { select: { name: true } }
-} satisfies Prisma.RecordInclude;
+// 取得系の共通 select。マッパーが読む列だけに絞る（method/type の名前＋色名、
+// subType 名、ペア相手の user 名。pairs 行自体は使わない＝scalar の pairId で判定する）。
+// method と type はそれぞれ別の色行を引くため color_classifications を別名で 2 回 join する。
+const methodColor = alias(colorClassifications, 'method_color');
+const typeColor = alias(colorClassifications, 'type_color');
 
-type RecordWithRelations = Prisma.RecordGetPayload<{
-  include: typeof recordInclude;
-}>;
+const recordColumns = {
+  id: records.id,
+  userId: records.userId,
+  pairId: records.pairId,
+  datetime: records.datetime,
+  isPay: records.isPay,
+  price: records.price,
+  memo: records.memo,
+  isSettled: records.isSettled,
+  recordType: records.recordType,
+  plannedRecordId: records.plannedRecordId,
+  methodId: records.methodId,
+  methodName: methods.name,
+  methodColorName: methodColor.name,
+  typeId: records.typeId,
+  typeName: types.name,
+  typeColorName: typeColor.name,
+  subTypeId: records.subTypeId,
+  subTypeName: subTypes.name,
+  userName: users.name
+} as const;
+
+// recordColumns を select した 1 行。
+type RecordSelectedRow = {
+  id: Id;
+  userId: string | null;
+  pairId: Id | null;
+  datetime: Date;
+  isPay: boolean | null;
+  price: number;
+  memo: string | null;
+  isSettled: boolean | null;
+  recordType: number;
+  plannedRecordId: Id | null;
+  methodId: Id;
+  methodName: string;
+  methodColorName: string;
+  typeId: Id | null;
+  typeName: string | null;
+  typeColorName: string | null;
+  subTypeId: Id | null;
+  subTypeName: string | null;
+  userName: string | null;
+};
+
+// type / sub_type / user は任意（精算 record は type を持たない）なので左結合する。
+function selectRecords() {
+  return db
+    .select(recordColumns)
+    .from(records)
+    .innerJoin(methods, eq(records.methodId, methods.id))
+    .innerJoin(methodColor, eq(methods.colorClassificationId, methodColor.id))
+    .leftJoin(types, eq(records.typeId, types.id))
+    .leftJoin(typeColor, eq(types.colorClassificationId, typeColor.id))
+    .leftJoin(subTypes, eq(records.subTypeId, subTypes.id))
+    .leftJoin(users, eq(records.userId, users.uid));
+}
 
 // smallint の record_type を RecordType(0/5/10/15) へ確定する。DB 制約上この 4 値のみ。
 function toRecordType(value: number): RecordType {
@@ -86,7 +156,7 @@ function toRecordType(value: number): RecordType {
 }
 
 // 共有 record かどうか（pair_id の有無）。
-function isPairRecord(row: RecordWithRelations): boolean {
+function isPairRecord(row: RecordSelectedRow): boolean {
   return row.pairId !== null;
 }
 
@@ -97,13 +167,15 @@ export async function getRecordList(
   start: Date,
   end: Date
 ): Promise<RecordListItem[]> {
-  const rows = await prisma.record.findMany({
-    where: {
-      AND: [buildScopeWhere(scope), { datetime: { gte: start, lte: end } }]
-    },
-    include: recordInclude,
-    orderBy: { datetime: 'asc' }
-  });
+  const rows = await selectRecords()
+    .where(
+      and(
+        buildScopeWhere(records, scope),
+        gte(records.datetime, start),
+        lte(records.datetime, end)
+      )
+    )
+    .orderBy(asc(records.datetime));
   return rows.map((row) => toRecordListItem(row, scope.userUid));
 }
 
@@ -113,22 +185,20 @@ export async function getSummarizedRecordList(
   scope: SessionScope,
   query: SummarizedRecordQuery
 ): Promise<SummarizedRecordItem[]> {
-  const rows = await prisma.record.findMany({
-    where: {
-      AND: [
-        buildScopeWhere(scope),
+  const rows = await selectRecords()
+    .where(
+      and(
+        buildScopeWhere(records, scope),
         buildSummarizedYearMonthWhere(query.yearMonth),
         // type 未設定 record（精算 15 等）を除外する。is_pay フィルタ頼みの間接除外では
         // なく、除外意図を明示する。
-        { typeId: { not: null } },
-        { isPay: query.isPay },
+        isNotNull(records.typeId),
+        eq(records.isPay, query.isPay),
         buildSummarizedTargetWhere(query),
         buildSummarizedPairWhere(scope.userUid, query)
-      ]
-    },
-    include: recordInclude,
-    orderBy: { datetime: 'desc' }
-  });
+      )
+    )
+    .orderBy(desc(records.datetime));
   return rows.map((row) => toSummarizedRecordItem(row, scope.userUid));
 }
 
@@ -138,17 +208,15 @@ export async function getPairedRecordList(
   scope: SessionScope,
   yearMonth: string
 ): Promise<PairedRecordItem[]> {
-  const rows = await prisma.record.findMany({
-    where: {
-      AND: [
-        buildScopeWhere(scope),
-        { pairId: { not: null } },
+  const rows = await selectRecords()
+    .where(
+      and(
+        buildScopeWhere(records, scope),
+        isNotNull(records.pairId),
         buildSummarizedYearMonthWhere(yearMonth)
-      ]
-    },
-    include: recordInclude,
-    orderBy: { datetime: 'desc' }
-  });
+      )
+    )
+    .orderBy(desc(records.datetime));
   return rows.map((row) => toPairedRecordItem(row, scope.userUid));
 }
 
@@ -157,28 +225,25 @@ export async function getPairedRecordList(
 // datetime を JST 暦月 [monthStart, nextMonthStart) で絞る。
 // 保存も JST の暦日を保つ時刻で行うため、読み取りも date.ts の JST 月境界に揃える
 // （UTC 境界だと JST 月初/月末の 9 時間分がズレて集計から漏れ/混入する）。
-function buildSummarizedYearMonthWhere(
-  yearMonth: string
-): Prisma.RecordWhereInput {
-  return {
-    datetime: {
-      gte: startOfMonthJst(yearMonth),
-      lt: startOfNextMonthJst(yearMonth)
-    }
-  };
+function buildSummarizedYearMonthWhere(yearMonth: string): SQL {
+  return and(
+    gte(records.datetime, startOfMonthJst(yearMonth)),
+    lt(records.datetime, startOfNextMonthJst(yearMonth))
+  ) as SQL;
 }
 
 // isType による絞り込み対象（type/sub_type or method）。
-function buildSummarizedTargetWhere(
-  query: SummarizedRecordQuery
-): Prisma.RecordWhereInput {
+function buildSummarizedTargetWhere(query: SummarizedRecordQuery): SQL {
   if (!query.isType) {
-    return { methodId: query.id };
+    return eq(records.methodId, query.id);
   }
   if (query.subTypeId !== null) {
-    return { AND: [{ typeId: query.id }, { subTypeId: query.subTypeId }] };
+    return and(
+      eq(records.typeId, query.id),
+      eq(records.subTypeId, query.subTypeId)
+    ) as SQL;
   }
-  return { typeId: query.id };
+  return eq(records.typeId, query.id);
 }
 
 // ペア関係 × 立替込みの絞り込み（4 分岐）。
@@ -189,34 +254,32 @@ function buildSummarizedTargetWhere(
 function buildSummarizedPairWhere(
   userUid: string,
   query: SummarizedRecordQuery
-): Prisma.RecordWhereInput {
+): SQL {
   if (query.isPair && query.isIncludeInstead) {
-    return { pairId: { not: null } };
+    return isNotNull(records.pairId);
   }
   if (query.isPair && !query.isIncludeInstead) {
-    return {
-      AND: [
-        { pairId: { not: null } },
-        { recordType: { in: [RecordType.pair, RecordType.settlement] } }
-      ]
-    };
+    return and(
+      isNotNull(records.pairId),
+      inArray(records.recordType, [RecordType.pair, RecordType.settlement])
+    ) as SQL;
   }
   if (!query.isPair && query.isIncludeInstead) {
-    return { userId: userUid };
+    return eq(records.userId, userUid);
   }
-  return { AND: [{ userId: userUid }, { pairId: null }] };
+  return and(eq(records.userId, userUid), isNull(records.pairId)) as SQL;
 }
 
 // 取得系: 行 → 公開 DTO 変換（BigInt→number 境界）
 
 function toRecordListItem(
-  row: RecordWithRelations,
+  row: RecordSelectedRow,
   userUid: string
 ): RecordListItem {
   const isPair = isPairRecord(row);
   const recordType = toRecordType(row.recordType);
   return {
-    id: Number(row.id),
+    id: row.id,
     isSelf: row.userId === userUid,
     datetime: row.datetime,
     isPay: row.isPay,
@@ -225,16 +288,16 @@ function toRecordListItem(
     recordType,
     plannedRecordId: row.plannedRecordId,
     methodId: row.methodId,
-    methodName: row.method.name,
-    methodColorClassificationName: row.method.colorClassification.name,
+    methodName: row.methodName,
+    methodColorClassificationName: row.methodColorName,
     typeId: row.typeId,
-    typeName: toDisplayTypeName(row.type?.name ?? null, recordType),
+    typeName: toDisplayTypeName(row.typeName, recordType),
     subTypeId: row.subTypeId,
-    subTypeName: row.subType?.name ?? null,
-    typeColorClassificationName: row.type?.colorClassification.name ?? null,
+    subTypeName: row.subTypeName,
+    typeColorClassificationName: row.typeColorName,
     isPair,
     // pair_id ありのとき records.user 名を引く（立替者名）。
-    pairUserName: isPair ? (row.user?.name ?? null) : null,
+    pairUserName: isPair ? row.userName : null,
     isInstead: toIsInstead(isPair, recordType),
     isSettlement: toIsSettlement(isPair, recordType),
     isScopeLocked: resolveScopeLocked({
@@ -246,13 +309,13 @@ function toRecordListItem(
 }
 
 function toSummarizedRecordItem(
-  row: RecordWithRelations,
+  row: RecordSelectedRow,
   userUid: string
 ): SummarizedRecordItem {
   const isPair = isPairRecord(row);
   const recordType = toRecordType(row.recordType);
   return {
-    id: Number(row.id),
+    id: row.id,
     isSelf: row.userId === userUid,
     datetime: row.datetime,
     isPay: row.isPay,
@@ -261,15 +324,15 @@ function toSummarizedRecordItem(
     recordType,
     plannedRecordId: row.plannedRecordId,
     methodId: row.methodId,
-    methodName: row.method.name,
-    methodColorClassificationName: row.method.colorClassification.name,
+    methodName: row.methodName,
+    methodColorClassificationName: row.methodColorName,
     typeId: row.typeId,
-    typeName: row.type?.name ?? null,
+    typeName: row.typeName,
     subTypeId: row.subTypeId,
-    subTypeName: row.subType?.name ?? null,
-    typeColorClassificationName: row.type?.colorClassification.name ?? null,
+    subTypeName: row.subTypeName,
+    typeColorClassificationName: row.typeColorName,
     isPair,
-    pairUserName: isPair ? (row.user?.name ?? null) : null,
+    pairUserName: isPair ? row.userName : null,
     isInstead: toIsInstead(isPair, recordType),
     isScopeLocked: resolveScopeLocked({
       isInstead: toIsInstead(isPair, recordType) === true,
@@ -280,12 +343,12 @@ function toSummarizedRecordItem(
 }
 
 function toPairedRecordItem(
-  row: RecordWithRelations,
+  row: RecordSelectedRow,
   userUid: string
 ): PairedRecordItem {
   const recordType = toRecordType(row.recordType);
   return {
-    id: Number(row.id),
+    id: row.id,
     datetime: row.datetime,
     isSelf: row.userId === userUid,
     isPay: row.isPay,
@@ -294,12 +357,11 @@ function toPairedRecordItem(
     recordType,
     isSettled: row.isSettled,
     isPlannedRecord: row.plannedRecordId !== null,
-    methodName: row.method.name,
-    methodColorClassificationName: row.method.colorClassification.name,
-    typeName: row.type?.name ?? SETTLEMENT_DISPLAY.name,
-    subTypeName: row.subType?.name ?? null,
-    typeColorClassificationName:
-      row.type?.colorClassification.name ?? SETTLEMENT_DISPLAY.color,
+    methodName: row.methodName,
+    methodColorClassificationName: row.methodColorName,
+    typeName: row.typeName ?? SETTLEMENT_DISPLAY.name,
+    subTypeName: row.subTypeName,
+    typeColorClassificationName: row.typeColorName ?? SETTLEMENT_DISPLAY.color,
     isInstead: recordType === RecordType.instead,
     isSettlement: recordType === RecordType.settlement
   };
@@ -313,18 +375,16 @@ export async function findRecordInScope(
   scope: SessionScope,
   id: Id
 ): Promise<{ id: Id; datetime: Date; plannedRecordId: Id | null } | null> {
-  const row = await prisma.record.findFirst({
-    where: { AND: [{ id }, buildScopeWhere(scope)] },
-    select: { id: true, datetime: true, plannedRecordId: true }
-  });
-  if (!row) {
-    return null;
-  }
-  return {
-    id: Number(row.id),
-    datetime: row.datetime,
-    plannedRecordId: row.plannedRecordId
-  };
+  const [row] = await db
+    .select({
+      id: records.id,
+      datetime: records.datetime,
+      plannedRecordId: records.plannedRecordId
+    })
+    .from(records)
+    .where(and(eq(records.id, id), buildScopeWhere(records, scope)))
+    .limit(1);
+  return row ?? null;
 }
 
 // READ: note（記録編集）の初期値 1 件。scope 内でなければ null。
@@ -334,25 +394,27 @@ export async function findRecordForEdit(
   scope: SessionScope,
   id: Id
 ): Promise<NoteRecordDefault | null> {
-  const row = await prisma.record.findFirst({
-    // 精算 record（record_type=15・is_pay=null・type なし）は記録タブで編集できない。
-    // UI 前提をデータ層でも保証し、?RECORD=<精算id> の直打ちで壊れた編集フォームが
-    // 開くのを防ぐ。
-    where: {
-      AND: [
-        { id },
-        buildScopeWhere(scope),
-        { recordType: { not: RecordType.settlement } }
-      ]
-    }
-  });
+  // 精算 record（record_type=15・is_pay=null・type なし）は記録タブで編集できない。
+  // UI 前提をデータ層でも保証し、?RECORD=<精算id> の直打ちで壊れた編集フォームが
+  // 開くのを防ぐ。
+  const [row] = await db
+    .select()
+    .from(records)
+    .where(
+      and(
+        eq(records.id, id),
+        buildScopeWhere(records, scope),
+        ne(records.recordType, RecordType.settlement)
+      )
+    )
+    .limit(1);
   if (!row) {
     return null;
   }
   const isPair = row.pairId !== null;
   const isInstead = isPair && row.userId !== null;
   return {
-    id: Number(row.id),
+    id: row.id,
     // 記録タブで編集する通常 record は is_pay を持つ（精算は上の where で除外済み）。
     // 型上は nullable のため防御的に true へ寄せる。
     isPay: row.isPay ?? true,
@@ -382,8 +444,8 @@ export async function insertRecords(
   if (inputs.length === 0) {
     return;
   }
-  await prisma.record.createMany({
-    data: inputs.map((input) => ({
+  await db.insert(records).values(
+    inputs.map((input) => ({
       userId: input.userId,
       pairId: input.pairId,
       datetime: input.datetime,
@@ -397,29 +459,27 @@ export async function insertRecords(
       isSettled: input.isSettled,
       recordType: input.recordType
     }))
-  });
+  );
 }
 
 // records.user_id は nullable のため、PAIR（record_type=10・共有かつ非立替）record の
-//   user_id=null を型付き create/update でそのまま書ける。所有列（user_id/pair_id/
-//   is_settled/record_type）は service が resolveRecordOwnership 済み。
+//   user_id=null をそのまま書ける。所有列（user_id/pair_id/is_settled/record_type）は
+//   service が resolveRecordOwnership 済み。
 
 // CREATE（1 件）。note の新規登録。所有列は service が resolveRecordOwnership 済み。
 export async function insertRecord(input: RecordUpsertInput): Promise<void> {
-  await prisma.record.create({
-    data: {
-      userId: input.userId,
-      pairId: input.pairId,
-      datetime: input.datetime,
-      isPay: input.isPay,
-      methodId: input.methodId,
-      typeId: input.typeId,
-      subTypeId: input.subTypeId,
-      price: input.price,
-      memo: input.memo,
-      isSettled: input.isSettled,
-      recordType: input.recordType
-    }
+  await db.insert(records).values({
+    userId: input.userId,
+    pairId: input.pairId,
+    datetime: input.datetime,
+    isPay: input.isPay,
+    methodId: input.methodId,
+    typeId: input.typeId,
+    subTypeId: input.subTypeId,
+    price: input.price,
+    memo: input.memo,
+    isSettled: input.isSettled,
+    recordType: input.recordType
   });
 }
 
@@ -429,9 +489,9 @@ export async function updateRecord(
   id: Id,
   input: RecordUpsertInput
 ): Promise<void> {
-  await prisma.record.update({
-    where: { id },
-    data: {
+  await db
+    .update(records)
+    .set({
       userId: input.userId,
       pairId: input.pairId,
       datetime: input.datetime,
@@ -443,8 +503,13 @@ export async function updateRecord(
       memo: input.memo,
       isSettled: input.isSettled,
       recordType: input.recordType
-    }
-  });
+    })
+    .where(eq(records.id, id));
+}
+
+// 自分が当事者である pair に限定する（他人同士の pair を引かない）。
+function buildPairMemberWhere(userUid: string): SQL {
+  return or(eq(pairs.user1Id, userUid), eq(pairs.user2Id, userUid)) as SQL;
 }
 
 // 精算の相手 user_id を引く。受取（!isPay）の精算 record は「相手が負担」する
@@ -454,15 +519,11 @@ export async function findCounterpartUserId(
   scope: SessionScope,
   pairId: Id
 ): Promise<string | null> {
-  const pair = await prisma.pair.findFirst({
-    where: {
-      AND: [
-        { id: pairId },
-        { OR: [{ user1Id: scope.userUid }, { user2Id: scope.userUid }] }
-      ]
-    },
-    select: { user1Id: true, user2Id: true }
-  });
+  const [pair] = await db
+    .select({ user1Id: pairs.user1Id, user2Id: pairs.user2Id })
+    .from(pairs)
+    .where(and(eq(pairs.id, pairId), buildPairMemberWhere(scope.userUid)))
+    .limit(1);
   if (!pair) {
     return null;
   }
@@ -475,23 +536,23 @@ export async function findCounterpartUserName(
   scope: SessionScope,
   pairId: Id
 ): Promise<string | null> {
-  const pair = await prisma.pair.findFirst({
-    where: {
-      AND: [
-        { id: pairId },
-        { OR: [{ user1Id: scope.userUid }, { user2Id: scope.userUid }] }
-      ]
-    },
-    select: {
-      user1Id: true,
-      user1: { select: { name: true } },
-      user2: { select: { name: true } }
-    }
-  });
+  const user1 = alias(users, 'user1');
+  const user2 = alias(users, 'user2');
+  const [pair] = await db
+    .select({
+      user1Id: pairs.user1Id,
+      user1Name: user1.name,
+      user2Name: user2.name
+    })
+    .from(pairs)
+    .innerJoin(user1, eq(pairs.user1Id, user1.uid))
+    .innerJoin(user2, eq(pairs.user2Id, user2.uid))
+    .where(and(eq(pairs.id, pairId), buildPairMemberWhere(scope.userUid)))
+    .limit(1);
   if (!pair) {
     return null;
   }
-  return pair.user1Id === scope.userUid ? pair.user2.name : pair.user1.name;
+  return pair.user1Id === scope.userUid ? pair.user2Name : pair.user1Name;
 }
 
 // CREATE（精算 record）。record_type=15・is_pay=null・type なし。
@@ -503,20 +564,18 @@ export async function insertSettlementRecord(input: {
   methodId: Id;
   price: number;
 }): Promise<void> {
-  await prisma.record.create({
-    data: {
-      userId: input.userId,
-      pairId: input.pairId,
-      datetime: input.datetime,
-      isPay: null,
-      methodId: input.methodId,
-      typeId: null,
-      subTypeId: null,
-      price: input.price,
-      memo: null,
-      isSettled: null,
-      recordType: RecordType.settlement
-    }
+  await db.insert(records).values({
+    userId: input.userId,
+    pairId: input.pairId,
+    datetime: input.datetime,
+    isPay: null,
+    methodId: input.methodId,
+    typeId: null,
+    subTypeId: null,
+    price: input.price,
+    memo: null,
+    isSettled: null,
+    recordType: RecordType.settlement
   });
 }
 
@@ -526,23 +585,25 @@ export async function markRecordsSettled(
   scope: SessionScope,
   ids: Id[]
 ): Promise<number> {
-  const result = await prisma.record.updateMany({
-    where: { AND: [{ id: { in: ids } }, buildScopeWhere(scope)] },
-    data: { isSettled: true }
-  });
-  return result.count;
+  const updated = await db
+    .update(records)
+    .set({ isSettled: true })
+    .where(and(inArray(records.id, ids), buildScopeWhere(records, scope)))
+    .returning({ id: records.id });
+  return updated.length;
 }
 
 // DELETE（1 件）。scope を where に AND し、削除できたかを返す
-// （scope 外の行は count===0 で notFound）。
+// （scope 外の行は 0 件で notFound）。
 export async function deleteRecordById(
   scope: SessionScope,
   id: Id
 ): Promise<{ ok: true } | { ok: false; error: 'notFound' }> {
-  const result = await prisma.record.deleteMany({
-    where: { AND: [{ id }, buildScopeWhere(scope)] }
-  });
-  if (result.count === 0) {
+  const deleted = await db
+    .delete(records)
+    .where(and(eq(records.id, id), buildScopeWhere(records, scope)))
+    .returning({ id: records.id });
+  if (deleted.length === 0) {
     return { ok: false, error: 'notFound' };
   }
   return { ok: true };

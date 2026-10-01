@@ -22,7 +22,7 @@ import { RecordSheet } from './record-sheet';
 // 候補データ（カテゴリ・方法）も layout で 1 度だけ取って配る。
 //
 // 候補は解決済みの値ではなく Promise で受け、シートを開いたときに初めて use() で
-// 読む（layout が await するとシェルごと待たされるため。docs/loading-ux L03）。
+// 読む（layout が await するとシェルごと待たされるため）。
 // today は DB に依らないので Promise に載せず、開いた瞬間に既定日が要る open 側へ
 // 素の値で渡す。
 

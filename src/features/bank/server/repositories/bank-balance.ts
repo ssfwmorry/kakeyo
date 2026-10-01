@@ -1,11 +1,13 @@
 import 'server-only';
-import { prisma } from '@/lib/server/db/client';
+import { and, asc, eq, gt, inArray, sql } from 'drizzle-orm';
+import { db } from '@/lib/server/db/client';
+import { bankBalances, banks } from '@/lib/server/db/schema';
 import { buildOwnerScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 
 // bank_balances は user_id 列を持たない（price + created_at の履歴テーブル）。
-// そのため所有者絞り込みは親 bank 経由で行う: where { bank: buildOwnerScopeWhere(scope) }。
+// そのため所有者絞り込みは親 bank を join して行う。
 // 個人専用（pair で共有しない）のため buildScopeWhere ではなく buildOwnerScopeWhere。
 
 // 履歴の遡及期間（5 年）。
@@ -26,14 +28,22 @@ export async function getBankBalanceList(
   const threshold = new Date();
   threshold.setFullYear(threshold.getFullYear() - HISTORY_YEARS);
 
-  const rows = await prisma.bankBalance.findMany({
-    where: {
-      bank: buildOwnerScopeWhere(scope),
-      createdAt: { gt: threshold }
-    },
-    select: { id: true, bankId: true, price: true, createdAt: true },
-    orderBy: { createdAt: 'asc' }
-  });
+  const rows = await db
+    .select({
+      id: bankBalances.id,
+      bankId: bankBalances.bankId,
+      price: bankBalances.price,
+      createdAt: bankBalances.createdAt
+    })
+    .from(bankBalances)
+    .innerJoin(banks, eq(bankBalances.bankId, banks.id))
+    .where(
+      and(
+        buildOwnerScopeWhere(banks.userId, scope),
+        gt(bankBalances.createdAt, threshold)
+      )
+    )
+    .orderBy(asc(bankBalances.createdAt));
   return rows.map((row) => ({
     id: row.id,
     bankId: row.bankId,
@@ -50,15 +60,21 @@ export async function insertBankBalances(
   rows: Array<{ bankId: Id; price: number }>
 ): Promise<{ ok: true } | { ok: false; error: 'notOwned' }> {
   const targetIds = [...new Set(rows.map((row) => row.bankId))];
-  const ownedCount = await prisma.bank.count({
-    where: { AND: [{ id: { in: targetIds } }, buildOwnerScopeWhere(scope)] }
-  });
-  if (ownedCount !== targetIds.length) {
+  const [owned] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(banks)
+    .where(
+      and(
+        inArray(banks.id, targetIds),
+        buildOwnerScopeWhere(banks.userId, scope)
+      )
+    );
+  if (owned.count !== targetIds.length) {
     return { ok: false, error: 'notOwned' };
   }
 
-  await prisma.bankBalance.createMany({
-    data: rows.map((row) => ({ bankId: row.bankId, price: row.price }))
-  });
+  await db
+    .insert(bankBalances)
+    .values(rows.map((row) => ({ bankId: row.bankId, price: row.price })));
   return { ok: true };
 }

@@ -1,12 +1,13 @@
+import { Suspense } from 'react';
 import { NotificationBell } from '@/components/notification-bell';
 import { requireAuth } from '@/features/auth/server/requireAuth';
 import { BankScreen } from '@/features/bank/components/bank-screen';
 import { getBankScreenData } from '@/features/bank/server/services';
-import { todayJst } from '@/lib/shared/domain/date';
+import { getDemoReferenceDate } from '@/features/demo/server/date';
 
 // この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
 // サーバでブロックしてよい印を立てる（共通 layout の静的シェルは効いている）。
-// 外すのは画面ごとの個別タスク（docs/loading-ux/README.md）。
+// 外すのは画面ごとの個別タスク。
 export const instant = false;
 
 // 口座タブ。
@@ -14,7 +15,15 @@ export const instant = false;
 // 総資産 1 本の推移を出すので、口座ごとの積み上げ用 chartPoints は使わない。
 // tableRows（記録日ごとの残高・前行引き継ぎ済み）から合計を取り出して描く。
 
-export default async function BankPage() {
+export default function BankPage() {
+  return (
+    <Suspense fallback={<div className='flex-1' />}>
+      <BankPageContent />
+    </Suspense>
+  );
+}
+
+async function BankPageContent() {
   const session = await requireAuth();
   const { banks, tableRows } = await getBankScreenData(session);
 
@@ -23,7 +32,7 @@ export default async function BankPage() {
       banks={banks}
       headerLeft={<NotificationBell />}
       tableRows={tableRows}
-      today={todayJst()}
+      today={getDemoReferenceDate(session)}
     />
   );
 }

@@ -1,14 +1,13 @@
 import 'server-only';
-import { prisma } from '@/lib/server/db/client';
-import { schemaSql } from '@/lib/server/db/schema-sql';
+import { type SQL, sql } from 'drizzle-orm';
+import { db } from '@/lib/server/db/client';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { PieSummaryQuery, TypeSummaryPeriodQuery } from '../../types';
 
 // 集計 6 本は record_type 0/5/10/15 分岐・is_pay・精算/立替の非対称処理の
-// CASE WHEN を改変せず $queryRaw で書く（家計の数字ズレを防ぐ最重要ポイント）。
+// CASE WHEN を改変せず生 SQL で書く（家計の数字ズレを防ぐ最重要ポイント）。
 //
-// スキーマ修飾: adapter-pg の { schema } は $queryRaw の生 SQL に効かないため
-// ${schemaSql()} で develop. / public. を実行時スキーマ名で明示修飾する。
+// テーブルのスキーマ修飾（develop / public）は接続時の search_path に委ねる。
 //
 // scope: records × pairs を left join した 3-way OR
 //     records.user_id = 自分
@@ -17,10 +16,16 @@ import type { PieSummaryQuery, TypeSummaryPeriodQuery } from '../../types';
 //   で自分/ペアの records に限定する。scope.userUid はテンプレート変数
 //   （= バインドパラメータ・SQL インジェクション安全）で渡す。
 //
-// 数値境界: 集計 sum は $queryRaw では bigint/Decimal で返りうるため、
-// 境界で Number() 変換して number にする（BigInt を Server→Client に漏らさない）。
+// 数値境界: 集計 sum は numeric/bigint のため文字列で返りうる。境界で Number()
+// 変換して number にする（文字列や BigInt を Server→Client に漏らさない）。
 
-// $queryRaw の bigint/Decimal/number を安全に number へ寄せる。
+// 生 SQL を実行し行配列を返す。db.execute の戻り（結果オブジェクト）から rows を取り出す。
+async function execute<Row>(query: SQL): Promise<Row[]> {
+  const result = await db.execute(query);
+  return result.rows as Row[];
+}
+
+// 生 SQL の bigint/numeric(文字列)/number を安全に number へ寄せる。
 function toNumber(
   value: bigint | number | { toString(): string } | null
 ): number {
@@ -56,7 +61,7 @@ export async function getMonthSum(
   scope: SessionScope,
   yearMonth: string
 ): Promise<number> {
-  const rows = await prisma.$queryRaw<MonthSumRawRow[]>`
+  const rows = await execute<MonthSumRawRow>(sql`
     with converted_price as (
       select
         to_char(cast(datetime as date),'YYYY-MM') as year_month,
@@ -71,8 +76,8 @@ export async function getMonthSum(
           when records.record_type = 15 and records.user_id <> ${scope.userUid} then price * (-1)
           else 0
         end as self_price
-      from ${schemaSql()}records
-      left join ${schemaSql()}pairs on
+      from records
+      left join pairs on
         records.pair_id = pairs.id
       where
         (
@@ -87,7 +92,7 @@ export async function getMonthSum(
       sum(self_price) as self_sum
     from converted_price
     group by year_month
-  `;
+  `);
   if (rows.length === 0) {
     return 0;
   }
@@ -116,17 +121,15 @@ export async function getMethodSummaryRows(
   query: PieSummaryQuery
 ): Promise<MethodSummaryRawRow[]> {
   const { year, month } = splitYearMonth(query.yearMonth);
-  const rows = await prisma.$queryRaw<
-    Array<
-      Omit<MethodSummaryRawRow, 'method_id'> & { method_id: bigint | number }
-    >
-  >`
+  const rows = await execute<
+    Omit<MethodSummaryRawRow, 'method_id'> & { method_id: bigint | number }
+  >(sql`
     with summarized_records as (
       select distinct
         records.method_id,
         sum(records.price) as sum
-      from ${schemaSql()}records
-      left join ${schemaSql()}pairs on
+      from records
+      left join pairs on
         records.pair_id = pairs.id
       where
         ( records.user_id = ${scope.userUid}
@@ -156,16 +159,16 @@ export async function getMethodSummaryRows(
       methods.pair_id is not null as is_pair,
       summarized_records.sum
     from summarized_records
-    inner join ${schemaSql()}methods on
+    inner join methods on
       summarized_records.method_id = methods.id
-    inner join ${schemaSql()}color_classifications on
+    inner join color_classifications on
       methods.color_classification_id = color_classifications.id
-    left join ${schemaSql()}pairs on
+    left join pairs on
       methods.pair_id = pairs.id
-    left join ${schemaSql()}users on
+    left join users on
       methods.user_id = users.uid
     order by summarized_records.sum desc
-  `;
+  `);
   return rows.map((row) => ({
     method_name: row.method_name,
     method_id: toNumber(row.method_id),
@@ -194,25 +197,23 @@ export async function getTypeSummaryRows(
   query: PieSummaryQuery
 ): Promise<TypeSummaryRawRow[]> {
   const { year, month } = splitYearMonth(query.yearMonth);
-  const rows = await prisma.$queryRaw<
-    Array<{
-      type_name: string | null;
-      type_id: bigint | number | null;
-      is_pair: boolean;
-      sub_type_id: bigint | number | null;
-      sub_type_name: string | null;
-      color_name: string | null;
-      sub_type_sum: bigint | number | null;
-      sum: bigint | number | null;
-    }>
-  >`
+  const rows = await execute<{
+    type_name: string | null;
+    type_id: bigint | number | null;
+    is_pair: boolean;
+    sub_type_id: bigint | number | null;
+    sub_type_name: string | null;
+    color_name: string | null;
+    sub_type_sum: bigint | number | null;
+    sum: bigint | number | null;
+  }>(sql`
     with summarized_records as (
       select distinct
         records.type_id,
         records.sub_type_id,
         sum(records.price) as sum
-      from ${schemaSql()}records
-      left join ${schemaSql()}pairs on
+      from records
+      left join pairs on
         records.pair_id = pairs.id
       where
         ( records.user_id = ${scope.userUid}
@@ -248,14 +249,14 @@ export async function getTypeSummaryRows(
       summarized_records.sum as sub_type_sum,
       cast( sum(summarized_records.sum) over (partition by types.id) as integer) as sum
     from summarized_records
-    left join ${schemaSql()}types on
+    left join types on
       summarized_records.type_id = types.id
-    left join ${schemaSql()}color_classifications on
+    left join color_classifications on
       types.color_classification_id = color_classifications.id
-    left join ${schemaSql()}sub_types on
+    left join sub_types on
       summarized_records.sub_type_id = sub_types.id
     order by sum desc
-  `;
+  `);
   return rows.map((row) => ({
     type_name: row.type_name,
     type_id: toNullableNumber(row.type_id),
@@ -280,13 +281,11 @@ export async function getPayAndIncomeRows(
   input: { year: number; isPair: boolean; isIncludeInstead: boolean }
 ): Promise<PayAndIncomeRawRow[]> {
   const yearStr = String(input.year);
-  const rows = await prisma.$queryRaw<
-    Array<{
-      year_month: string;
-      pay_sum: bigint | number | null;
-      income_sum: bigint | number | null;
-    }>
-  >`
+  const rows = await execute<{
+    year_month: string;
+    pay_sum: bigint | number | null;
+    income_sum: bigint | number | null;
+  }>(sql`
     with converted_price as (
       select
         case
@@ -302,8 +301,8 @@ export async function getPayAndIncomeRows(
           else 0
         end as income_price,
         to_char(cast(datetime as date),'YYYY-MM') as year_month
-      from ${schemaSql()}records
-      left join ${schemaSql()}pairs on
+      from records
+      left join pairs on
         records.pair_id = pairs.id
       where
         ( records.user_id = ${scope.userUid}
@@ -326,7 +325,7 @@ export async function getPayAndIncomeRows(
     from converted_price
     group by year_month
     order by year_month
-  `;
+  `);
   return rows.map((row) => ({
     year_month: row.year_month,
     pay_sum: toNumber(row.pay_sum),
@@ -348,22 +347,20 @@ export async function getTypeSummaryPeriodRows(
   query: TypeSummaryPeriodQuery
 ): Promise<TypeSummaryPeriodRawRow[]> {
   const yearStr = String(query.year);
-  const rows = await prisma.$queryRaw<
-    Array<{
-      year_month: string;
-      type_id: bigint | number | null;
-      type_name: string | null;
-      type_color_classification_name: string | null;
-      sum: bigint | number | null;
-    }>
-  >`
+  const rows = await execute<{
+    year_month: string;
+    type_id: bigint | number | null;
+    type_name: string | null;
+    type_color_classification_name: string | null;
+    sum: bigint | number | null;
+  }>(sql`
     with converted_records as (
       select
         to_char(cast(datetime as date),'YYYY-MM') as year_month,
         records.type_id,
         sum(records.price) as sum
-      from ${schemaSql()}records
-      left join ${schemaSql()}pairs on
+      from records
+      left join pairs on
         records.pair_id = pairs.id
       where
         ( records.user_id = ${scope.userUid}
@@ -389,12 +386,12 @@ export async function getTypeSummaryPeriodRows(
       color_classifications.name as type_color_classification_name,
       converted_records.sum
     from converted_records
-    left join ${schemaSql()}types on
+    left join types on
       converted_records.type_id = types.id
-    left join ${schemaSql()}color_classifications on
+    left join color_classifications on
       types.color_classification_id = color_classifications.id
     order by converted_records.year_month, converted_records.type_id
-  `;
+  `);
   return rows.map((row) => ({
     year_month: row.year_month,
     type_id: toNullableNumber(row.type_id),
@@ -415,7 +412,7 @@ export type SubTypeSummaryRawRow = {
 };
 
 // 年次サブカテゴリ別集計（推移 > カテゴリ別・特定カテゴリ選択時）。
-// scope: Prisma 直結（RLS バイパス）のため type_id 一致だけでは scope が成立しない
+// scope: DB 直結（RLS バイパス）のため type_id 一致だけでは scope が成立しない
 //   （typeId は公開 Server Action にクライアントが渡す値のため、他ペアの type_id を
 //   渡すとそのペアの集計が漏れる IDOR になる）。他の集計と同じく records × pairs の
 //   3-way OR（user_id=自分 OR pairs.user1_id/user2_id=自分）を WHERE に明示追加し、
@@ -428,25 +425,23 @@ export async function getSubTypeSummaryRows(
   }
 ): Promise<SubTypeSummaryRawRow[]> {
   const yearStr = String(input.year);
-  const rows = await prisma.$queryRaw<
-    Array<{
-      year_month: string;
-      type_id: bigint | number;
-      type_name: string;
-      type_color_classification_name: string;
-      sub_type_id: bigint | number | null;
-      sub_type_name: string | null;
-      sum: bigint | number | null;
-    }>
-  >`
+  const rows = await execute<{
+    year_month: string;
+    type_id: bigint | number;
+    type_name: string;
+    type_color_classification_name: string;
+    sub_type_id: bigint | number | null;
+    sub_type_name: string | null;
+    sum: bigint | number | null;
+  }>(sql`
     with converted_records as (
       select
         to_char(cast(datetime as date),'YYYY-MM') as year_month,
         records.type_id,
         records.sub_type_id,
         sum(records.price) as sum
-      from ${schemaSql()}records
-      left join ${schemaSql()}pairs on
+      from records
+      left join pairs on
         records.pair_id = pairs.id
       where
         (
@@ -467,14 +462,14 @@ export async function getSubTypeSummaryRows(
       sub_types.name as sub_type_name,
       converted_records.sum
     from converted_records
-    inner join ${schemaSql()}types on
+    inner join types on
       converted_records.type_id = types.id
-    left join ${schemaSql()}sub_types on
+    left join sub_types on
       converted_records.sub_type_id = sub_types.id
-    left join ${schemaSql()}color_classifications on
+    left join color_classifications on
       types.color_classification_id = color_classifications.id
     order by converted_records.year_month, converted_records.type_id, converted_records.sub_type_id
-  `;
+  `);
   return rows.map((row) => ({
     year_month: row.year_month,
     type_id: toNumber(row.type_id),

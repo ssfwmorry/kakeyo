@@ -1,5 +1,7 @@
 import 'server-only';
-import { prisma } from '@/lib/server/db/client';
+import { and, asc, eq, inArray } from 'drizzle-orm';
+import { db } from '@/lib/server/db/client';
+import { colorClassifications, planTypes } from '@/lib/server/db/schema';
 import { buildScopeWhere } from '@/lib/shared/db/scope';
 import type { SortAssignment } from '@/lib/shared/domain/reorder';
 import type { SessionScope } from '@/lib/shared/types/auth';
@@ -23,20 +25,25 @@ export type PlanTypeRow = {
 export async function findPlanTypeRows(
   scope: SessionScope
 ): Promise<PlanTypeRow[]> {
-  const rows = await prisma.planType.findMany({
-    where: buildScopeWhere(scope),
-    include: { colorClassification: { select: { name: true } } },
-    // is_pair, sort 順で並べる。self（pairId=null）を先に、次に sort。
-    orderBy: [{ pairId: 'asc' }, { sort: 'asc' }]
-  });
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    sort: row.sort,
-    colorClassificationId: row.colorClassificationId,
-    colorName: row.colorClassification.name,
-    pairId: row.pairId
-  }));
+  return (
+    db
+      .select({
+        id: planTypes.id,
+        name: planTypes.name,
+        sort: planTypes.sort,
+        colorClassificationId: planTypes.colorClassificationId,
+        colorName: colorClassifications.name,
+        pairId: planTypes.pairId
+      })
+      .from(planTypes)
+      .innerJoin(
+        colorClassifications,
+        eq(planTypes.colorClassificationId, colorClassifications.id)
+      )
+      .where(buildScopeWhere(planTypes, scope))
+      // is_pair, sort 順で並べる。self（pairId=null）を先に、次に sort。
+      .orderBy(asc(planTypes.pairId), asc(planTypes.sort))
+  );
 }
 
 // scope 検証: 指定 plan_type が scope 内か。update / delete の対象確認に使う。
@@ -44,10 +51,16 @@ export async function findPlanTypeInScope(
   scope: SessionScope,
   id: Id
 ): Promise<{ id: Id; sort: number; pairId: Id | null } | null> {
-  return prisma.planType.findFirst({
-    where: { AND: [{ id }, buildScopeWhere(scope)] },
-    select: { id: true, sort: true, pairId: true }
-  });
+  const [row] = await db
+    .select({
+      id: planTypes.id,
+      sort: planTypes.sort,
+      pairId: planTypes.pairId
+    })
+    .from(planTypes)
+    .where(and(eq(planTypes.id, id), buildScopeWhere(planTypes, scope)))
+    .limit(1);
+  return row ?? null;
 }
 
 export async function insertPlanType(input: {
@@ -56,13 +69,11 @@ export async function insertPlanType(input: {
   userId: string | null;
   pairId: Id | null;
 }): Promise<void> {
-  await prisma.planType.create({
-    data: {
-      name: input.name,
-      colorClassificationId: input.colorClassificationId,
-      userId: input.userId,
-      pairId: input.pairId
-    }
+  await db.insert(planTypes).values({
+    name: input.name,
+    colorClassificationId: input.colorClassificationId,
+    userId: input.userId,
+    pairId: input.pairId
   });
 }
 
@@ -72,17 +83,17 @@ export async function updatePlanType(input: {
   name: string;
   colorClassificationId: Id;
 }): Promise<void> {
-  await prisma.planType.update({
-    where: { id: input.id },
-    data: {
+  await db
+    .update(planTypes)
+    .set({
       name: input.name,
       colorClassificationId: input.colorClassificationId
-    }
-  });
+    })
+    .where(eq(planTypes.id, input.id));
 }
 
 export async function deletePlanTypeById(id: Id): Promise<void> {
-  await prisma.planType.delete({ where: { id } });
+  await db.delete(planTypes).where(eq(planTypes.id, id));
 }
 
 // REORDER（任意順）。集まり（pairId）の検証は service 層で行う。
@@ -90,18 +101,22 @@ export async function findPlanTypeRowsForReorder(
   scope: SessionScope,
   ids: Id[]
 ): Promise<{ id: Id; sort: number; pairId: Id | null }[]> {
-  return prisma.planType.findMany({
-    where: { AND: [{ id: { in: ids } }, buildScopeWhere(scope)] },
-    select: { id: true, sort: true, pairId: true }
-  });
+  return db
+    .select({
+      id: planTypes.id,
+      sort: planTypes.sort,
+      pairId: planTypes.pairId
+    })
+    .from(planTypes)
+    .where(and(inArray(planTypes.id, ids), buildScopeWhere(planTypes, scope)));
 }
 
 export async function updatePlanTypeSorts(
   assignments: SortAssignment[]
 ): Promise<void> {
-  await prisma.$transaction(
-    assignments.map(({ id, sort }) =>
-      prisma.planType.update({ where: { id }, data: { sort } })
-    )
-  );
+  await db.transaction(async (tx) => {
+    for (const { id, sort } of assignments) {
+      await tx.update(planTypes).set({ sort }).where(eq(planTypes.id, id));
+    }
+  });
 }

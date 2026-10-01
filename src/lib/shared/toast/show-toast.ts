@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import { toast } from 'sonner';
 import type { ToastMessage } from '@/lib/shared/types/formResult';
 
-// トースト（docs/new-design/共通仕様.md「トースト」）。
+// トースト。
 //
 // 見た目は AppToaster（components/toaster.tsx）が種類ごとに持つ。ここは
 // 「どの種類で・どれだけ出すか」だけを決める:

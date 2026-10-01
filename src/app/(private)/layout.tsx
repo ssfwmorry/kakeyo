@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { requireAuth } from '@/features/auth/server/requireAuth';
+import { getDemoReferenceDate } from '@/features/demo/server/date';
 import { OfflineBanner } from '@/features/pwa/components/offline-banner';
 import { NoteModalProvider } from '@/features/record/components/note-modal';
 import {
@@ -8,9 +9,8 @@ import {
   getTypeCardList
 } from '@/features/type-method/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
-import { todayJst } from '@/lib/shared/domain/date';
 
-// 認証必須画面の共有 layout（アプリのシェル。docs/new-design/README.md）。
+// 認証必須画面の共有 layout（アプリのシェル）。
 //
 // 上部の共通バーは持たない。各画面が自分のヘッダを持ち、そこに「個人｜共有」と
 // ダーク切替を置く（位置は全画面で揃える）。
@@ -61,7 +61,10 @@ async function AuthenticatedShell({ children }: { children: ReactNode }) {
   }));
 
   return (
-    <NoteModalProvider candidates={candidates} today={todayJst()}>
+    <NoteModalProvider
+      candidates={candidates}
+      today={getDemoReferenceDate(session)}
+    >
       <OfflineBanner />
       {children}
     </NoteModalProvider>
