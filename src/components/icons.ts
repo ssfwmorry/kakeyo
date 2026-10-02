@@ -48,6 +48,7 @@ export {
   Tag as IconTag, // mdiTagOutline（カテゴリ）
   Trash2 as IconTrash, // mdiTrashCanOutline
   TrendingUp as IconAnalytics, // mdiGoogleAnalytics
+  User as IconUser, // mdiAccount（ひとり。デモの「ペアなし」）
   // 共有(ペア)の唯一の正。2 人アイコンを使う
   // （lucide の Share2 は共有ノード図で意図が異なる）。
   Users as IconShare, // mdiAccountMultiple

@@ -3,28 +3,38 @@
 
 export const authLabels = {
   appName: 'かけよ',
+  tagline: '家計も予定も、ここに書けよ',
   field: {
     email: 'メールアドレス',
-    password: 'パスワード',
-    resetPassword: 'パスワード再設定（登録メール宛に送信）'
+    password: 'パスワード'
   },
   action: {
     login: 'ログイン',
+    // 送信中は押せないボタンの文字で伝える（スピナーは置かない）。
+    loggingIn: 'ログイン中…',
     sendReset: '再設定メールを送る',
-    // 再設定モードへ切り替える導線（戻る側は汎用の L.button.cancel を使う）。
-    showReset: 'パスワード再設定',
+    sendingReset: '送信中…',
+    showReset: 'パスワードを忘れたときは',
+    backToLogin: 'ログインに戻る',
     demo: 'デモページを見る',
     // 問い合わせ画面（/inquiry）への導線。
     inquiry: 'お問い合わせ',
     // 使い方（Notion チュートリアル）への外部リンク。
     tutorial: 'とりせつ'
   },
-  // デモのアカウント種別選択（「デモページを見る」押下後に同じ画面で出す）。
+  // パスワード再設定（ログイン欄と入れ替わりで出す）。
+  reset: {
+    title: 'パスワードを再設定',
+    hint: '登録したメールアドレス宛に、再設定の案内を送ります'
+  },
+  // デモのアカウント種別選択（「デモページを見る」で開くシート）。
   demo: {
     selectTitle: 'デモアカウントを選択',
     selectHint: 'デモでは登録・変更内容は保存されません',
     pair: 'ペアありアカウント',
-    solo: 'ペアなしアカウント'
+    pairHint: 'ふたりで使う画面。共有や精算も試せます',
+    solo: 'ペアなしアカウント',
+    soloHint: 'ひとりで使う画面。自分の記録だけ'
   },
   toast: {
     loginFailed: 'ログインに失敗しました。入力内容をご確認ください',

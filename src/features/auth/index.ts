@@ -4,4 +4,4 @@
 // server-only を含むモジュールはここから re-export しない。
 // requireAuth 等のサーバ専用関数は各利用箇所が @/features/auth/server/* を直接 import する。
 
-export { LoginForm } from './components/login-form';
+export { LoginScreen } from './components/login-screen';
