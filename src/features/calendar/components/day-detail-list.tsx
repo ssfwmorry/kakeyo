@@ -7,7 +7,12 @@ import { resolveDisplayIsPay } from '@/features/calendar/domain/record-sign';
 import { colorVar } from '@/features/master';
 import { useOpenNotifySheet } from '@/features/notify/components/notify-sheet-state';
 import type { PlanItem, ReminderItem } from '@/features/plan-reminder';
-import type { NoteRecordDefault, RecordListItem } from '@/features/record';
+import {
+  type NoteRecordDefault,
+  PlannedRecordMark,
+  type RecordListItem,
+  RecordTile
+} from '@/features/record';
 import { toRecordDefault } from '@/features/record/domain/record-default';
 import { amountToneClass, formatPrice } from '@/lib/shared/domain/format';
 
@@ -210,27 +215,21 @@ function RecordRow({
     record.subTypeName === null
       ? (record.typeName ?? '')
       : `${record.typeName} · ${record.subTypeName}`;
-  const color = colorVar(record.typeColorClassificationName);
-
   const rowClass =
     'flex h-15 w-full items-center gap-3 px-3.5 text-left text-foreground';
   const body = (
     <>
-      {/* カテゴリのアイコンは DB に無いので、淡い色タイルに色のドットを置く（README D15）。 */}
-      <span
-        aria-hidden='true'
-        className='flex size-9 shrink-0 items-center justify-center rounded-[10px]'
-        style={{
-          backgroundColor: `color-mix(in srgb, ${color} var(--band-mix), var(--card))`
-        }}
-      >
-        <span
-          className='size-3 rounded-full'
-          style={{ backgroundColor: color }}
-        />
-      </span>
+      <RecordTile
+        colorName={record.typeColorClassificationName}
+        isPair={record.isPair}
+      />
       <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
-        <span className='truncate text-[15px]'>{title}</span>
+        <span className='flex items-center gap-1.5 text-[15px]'>
+          <span className='truncate'>{title}</span>
+          <PlannedRecordMark
+            isPlannedRecord={record.plannedRecordId !== null}
+          />
+        </span>
         {record.memo === null ? null : (
           <span className='truncate text-muted-foreground text-xs'>
             {record.memo}

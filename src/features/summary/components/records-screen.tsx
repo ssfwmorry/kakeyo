@@ -5,14 +5,16 @@ import { useMemo, useState, useTransition } from 'react';
 import {
   IconChevronLeft,
   IconChevronRight,
-  IconLock,
-  IconShare,
-  IconUpdate
+  IconLock
 } from '@/components/icons';
 import { ScreenHeader } from '@/components/screen-header';
 import { SectionListEmpty } from '@/components/section-list';
 import { colorVar } from '@/features/master';
-import type { SummarizedRecordItem } from '@/features/record';
+import {
+  PlannedRecordMark,
+  RecordTile,
+  type SummarizedRecordItem
+} from '@/features/record';
 import { useNoteModal } from '@/features/record/components/note-modal';
 import { toRecordDefault } from '@/features/record/domain/record-default';
 import { fetchSummarizedRecordsAction } from '@/features/summary/actions';
@@ -236,25 +238,15 @@ function RecordRow({
   onEdit: (record: SummarizedRecordItem) => void;
 }) {
   const isLocked = isLockedRecord(record);
-  const color = colorVar(record.typeColorClassificationName);
   const amount = formatPrice(record.price);
   const title = record.subTypeName ?? record.typeName ?? '';
 
   const body = (
     <>
-      {/* カテゴリのアイコンは DB に無いので、淡色タイル + 色ドットで代用する（D15）。 */}
-      <span
-        aria-hidden='true'
-        className='flex size-9 shrink-0 items-center justify-center rounded-[10px]'
-        style={{
-          backgroundColor: `color-mix(in srgb, ${color} 20%, var(--card))`
-        }}
-      >
-        <span
-          className='size-3 rounded-full'
-          style={{ backgroundColor: color }}
-        />
-      </span>
+      <RecordTile
+        colorName={record.typeColorClassificationName}
+        isPair={record.isPair}
+      />
       <span
         className={cn(
           'flex min-w-0 flex-grow flex-col justify-center gap-0.5 self-stretch',
@@ -262,23 +254,10 @@ function RecordRow({
         )}
       >
         <span className='flex items-center gap-1.5 text-[15px]'>
-          {title}
-          {record.plannedRecordId === null ? null : (
-            <IconUpdate
-              aria-label='定期の記録'
-              className='size-3.5 shrink-0 text-muted-foreground'
-              role='img'
-              strokeWidth={2.2}
-            />
-          )}
-          {record.isPair && !isLocked ? (
-            <IconShare
-              aria-label='共有'
-              className='size-3.5 shrink-0 text-primary'
-              role='img'
-              strokeWidth={2.2}
-            />
-          ) : null}
+          <span className='truncate'>{title}</span>
+          <PlannedRecordMark
+            isPlannedRecord={record.plannedRecordId !== null}
+          />
           {isLocked ? (
             <span className='flex h-[18px] shrink-0 items-center rounded-md bg-muted px-1.5 font-bold text-[11px] text-muted-foreground'>
               {record.pairUserName}の立替
@@ -297,7 +276,6 @@ function RecordRow({
           {record.memo}
         </span>
       </span>
-      {/* 方法はメモと混ざらないよう金額の下に置く（メモの有無で位置が動かないよう常に右寄せ）。 */}
       <span
         className={cn(
           'flex shrink-0 flex-col items-end justify-center gap-0.5 self-stretch',

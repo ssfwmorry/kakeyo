@@ -6,13 +6,12 @@ import {
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
-  IconShare,
-  IconUpdate
+  IconShare
 } from '@/components/icons';
 import { SectionListEmpty } from '@/components/section-list';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { colorVar } from '@/features/master';
-import type { PairedRecordItem } from '@/features/record';
+import { type PairedRecordItem, PlannedRecordMark } from '@/features/record';
 import { completeSettlementAction } from '@/features/record/settlement-actions';
 import { fetchPairedRecordsAction } from '@/features/summary/actions';
 import { monthLabel, shiftMonth } from '@/features/summary/domain/period';
@@ -894,18 +893,11 @@ function CoupleRow({
       >
         <span className='flex items-center gap-1.5 text-[15px]'>
           <span className='truncate'>{categoryName(item)}</span>
-          {item.isPlannedRecord ? (
-            <IconUpdate
-              aria-label='定期の記録'
-              className='size-[13px] shrink-0 text-muted-foreground'
-              role='img'
-              strokeWidth={2.2}
-            />
-          ) : null}
+          <PlannedRecordMark isPlannedRecord={item.isPlannedRecord} />
         </span>
         <span className='truncate text-muted-foreground text-xs'>{sub}</span>
       </span>
-      {/* 方法は日付・送金先と混ざらないよう金額の下に置く（内訳の明細と同じ並び）。 */}
+      {/* 方法は日付・送金先と混ざらないよう金額の下に置く。 */}
       <span className='flex shrink-0 flex-col items-end gap-0.5'>
         <span
           className={cn(
@@ -1024,6 +1016,7 @@ function InsteadCard({
           }}
         />
         <span className='truncate'>{categoryName(item)}</span>
+        <PlannedRecordMark isPlannedRecord={item.isPlannedRecord} size={13} />
       </span>
       <span className='flex w-full items-baseline gap-1'>
         {isAssigned ? (
