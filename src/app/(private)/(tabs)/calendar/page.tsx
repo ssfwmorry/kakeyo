@@ -9,6 +9,7 @@ import {
 } from '@/features/demo/server/date';
 import { getMemoList } from '@/features/memo/server/services';
 import { getPlanTypeCardList } from '@/features/plan-reminder/server/services';
+import { materializePlannedRecordsForMonth } from '@/features/planned-record/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 import CalendarLoading from './loading';
 
@@ -33,6 +34,8 @@ async function CalendarPageContent() {
   const session = await requireAuth();
   const today = getDemoReferenceDate(session);
   const yearMonth = getDemoReferenceYearMonth(session);
+
+  await materializePlannedRecordsForMonth(session, yearMonth);
 
   const [month, memos, isPair, planTypeList] = await Promise.all([
     getCalendarMonth(session, yearMonth),

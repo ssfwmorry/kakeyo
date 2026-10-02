@@ -11,9 +11,8 @@ import { buildDaySumList, sumMonthFromDays } from '../domain/day-sum';
 import { calcCalendarRange } from '../domain/range';
 import type { CalendarMonthData } from '../types';
 
-// calendar の取得サービス（server-only・純粋読み取り）。
-// 表示から副作用を排除するため、定期 record の実体化 INSERT（postRecords）は絶対に呼ばない
-//   （定期実体化は Cron に移譲済み。/api/cron/post-records）。ここは record/plan/reminder/月収支の取得のみ。
+// calendar の取得サービス（server-only・純粋読み取り。定期 record の実体化 INSERT は
+// 呼び出し側の責務で、ここでは行わない）。
 //
 // scope（userUid/pairId）は session から確定し、各サービス/リポジトリが自分/ペアに絞る。
 // getMonthSum は summary services に未公開のため repositories を直 import する。

@@ -9,13 +9,16 @@ import {
 } from '@/features/master/server/repositories/dayClassification';
 import { db } from '@/lib/server/db/client';
 import { isForeignKeyError } from '@/lib/server/db/errors';
-import { todayJst, toYearMonthJst } from '@/lib/shared/domain/date';
+import { toYearMonthJst } from '@/lib/shared/domain/date';
 import { planReorder } from '@/lib/shared/domain/reorder';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
 import { resolvePlannedRecordOwnership } from '../domain/planned-record-fields';
-import { enumerateTargetYearMonths } from '../domain/target-year-months';
+import {
+  enumerateTargetYearMonths,
+  isWithinMaterializeHorizon
+} from '../domain/target-year-months';
 import type {
   GroupedPlannedRecordList,
   NotePlannedRecordDefault,
@@ -158,18 +161,38 @@ export async function deletePlannedRecord(
   });
 }
 
-// 実体化バッチ。
+// 実体化（planned_records → records）。
 //
-// 実体化は Vercel Cron（日次 1 回）からこのサービスだけが行い、表示コードは
-// 純粋な読み取りのみとする（表示に副作用 INSERT を混在させない）。
-//
-// SQL は CASE WHEN・day_classifications による日付組み立て・updated_at / now()
-// 条件をそのまま用いる。全ユーザー対象の日次バッチのため、ここは buildScopeWhere を
-// 通さない唯一の箇所（ユーザー絞り込みなし）。
+// scope: Drizzle の where ヘルパが使えない生 SQL のため、buildScopeWhere と同じ
+// 「自分 or ペア」条件を SQL 片として組み立てる。
 
-// 1 ヶ月分の実体化。挿入行数を返す。
+// 閲覧者 1 人分に絞る条件。planned_records / records いずれも user_id・pair_id の
+// どちらか一方を持ち、ペアの行は pairs の user1_id / user2_id 経由で拾う
+// （session.pairId は使わない）。
+// 戻り値は ` and (` で始まる断片。`--` コメントと同じ行に埋め込むと先頭の and が
+// コメントに飲まれて SQL が壊れるため、テンプレート側では必ず独立した行に置く。
+function buildOwnerSqlFilter(
+  userUid: string | null,
+  table: 'planned_records' | 'records'
+) {
+  if (userUid === null) {
+    return sql``;
+  }
+  const userId =
+    table === 'planned_records'
+      ? sql`planned_records.user_id`
+      : sql`records.user_id`;
+  return sql` and (
+            ${userId} = ${userUid}
+            or pairs.user1_id = ${userUid}
+            or pairs.user2_id = ${userUid}
+        )`;
+}
+
+// 1 ヶ月分の実体化。挿入行数を返す。userUid が null なら全ユーザーが対象（Cron 専用）。
 async function insertRecordsFromPlannedRecords(
-  yearMonth: string
+  yearMonth: string,
+  userUid: string | null
 ): Promise<number> {
   const result = await db.execute(sql`
     -- すでに planned_record_id が設定されている record を取り出す
@@ -182,6 +205,7 @@ async function insertRecordsFromPlannedRecords(
         where
             to_char(cast(datetime as date),'YYYY-MM') = ${yearMonth}
             and planned_record_id is not null
+            ${buildOwnerSqlFilter(userUid, 'records')}
     )
     -- コピーされたものを登録する
     insert into records (
@@ -228,6 +252,7 @@ async function insertRecordsFromPlannedRecords(
         planned_records.pair_id = pairs.id
     where
         summarized_records.planned_record_id is null -- planned_record_id が登録されていないものを抽出
+        ${buildOwnerSqlFilter(userUid, 'planned_records')}
         and cast(planned_records.updated_at as date) <=  cast((${yearMonth} || '-01') as date) -- planned_record が登録された後の期間でのみ、record 登録を行う
         and cast(${yearMonth} || '-' || lpad(cast(day_classifications.value as character varying), 2, '0') as timestamp) > now() -- 登録される datetime が未来の場合のみrecord 登録を行う
   `);
@@ -236,18 +261,36 @@ async function insertRecordsFromPlannedRecords(
 
 // 日次バッチの入口（Cron Route 専用）。当月〜7 ヶ月後を月ごとに実体化し、
 // 対象月数と挿入行数を返す。
-// 過去月は SQL の `datetime > now()` 条件で挿入 0 件のため対象に含めない。
 export async function postRecordsForAllUsers(): Promise<{
   months: number;
   inserted: number;
 }> {
-  const yearMonths = enumerateTargetYearMonths(toYearMonthJst(todayJst()));
+  const yearMonths = enumerateTargetYearMonths(toYearMonthJst(new Date()));
   let inserted = 0;
   // 同一テーブルへの INSERT を月順に直列実行する（並列にしない）。
   for (const yearMonth of yearMonths) {
-    inserted += await insertRecordsFromPlannedRecords(yearMonth);
+    inserted += await insertRecordsFromPlannedRecords(yearMonth, null);
   }
   return { months: yearMonths.length, inserted };
+}
+
+// カレンダー表示時の実体化。Vercel Cron が有効化されるまでの暫定で、有効化したら
+// この関数と呼び出し元を削除する。
+//
+// 開いた人の表示中の月だけを対象にし、閲覧者 1 人に絞る（他人のページ閲覧で
+// 他人の record を作らない）。呼び出し側は月データの取得より先に await する
+// （作られた record をその描画に載せるため）。
+export async function materializePlannedRecordsForMonth(
+  session: SessionData,
+  yearMonth: string
+): Promise<void> {
+  if (session.isDemo) {
+    return;
+  }
+  if (!isWithinMaterializeHorizon(toYearMonthJst(new Date()), yearMonth)) {
+    return;
+  }
+  await insertRecordsFromPlannedRecords(yearMonth, session.userUid);
 }
 
 // 任意順の並べ替え。全 id が scope 内かつ同じ所有（self / pair）に揃っていることを

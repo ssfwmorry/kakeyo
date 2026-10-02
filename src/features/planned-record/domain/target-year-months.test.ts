@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { enumerateTargetYearMonths } from './target-year-months';
+import {
+  enumerateTargetYearMonths,
+  isWithinMaterializeHorizon
+} from './target-year-months';
 
-// Cron 実体化バッチの対象年月列挙（当月〜+7 ヶ月）の境界を固定する。
+// 対象年月の列挙と打ち切り（当月〜+7 ヶ月）の境界を固定する。
 
 describe('enumerateTargetYearMonths', () => {
   it('当月から 7 ヶ月後まで 8 件を列挙する', () => {
@@ -48,5 +51,30 @@ describe('enumerateTargetYearMonths', () => {
     expect(() => enumerateTargetYearMonths('2026-13')).toThrow();
     expect(() => enumerateTargetYearMonths('2026-1')).toThrow();
     expect(() => enumerateTargetYearMonths('202601')).toThrow();
+  });
+});
+
+describe('isWithinMaterializeHorizon', () => {
+  it('基準月と同じ月は対象', () => {
+    expect(isWithinMaterializeHorizon('2026-10', '2026-10')).toBe(true);
+  });
+
+  it('7 ヶ月後ちょうどは対象、8 ヶ月後は対象外', () => {
+    expect(isWithinMaterializeHorizon('2026-10', '2027-05')).toBe(true);
+    expect(isWithinMaterializeHorizon('2026-10', '2027-06')).toBe(false);
+  });
+
+  it('年跨ぎの比較を正しく扱う', () => {
+    expect(isWithinMaterializeHorizon('2026-12', '2027-07')).toBe(true);
+    expect(isWithinMaterializeHorizon('2026-12', '2027-08')).toBe(false);
+  });
+
+  it('過去月は対象（SQL 側の datetime > now() で 0 件になる）', () => {
+    expect(isWithinMaterializeHorizon('2026-10', '2020-01')).toBe(true);
+  });
+
+  it('不正な年月は例外を投げる', () => {
+    expect(() => isWithinMaterializeHorizon('2026-10', '2026-13')).toThrow();
+    expect(() => isWithinMaterializeHorizon('2026-1', '2026-10')).toThrow();
   });
 });
