@@ -1,4 +1,3 @@
-import { currentYearMonth } from './period';
 import type { RecordsTarget } from './records-heading';
 
 // 明細のクエリ文字列 → 絞り込み条件。純粋関数。
@@ -6,7 +5,7 @@ import type { RecordsTarget } from './records-heading';
 // クライアントが自由に付けられる値なので、数字に効くものはここで正規化する
 // （id が不正なら null にして呼び出し側が 404 にする）。scope はリポジトリ層が
 // 担保するので、正しい形の id を渡されても他人の記録は返らない。
-// isPair だけはここでは決めず、セッションから受け取る。
+// isPair と既定の年月はここでは決めず、呼び出し側から受け取る。
 
 export type RecordsQuery = {
   axis?: string;
@@ -32,14 +31,15 @@ function positiveInt(value: string | undefined): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-// 'YYYY-MM' の形だけ受ける（不正なら今月）。
+// 'YYYY-MM' の形だけ受ける。
 function yearMonthOr(value: string | undefined, fallback: string): string {
   return value !== undefined && /^\d{4}-\d{2}$/.test(value) ? value : fallback;
 }
 
 export function parseRecordsQuery(
   query: RecordsQuery,
-  isPair: boolean
+  isPair: boolean,
+  fallbackYearMonth: string
 ): RecordsCondition | null {
   const id = positiveInt(query.id);
   if (id === null) {
@@ -63,7 +63,7 @@ export function parseRecordsQuery(
     subTypeName: subTypeId === null ? null : (query.subTypeName ?? ''),
     id,
     subTypeId,
-    yearMonth: yearMonthOr(query.ym, currentYearMonth()),
+    yearMonth: yearMonthOr(query.ym, fallbackYearMonth),
     colorName: query.color ?? ''
   };
 }

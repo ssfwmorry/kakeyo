@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { requireAuth } from '@/features/auth/server/requireAuth';
-import { getDemoReferenceDate } from '@/features/demo/server/date';
+import { getDemoTodayOverride } from '@/features/demo/server/date';
 import { OfflineBanner } from '@/features/pwa/components/offline-banner';
 import { NoteModalProvider } from '@/features/record/components/note-modal';
 import {
@@ -63,7 +63,7 @@ async function AuthenticatedShell({ children }: { children: ReactNode }) {
   return (
     <NoteModalProvider
       candidates={candidates}
-      today={getDemoReferenceDate(session)}
+      demoToday={getDemoTodayOverride(session)}
     >
       <OfflineBanner />
       {children}

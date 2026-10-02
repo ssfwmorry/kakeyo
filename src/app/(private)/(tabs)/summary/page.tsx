@@ -1,7 +1,7 @@
 import { NotificationBell } from '@/components/notification-bell';
 import { requireAuth } from '@/features/auth/server/requireAuth';
+import { getDemoReferenceYearMonth } from '@/features/demo/server/date';
 import { SummaryScreen } from '@/features/summary/components/summary-screen';
-import { currentYearMonth } from '@/features/summary/domain/period';
 import { getTypePie } from '@/features/summary/server/services';
 import { getEffectivePairMode } from '@/lib/server/pair/mode';
 
@@ -19,7 +19,7 @@ export const instant = false;
 export default async function SummaryPage() {
   const session = await requireAuth();
   const isPair = await getEffectivePairMode(session);
-  const yearMonth = currentYearMonth();
+  const yearMonth = await getDemoReferenceYearMonth(session);
 
   const initialData = await getTypePie(session, {
     isPay: true,

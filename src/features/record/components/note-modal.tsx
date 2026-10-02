@@ -15,6 +15,7 @@ import type {
   GroupedMethodList,
   GroupedTypeList
 } from '@/features/type-method';
+import { todayJst } from '@/lib/shared/domain/date';
 import { RecordSheet } from './record-sheet';
 
 // 入力の全画面モーダル（README D1）。タブバーの ＋ はどのタブからでも入力を開き、
@@ -23,8 +24,9 @@ import { RecordSheet } from './record-sheet';
 //
 // 候補は解決済みの値ではなく Promise で受け、シートを開いたときに初めて use() で
 // 読む（layout が await するとシェルごと待たされるため）。
-// today は DB に依らないので Promise に載せず、開いた瞬間に既定日が要る open 側へ
-// 素の値で渡す。
+// 既定日の「今日」は開いた瞬間にクライアントで計算する。サーバで決めるとシェルの
+// 事前描画がそこで止まり、開きっぱなしの PWA では日付跨ぎで前日が既定になる。
+// デモだけは基準日に固定するので上書き値を受ける。
 
 export type NoteModalCandidates = {
   typeList: GroupedTypeList;
@@ -57,24 +59,28 @@ export function useNoteModal(): NoteModalContextValue {
   return value;
 }
 
-type SheetState = { key: number; options: OpenOptions } | null;
+type SheetState = { key: number; options: OpenOptions; today: string } | null;
 
 export function NoteModalProvider({
   candidates,
   children,
-  today
+  demoToday
 }: {
   candidates: Promise<NoteModalCandidates>;
   children: ReactNode;
-  today: string;
+  demoToday: string | null;
 }) {
   const [sheet, setSheet] = useState<SheetState>(null);
 
   // key を変えて開くたびにシートを作り直す。入力中の値はシート側の state なので、
   // 同じ要素を使い回すと前回の入力が残る。
-  const open = useCallback((options: OpenOptions = {}) => {
-    setSheet((prev) => ({ key: (prev?.key ?? 0) + 1, options }));
-  }, []);
+  const open = useCallback(
+    (options: OpenOptions = {}) => {
+      const today = demoToday ?? todayJst();
+      setSheet((prev) => ({ key: (prev?.key ?? 0) + 1, options, today }));
+    },
+    [demoToday]
+  );
   const close = useCallback(() => setSheet(null), []);
   const value = useMemo(() => ({ open, close }), [open, close]);
 
@@ -93,10 +99,10 @@ export function NoteModalProvider({
           <ResolvedRecordSheet
             candidatesPromise={candidates}
             editing={sheet.options.editing}
-            initialDate={sheet.options.initialDate ?? today}
+            initialDate={sheet.options.initialDate ?? sheet.today}
             onClose={close}
             onSaved={sheet.options.onSaved}
-            today={today}
+            today={sheet.today}
           />
         </Suspense>
       )}

@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation';
 import { NotificationBell } from '@/components/notification-bell';
 import { requireAuth } from '@/features/auth/server/requireAuth';
+import { getDemoReferenceYearMonth } from '@/features/demo/server/date';
 import {
   getPairedRecords,
   getPairPartnerName
 } from '@/features/record/server/services';
 import { SettlementScreen } from '@/features/summary/components/settlement-screen';
-import { currentYearMonth } from '@/features/summary/domain/period';
 import { getMethodCardList } from '@/features/summary/server/services';
 
 // この画面本体はまだセッション由来の取得を Suspense 境界へ落としていないため、
@@ -24,7 +24,7 @@ export default async function SummarySettlementPage() {
   if (session.pairId === null) {
     redirect('/summary');
   }
-  const yearMonth = currentYearMonth();
+  const yearMonth = await getDemoReferenceYearMonth(session);
 
   const [records, methods, partnerName] = await Promise.all([
     getPairedRecords(session, yearMonth),

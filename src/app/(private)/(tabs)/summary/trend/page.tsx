@@ -1,11 +1,9 @@
 import { NotificationBell } from '@/components/notification-bell';
 import { requireAuth } from '@/features/auth/server/requireAuth';
+import { getDemoReferenceYearMonth } from '@/features/demo/server/date';
 import { TrendScreen } from '@/features/summary/components/trend-screen';
 import { buildPayIncomeBar } from '@/features/summary/domain/chart-data';
-import {
-  currentYear,
-  currentYearMonth
-} from '@/features/summary/domain/period';
+import { splitYearMonth } from '@/features/summary/domain/period';
 import {
   getPayAndIncomeList,
   getTypeChips
@@ -26,7 +24,9 @@ export const instant = false;
 export default async function SummaryTrendPage() {
   const session = await requireAuth();
   const isPair = await getEffectivePairMode(session);
-  const year = currentYear();
+  const { year, month } = splitYearMonth(
+    await getDemoReferenceYearMonth(session)
+  );
 
   const [items, chips] = await Promise.all([
     getPayAndIncomeList(session, {
@@ -46,7 +46,7 @@ export default async function SummaryTrendPage() {
       hasPair={session.pairId !== null}
       headerLeft={<NotificationBell />}
       initialData={buildPayIncomeBar(items, year)}
-      initialMonth={Number(currentYearMonth().split('-')[1])}
+      initialMonth={month}
       initialYear={year}
       isPair={isPair}
       key={isPair ? 'pair' : 'self'}

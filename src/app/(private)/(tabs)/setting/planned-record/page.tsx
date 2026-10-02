@@ -45,7 +45,7 @@ async function PlannedRecordPageContent() {
       isPair={isPair}
       items={isPair ? plannedRecordList.pair : plannedRecordList.self}
       methodList={methodList}
-      today={getDemoReferenceDate(session)}
+      today={await getDemoReferenceDate(session)}
       typeList={typeList}
     />
   );

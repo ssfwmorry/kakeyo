@@ -38,7 +38,7 @@ function BellFallback() {
 async function BellContent() {
   const session = await requireAuth();
   const { all } = await getReminderList(session);
-  const rows = buildNotifyRows(all, getDemoReferenceDate(session));
+  const rows = buildNotifyRows(all, await getDemoReferenceDate(session));
 
   return <NotificationBellButton rows={rows} />;
 }

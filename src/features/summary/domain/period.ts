@@ -1,5 +1,3 @@
-import { toYearMonthJst } from '@/lib/shared/domain/date';
-
 // 月/年ナビの純粋計算（server-only を含まない = Client / Vitest 双方から使う）。
 // 'YYYY-MM' 文字列と year(number) を、暦を跨いで前後に動かす。
 
@@ -39,12 +37,11 @@ export function yearLabel(year: number): string {
   return `${year}年`;
 }
 
-// JST の「今月」を 'YYYY-MM' で返す（初期表示の起点）。
-export function currentYearMonth(): string {
-  return toYearMonthJst(new Date());
-}
-
-// JST の「今年」を number で返す。
-export function currentYear(): number {
-  return Number(currentYearMonth().split('-')[0]);
+// month は 1..12（Date の 0 始まりではない）。
+export function splitYearMonth(yearMonth: string): {
+  year: number;
+  month: number;
+} {
+  const [yearStr, monthStr] = yearMonth.split('-');
+  return { year: Number(yearStr), month: Number(monthStr) };
 }

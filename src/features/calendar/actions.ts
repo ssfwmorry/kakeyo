@@ -14,7 +14,7 @@ export async function getCalendarMonthAction(
   const session = await requireAuth();
   const normalized = /^\d{4}-\d{2}$/.test(yearMonth)
     ? yearMonth
-    : getDemoReferenceYearMonth(session);
+    : await getDemoReferenceYearMonth(session);
   await materializePlannedRecordsForMonth(session, normalized);
   return getCalendarMonth(session, normalized);
 }

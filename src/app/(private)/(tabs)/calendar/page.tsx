@@ -32,8 +32,8 @@ export default function CalendarPage() {
 
 async function CalendarPageContent() {
   const session = await requireAuth();
-  const today = getDemoReferenceDate(session);
-  const yearMonth = getDemoReferenceYearMonth(session);
+  const today = await getDemoReferenceDate(session);
+  const yearMonth = await getDemoReferenceYearMonth(session);
 
   await materializePlannedRecordsForMonth(session, yearMonth);
 

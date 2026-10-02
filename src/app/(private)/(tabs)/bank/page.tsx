@@ -32,7 +32,7 @@ async function BankPageContent() {
       banks={banks}
       headerLeft={<NotificationBell />}
       tableRows={tableRows}
-      today={getDemoReferenceDate(session)}
+      today={await getDemoReferenceDate(session)}
     />
   );
 }

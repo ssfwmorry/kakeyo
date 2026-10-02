@@ -35,7 +35,7 @@ async function ReminderPageContent() {
       colors={colors}
       isPair={isPair}
       reminders={isPair ? reminderList.pair : reminderList.self}
-      today={getDemoReferenceDate(session)}
+      today={await getDemoReferenceDate(session)}
     />
   );
 }

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { requireAuth } from '@/features/auth/server/requireAuth';
+import { getDemoReferenceYearMonth } from '@/features/demo/server/date';
 import { getSummarizedRecords } from '@/features/record/server/services';
 import { RecordsScreen } from '@/features/summary/components/records-screen';
 import {
@@ -28,7 +29,11 @@ export default async function SummaryRecordsPage({
   const [session, query] = await Promise.all([requireAuth(), searchParams]);
   const isPair = await getEffectivePairMode(session);
 
-  const condition = parseRecordsQuery(query, isPair);
+  const condition = parseRecordsQuery(
+    query,
+    isPair,
+    await getDemoReferenceYearMonth(session)
+  );
   if (condition === null) {
     notFound();
   }
