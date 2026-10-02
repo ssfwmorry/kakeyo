@@ -11,9 +11,11 @@ import { authLabels } from '../labels';
 import { loginSchema, resetPasswordSchema } from '../schemas/login-schema';
 import {
   sendResetPasswordEmail,
-  signInWithPassword
+  signInWithPassword,
+  signOut
 } from '../server/authActions';
 import { clearDemoSession, setDemoSession } from '../server/demoCookie';
+import { findUserBySupabaseUid } from '../server/user';
 import { authRoutes } from '../shared/routes';
 
 const { toast } = authLabels;
@@ -42,6 +44,23 @@ export async function loginAction(
       toast: {
         type: ToastType.error,
         message: toast.loginFailed
+      }
+    };
+  }
+
+  // Supabase Auth は develop / public の両スキーマで共有しており、Auth にいても
+  // この環境の users に紐付いていないアカウントがありうる。その状態でセッションを
+  // 残すと、proxy（JWT のみで判定）は通し getSessionData（users 突合）は弾くため
+  // /login と /calendar の間でリダイレクトが止まらなくなる。ここでセッションを
+  // 成立させずに弾く。
+  const appUser = await findUserBySupabaseUid(user.id);
+  if (!appUser) {
+    await signOut();
+    return {
+      submission: submission.reply(),
+      toast: {
+        type: ToastType.error,
+        message: toast.accountUnavailable
       }
     };
   }

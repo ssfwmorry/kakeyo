@@ -28,6 +28,7 @@ export const authLabels = {
   },
   toast: {
     loginFailed: 'ログインに失敗しました。入力内容をご確認ください',
+    accountUnavailable: 'このアカウントは利用できません',
     resetSendFailed: 'メール送信に失敗しました',
     resetSent: 'パスワード再設定メールを送信しました',
     demoUnavailable: 'デモログインは現在利用できません'
