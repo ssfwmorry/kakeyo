@@ -96,11 +96,14 @@ export function RecordSheet({
         {isAmountStep && selection.selectedType !== null ? (
           <AmountStep
             editing={editing}
+            hasPair={hasPair}
             isPair={isPair}
+            isPairLocked={editing?.isScopeLocked ?? false}
             methodId={methodId}
             methods={selection.methods}
             onBack={backToType}
             onClose={onClose}
+            onPairChange={changeIsPair}
             onSaved={saved}
             patch={patch}
             selectedType={selection.selectedType}

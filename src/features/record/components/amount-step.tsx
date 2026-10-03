@@ -13,6 +13,7 @@ import {
   IconMemo,
   IconUpdate
 } from '@/components/icons';
+import { ScopeSegment } from '@/components/scope-segment';
 import { SheetHeader, SheetTrashButton } from '@/components/sheet-header';
 import { ConfirmAlert } from '@/components/ui/confirm-alert';
 import { InlineCalendar } from '@/components/ui/inline-calendar';
@@ -46,7 +47,11 @@ import { TypePill, typeLabel } from './type-pill';
 // 送信バー。金額行に mt-auto を置いて、上の内容が短くてもテンキーが下に張り付く。
 //
 // 共有モードはメモ必須（ペアに見える内容なので何の記録か分かるようにする）。
-// 満たさないうちは送信ボタンの文言で理由を伝える。
+// 満たさないうちは送信ボタンの文言で理由を伝える。金額は 0 円でも送れる。
+//
+// 個人／共有の切替は①と同じヘッダー右に置く（①へ戻ってから切り替える手間を省く）。
+// 切替が見えているあいだはピルの「共有」バッジを外す（同じ状態を 2 度示さず、
+// ヘッダーの幅をピルの文字に回す）。
 //
 // 編集（原典 RecordEdit）も同じ画面で、左が×・右がゴミ箱になる。定期の記録から作られた
 // 記録は日付を同じ月の中にだけ動かせるので、カードの下にその案内を出し、前後の日と暦を
@@ -60,6 +65,8 @@ const INSTEAD_OPTIONS = [
 export function AmountStep({
   state,
   isPair,
+  hasPair,
+  isPairLocked,
   editing,
   selectedType,
   methods,
@@ -67,11 +74,14 @@ export function AmountStep({
   today,
   onBack,
   onClose,
+  onPairChange,
   onSaved,
   patch
 }: {
   state: NoteState;
   isPair: boolean;
+  hasPair: boolean;
+  isPairLocked: boolean;
   // 編集対象。新規のときは undefined。
   editing?: NoteRecordDefault;
   selectedType: TypeCard;
@@ -81,6 +91,7 @@ export function AmountStep({
   today: string;
   onBack: () => void;
   onClose: () => void;
+  onPairChange: (isPair: boolean) => void;
   onSaved: () => void;
   patch: (next: Partial<NoteState>) => void;
 }) {
@@ -109,8 +120,8 @@ export function AmountStep({
 
   const showInstead = isPair && state.isPay;
   const needsMemo = isPair && state.memo.trim() === '';
-  const hasPrice = state.price > 0;
-  const canSubmit = methodId !== null && hasPrice && !needsMemo;
+  const needsMethod = methodId === null;
+  const canSubmit = !needsMethod && !needsMemo;
 
   return (
     <form
@@ -127,17 +138,19 @@ export function AmountStep({
         left={editingId === undefined ? { back: 'カテゴリに戻る' } : 'close'}
         onLeft={editingId === undefined ? onBack : onClose}
         right={
-          editingId === undefined ? undefined : (
-            <DeleteButton
-              description={deleteDescription(state, selectedType)}
-              id={editingId}
-              onDeleted={onSaved}
-            />
-          )
+          <HeaderRight
+            deleteDescription={deleteDescription(state, selectedType)}
+            editingId={editingId}
+            hasPair={hasPair}
+            isPair={isPair}
+            isPairLocked={isPairLocked}
+            onDeleted={onSaved}
+            onPairChange={onPairChange}
+          />
         }
         title={
           <TypePill
-            isPair={isPair}
+            isPair={isPair && !hasPair}
             isPay={state.isPay}
             onClick={onBack}
             selectedType={selectedType}
@@ -182,12 +195,49 @@ export function AmountStep({
       <SheetSubmitButton
         bar
         disabled={!canSubmit}
-        disabledLabel={disabledSubmitLabel({ needsMemo, hasPrice, verb })}
+        disabledLabel={disabledSubmitLabel({ needsMemo, needsMethod, verb })}
         formAction={action}
         isPending={isPending}
         label={`${verb}する`}
       />
     </form>
+  );
+}
+
+function HeaderRight({
+  hasPair,
+  isPair,
+  isPairLocked,
+  editingId,
+  deleteDescription,
+  onPairChange,
+  onDeleted
+}: {
+  hasPair: boolean;
+  isPair: boolean;
+  isPairLocked: boolean;
+  editingId: Id | undefined;
+  deleteDescription: string;
+  onPairChange: (isPair: boolean) => void;
+  onDeleted: () => void;
+}) {
+  return (
+    <span className='flex items-center gap-2'>
+      <ScopeSegment
+        hasPair={hasPair}
+        isLocked={isPairLocked}
+        isPair={isPair}
+        lockedLabel={recordLabels.error.scopeLocked}
+        onChange={onPairChange}
+      />
+      {editingId === undefined ? null : (
+        <DeleteButton
+          description={deleteDescription}
+          id={editingId}
+          onDeleted={onDeleted}
+        />
+      )}
+    </span>
   );
 }
 
@@ -391,7 +441,8 @@ function MemoRow({
   return (
     <label
       className={cn(
-        'flex h-13 items-center gap-2.5 border-line-soft border-t px-3.5',
+        // 親カードの角丸クリップで輪郭（inset shadow）の角が欠けないよう、下の角だけ同じ半径を持つ。
+        'flex h-13 items-center gap-2.5 rounded-b-[14px] border-line-soft border-t px-3.5',
         // 未入力を促す輪郭。エラーの赤そのものだと失敗の表示に見えるので薄める。
         isRequired &&
           'shadow-[inset_0_0_0_1.5px_color-mix(in_srgb,var(--destructive)_45%,var(--card))]'
@@ -518,21 +569,21 @@ function DeleteButton({
   );
 }
 
-// 押せない理由はメモ → 金額の順で 1 つだけ出す。
+// 押せない理由はメモ → 方法の順で 1 つだけ出す。
 function disabledSubmitLabel({
   needsMemo,
-  hasPrice,
+  needsMethod,
   verb
 }: {
   needsMemo: boolean;
-  hasPrice: boolean;
+  needsMethod: boolean;
   verb: string;
 }): string | undefined {
   if (needsMemo) {
     return `メモを入れると${verb}できます`;
   }
-  if (!hasPrice) {
-    return `金額を入れると${verb}できます`;
+  if (needsMethod) {
+    return `方法を選ぶと${verb}できます`;
   }
   return undefined;
 }
