@@ -30,15 +30,15 @@ import { useFormToast } from '@/components/form/use-form-toast';
 import { IconGrip } from '@/components/icons';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 
-// ドラッグで任意順に並べ替えるリスト（README D2）。設定のカテゴリ・方法・予定カテゴリ・
-// 定期の記録が、編集モード中の行末のハンドルで並べ替える。
+// ドラッグで任意順に並べ替えるリスト（README D2）。行末のハンドルで並べ替える。
 //
 // 縦方向だけに動かす。DragOverlay は使わず、行そのものを transform で動かす
 // （Base UI の Drawer の中でも Portal 先を気にせず動くようにするため）。
 // ドラッグ中の行は面を持ち上げて見せる（影はデザインの数少ない例外。README D17）。
 //
-// 並びの保存はドロップごとに送る（useSortableOrder）。デザインは「完了」で確定だが、
-// ドロップのたびに送っておけば途中で画面を離れても並びが失われない。
+// 並びの保存はドロップごとに送る（useSortableOrder）。並べ替えのモードや「完了」を
+// 持たないのは、ドロップで即保存される挙動と「完了で確定」の見た目が食い違うため。
+// 即保存であることは各画面の注記で伝える。
 
 type SortableId = number;
 
@@ -52,8 +52,7 @@ const verticalOnly: Modifier = ({ transform }) => ({ ...transform, x: 0 });
 export function SortableList<Item extends { id: SortableId }>({
   items,
   renderItem,
-  onReorder,
-  disabled = false
+  onReorder
 }: {
   items: Item[];
   // 行を描く。handleProps はハンドルの button にそのまま渡す（SortableHandle が受ける）。
@@ -63,7 +62,6 @@ export function SortableList<Item extends { id: SortableId }>({
   ) => ReactNode;
   // ドロップで並びが変わったとき。新しい順の id を渡す。
   onReorder: (ids: SortableId[]) => void;
-  disabled?: boolean;
 }) {
   const sensors = useSensors(
     // 4px 動かすまではタップ扱い（ハンドルの押下と区別する）。
@@ -91,11 +89,7 @@ export function SortableList<Item extends { id: SortableId }>({
       onDragEnd={handleDragEnd}
       sensors={sensors}
     >
-      <SortableContext
-        disabled={disabled}
-        items={ids}
-        strategy={verticalListSortingStrategy}
-      >
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         {items.map((item) => (
           <SortableRow id={item.id} key={item.id}>
             {(state) => renderItem(item, state)}

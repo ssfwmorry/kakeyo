@@ -4,8 +4,8 @@ import { cn } from 'cn';
 import { useState } from 'react';
 import { AddRow } from '@/components/add-row';
 import { IconLock } from '@/components/icons';
-import { ListCellButton, ListCellStatic } from '@/components/list-cell';
-import { ScreenHeader, ScreenHeaderAction } from '@/components/screen-header';
+import { ListCellSortable, ListCellStatic } from '@/components/list-cell';
+import { ScreenHeader } from '@/components/screen-header';
 import { ScreenLead, ScreenNote, ScreenTitle } from '@/components/screen-title';
 import { SectionList, SectionListEmpty } from '@/components/section-list';
 import {
@@ -22,7 +22,6 @@ import type {
   GroupedTypeList
 } from '@/features/type-method';
 import { amountToneClass, formatPrice } from '@/lib/shared/domain/format';
-import { dismissToast } from '@/lib/shared/toast/show-toast';
 import {
   isLockedItem,
   itemDescription,
@@ -35,10 +34,9 @@ import { PlannedRecordSheet } from './planned-record-sheet';
 //
 // 毎月の収入・支出を 2 枚のカードで見せ、その下に「毎月 D 日」つきの一覧を置く。
 // 行を押すと詳細シート（編集）、追加行はカテゴリのシートから始まる。
-// 「並べ替え」中は行末がハンドルになり、行タップと追加行を止める。
 //
 // 共有ではパートナーが立て替える定期も見えるが、編集できるのはパートナーだけなので
-// 行を押せなくして南京錠を出す。
+// 行を押せなくして南京錠を出す（並べ替えのハンドルも出さない）。
 
 type SheetState =
   | { kind: 'closed' }
@@ -60,19 +58,12 @@ export function PlannedRecordScreen({
   dayClassifications: DayClassification[];
   today: string;
 }) {
-  const [isSorting, setIsSorting] = useState(false);
   const [sheet, setSheet] = useState<SheetState>({ kind: 'closed' });
   const { ordered, reorder } = useSortableOrder(
     items,
     reorderPlannedRecordAction
   );
 
-  // 並べ替えの出入りで、開いていたシートと残っていたトーストを片付ける。
-  const toggleSorting = () => {
-    setIsSorting((prev) => !prev);
-    setSheet({ kind: 'closed' });
-    dismissToast();
-  };
   // 開くたびに key を変えてシートを作り直す（前回の入力を残さない）。
   const nextKey = () => (sheet.kind === 'closed' ? 0 : sheet.key) + 1;
   const closeSheet = () => setSheet({ kind: 'closed' });
@@ -85,15 +76,7 @@ export function PlannedRecordScreen({
 
   return (
     <div className='flex flex-col'>
-      <ScreenHeader
-        action={
-          <ScreenHeaderAction onClick={toggleSorting}>
-            {isSorting ? '完了' : '並べ替え'}
-          </ScreenHeaderAction>
-        }
-        backHref='/setting'
-        backLabel='設定'
-      />
+      <ScreenHeader backHref='/setting' backLabel='設定' />
       <div className='flex flex-col gap-3 px-3'>
         <ScreenTitle badge={isPair ? 'pair' : 'self'}>定期の記録</ScreenTitle>
         <ScreenLead>毎月決まった日に、自動で記録されます</ScreenLead>
@@ -105,20 +88,17 @@ export function PlannedRecordScreen({
 
         <PlannedList
           dayValueOf={dayValueOf}
-          isSorting={isSorting}
           items={ordered}
           onOpen={(item) => setSheet({ kind: 'edit', item, key: nextKey() })}
           onReorder={reorder}
         />
 
-        {isSorting ? null : (
-          <AddRow
-            label='定期の記録を追加'
-            onClick={() => setSheet({ kind: 'create', key: nextKey() })}
-          />
-        )}
+        <AddRow
+          label='定期の記録を追加'
+          onClick={() => setSheet({ kind: 'create', key: nextKey() })}
+        />
 
-        <ScreenNote>{footnote(isSorting, isPair)}</ScreenNote>
+        <ScreenNote>{footnote(isPair)}</ScreenNote>
       </div>
 
       {sheet.kind === 'closed' ? null : (
@@ -142,25 +122,22 @@ export function PlannedRecordScreen({
   );
 }
 
-function footnote(isSorting: boolean, isPair: boolean): string {
-  if (isSorting) {
-    return 'ドラッグして並べ替えます。並び順は一覧の表示にだけ使われます。';
-  }
+function footnote(isPair: boolean): string {
+  const base =
+    '行をタップすると編集・削除できます。≡ をドラッグすると並べ替えられ、並びはすぐ保存されます。';
   return isPair
-    ? 'パートナーが立て替える定期の記録は、パートナーだけが編集できます。共有／個人は登録後に切り替えられません。'
-    : '行をタップすると編集・削除できます。';
+    ? `${base}パートナーが立て替える定期の記録は、パートナーだけが編集できます。共有／個人は登録後に切り替えられません。`
+    : base;
 }
 
-// 一覧のカード。並べ替え中は行末がハンドルになる。空なら 1 文だけ。
+// 一覧のカード。空なら 1 文だけ。
 function PlannedList({
   items,
-  isSorting,
   dayValueOf,
   onOpen,
   onReorder
 }: {
   items: PlannedRecordListItem[];
-  isSorting: boolean;
   dayValueOf: (dayClassificationId: number) => number | null;
   onOpen: (item: PlannedRecordListItem) => void;
   onReorder: (ids: number[]) => void;
@@ -171,17 +148,13 @@ function PlannedList({
         <SectionListEmpty>まだ定期の記録はありません</SectionListEmpty>
       ) : (
         <SortableList
-          disabled={!isSorting}
           items={items}
           onReorder={onReorder}
           renderItem={(item, { handleProps }) => (
             <PlannedRow
               dayValue={dayValueOf(item.dayClassificationId)}
-              handle={
-                isSorting ? <SortableHandle {...handleProps} /> : undefined
-              }
+              handle={<SortableHandle {...handleProps} />}
               isFirst={item.id === items[0]?.id}
-              isSorting={isSorting}
               item={item}
               onOpen={() => onOpen(item)}
             />
@@ -223,20 +196,17 @@ function TotalCard({
   );
 }
 
-// 一覧の 1 行。編集できる行はボタン、並べ替え中とパートナーの立替行は押せない行。
 function PlannedRow({
   item,
   dayValue,
   isFirst,
-  isSorting,
   handle,
   onOpen
 }: {
   item: PlannedRecordListItem;
   dayValue: number | null;
   isFirst: boolean;
-  isSorting: boolean;
-  handle?: React.ReactNode;
+  handle: React.ReactNode;
   onOpen: () => void;
 }) {
   const title = itemTitle(item);
@@ -280,13 +250,12 @@ function PlannedRow({
       />
     );
   }
-  if (isSorting) {
-    return <ListCellStatic {...shared} trailing={handle} />;
-  }
   return (
-    <ListCellButton
+    <ListCellSortable
       {...shared}
       aria-label={`毎月${dayValue ?? ''}日 ${title} を編集`}
+      handle={handle}
+      leadingWidth={40}
       onClick={onOpen}
     />
   );

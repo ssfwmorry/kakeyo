@@ -33,7 +33,6 @@ export {
   LogOut as IconLogout, // mdiLogout
   Mail as IconMail, // mdiEmailOutline（お問い合わせ）
   MessageSquareText as IconMemo, // mdiCommentTextOutline（メモ）
-  Minus as IconMinus, // mdiMinus（編集中の削除マーク・ステッパー）
   Moon as IconMoon, // mdiWeatherNight（ダークへ切替）
   Pencil as IconPencil, // mdiPencil
   PiggyBank as IconPiggyBank, // mdiPiggyBank

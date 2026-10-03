@@ -1,6 +1,7 @@
 import { cn } from 'cn';
 import Link from 'next/link';
 import type { ComponentProps, ReactNode } from 'react';
+import { IconPencil } from '@/components/icons';
 import { ListCellPending } from './list-cell-pending';
 
 // 白いカードの中に積む 1 行。設定・一覧・リマインダーなど画面をまたいで同じ形で使う。
@@ -32,6 +33,11 @@ const HEIGHT_CLASS = {
   60: 'h-15',
   64: 'h-16'
 } as const;
+
+// 行の左の余白と、leading と本文のあいだの間隔（px）。ListCellSortable の区切り線の
+// 開始位置を leading の幅から出すのに使う。
+const ROW_PADDING_LEFT = 14;
+const LEADING_GAP = 12;
 
 export function Chevron() {
   return (
@@ -116,9 +122,7 @@ export function ListCellLink({
   );
 }
 
-// 行そのものは押せず、中に置いたボタンだけが操作対象になる行。
-// 並べ替え中のカテゴリ・方法のように、「行の中に操作がある」ときに使う
-// （行をボタンやリンクにすると、その中のボタンが入れ子になってしまう）。
+// 押せない行。パートナーの立替の定期の記録のように、印だけ出すときに使う。
 export function ListCellStatic({
   height = 48,
   className,
@@ -164,5 +168,72 @@ export function ListCellButton({
         value={value}
       />
     </button>
+  );
+}
+
+// 本文を押すとシートが開き、右端のハンドルをドラッグして並べ替える行。
+//
+// 本文とハンドルはどちらもボタンなので、兄弟に並べて入れ子を避ける。区切り線を本文側の
+// border で引くとハンドルの下で途切れるため、行の上端に leading の幅ぶん右へ寄せた線を
+// 別に引く。右端は既定で ✎ を出し、シェブロンの代わりに「押すと編集」の手がかりにする。
+export function ListCellSortable({
+  height = 48,
+  className,
+  handle,
+  leadingWidth,
+  isFirst = false,
+  onClick,
+  trailing,
+  'aria-label': ariaLabel,
+  ...inner
+}: ListCellProps & {
+  // 右端のドラッグハンドル（SortableHandle）。
+  handle: ReactNode;
+  // leading の幅（px）。0 なら leading 無しとして行の左端から線を引く。
+  leadingWidth: number;
+  onClick: () => void;
+  'aria-label'?: string;
+}) {
+  const dividerLeft =
+    leadingWidth === 0
+      ? ROW_PADDING_LEFT
+      : ROW_PADDING_LEFT + leadingWidth + LEADING_GAP;
+  return (
+    <div
+      className={cn(
+        'relative flex items-center pr-1.5 pl-3.5 text-foreground',
+        HEIGHT_CLASS[height],
+        className
+      )}
+    >
+      {isFirst ? null : (
+        <span
+          aria-hidden='true'
+          className='absolute top-0 right-0 border-t'
+          style={{ left: dividerLeft }}
+        />
+      )}
+      <button
+        aria-label={ariaLabel}
+        className='flex min-w-0 flex-grow items-center gap-3 self-stretch text-left text-foreground'
+        onClick={onClick}
+        type='button'
+      >
+        <ListCellInner
+          {...inner}
+          isFirst
+          trailing={
+            trailing ?? (
+              <IconPencil
+                aria-hidden='true'
+                className='mr-1 size-4 shrink-0 text-primary'
+                strokeWidth={2}
+              />
+            )
+          }
+        />
+      </button>
+      {handle}
+    </div>
   );
 }

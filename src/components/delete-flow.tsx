@@ -2,16 +2,15 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useFormToast } from '@/components/form/use-form-toast';
-import { IconMinus } from '@/components/icons';
 import { ConfirmAlert } from '@/components/ui/confirm-alert';
 import { quoted } from '@/lib/shared/domain/format';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 
 // 削除の一連の流れ: 確認（中央のアラート）→ 実行 → 成功なら片付け／紐づくデータが
-// あって消せなければ説明。マスタのシート（右上のゴミ箱）と一覧の編集モード（行頭の −）と
-// カテゴリ編集画面（末尾のボタン）が同じ流れを使うので、状態と見た目をここに寄せる。
+// あって消せなければ説明。各マスタのシート（右上のゴミ箱）が同じ流れを使うので、
+// 状態と見た目をここに寄せる。
 //
-// 削除できなかったときの出し方は 2 つ。方法・口座・カテゴリは「削除できません」の
+// 削除できなかったときの出し方は 2 つ。方法・口座は「削除できません」の
 // アラートで理由を説明し、予定カテゴリは原典どおりトースト（README D19）。
 // 指定が無ければ Action が返した文言をそのままトーストに出す。
 
@@ -164,26 +163,5 @@ export function DeleteAlerts({
         />
       ) : null}
     </>
-  );
-}
-
-// 編集モードの行頭に出す赤い −（原典 SetType / SetMethod）。押すと削除の確認へ進む。
-export function RemoveBadge({
-  onClick,
-  disabled = false
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      aria-label='削除'
-      className='flex size-5.5 shrink-0 items-center justify-center rounded-full bg-destructive text-white disabled:opacity-50'
-      disabled={disabled}
-      onClick={onClick}
-      type='button'
-    >
-      <IconMinus aria-hidden='true' className='size-3' strokeWidth={3} />
-    </button>
   );
 }

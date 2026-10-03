@@ -12,7 +12,7 @@ export function InitialCircle({
 }: {
   name: string;
   colorName: string;
-  // 一覧は 32、入力フローのカテゴリ格子は 40、編集画面の見出しは 56。
+  // 一覧は 32、入力フローのカテゴリ格子は 40、カテゴリのシートの見出しは 56。
   size?: 32 | 40 | 56;
 }) {
   return (

@@ -18,50 +18,33 @@ import { ColorGrid } from '@/components/ui/color-grid';
 import { SheetSubmitButton } from '@/components/ui/sheet-submit-button';
 import { TextField } from '@/components/ui/text-field';
 import type { ColorClassification } from '@/features/master';
+import { dialogTitle } from '@/lib/shared/labels';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
 
-// 「名前 + 色」だけを持つマスタ（方法・予定カテゴリ・口座。サブカテゴリは名前だけ）の
-// 追加・編集シート。データの形が同じなので UI も 1 つに揃える。構成は原典 SetBank の
-// シートに合わせる:
-//
-//   グラバー → ×｜「◯◯を追加／編集」｜ゴミ箱（編集時） → 名前（文字数カウンタ付き）
-//   → 補足 → 色（36px の丸） → 主ボタン「追加する／保存する」
+// 「名前 + 色」だけを持つマスタ（方法・予定カテゴリ・口座・カテゴリの名前と色。
+// サブカテゴリは名前だけ）の追加・編集フォーム。データの形が同じなので UI も 1 つに揃える。
+// 構成は原典 SetBank のシートに合わせる。
 //
 // 主ボタンは名前が空のあいだ押せず、押せない理由を文字にする（必須エラーは出さない）。
 // 削除はゴミ箱 → 中央の確認 → 実行（delete-flow）。紐づくデータがあって消せないときは、
 // トーストではなく「削除できません」のアラートで理由を説明してシートは開いたままにする
 // （予定カテゴリだけは原典がトーストなので onForeignKey で切り替える）。
 //
-// フォームの作りは既存と同じ「1 フォーム = 1 スキーマ = 1 useForm」。編集対象が
-// 変わっても useForm の defaultValue はマウント時にしか取り込まれないため、
-// 呼び出し側は対象の id で key を変えてこのコンポーネントごと作り直す。
+// Drawer ごと出す MasterSheet と、中身だけの MasterSheetPanel に分かれている。
+// カテゴリのシートのように 1 枚の Drawer の中でビューを切り替える画面は、
+// Panel を自前の Drawer に載せて左上を「‹ 戻る」にする。
 
 export type { ForeignKeyHandling };
 
-export function MasterSheet<Schema extends ZodType>({
-  isOpen,
-  onOpenChange,
-  entity,
-  editing,
-  nameLabel = '名前',
-  nameAriaLabel,
-  namePlaceholder,
-  maxLength = 10,
-  counter = true,
-  nameHeight = 52,
-  helper,
-  colors,
-  hiddenFields,
-  upsertAction,
-  upsertSchema,
-  deleteAction,
-  onForeignKey,
-  isDeleteBlocked = false,
-  onDeleted,
-  children
-}: {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+type MasterSheetPanelProps<Schema extends ZodType> = {
+  // 閉じる・保存できた・削除できた、のいずれかで呼ぶ。Drawer を閉じるか前のビューへ戻るかは呼び出し側が決める。
+  onDone: () => void;
+  // 左上。× か「‹ 戻る」。
+  left?: 'close' | { back: string };
+  // 左上を押したとき。省略時は onDone。
+  onLeft?: () => void;
+  // 見出し。省略時は「◯◯を追加／編集」。
+  title?: string;
   // 「支払方法」「予定カテゴリ」「口座」「サブカテゴリ」。見出し・ボタン・確認の文言に使う。
   entity: string;
   // 編集対象。追加のときは undefined。
@@ -95,14 +78,60 @@ export function MasterSheet<Schema extends ZodType>({
   onDeleted?: () => void;
   // 名前欄と色のあいだに差し込む要素。
   children?: ReactNode;
-}) {
+};
+
+export function MasterSheet<Schema extends ZodType>({
+  isOpen,
+  onOpenChange,
+  ...panel
+}: {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+} & Omit<MasterSheetPanelProps<Schema>, 'onDone' | 'left' | 'onLeft'>) {
+  return (
+    <BottomSheet onOpenChange={onOpenChange} open={isOpen}>
+      <BottomSheetContent>
+        <MasterSheetPanel {...panel} onDone={() => onOpenChange(false)} />
+      </BottomSheetContent>
+    </BottomSheet>
+  );
+}
+
+export function MasterSheetPanel<Schema extends ZodType>({
+  onDone,
+  left = 'close',
+  onLeft,
+  title,
+  entity,
+  editing,
+  nameLabel = '名前',
+  nameAriaLabel,
+  namePlaceholder,
+  maxLength = 10,
+  counter = true,
+  nameHeight = 52,
+  helper,
+  colors,
+  hiddenFields,
+  upsertAction,
+  upsertSchema,
+  deleteAction,
+  onForeignKey,
+  isDeleteBlocked = false,
+  onDeleted,
+  children
+}: MasterSheetPanelProps<Schema>) {
   const [result, action, isSaving] = useFormAction(upsertAction);
   const [form, fields] = useForm({
     lastResult: result?.submission,
     onValidate: ({ formData }) =>
       parseWithZod(formData, { schema: upsertSchema })
   });
-  useCloseOnSuccess(result, onOpenChange);
+  useCloseOnSuccess(result, (isOpen) => {
+    if (!isOpen) {
+      onDone();
+    }
+  });
 
   const isEdit = editing !== undefined;
   const [name, setName] = useState(editing?.name ?? '');
@@ -115,92 +144,88 @@ export function MasterSheet<Schema extends ZodType>({
     onForeignKey,
     isKnownBlocked: () => isDeleteBlocked,
     onDeleted: () => {
-      onOpenChange(false);
+      onDone();
       onDeleted?.();
     }
   });
 
   return (
-    <BottomSheet onOpenChange={onOpenChange} open={isOpen}>
-      <BottomSheetContent>
-        <SheetHeader
-          left='close'
-          onLeft={() => onOpenChange(false)}
-          right={
-            isEdit && deleteAction !== undefined ? (
-              <SheetTrashButton
-                disabled={remove.isPending}
-                label={`この${entity}を削除`}
-                onClick={() =>
-                  remove.ask({ id: editing.id, name: editing.name })
-                }
-              />
-            ) : undefined
-          }
-          title={`${entity}を${isEdit ? '編集' : '追加'}`}
-        />
-
-        <form
-          {...getFormProps(form)}
-          action={action}
-          className='flex flex-col gap-3.5'
-        >
-          <HiddenFields fields={hiddenFields} id={editing?.id} />
-
-          <div className='flex flex-col gap-1.5'>
-            <TextField
-              aria-label={nameAriaLabel}
-              counter={counter}
-              errorId={fields.name.errorId}
-              errors={fields.name.errors}
-              height={nameHeight}
-              key={fields.name.key}
-              label={nameLabel}
-              maxLength={maxLength}
-              name={fields.name.name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={namePlaceholder}
-              value={name}
+    <>
+      <SheetHeader
+        left={left}
+        onLeft={onLeft ?? onDone}
+        right={
+          isEdit && deleteAction !== undefined ? (
+            <SheetTrashButton
+              disabled={remove.isPending}
+              label={`この${entity}を削除`}
+              onClick={() => remove.ask({ id: editing.id, name: editing.name })}
             />
-            {helperText !== undefined ? (
-              <p className='px-1 text-muted-foreground text-xs leading-relaxed'>
-                {helperText}
-              </p>
-            ) : null}
-          </div>
+          ) : undefined
+        }
+        title={title ?? dialogTitle(entity, isEdit)}
+      />
 
-          {children}
+      <form
+        {...getFormProps(form)}
+        action={action}
+        className='flex flex-col gap-3.5'
+      >
+        <HiddenFields fields={hiddenFields} id={editing?.id} />
 
-          {colors !== undefined ? (
-            <ColorGrid
-              colors={colors}
-              defaultColorId={editing?.colorClassificationId}
-              errorId={fields.colorId.errorId}
-              errors={fields.colorId.errors}
-              label='色'
-              name={fields.colorId.name}
-              size={36}
-            />
-          ) : null}
-
-          <SheetSubmitButton
-            className='mt-1'
-            disabled={!canSave}
-            isPending={isSaving}
-            disabledLabel={`${nameLabel}を入れると${verb}できます`}
-            label={`${verb}する`}
+        <div className='flex flex-col gap-1.5'>
+          <TextField
+            aria-label={nameAriaLabel}
+            counter={counter}
+            errorId={fields.name.errorId}
+            errors={fields.name.errors}
+            height={nameHeight}
+            key={fields.name.key}
+            label={nameLabel}
+            maxLength={maxLength}
+            name={fields.name.name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={namePlaceholder}
+            value={name}
           />
-        </form>
+          {helperText !== undefined ? (
+            <p className='px-1 text-muted-foreground text-xs leading-relaxed'>
+              {helperText}
+            </p>
+          ) : null}
+        </div>
 
-        {editing !== undefined ? (
-          <DeleteAlerts
-            entity={entity}
-            onForeignKey={onForeignKey}
-            remove={remove}
+        {children}
+
+        {colors !== undefined ? (
+          <ColorGrid
+            colors={colors}
+            defaultColorId={editing?.colorClassificationId}
+            errorId={fields.colorId.errorId}
+            errors={fields.colorId.errors}
+            label='色'
+            name={fields.colorId.name}
+            size={36}
           />
         ) : null}
-      </BottomSheetContent>
-    </BottomSheet>
+
+        <SheetSubmitButton
+          className='mt-1'
+          disabled={!canSave}
+          isPending={isSaving}
+          disabledLabel={`${nameLabel}を入れると${verb}できます`}
+          label={`${verb}する`}
+        />
+      </form>
+
+      {editing !== undefined ? (
+        <DeleteAlerts
+          entity={entity}
+          onForeignKey={onForeignKey}
+          remove={remove}
+        />
+      ) : null}
+    </>
   );
 }
 
