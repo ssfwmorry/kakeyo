@@ -41,18 +41,12 @@ import { TodoChips } from './todo-chips';
 
 // カレンダー（ホーム）。
 //
-// セルが「日付・収支・予定の帯」の 3 段で帯が複数日にまたがるため、暦ライブラリの
-// レイアウトに載せず自前のグリッドで組む（段の割り当ては domain/event-lanes.ts）。
-//
 // 月移動（前後・ピッカーでのジャンプ）は Server Action で取り直すが、応答を待たずに
 // 見出しとグリッドの枠を先に送る（枠は年月だけで決まる）。日別の収支・予定はデータが
 // 追いつくまで空にする。前の月の値を残すと新しい枠に古い数字が乗るため。
 //
 // お知らせシートの開閉はこの画面が持つ。ヘッダーのベルと日別リストのリマインダー行の
 // 両方から同じシートを開くため。
-
-// セルに出す帯の段数。3 段以上入れると 1 マスが高くなりすぎて月が見渡せない。
-const MAX_LANES = 2;
 
 // 予定シート。追加は選択日を初期値に、編集は対象の予定を持って開く。
 type PlanSheetState =
@@ -136,10 +130,9 @@ export function CalendarScreen({
     [isStale, month.days]
   );
 
-  // 予定とリマインダーを同じ形に寄せてから段を割り当てる。
   const lanes = useMemo(() => {
     if (isStale) {
-      return assignEventLanes([], MAX_LANES);
+      return assignEventLanes([]);
     }
     const events: LaneEvent[] = [
       ...month.plans.map((plan) => ({
@@ -159,7 +152,7 @@ export function CalendarScreen({
         startDate: reminder.date
       }))
     ];
-    return assignEventLanes(events, MAX_LANES);
+    return assignEventLanes(events);
   }, [isStale, month.plans, month.reminders]);
 
   const selectedHolidayName = daySums.get(selectedDate)?.holidayName ?? null;
