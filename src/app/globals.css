@@ -267,11 +267,46 @@
   html {
     @apply font-sans;
   }
+
+  /* Tailwind v4 の preflight はボタンを cursor: default にするので、押せるものだけ
+     pointer に戻す。無効なものは default のまま（押せない合図は灰色の見た目に任せ、
+     カーソルで二重に言わない）。 */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  input:where([type="button"], [type="submit"], [type="reset"]):not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* 押している間、押したものを沈ませて「押せている」ことを返す。
+     塗りのあるボタンにも、文字だけのボタンにも、カードの中の行にも 1 つの合図で
+     効くよう、色ではなく不透明度で表す。不透明度だけだと白いキーが薄い地に溶けて
+     無効と見分けにくいので、わずかな減光を重ねて灰色に沈ませる。
+     押し込みは即座に、戻りだけ短くなめらかに（押した瞬間の手応えを優先する）。
+     行（ListCellLink）やタブのようにリンクで作るボタンにも効かせるため a も含める。 */
+  button,
+  a,
+  [role="button"] {
+    transition:
+      opacity 160ms ease-out,
+      filter 160ms ease-out;
+  }
+  button:active:not(:disabled),
+  a:active,
+  [role="button"]:active:not([aria-disabled="true"]) {
+    opacity: 0.6;
+    filter: brightness(0.92);
+    transition-duration: 0ms;
+  }
 }
 
 /* 動きを抑える設定では、遅延だけ残してフェードを消す（出現そのものは保つ）。 */
 @media (prefers-reduced-motion: reduce) {
   .animate-skeleton-in {
     animation-duration: 0ms;
+  }
+  button,
+  a,
+  [role="button"] {
+    transition-duration: 0ms;
   }
 }
