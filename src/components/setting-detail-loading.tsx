@@ -15,11 +15,11 @@ export function SettingDetailLoading({
 }) {
   return (
     <div className='flex flex-col'>
-      <div className='grid h-11 grid-cols-[1fr_auto_1fr] items-center px-2'>
+      <div className='grid h-11 grid-cols-[1fr_auto_1fr] items-center px-1'>
         <Skeleton className='h-4 w-16 justify-self-start' />
       </div>
-      <div className='flex flex-col gap-3 px-4'>
-        <Skeleton className='h-9 w-32' />
+      <div className='flex flex-col gap-3 px-3'>
+        <Skeleton className='h-8 w-32' />
         {hasSegment ? (
           <Skeleton className='h-[38px] w-full rounded-[10px]' />
         ) : null}

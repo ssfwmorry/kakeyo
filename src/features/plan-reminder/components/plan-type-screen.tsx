@@ -61,7 +61,7 @@ export function PlanTypeScreen({
         backHref='/setting'
         backLabel='設定'
       />
-      <div className='flex flex-col gap-3 px-4'>
+      <div className='flex flex-col gap-3 px-3'>
         <ScreenTitle badge={isPair ? 'pair' : 'self'}>予定カテゴリ</ScreenTitle>
         <ScreenLead>
           予定を追加するときに選ぶカテゴリです。色はカレンダーの帯の色になります

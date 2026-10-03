@@ -48,7 +48,7 @@ export function BankSettingScreen({
   return (
     <div className='flex flex-col'>
       <ScreenHeader backHref='/setting' backLabel='設定' />
-      <div className='flex flex-col gap-3 px-4'>
+      <div className='flex flex-col gap-3 px-3'>
         <ScreenTitle badge='self'>口座</ScreenTitle>
         <ScreenLead>口座タブで残高を記録する口座です</ScreenLead>
 

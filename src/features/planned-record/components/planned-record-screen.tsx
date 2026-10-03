@@ -94,7 +94,7 @@ export function PlannedRecordScreen({
         backHref='/setting'
         backLabel='設定'
       />
-      <div className='flex flex-col gap-3 px-4'>
+      <div className='flex flex-col gap-3 px-3'>
         <ScreenTitle badge={isPair ? 'pair' : 'self'}>定期の記録</ScreenTitle>
         <ScreenLead>毎月決まった日に、自動で記録されます</ScreenLead>
 

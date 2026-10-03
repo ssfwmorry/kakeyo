@@ -41,14 +41,14 @@ export function BankScreen({
   const latest = tableRows.at(-1);
 
   return (
-    <div className='flex flex-col gap-3 px-4'>
+    <div className='flex flex-col gap-3 px-3'>
       <div className='flex h-11 items-center justify-between'>
         <span>{headerLeft}</span>
         <ThemeToggle />
       </div>
 
       <div className='flex items-center'>
-        <h1 className='font-bold text-3xl'>口座</h1>
+        <h1 className='font-bold text-2xl'>口座</h1>
         <button
           className='ml-auto h-9 rounded-full bg-secondary px-3.5 font-semibold text-primary text-sm'
           onClick={() => setIsSheetOpen(true)}

@@ -24,7 +24,7 @@ export function ScreenHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className='grid h-11 grid-cols-[1fr_auto_1fr] items-center px-2'>
+    <div className='grid h-11 grid-cols-[1fr_auto_1fr] items-center px-1'>
       <Link
         className='flex h-11 items-center gap-0.5 justify-self-start px-2 text-base text-primary'
         href={backHref}

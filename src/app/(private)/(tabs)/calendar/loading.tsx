@@ -12,15 +12,15 @@ const WEEKS = 5;
 
 export default function CalendarLoading() {
   return (
-    <div className='flex flex-col gap-3 px-4'>
+    <div className='flex flex-col gap-3 px-3'>
       <div className='flex h-11 items-center justify-between' />
 
       <div className='flex items-center gap-2'>
-        <Skeleton className='h-9 w-16' />
-        <Skeleton className='mt-1.5 h-5 w-10' />
+        <Skeleton className='h-8 w-16' />
+        <Skeleton className='mt-1 h-5 w-10' />
       </div>
 
-      <div className='-mx-4 border-y bg-card'>
+      <div className='-mx-3 border-y bg-card'>
         <div className='grid h-6 grid-cols-7 items-center text-center font-semibold text-[11px]'>
           {WEEKDAY_LABELS.map((label, index) => (
             <span

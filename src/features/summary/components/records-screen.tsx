@@ -93,14 +93,14 @@ export function RecordsScreen({
     <div className='flex flex-col'>
       <ScreenHeader backHref='/summary' backLabel='集計' />
 
-      <div className='flex flex-col gap-3 px-4 pb-12'>
+      <div className='flex flex-col gap-3 px-3 pb-12'>
         <div className='flex items-center gap-2.5'>
           <span
             aria-hidden='true'
             className='size-3 shrink-0 rounded-full'
             style={{ backgroundColor: colorVar(colorName) }}
           />
-          <h1 className='whitespace-nowrap font-bold text-[28px]'>
+          <h1 className='whitespace-nowrap font-bold text-[22px]'>
             {recordsTitle(target)}
           </h1>
         </div>

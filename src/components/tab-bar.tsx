@@ -56,7 +56,7 @@ function TabContent({ item, isActive }: { item: TabItem; isActive: boolean }) {
   return (
     <span
       className={cn(
-        'flex h-12 w-full flex-col items-center justify-center gap-0.5 rounded-3xl transition-colors motion-reduce:transition-none',
+        'flex h-11 w-full flex-col items-center justify-center gap-0.5 rounded-3xl transition-colors motion-reduce:transition-none',
         isSelected ? 'bg-line-soft text-primary' : 'text-tab-muted'
       )}
     >
@@ -72,7 +72,7 @@ function Tab({ item, isActive }: { item: TabItem; isActive: boolean }) {
   return (
     <Link
       aria-current={isActive ? 'page' : undefined}
-      className='flex h-12 flex-1 basis-0 items-center justify-center rounded-3xl'
+      className='flex h-11 flex-1 basis-0 items-center justify-center rounded-3xl'
       href={item.href}
       prefetch={true}
     >
@@ -87,10 +87,10 @@ export function TabBar() {
 
   return (
     <div
-      className='pointer-events-none fixed inset-x-0 z-40 mx-auto w-full max-w-md px-4'
-      style={{ bottom: 'max(26px, env(safe-area-inset-bottom))' }}
+      className='pointer-events-none fixed inset-x-0 z-40 mx-auto w-full max-w-md px-3'
+      style={{ bottom: 'max(12px, env(safe-area-inset-bottom))' }}
     >
-      <nav className='pointer-events-auto flex h-16 items-center gap-1 rounded-[32px] border border-black/[0.06] bg-[var(--bar)] p-2 shadow-[0_10px_30px_rgba(22,25,26,0.14),0_2px_6px_rgba(22,25,26,0.06)] backdrop-blur-[20px]'>
+      <nav className='pointer-events-auto flex h-14 items-center gap-1 rounded-[28px] border border-black/[0.06] bg-[var(--bar)] p-1.5 shadow-[0_10px_30px_rgba(22,25,26,0.14),0_2px_6px_rgba(22,25,26,0.06)] backdrop-blur-[20px]'>
         {LEFT_TABS.map((item) => (
           <Tab
             isActive={isActivePath(pathname, item.href)}
@@ -101,15 +101,11 @@ export function TabBar() {
         <div className='flex flex-1 basis-0 justify-center'>
           <button
             aria-label='入力'
-            className='flex size-12 items-center justify-center rounded-full bg-primary text-white shadow-[0_4px_12px_rgba(22,25,26,0.22)]'
+            className='flex size-11 items-center justify-center rounded-full bg-primary text-white shadow-[0_4px_12px_rgba(22,25,26,0.22)]'
             onClick={() => noteModal.open()}
             type='button'
           >
-            <IconPlus
-              aria-hidden='true'
-              className='size-[22px]'
-              strokeWidth={2.4}
-            />
+            <IconPlus aria-hidden='true' className='size-5' strokeWidth={2.4} />
           </button>
         </div>
         {RIGHT_TABS.map((item) => (

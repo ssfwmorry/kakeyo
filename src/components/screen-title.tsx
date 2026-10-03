@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-// 画面の大見出し（30 / Bold）。右に「個人の設定」「共有の設定」のバッジを添えられる。
+// 画面の大見出し（24 / Bold）。右に「個人の設定」「共有の設定」のバッジを添えられる。
 // タブバー直下の各画面が同じ形で持つので部品にしている。
 //
 // バッジの見た目は 2 種（共通仕様「画面の骨格」）: 個人は面（弱）の地に補足色、
@@ -27,7 +27,7 @@ export function ScreenTitle({
 }) {
   return (
     <div className='flex items-center gap-2.5'>
-      <h1 className='font-bold text-3xl'>{children}</h1>
+      <h1 className='font-bold text-2xl'>{children}</h1>
       {badge !== undefined ? (
         <span
           className={`inline-flex h-6 items-center rounded-xl px-2.5 text-xs ${BADGE[badge].className}`}

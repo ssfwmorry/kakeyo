@@ -157,13 +157,13 @@ export function SettlementScreen({
   };
 
   return (
-    <div className='flex flex-col gap-3 px-4'>
+    <div className='flex flex-col gap-3 px-3'>
       <div className='flex h-11 items-center justify-between'>
         <span>{headerLeft}</span>
         <ThemeToggle />
       </div>
 
-      <h1 className='font-bold text-3xl'>{summaryLabels.heading.summary}</h1>
+      <h1 className='font-bold text-2xl'>{summaryLabels.heading.summary}</h1>
 
       <SummaryTabs current='settlement' hasPair />
 

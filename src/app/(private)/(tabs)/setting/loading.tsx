@@ -33,11 +33,11 @@ function ListSkeleton({ title, rows }: { title: string; rows: number }) {
 
 export default function SettingLoading() {
   return (
-    <div className='flex flex-col gap-2 px-4'>
+    <div className='flex flex-col gap-2 px-3'>
       <div className='flex h-11 items-center justify-between' />
 
       <div className='flex items-center gap-2.5'>
-        <Skeleton className='h-9 w-24' />
+        <Skeleton className='h-8 w-24' />
       </div>
 
       <div className='mt-1 flex flex-col gap-3.5'>

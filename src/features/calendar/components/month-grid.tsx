@@ -39,7 +39,7 @@ export function MonthGrid({
 }) {
   return (
     // グリッドは画面の左右いっぱいに広げる（デザインでは本文の余白を打ち消している）。
-    <div className='-mx-4 border-y bg-card'>
+    <div className='-mx-3 border-y bg-card'>
       <div className='grid h-6 grid-cols-7 items-center text-center font-semibold text-[11px]'>
         {WEEKDAY_LABELS.map((label, index) => (
           <span

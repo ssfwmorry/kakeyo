@@ -97,7 +97,7 @@ export function TypeEditScreen({
           title={isEdit ? 'カテゴリを編集' : 'カテゴリを追加'}
         />
 
-        <div className='flex flex-col gap-4.5 px-4 pt-2'>
+        <div className='flex flex-col gap-4.5 px-3 pt-2'>
           <div className='flex items-center gap-3.5 py-1'>
             <InitialCircle colorName={colorName} name={name} size={56} />
             <div className='flex-grow'>
@@ -128,7 +128,7 @@ export function TypeEditScreen({
       </form>
 
       {isEdit ? (
-        <div className='mt-4.5 flex flex-col gap-4.5 px-4 pb-8.5'>
+        <div className='mt-4.5 flex flex-col gap-4.5 px-3 pb-8.5'>
           <SubTypeSection onEdit={setEditingSub} type={type} />
 
           <button

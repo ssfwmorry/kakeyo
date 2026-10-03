@@ -168,7 +168,7 @@ export function CalendarScreen({
 
   return (
     <NotifySheetStateProvider>
-      <div className='flex flex-col gap-3 px-4' {...swipe}>
+      <div className='flex flex-col gap-3 px-3' {...swipe}>
         <div className='flex h-11 items-center justify-between'>
           <span>{headerLeft}</span>
           <ThemeToggle />
@@ -178,7 +178,7 @@ export function CalendarScreen({
           {/* 見出し自体をピッカーのトリガーにする。集計の月ラベルと揃え、右端の ‹ › に
               ボタンを足して詰めるより大きく押せる。aria-label は付けない。付けると h1 の
               名前が置き換わり、見出しとして読まれなくなる。 */}
-          <h1 className='font-bold text-3xl'>
+          <h1 className='font-bold text-2xl'>
             <button
               aria-haspopup='dialog'
               className='flex items-center gap-2 rounded-lg text-foreground'
@@ -186,12 +186,12 @@ export function CalendarScreen({
               type='button'
             >
               {Number(monthPart)}月
-              <span className='mt-1.5 font-normal text-[17px] text-muted-foreground'>
+              <span className='mt-1 font-normal text-[15px] text-muted-foreground'>
                 {year}
               </span>
               <IconChevronDown
                 aria-hidden='true'
-                className='mt-1.5 size-4 text-icon-muted'
+                className='mt-1 size-4 text-icon-muted'
                 strokeWidth={2.4}
               />
             </button>

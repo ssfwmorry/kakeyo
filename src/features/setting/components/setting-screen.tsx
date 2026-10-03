@@ -113,7 +113,7 @@ export function SettingScreen({
   ];
 
   return (
-    <div className='flex flex-col gap-2 px-4'>
+    <div className='flex flex-col gap-2 px-3'>
       {/* 画面上部の固定配置。左にベル、右にダーク切替と個人｜共有（全画面共通の位置）。 */}
       <div className='flex h-11 items-center justify-between'>
         <NotificationBell />

@@ -6,10 +6,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function SummaryLoading({ children }: { children?: React.ReactNode }) {
   return (
-    <div className='flex flex-col gap-3 px-4'>
+    <div className='flex flex-col gap-3 px-3'>
       <div className='flex h-11 items-center justify-between' />
 
-      <Skeleton className='h-9 w-20' />
+      <Skeleton className='h-8 w-20' />
 
       <Skeleton className='h-[38px] w-full rounded-[10px]' />
 

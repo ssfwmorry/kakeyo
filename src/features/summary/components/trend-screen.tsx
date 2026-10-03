@@ -204,7 +204,7 @@ export function TrendScreen({
     `${bar.month}月 ${target} ${showValue(bar.value)}円`;
 
   return (
-    <div className='flex flex-col gap-3 px-4' {...swipe}>
+    <div className='flex flex-col gap-3 px-3' {...swipe}>
       <div className='flex h-11 items-center justify-between'>
         <span>{headerLeft}</span>
         <div className='flex items-center gap-1.5'>
@@ -213,7 +213,7 @@ export function TrendScreen({
         </div>
       </div>
 
-      <h1 className='font-bold text-3xl'>{summaryLabels.heading.summary}</h1>
+      <h1 className='font-bold text-2xl'>{summaryLabels.heading.summary}</h1>
 
       <SummaryTabs current='trend' hasPair={hasPair} />
 
@@ -513,7 +513,7 @@ function TypeChips({
   return (
     <fieldset
       aria-label={summaryLabels.trend.chipsLabel}
-      className='-mx-4 flex gap-1.5 overflow-x-auto px-4'
+      className='-mx-3 flex gap-1.5 overflow-x-auto px-3'
       data-swipe-ignore
     >
       <TypeChipButton

@@ -8,11 +8,11 @@ const BANK_ROWS = 2;
 
 export default function BankLoading() {
   return (
-    <div className='flex flex-col gap-3 px-4'>
+    <div className='flex flex-col gap-3 px-3'>
       <div className='flex h-11 items-center justify-between' />
 
       <div className='flex items-center'>
-        <Skeleton className='h-9 w-20' />
+        <Skeleton className='h-8 w-20' />
       </div>
 
       <section className='flex flex-col gap-2.5 rounded-2xl bg-card p-4'>

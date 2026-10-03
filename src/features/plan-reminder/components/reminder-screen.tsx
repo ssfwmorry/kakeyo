@@ -44,7 +44,7 @@ export function ReminderScreen({
   return (
     <div className='flex flex-col'>
       <ScreenHeader backHref='/setting' backLabel='設定' />
-      <div className='flex flex-col gap-3 px-4'>
+      <div className='flex flex-col gap-3 px-3'>
         <ScreenTitle badge={isPair ? 'pair' : 'self'}>リマインダー</ScreenTitle>
         <ScreenLead>
           決まった間隔でくり返すお知らせです。近い日付の順に並びます
