@@ -14,7 +14,6 @@ import {
   upsertRecord
 } from '@/features/record/server/services';
 import type { RecordError } from '@/features/record/types';
-import { getPairMode } from '@/lib/server/pair/mode';
 import { dateWithCurrentTimeJst } from '@/lib/shared/domain/date';
 import { L } from '@/lib/shared/labels';
 import type { SessionData } from '@/lib/shared/types/auth';
@@ -28,7 +27,7 @@ import { err } from '@/lib/shared/types/result';
 // 入力モーダルの登録・更新・削除。
 //
 // モーダルはどのタブの上にも出て、保存しても元のタブに留まる。そのため遷移せず
-// FormActionResult.toast を返し、モーダルを閉じた側で月を取り直す（予定シートと同じ）。
+// FormActionResult.toast を返し、モーダルを閉じた側で月を取り直す。
 //
 // 再検証はルートの layout 単位。記録はカレンダーだけでなく集計・口座にも効くうえ、
 // 入力はどのタブからでも開くため。
@@ -88,16 +87,17 @@ export async function upsertRecordAction(
   });
 }
 
-// 新規は Cookie のペアモード、編集はフォームの選択を採る（シート内で移せるため）。
-// 移せない対象に別の区分が来たら null を返して弾く。
-// 対象が引けないときは false で進め、scope の判定は upsertRecord に任せる。
+// 個人/共有はシート右上のトグル（フォーム値）で決める。画面のペアモードとは独立に選べるようにするため。
+// 共有なのにペア未設定なら upsertRecord が pairRequired で弾く。
+// 移せない対象に別の区分が来たら null で弾く。対象が引けないときは false で進め、
+// scope の判定は upsertRecord に任せる。
 async function resolveIsPair(
   session: SessionData,
   id: Id | undefined,
   requested: boolean
 ): Promise<boolean | null> {
   if (id === undefined) {
-    return getPairMode();
+    return requested;
   }
   const target = await getRecordForEdit(session, id);
   if (target === null) {

@@ -33,7 +33,6 @@ function revalidateSetting(): void {
   revalidatePath(SETTING_PATH, 'layout');
 }
 
-// Result → FormActionResult 変換（設定タブ用。遷移しないため toast を返す）。
 function toResult(
   result: Result<void, PlanReminderError>,
   success: string,
@@ -133,7 +132,7 @@ export async function deleteReminderAction(
   return toResult(result, L.snackbar.deleted, submission.reply());
 }
 
-// ドラッグ並べ替え。ids の並びが新しい順。成功の文言は「変更しました」。
+// ids は並べ替え後の順で受ける。
 export async function reorderPlanTypeAction(
   ids: number[]
 ): Promise<FormActionResult> {
@@ -147,9 +146,9 @@ export async function reorderPlanTypeAction(
   return toResult(result, L.snackbar.updated);
 }
 
-// 予定（カレンダーのシート）。編集はフォームの選択を採り（シート内で移せるため）、
-// 新規は今のモード。フォーム値を信用しても、scope 外・不存在なら service が
-// notInScope を返すので他ペアの予定は書き換えられない。
+// 個人/共有はシート右上のトグル（フォーム値）で決める。画面のペアモードとは独立に選べるようにするため。
+// 共有なのにペア未設定なら resolveOwner が pairRequired、scope 外・不存在なら service が
+// notInScope を返すので、フォーム値を信用しても他ペアの予定は書き換えられない。
 export async function savePlanAction(
   _prev: FormActionResult | null,
   formData: FormData
@@ -159,11 +158,8 @@ export async function savePlanAction(
     return { submission: submission.reply() };
   }
   const session = await requireAuth();
-  const { id, name, startDate, endDate, planTypeId, memo } = submission.value;
-  const isPair =
-    id === undefined
-      ? await getEffectivePairMode(session)
-      : submission.value.isPair;
+  const { id, name, startDate, endDate, planTypeId, memo, isPair } =
+    submission.value;
   const result = await service.upsertPlan(session, {
     id,
     name,
