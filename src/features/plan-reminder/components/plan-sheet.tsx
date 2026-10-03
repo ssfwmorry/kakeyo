@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useId, useState, useTransition } from 'react';
-import type { DateRange } from 'react-day-picker';
 import { useFormAction } from '@/components/form/use-form-action';
 import { useFormToast } from '@/components/form/use-form-toast';
 import { useSubmissionErrorToast } from '@/components/form/use-submission-error-toast';
@@ -301,6 +300,11 @@ function HiddenFields({
 }
 
 // 日付（単日）／期間の行と、期間スイッチ。行のボタンを押すと下に暦が開く。
+//
+// 期間は「開いて 1 クリック目が開始日、2 クリック目が終了日」で選び直す。ライブラリの
+// range 演算（from より後は to を動かす・内側は to を縮める）だと開始日を後ろにずらせず
+// 片端しか動かせないため、onSelect の演算結果は捨てて押された日だけを自前で扱う
+// （onSelect を渡さないとライブラリが内部状態を持ち、selected の更新が効かない）。
 function DateSection({
   isPeriod,
   startDate,
@@ -315,7 +319,32 @@ function DateSection({
   onPeriodChange: (isPeriod: boolean) => void;
 }) {
   const [isPicking, setIsPicking] = useState(false);
+  // 期間の 1 クリック目。null なら確定済みの期間を表示している。
+  const [pendingFrom, setPendingFrom] = useState<string | null>(null);
   const dayCount = listDatesJst(startDate, endDate).length;
+
+  const pickRangeDay = (day: Date) => {
+    const date = formatLocalDate(day);
+    // 期間は最低 2 日間なので、同じ日を続けて押しても確定せず待ち続ける。
+    if (pendingFrom === null || date === pendingFrom) {
+      setPendingFrom(date);
+      return;
+    }
+    const [from, to] = [pendingFrom, date].sort();
+    onChange({ startDate: from, endDate: to });
+    setPendingFrom(null);
+    setIsPicking(false);
+  };
+
+  // 1 クリック目を待つ間は開始日だけを単日として塗り、確定済みの期間は消す。
+  const selectedRange =
+    pendingFrom === null
+      ? { from: parseLocalDate(startDate), to: parseLocalDate(endDate) }
+      : { from: parseLocalDate(pendingFrom) };
+  const rangeLabel =
+    pendingFrom === null
+      ? `${formatSlashDateWeekJa(startDate)} 〜 ${formatSlashDateWeekJa(endDate)}`
+      : `${formatSlashDateWeekJa(pendingFrom)} 〜 終了日を選ぶ`;
 
   return (
     <div className='flex flex-col gap-2'>
@@ -324,7 +353,7 @@ function DateSection({
           <span className='flex-grow text-base'>
             {isPeriod ? '期間' : '日付'}
           </span>
-          {isPeriod ? (
+          {isPeriod && pendingFrom === null ? (
             <span className='text-[13px] text-muted-foreground'>
               {dayCount}日間
             </span>
@@ -333,12 +362,13 @@ function DateSection({
             aria-expanded={isPicking}
             aria-label={isPeriod ? '期間を選ぶ' : undefined}
             className='h-8.5 whitespace-nowrap rounded-lg bg-fill-soft px-3 font-semibold text-[15px] text-foreground'
-            onClick={() => setIsPicking((prev) => !prev)}
+            onClick={() => {
+              setIsPicking((prev) => !prev);
+              setPendingFrom(null);
+            }}
             type='button'
           >
-            {isPeriod
-              ? `${formatSlashDateWeekJa(startDate)} 〜 ${formatSlashDateWeekJa(endDate)}`
-              : formatSlashDateWeekJa(startDate)}
+            {isPeriod ? rangeLabel : formatSlashDateWeekJa(startDate)}
           </button>
         </div>
         <div className='ml-3.5 border-t' />
@@ -348,7 +378,10 @@ function DateSection({
             aria-label='期間を指定'
             checked={isPeriod}
             offClass='bg-disabled'
-            onCheckedChange={onPeriodChange}
+            onCheckedChange={(next) => {
+              setPendingFrom(null);
+              onPeriodChange(next);
+            }}
           />
         </div>
       </div>
@@ -359,30 +392,15 @@ function DateSection({
             <InlineCalendar
               defaultMonth={parseLocalDate(startDate)}
               mode='range'
-              onSelect={(range: DateRange | undefined) => {
-                if (range?.from === undefined) {
-                  return;
-                }
-                // 期間は選び直しが多いので自動では閉じない。行のボタンでたたむ。
-                onChange({
-                  startDate: formatLocalDate(range.from),
-                  endDate: formatLocalDate(range.to ?? range.from)
-                });
-              }}
-              selected={{
-                from: parseLocalDate(startDate),
-                to: parseLocalDate(endDate)
-              }}
+              onSelect={(_, day) => pickRangeDay(day)}
+              selected={selectedRange}
             />
           ) : (
             <InlineCalendar
               defaultMonth={parseLocalDate(startDate)}
               mode='single'
-              onSelect={(next) => {
-                if (next === undefined) {
-                  return;
-                }
-                const date = formatLocalDate(next);
+              onSelect={(_, day) => {
+                const date = formatLocalDate(day);
                 onChange({ startDate: date, endDate: date });
                 setIsPicking(false);
               }}
