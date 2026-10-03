@@ -28,6 +28,7 @@ export {
   Equal as IconGrip,
   Eye as IconEye, // mdiEye
   EyeOff as IconEyeOff, // mdiEyeOff
+  Info as IconInfo, // mdiInformationOutline（補足の説明を開く）
   Landmark as IconBank, // mdiBank（口座）
   Lock as IconLock, // mdiLock（編集中の固定）
   LogOut as IconLogout, // mdiLogout

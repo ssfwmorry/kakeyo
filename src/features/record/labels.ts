@@ -8,6 +8,20 @@ export const recordLabels = {
   },
   // 立替チェック。
   instead: '立替',
+  // 共有の支出で「だれのお金で払ったか」を選ぶ行。
+  wallet: {
+    label: 'お財布',
+    options: {
+      instead: {
+        label: '自分が立替',
+        help: '自分のお金で払い、あとでペアと精算します。'
+      },
+      shared: {
+        label: '共有のお金',
+        help: '共有のお金で払ったので、精算はしません。'
+      }
+    }
+  },
   // 一覧の鍵（相手の立替）の読み上げ。
   lock: {
     partnerOnly: 'パートナーのみ編集できます'

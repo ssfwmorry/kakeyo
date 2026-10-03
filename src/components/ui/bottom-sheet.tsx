@@ -14,10 +14,13 @@ import type { ReactNode } from 'react';
 // 地は面（白）ではなく画面の地色。シートの中に白いカードを積む構成なので、
 // 地が白だとカードが沈む。
 //
-// 高さは 2 種類:
-// - content: 内容に応じた高さ。上限は画面の 94% で、超えた分は内側でスクロールする。
+// 高さは 2 種類。どちらも中身が収まらなければ内側で縦にスクロールする:
+// - content: 内容に応じた高さ。上限は画面の 94%。
 // - full: 上端 56px を残して画面下端まで固定。入力フローのようにテンキーを下に
-//   張り付ける画面が使う。内側はスクロールさせず、中身が flex で縦に並ぶ。
+//   張り付ける画面が使う。
+//
+// full の中で下に張り付けたい要素（mt-auto）を持つ flex-1 の子は min-h-0 を付けない。
+// 付けると子が親の高さに縮んで中身だけがはみ出し、親のスクロールが効かない。
 //
 // footer は下端に張り付く帯（予定シートの保存ボタンなど）。スクロール領域の外に置き、
 // 中身が長くても常に見える。フォームの送信ボタンを置くときは form 属性でフォームに結ぶ。
@@ -56,16 +59,14 @@ export function BottomSheetContent({
           data-slot='bottom-sheet-content'
           {...props}
         >
-          {/* 掴み棒。押し下げて閉じられることの手がかり。 */}
           <div
             aria-hidden='true'
             className='mx-auto mt-2 h-[5px] w-9 shrink-0 rounded-full bg-grabber'
           />
           <Drawer.Content
             className={cn(
-              'flex min-h-0 flex-1 flex-col px-4 pt-2',
+              'flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-2',
               gap === 12 ? 'gap-3' : 'gap-3.5',
-              isFull ? 'overflow-hidden' : 'overflow-y-auto',
               hasFooter && 'pb-1'
             )}
             style={

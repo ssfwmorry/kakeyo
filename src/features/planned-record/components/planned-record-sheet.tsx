@@ -16,12 +16,10 @@ import type { NotePlannedRecordDefault } from '@/features/planned-record';
 import { plannedRecordUpsertSchema } from '@/features/planned-record/schemas';
 import { AmountRow } from '@/features/record/components/amount-row';
 import { Keypad } from '@/features/record/components/keypad';
-import {
-  FieldLabel,
-  MethodPills
-} from '@/features/record/components/method-pills';
+import { MethodField } from '@/features/record/components/method-pills';
 import { TypePill, typeLabel } from '@/features/record/components/type-pill';
 import { TypeGrid } from '@/features/record/components/type-step';
+import { WalletRow } from '@/features/record/components/wallet-row';
 import { recordLabels } from '@/features/record/labels';
 import type {
   GroupedMethodList,
@@ -47,11 +45,6 @@ import { nextPlannedRecordDate } from '../domain/next-record-date';
 const PAY_OPTIONS = [
   { value: 'pay', label: recordLabels.payToggle.pay },
   { value: 'income', label: recordLabels.payToggle.income }
-] as const;
-
-const INSTEAD_OPTIONS = [
-  { value: 'instead', label: '自分が立替', sub: 'あとで精算する' },
-  { value: 'shared', label: '共有のお金', sub: '精算しない' }
 ] as const;
 
 type PlannedState = {
@@ -285,10 +278,7 @@ function DetailStep({
   const canSave = state.price > 0 && methodId !== null && day !== null;
 
   return (
-    <form
-      {...getFormProps(form)}
-      className='flex min-h-0 flex-1 flex-col gap-3.5'
-    >
+    <form {...getFormProps(form)} className='flex flex-1 flex-col gap-3.5'>
       <HiddenFields
         id={editing?.id}
         isPair={isPair}
@@ -315,29 +305,23 @@ function DetailStep({
             onChange={(dayClassificationId) => patch({ dayClassificationId })}
             value={state.dayClassificationId}
           />
+          {showInstead ? (
+            <WalletRow
+              isInstead={state.isInstead}
+              onChange={(isInstead) => patch({ isInstead, methodId: null })}
+            />
+          ) : null}
           <MemoRow onChange={(memo) => patch({ memo })} value={state.memo} />
         </div>
         <NextHint day={day} today={today} />
       </div>
 
-      {showInstead ? (
-        <InsteadField
-          isInstead={state.isInstead}
-          onChange={(isInstead) =>
-            // 立替かどうかで方法の候補が入れ替わるので、選択を捨てて先頭に戻す。
-            patch({ isInstead, methodId: null })
-          }
-        />
-      ) : null}
-
-      <div className='flex shrink-0 flex-col gap-1.5'>
-        <FieldLabel>{state.isPay ? '支払方法' : '受取方法'}</FieldLabel>
-        <MethodPills
-          methodId={methodId}
-          methods={methods}
-          onChange={(next) => patch({ methodId: next })}
-        />
-      </div>
+      <MethodField
+        isPay={state.isPay}
+        methodId={methodId}
+        methods={methods}
+        onChange={(next) => patch({ methodId: next })}
+      />
 
       <AmountRow
         isPay={state.isPay}
@@ -422,29 +406,6 @@ function NextHint({ day, today }: { day: number | null; today: string }) {
   );
 }
 
-// 共有の支出だけに出る「だれのお金で払う？」。
-function InsteadField({
-  isInstead,
-  onChange
-}: {
-  isInstead: boolean;
-  onChange: (isInstead: boolean) => void;
-}) {
-  return (
-    <div className='flex shrink-0 flex-col gap-1.5'>
-      <FieldLabel>だれのお金で払う？</FieldLabel>
-      <Segment
-        label='だれのお金で払う？'
-        onChange={(value) => onChange(value === 'instead')}
-        options={INSTEAD_OPTIONS}
-        size='xl'
-        value={isInstead ? 'instead' : 'shared'}
-      />
-    </div>
-  );
-}
-
-// Server Action へ送る hidden 群。record_type と所有者の導出は Server に委ねる。
 function HiddenFields({
   id,
   state,
@@ -456,7 +417,6 @@ function HiddenFields({
   isPair: boolean;
   methodId: Id | null;
 }) {
-  // 立替は共有 & 支出のときだけ意味を持つ。それ以外は false で送る。
   const isInstead = isPair && state.isPay ? state.isInstead : false;
   return (
     <>
@@ -568,8 +528,6 @@ function MemoRow({
   );
 }
 
-// ヘッダー右のゴミ箱。中央のアラートで確かめてから消す。
-// トーストはここで直に出す。成功するとシートごと閉じて effect まで届かないため。
 function DeleteButton({
   id,
   description,

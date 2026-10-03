@@ -18,7 +18,6 @@ import { SheetHeader, SheetTrashButton } from '@/components/sheet-header';
 import { ConfirmAlert } from '@/components/ui/confirm-alert';
 import { InlineCalendar } from '@/components/ui/inline-calendar';
 import { RoundIconButton } from '@/components/ui/round-icon-button';
-import { Segment } from '@/components/ui/segment';
 import { SheetSubmitButton } from '@/components/ui/sheet-submit-button';
 import type { NoteRecordDefault } from '@/features/record';
 import { recordLabels } from '@/features/record/labels';
@@ -37,14 +36,15 @@ import {
 import { relativeDayLabel } from '../domain/relative-day';
 import { AmountRow } from './amount-row';
 import { Keypad } from './keypad';
-import { FieldLabel, MethodPills } from './method-pills';
+import { MethodField } from './method-pills';
 import type { NoteState } from './note-state';
 import { TypePill, typeLabel } from './type-pill';
+import { WalletRow } from './wallet-row';
 
 // 入力② 金額と詳細（原典 Note / NoteIncome / NotePair）。
 //
-// 上から「‹｜カテゴリのピル」「日付とメモのカード」「方法」、下に金額とテンキーと
-// 送信バー。金額行に mt-auto を置いて、上の内容が短くてもテンキーが下に張り付く。
+// 上から「‹｜カテゴリのピル」「日付（・お財布）・メモのカード」「方法」、下に金額と
+// テンキーと送信バー。金額行に mt-auto を置いて、上の内容が短くてもテンキーが下に張り付く。
 //
 // 共有モードはメモ必須（ペアに見える内容なので何の記録か分かるようにする）。
 // 満たさないうちは送信ボタンの文言で理由を伝える。金額は 0 円でも送れる。
@@ -56,11 +56,6 @@ import { TypePill, typeLabel } from './type-pill';
 // 編集（原典 RecordEdit）も同じ画面で、左が×・右がゴミ箱になる。定期の記録から作られた
 // 記録は日付を同じ月の中にだけ動かせるので、カードの下にその案内を出し、前後の日と暦を
 // 月の中に留める。
-
-const INSTEAD_OPTIONS = [
-  { value: 'instead', label: '自分が立替', sub: 'あとで精算する' },
-  { value: 'shared', label: '共有のお金', sub: '精算しない' }
-] as const;
 
 export function AmountStep({
   state,
@@ -124,10 +119,7 @@ export function AmountStep({
   const canSubmit = !needsMethod && !needsMemo;
 
   return (
-    <form
-      {...getFormProps(form)}
-      className='flex min-h-0 flex-1 flex-col gap-3.5'
-    >
+    <form {...getFormProps(form)} className='flex flex-1 flex-col gap-3.5'>
       {editingId === undefined ? null : (
         <input name='id' readOnly type='hidden' value={editingId} />
       )}
@@ -159,29 +151,22 @@ export function AmountStep({
         }
       />
 
-      <div className='shrink-0 overflow-hidden rounded-[14px] bg-card'>
-        <DateRow
-          onChange={(date) => patch({ date })}
-          range={dateRange}
-          today={today}
-          value={state.date}
-        />
-        <MemoRow
-          isPair={isPair}
-          isRequired={needsMemo}
-          onChange={(memo) => patch({ memo })}
-          value={state.memo}
-        />
-      </div>
+      <DetailCard
+        dateRange={dateRange}
+        isPair={isPair}
+        needsMemo={needsMemo}
+        patch={patch}
+        showInstead={showInstead}
+        state={state}
+        today={today}
+      />
       {isFromPlanned ? <PlannedBanner /> : null}
 
       <MethodField
-        isInstead={state.isInstead}
         isPay={state.isPay}
         methodId={methodId}
         methods={methods}
-        patch={patch}
-        showInstead={showInstead}
+        onChange={(next) => patch({ methodId: next })}
       />
 
       <AmountRow
@@ -238,6 +223,48 @@ function HeaderRight({
         />
       )}
     </span>
+  );
+}
+
+// 日付・お財布・メモを 1 枚のカードに積む。
+function DetailCard({
+  state,
+  isPair,
+  showInstead,
+  needsMemo,
+  dateRange,
+  today,
+  patch
+}: {
+  state: NoteState;
+  isPair: boolean;
+  showInstead: boolean;
+  needsMemo: boolean;
+  dateRange: EditableDateRange;
+  today: string;
+  patch: (next: Partial<NoteState>) => void;
+}) {
+  return (
+    <div className='shrink-0 overflow-hidden rounded-[14px] bg-card'>
+      <DateRow
+        onChange={(date) => patch({ date })}
+        range={dateRange}
+        today={today}
+        value={state.date}
+      />
+      {showInstead ? (
+        <WalletRow
+          isInstead={state.isInstead}
+          onChange={(isInstead) => patch({ isInstead, methodId: null })}
+        />
+      ) : null}
+      <MemoRow
+        isPair={isPair}
+        isRequired={needsMemo}
+        onChange={(memo) => patch({ memo })}
+        value={state.memo}
+      />
+    </div>
   );
 }
 
@@ -471,51 +498,6 @@ function MemoRow({
         value={value}
       />
     </label>
-  );
-}
-
-// 方法の候補。共有の支出だけは、その前に「だれのお金で払った？」で候補ごと切り替える。
-function MethodField({
-  showInstead,
-  isInstead,
-  isPay,
-  methods,
-  methodId,
-  patch
-}: {
-  showInstead: boolean;
-  isInstead: boolean;
-  isPay: boolean;
-  methods: MethodCard[];
-  methodId: Id | null;
-  patch: (next: Partial<NoteState>) => void;
-}) {
-  const methodLabel = isPay ? '支払方法' : '受取方法';
-  return (
-    <div className='flex shrink-0 flex-col gap-1.5'>
-      {showInstead ? (
-        <>
-          <FieldLabel>だれのお金で払った？</FieldLabel>
-          <Segment
-            label='だれのお金で払った？'
-            onChange={(value) =>
-              // 立替かどうかで方法の候補が入れ替わるので、選択を捨てて選び直させる。
-              patch({ isInstead: value === 'instead', methodId: null })
-            }
-            options={INSTEAD_OPTIONS}
-            size='xl'
-            value={isInstead ? 'instead' : 'shared'}
-          />
-        </>
-      ) : (
-        <FieldLabel>{methodLabel}</FieldLabel>
-      )}
-      <MethodPills
-        methodId={methodId}
-        methods={methods}
-        onChange={(next) => patch({ methodId: next })}
-      />
-    </div>
   );
 }
 

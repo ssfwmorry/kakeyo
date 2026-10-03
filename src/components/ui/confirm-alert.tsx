@@ -2,6 +2,7 @@
 
 import { AlertDialog } from '@base-ui/react/alert-dialog';
 import { cn } from 'cn';
+import { POPUP_TRANSITION_CLASS } from '@/components/ui/popup-transition';
 import { Spinner } from '@/components/ui/spinner';
 
 // 削除など取り返しのつかない操作の確認。画面中央の幅 290 の小さなアラート
@@ -58,7 +59,12 @@ export function ConfirmAlert({
           forceRender
         />
         <AlertDialog.Viewport className='fixed inset-0 z-[60] flex items-center justify-center'>
-          <AlertDialog.Popup className='w-[290px] overflow-hidden rounded-2xl bg-card text-foreground outline-none transition-[opacity,transform] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0'>
+          <AlertDialog.Popup
+            className={cn(
+              'w-[290px] overflow-hidden rounded-2xl bg-card text-foreground',
+              POPUP_TRANSITION_CLASS
+            )}
+          >
             <div className='flex flex-col gap-2 px-4.5 pt-5 pb-4 text-center'>
               <AlertDialog.Title className='font-bold text-[17px]'>
                 {title}
