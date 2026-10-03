@@ -8,6 +8,10 @@ export const recordLabels = {
   },
   // 立替チェック。
   instead: '立替',
+  // 一覧の鍵（相手の立替）の読み上げ。
+  lock: {
+    partnerOnly: 'パートナーのみ編集できます'
+  },
   // 入力項目名。可視ラベルを持たない項目（日付）の読み上げにも使う。
   field: {
     date: '日付',
@@ -37,10 +41,21 @@ export const recordLabels = {
     pairRequired: 'ペア設定が必要です',
     sameMonthOnly: '定期的なものは同月中のみ変更可能です',
     scopeLocked: '精算に関わる記録は個人・共有を変更できません',
+    partnerOnly: 'パートナーが立て替えた記録は、パートナーだけが編集できます',
     noTarget: '対象がありません',
     methodRequired: '精算方法を選んでください'
   }
 } as const;
+
+// 一覧の方法の欄に出す立替の言い回し。相手の立替は相手の方法名を出しても自分には
+// 意味が無いので「はなこの立替」に置き換え、自分の立替は方法名に添える。
+export function insteadByLabel(userName: string): string {
+  return `${userName}の立替`;
+}
+
+export function methodWithInsteadLabel(methodName: string): string {
+  return `${methodName}（${recordLabels.instead}）`;
+}
 
 // 精算 record（record_type=15 / type 未設定）の表示名・表示色。
 // 'yellow' はグラフ・色マスタの双方で解決できる特別扱いの色名。

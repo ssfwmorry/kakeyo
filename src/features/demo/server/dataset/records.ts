@@ -287,14 +287,14 @@ function pairSpecs(yearMonth: string, month: DemoMonth['pair']): Spec[] {
     insteadBySelf(
       '02',
       month.insteadSelf,
-      '洗剤（立替）',
+      '洗剤',
       types.pairDaily,
       methods.credit
     ),
     insteadByPartner(
       '04',
       month.insteadPartner,
-      'まとめ買い（立替）',
+      'まとめ買い',
       types.pairFood,
       methods.partnerCredit,
       { subType: subTypes.pairGrocery }

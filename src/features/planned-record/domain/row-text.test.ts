@@ -68,8 +68,8 @@ describe('itemDescription', () => {
       memo: '電気代'
     };
     expect(isLockedItem(locked)).toBe(true);
-    expect(itemDescription(locked)).toBe('はなこさんの立替 · 電気代');
-    expect(itemDescription({ ...locked, memo: null })).toBe('はなこさんの立替');
+    expect(itemDescription(locked)).toBe('はなこの立替 · 電気代');
+    expect(itemDescription({ ...locked, memo: null })).toBe('はなこの立替');
   });
 });
 

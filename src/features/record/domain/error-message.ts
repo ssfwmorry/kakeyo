@@ -14,6 +14,8 @@ export function recordErrorMessage(error: RecordError): string | undefined {
       return recordLabels.error.sameMonthOnly;
     case 'scopeLocked':
       return recordLabels.error.scopeLocked;
+    case 'partnerOnly':
+      return recordLabels.error.partnerOnly;
     case 'notInScope':
       return L.error.notFound;
     case 'noTarget':

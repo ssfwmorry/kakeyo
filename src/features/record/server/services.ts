@@ -6,7 +6,10 @@ import { toDateStringJst, toYearMonthJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
-import { resolveRecordOwnership } from '../domain/record-fields';
+import {
+  isPartnerInstead,
+  resolveRecordOwnership
+} from '../domain/record-fields';
 import type {
   NoteRecordDefault,
   PairedRecordItem,
@@ -143,11 +146,11 @@ export async function upsertRecord(
       await recordRepo.insertRecord(fields);
       return ok(undefined);
     }
-    // 更新は対象が scope 内か検証（他ペアの行を触らせない）。
-    const target = await recordRepo.findRecordInScope(session, input.id);
-    if (!target) {
-      return err('notInScope');
+    const found = await findEditableRecord(session, input.id);
+    if (!found.ok) {
+      return found;
     }
+    const target = found.data;
     // 定期由来 record は同月内のみ変更可。
     if (
       target.plannedRecordId !== null &&
@@ -166,6 +169,27 @@ export async function upsertRecord(
     });
     return ok(undefined);
   });
+}
+
+type EditableRecord = NonNullable<
+  Awaited<ReturnType<typeof recordRepo.findRecordInScope>>
+>;
+
+// 更新・削除の対象を引き、触ってよいか確かめる。scope 外・不存在は他ペアの行なので
+// 触らせない。相手の立替は相手のもので、一覧は押せなくしているが id を知っていれば
+// Action は直接呼べる。
+async function findEditableRecord(
+  session: SessionData,
+  id: Id
+): Promise<Result<EditableRecord, RecordError>> {
+  const target = await recordRepo.findRecordInScope(session, id);
+  if (!target) {
+    return err('notInScope');
+  }
+  if (isPartnerInstead(target)) {
+    return err('partnerOnly');
+  }
+  return ok(target);
 }
 
 type SettlementInput = {
@@ -264,12 +288,18 @@ export async function completeSettlement(
   });
 }
 
-// record 削除。scope を where に AND した deleteMany で scope 保証を DB 条件に閉じ込める。
+// record 削除。対象を先に引くのは相手の立替を理由つきで弾くため（delete の where に
+// 混ぜると「見つからない」と区別できない）。delete 自体にも scope を AND し、
+// 引いてから消すまでの間に行が変わっても他ペアの行を消さない。
 export async function deleteRecord(
   session: SessionData,
   id: Id
 ): Promise<Result<void, RecordError>> {
   return withDemoWriteVoid(session, async () => {
+    const found = await findEditableRecord(session, id);
+    if (!found.ok) {
+      return found;
+    }
     try {
       const result = await recordRepo.deleteRecordById(session, id);
       if (!result.ok) {

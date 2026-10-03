@@ -2,6 +2,7 @@ import type {
   NotePlannedRecordDefault,
   PlannedRecordListItem
 } from '@/features/planned-record';
+import { insteadByLabel, isPartnerInstead } from '@/features/record';
 
 // 一覧の 1 行の見せ方と、行から編集の初期値を起こす純関数。
 
@@ -10,9 +11,12 @@ export function isInsteadItem(item: PlannedRecordListItem): boolean {
   return item.isPair && item.pairUserName !== null;
 }
 
-// パートナーが立て替える定期は、パートナーだけが編集できる。
+// パートナーが立て替える定期は、パートナーだけが編集できる（判定は record と同じ）。
 export function isLockedItem(item: PlannedRecordListItem): boolean {
-  return isInsteadItem(item) && !item.isSelf;
+  return isPartnerInstead({
+    isSelf: item.isSelf,
+    isInstead: isInsteadItem(item)
+  });
 }
 
 // 「住居 › 家賃」。サブカテゴリが無ければカテゴリだけ。
@@ -23,10 +27,10 @@ export function itemTitle(item: PlannedRecordListItem): string {
 }
 
 // 2 行目の補足。「方法 · 立替か共有のお金か · メモ」を「 · 」で結ぶ。
-// パートナーの立替は方法が相手のものなので出さず、「はなこさんの立替」にする。
+// パートナーの立替は方法が相手のものなので出さず、「はなこの立替」にする。
 export function itemDescription(item: PlannedRecordListItem): string {
   if (isLockedItem(item)) {
-    return [`${item.pairUserName}さんの立替`, item.memo]
+    return [insteadByLabel(item.pairUserName ?? ''), item.memo]
       .filter((part) => part !== null && part !== '')
       .join(' · ');
   }

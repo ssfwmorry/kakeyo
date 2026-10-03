@@ -42,22 +42,14 @@ export function resolveRecordOwnership({
   };
 }
 
-// record の「編集可否」を導出する純粋関数（一覧カードの編集導線ガード・機能安全）。
-// - 精算(isSettlement=true)は編集不可。
-// - 自分の record は編集可。
-// - 共有 record は「非立替（PAIR）」のみ編集可。ペア相手の立替 record は編集不可
-//   （相手が起票した立替を自分が書き換えられないようにする）。
-// isSettlement を持たない型（SummarizedRecordItem。精算は既に除外済み）では省略可。
-export function resolveRecordEditable(record: {
+// ペア相手が立て替えた record か。相手の債権なので相手だけが編集・削除できる。
+// 共有（PAIR・user_id なし）は相手が起票したものでも二人のお金なので対象外。
+// 一覧の押せない行・鍵の印と、サーバの更新・削除ガードが同じ判定を使う。
+export function isPartnerInstead(record: {
   isSelf: boolean;
-  isPair: boolean;
   isInstead: boolean | null;
-  isSettlement?: boolean | null;
 }): boolean {
-  if (record.isSettlement === true) {
-    return false;
-  }
-  return record.isSelf || (record.isPair && record.isInstead !== true);
+  return record.isInstead === true && !record.isSelf;
 }
 
 // 個人⇔共有を移せない record か（移すと pair_id と is_settled が落ちる）。

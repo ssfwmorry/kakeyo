@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SummarizedRecordItem } from '@/features/record';
 import { RecordType } from '@/lib/shared/types/recordType';
-import { groupRecordsByDay, isLockedRecord } from './records-group';
+import { groupRecordsByDay } from './records-group';
 
 function item(
   id: number,
@@ -76,52 +76,5 @@ describe('groupRecordsByDay', () => {
     ]);
     expect(result.days).toHaveLength(1);
     expect(result.days[0].date).toBe('2026-09-21');
-  });
-});
-
-describe('isLockedRecord', () => {
-  const at = '2026-09-01T12:00:00+09:00';
-
-  it('相手が立て替えた記録だけ編集できない', () => {
-    expect(
-      isLockedRecord(
-        item(1, at, 100, {
-          isSelf: false,
-          isPair: true,
-          isInstead: true,
-          recordType: RecordType.instead
-        })
-      )
-    ).toBe(true);
-  });
-
-  it('共有の記録は相手が起票していても二人のお金なので編集できる', () => {
-    expect(
-      isLockedRecord(
-        item(2, at, 100, {
-          isSelf: false,
-          isPair: true,
-          isInstead: false,
-          recordType: RecordType.pair
-        })
-      )
-    ).toBe(false);
-  });
-
-  it('自分の立替は自分で編集できる', () => {
-    expect(
-      isLockedRecord(
-        item(3, at, 100, {
-          isSelf: true,
-          isPair: true,
-          isInstead: true,
-          recordType: RecordType.instead
-        })
-      )
-    ).toBe(false);
-  });
-
-  it('個人の記録は立替の概念が無い（isInstead=null）', () => {
-    expect(isLockedRecord(item(4, at, 100))).toBe(false);
   });
 });

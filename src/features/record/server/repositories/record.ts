@@ -155,9 +155,25 @@ function toRecordType(value: number): RecordType {
   return value as RecordType;
 }
 
-// 共有 record かどうか（pair_id の有無）。
-function isPairRecord(row: RecordSelectedRow): boolean {
-  return row.pairId !== null;
+// 所有者まわりの導出。閲覧者から見て自分の行か・共有か・立替か・精算か。
+// 一覧 DTO とサーバの更新・削除ガードが同じ導出を使う。
+function toOwnership(
+  row: Pick<RecordSelectedRow, 'userId' | 'pairId' | 'recordType'>,
+  userUid: string
+): {
+  isSelf: boolean;
+  isPair: boolean;
+  isInstead: boolean | null;
+  isSettlement: boolean | null;
+} {
+  const isPair = row.pairId !== null;
+  const recordType = toRecordType(row.recordType);
+  return {
+    isSelf: row.userId === userUid,
+    isPair,
+    isInstead: toIsInstead(isPair, recordType),
+    isSettlement: toIsSettlement(isPair, recordType)
+  };
 }
 
 // READ: 期間内 record（カレンダー用）。
@@ -276,34 +292,33 @@ function toRecordListItem(
   row: RecordSelectedRow,
   userUid: string
 ): RecordListItem {
-  const isPair = isPairRecord(row);
-  const recordType = toRecordType(row.recordType);
+  const ownership = toOwnership(row, userUid);
   return {
     id: row.id,
-    isSelf: row.userId === userUid,
+    isSelf: ownership.isSelf,
     datetime: row.datetime,
     isPay: row.isPay,
     price: row.price,
     memo: row.memo,
-    recordType,
+    recordType: toRecordType(row.recordType),
     plannedRecordId: row.plannedRecordId,
     methodId: row.methodId,
     methodName: row.methodName,
     methodColorClassificationName: row.methodColorName,
     typeId: row.typeId,
-    typeName: toDisplayTypeName(row.typeName, recordType),
+    typeName: toDisplayTypeName(row.typeName, toRecordType(row.recordType)),
     subTypeId: row.subTypeId,
     subTypeName: row.subTypeName,
     typeColorClassificationName: row.typeColorName,
-    isPair,
+    isPair: ownership.isPair,
     // pair_id ありのとき records.user 名を引く（立替者名）。
-    pairUserName: isPair ? row.userName : null,
-    isInstead: toIsInstead(isPair, recordType),
-    isSettlement: toIsSettlement(isPair, recordType),
+    pairUserName: ownership.isPair ? row.userName : null,
+    isInstead: ownership.isInstead,
+    isSettlement: ownership.isSettlement,
     isScopeLocked: resolveScopeLocked({
-      isInstead: toIsInstead(isPair, recordType) === true,
+      isInstead: ownership.isInstead === true,
       isSettled: row.isSettled,
-      isSelf: row.userId === userUid
+      isSelf: ownership.isSelf
     })
   };
 }
@@ -312,34 +327,12 @@ function toSummarizedRecordItem(
   row: RecordSelectedRow,
   userUid: string
 ): SummarizedRecordItem {
-  const isPair = isPairRecord(row);
-  const recordType = toRecordType(row.recordType);
-  return {
-    id: row.id,
-    isSelf: row.userId === userUid,
-    datetime: row.datetime,
-    isPay: row.isPay,
-    price: row.price,
-    memo: row.memo,
-    recordType,
-    plannedRecordId: row.plannedRecordId,
-    methodId: row.methodId,
-    methodName: row.methodName,
-    methodColorClassificationName: row.methodColorName,
-    typeId: row.typeId,
-    typeName: row.typeName,
-    subTypeId: row.subTypeId,
-    subTypeName: row.subTypeName,
-    typeColorClassificationName: row.typeColorName,
-    isPair,
-    pairUserName: isPair ? row.userName : null,
-    isInstead: toIsInstead(isPair, recordType),
-    isScopeLocked: resolveScopeLocked({
-      isInstead: toIsInstead(isPair, recordType) === true,
-      isSettled: row.isSettled,
-      isSelf: row.userId === userUid
-    })
-  };
+  const { isSettlement: _isSettlement, ...item } = toRecordListItem(
+    row,
+    userUid
+  );
+  // 明細は精算を where で除外しているので '精算' への名前補完は効かず、生の名前のまま。
+  return { ...item, typeName: row.typeName };
 }
 
 function toPairedRecordItem(
@@ -369,22 +362,38 @@ function toPairedRecordItem(
 
 // scope 検証（更新/削除の対象が自分/ペアの行か）
 
-// 指定 record が scope 内か。update / delete / settle の対象確認に使う
-// （他ペアの行を触らせない）。datetime は「同月のみ更新可」検証に使う。
+// 指定 record が scope 内か。update / delete の対象確認に使う（他ペアの行を触らせない）。
+// datetime は「同月のみ更新可」、isSelf / isInstead は「相手の立替は触らせない」の検証に使う。
 export async function findRecordInScope(
   scope: SessionScope,
   id: Id
-): Promise<{ id: Id; datetime: Date; plannedRecordId: Id | null } | null> {
+): Promise<Pick<
+  RecordListItem,
+  'id' | 'datetime' | 'plannedRecordId' | 'isSelf' | 'isInstead'
+> | null> {
   const [row] = await db
     .select({
       id: records.id,
       datetime: records.datetime,
-      plannedRecordId: records.plannedRecordId
+      plannedRecordId: records.plannedRecordId,
+      userId: records.userId,
+      pairId: records.pairId,
+      recordType: records.recordType
     })
     .from(records)
     .where(and(eq(records.id, id), buildScopeWhere(records, scope)))
     .limit(1);
-  return row ?? null;
+  if (!row) {
+    return null;
+  }
+  const { isSelf, isInstead } = toOwnership(row, scope.userUid);
+  return {
+    id: row.id,
+    datetime: row.datetime,
+    plannedRecordId: row.plannedRecordId,
+    isSelf,
+    isInstead
+  };
 }
 
 // READ: note（記録編集）の初期値 1 件。scope 内でなければ null。

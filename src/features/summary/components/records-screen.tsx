@@ -2,16 +2,15 @@
 
 import { cn } from 'cn';
 import { useMemo, useState, useTransition } from 'react';
-import {
-  IconChevronLeft,
-  IconChevronRight,
-  IconLock
-} from '@/components/icons';
+import { IconChevronLeft, IconChevronRight } from '@/components/icons';
 import { ScreenHeader } from '@/components/screen-header';
 import { SectionListEmpty } from '@/components/section-list';
 import { colorVar } from '@/features/master';
 import {
+  isPartnerInstead,
+  type NoteRecordDefault,
   PlannedRecordMark,
+  RecordAmount,
   RecordTile,
   type SummarizedRecordItem
 } from '@/features/record';
@@ -27,7 +26,6 @@ import {
 } from '@/lib/shared/domain/format';
 import {
   groupRecordsByDay,
-  isLockedRecord,
   type RecordsDayGroup
 } from '../domain/records-group';
 import {
@@ -41,8 +39,7 @@ import { summaryLabels } from '../labels';
 // 集計 › 明細（原典 SumRecords）。内訳の行から開き、その絞り込みのまま月を動かせる。
 // 記録をタップすると入力フローの編集モーダルが開く。
 //
-// 相手が立て替えた記録は自分の家計には効くので一覧には出すが、編集できるのは
-// 立て替えた本人だけ（定期の記録一覧と同じ扱い）。
+// 相手が立て替えた記録は自分の家計に効くので、編集できなくても一覧には出す。
 
 export function RecordsScreen({
   target,
@@ -80,13 +77,8 @@ export function RecordsScreen({
   };
 
   // 編集で金額や日付が変わるとこの一覧が古くなるので、保存後に取り直す。
-  const openEdit = (record: SummarizedRecordItem) => {
-    const editing = toRecordDefault(record);
-    if (editing === null) {
-      return;
-    }
+  const openEdit = (editing: NoteRecordDefault) =>
     noteModal.open({ editing, onSaved: () => reload(yearMonth) });
-  };
 
   const grouped = useMemo(() => groupRecordsByDay(records), [records]);
 
@@ -200,7 +192,7 @@ function DayGroup({
 }: {
   day: RecordsDayGroup;
   isPay: boolean;
-  onEdit: (record: SummarizedRecordItem) => void;
+  onEdit: (editing: NoteRecordDefault) => void;
 }) {
   return (
     <div className='flex flex-col gap-1.5'>
@@ -236,16 +228,16 @@ function RecordRow({
   record: SummarizedRecordItem;
   isFirst: boolean;
   isPay: boolean;
-  onEdit: (record: SummarizedRecordItem) => void;
+  onEdit: (editing: NoteRecordDefault) => void;
 }) {
-  const isLocked = isLockedRecord(record);
-  const amount = formatPrice(record.price);
+  const editing = toRecordDefault(record);
   const title = record.subTypeName ?? record.typeName ?? '';
 
   const body = (
     <>
       <RecordTile
         colorName={record.typeColorClassificationName}
+        isLocked={isPartnerInstead(record)}
         isPair={record.isPair}
       />
       <span
@@ -259,43 +251,25 @@ function RecordRow({
           <PlannedRecordMark
             isPlannedRecord={record.plannedRecordId !== null}
           />
-          {isLocked ? (
-            <span className='flex h-[18px] shrink-0 items-center rounded-md bg-muted px-1.5 font-bold text-[11px] text-muted-foreground'>
-              {record.pairUserName}の立替
-            </span>
-          ) : null}
         </span>
-        <span className='flex items-center gap-1 truncate text-muted-foreground text-xs'>
-          {isLocked ? (
-            <IconLock
-              aria-label='パートナーのみ編集できます'
-              className='size-3 shrink-0'
-              role='img'
-              strokeWidth={2.4}
-            />
-          ) : null}
+        <span className='truncate text-muted-foreground text-xs'>
           {record.memo}
         </span>
       </span>
-      <span
+      <RecordAmount
         className={cn(
-          'flex shrink-0 flex-col items-end justify-center gap-0.5 self-stretch',
+          'justify-center self-stretch',
           !isFirst && 'border-border border-t'
         )}
-      >
-        <span className={cn('font-semibold text-base', amountToneClass(isPay))}>
-          {amount}
-        </span>
-        <span className='text-muted-foreground text-xs'>
-          {record.methodName}
-        </span>
-      </span>
+        isPay={isPay}
+        record={record}
+      />
     </>
   );
 
-  // 相手の立替は押せない。行に出ているバッジと南京錠がその理由を伝えるので、
+  // 相手の立替は押せない。タイルの鍵と「〜の立替」がその理由を伝えるので、
   // 読み上げ用の名前を別に足さない（押せない要素を読み上げ対象にしても操作できない）。
-  if (isLocked) {
+  if (editing === null) {
     return (
       <div className='flex h-[60px] items-center gap-3 px-3.5'>{body}</div>
     );
@@ -303,9 +277,9 @@ function RecordRow({
 
   return (
     <button
-      aria-label={`${title} ${isPay ? '支出' : '収入'} ${amount} を編集`}
+      aria-label={`${title} ${isPay ? '支出' : '収入'} ${formatPrice(record.price)} を編集`}
       className='flex h-[60px] w-full items-center gap-3 px-3.5 text-left'
-      onClick={() => onEdit(record)}
+      onClick={() => onEdit(editing)}
       type='button'
     >
       {body}

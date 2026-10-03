@@ -42,10 +42,3 @@ export function groupRecordsByDay(
 
   return { days, total };
 }
-
-// 相手が立て替えた記録は相手だけが編集できる（自分の家計には効くので一覧には出す）。
-// 共有（record_type=10）は相手が起票したものでも二人のお金なので、自分も編集できる。
-// 立替かどうかの判定は定期の記録一覧（isLockedItem）と同じ。
-export function isLockedRecord(record: SummarizedRecordItem): boolean {
-  return record.isInstead === true && !record.isSelf;
-}

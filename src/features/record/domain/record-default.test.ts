@@ -63,6 +63,34 @@ describe('toRecordDefault', () => {
     expect(result?.isPair).toBe(true);
   });
 
+  it('相手の立替は編集対象にしない（相手だけが直せる）', () => {
+    expect(
+      toRecordDefault(
+        record({
+          isSelf: false,
+          isPair: true,
+          isInstead: true,
+          isScopeLocked: true,
+          pairUserName: 'はなこ',
+          recordType: RecordType.instead
+        })
+      )
+    ).toBeNull();
+  });
+
+  it('相手が起票した共有の記録は二人のお金なので編集できる', () => {
+    expect(
+      toRecordDefault(
+        record({
+          isSelf: false,
+          isPair: true,
+          isInstead: false,
+          recordType: RecordType.pair
+        })
+      )
+    ).not.toBeNull();
+  });
+
   it('精算（isPay が null・カテゴリ無し）は編集対象にしない', () => {
     expect(
       toRecordDefault(

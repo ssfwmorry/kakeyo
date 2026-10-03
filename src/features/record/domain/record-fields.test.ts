@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RecordType } from '@/lib/shared/types/recordType';
 import {
-  resolveRecordEditable,
+  isPartnerInstead,
   resolveRecordOwnership,
   resolveScopeLocked
 } from './record-fields';
@@ -61,49 +61,21 @@ describe('resolveRecordOwnership', () => {
   });
 });
 
-describe('resolveRecordEditable', () => {
-  it('精算 record は編集不可', () => {
-    expect(
-      resolveRecordEditable({
-        isSelf: true,
-        isPair: false,
-        isInstead: null,
-        isSettlement: true
-      })
-    ).toBe(false);
+describe('isPartnerInstead', () => {
+  it('相手が立て替えた記録だけ該当する', () => {
+    expect(isPartnerInstead({ isSelf: false, isInstead: true })).toBe(true);
   });
 
-  it('自分の個人 record は編集可', () => {
-    expect(
-      resolveRecordEditable({ isSelf: true, isPair: false, isInstead: null })
-    ).toBe(true);
+  it('共有の記録は相手が起票していても二人のお金なので該当しない', () => {
+    expect(isPartnerInstead({ isSelf: false, isInstead: false })).toBe(false);
   });
 
-  it('共有・非立替（PAIR）は自分/相手どちらでも編集可', () => {
-    expect(
-      resolveRecordEditable({ isSelf: true, isPair: true, isInstead: false })
-    ).toBe(true);
-    expect(
-      resolveRecordEditable({ isSelf: false, isPair: true, isInstead: false })
-    ).toBe(true);
+  it('自分の立替は該当しない', () => {
+    expect(isPartnerInstead({ isSelf: true, isInstead: true })).toBe(false);
   });
 
-  it('ペア相手の立替 record は編集不可（起票者でないため）', () => {
-    expect(
-      resolveRecordEditable({ isSelf: false, isPair: true, isInstead: true })
-    ).toBe(false);
-  });
-
-  it('自分の立替 record は編集可（isSelf）', () => {
-    expect(
-      resolveRecordEditable({ isSelf: true, isPair: true, isInstead: true })
-    ).toBe(true);
-  });
-
-  it('isSettlement を持たない型（精算除外済み）は他条件で判定', () => {
-    expect(
-      resolveRecordEditable({ isSelf: false, isPair: true, isInstead: false })
-    ).toBe(true);
+  it('個人の記録は立替の概念が無い（isInstead=null）', () => {
+    expect(isPartnerInstead({ isSelf: true, isInstead: null })).toBe(false);
   });
 });
 

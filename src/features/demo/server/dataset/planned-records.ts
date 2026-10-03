@@ -76,7 +76,7 @@ export const [plannedRecords, plannedRecordRows] = defineTable({
     recordType: pairType,
     sort: 2
   },
-  // 相手が立て替える定期。共有の一覧に「はなこさんの立替」として出て、自分は編集できない。
+  // 相手が立て替える定期。共有の一覧に「はなこの立替」として出て、自分は編集できない。
   partnerInternet: {
     userUid: demoUsers.partner.uid,
     pairId: demoPair.id,

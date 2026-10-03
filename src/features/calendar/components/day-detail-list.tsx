@@ -8,13 +8,14 @@ import { colorVar } from '@/features/master';
 import { useOpenNotifySheet } from '@/features/notify/components/notify-sheet-state';
 import type { PlanItem, ReminderItem } from '@/features/plan-reminder';
 import {
+  isPartnerInstead,
   type NoteRecordDefault,
   PlannedRecordMark,
+  RecordAmount,
   type RecordListItem,
   RecordTile
 } from '@/features/record';
 import { toRecordDefault } from '@/features/record/domain/record-default';
-import { amountToneClass, formatPrice } from '@/lib/shared/domain/format';
 
 // 選んだ日の予定・リマインダー・記録を 1 枚のカードに積む（原典 Calendar の日別カード）。
 //
@@ -200,7 +201,7 @@ function ReminderRow({
   );
 }
 
-// 押すと編集シートが開く。精算の記録は入力フローの形に載らないので押せない。
+// 押すと編集シートが開く。精算の記録と相手の立替は押せず、相手の立替はタイルの鍵が理由を伝える。
 function RecordRow({
   record,
   isLast,
@@ -221,6 +222,7 @@ function RecordRow({
     <>
       <RecordTile
         colorName={record.typeColorClassificationName}
+        isLocked={isPartnerInstead(record)}
         isPair={record.isPair}
       />
       <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
@@ -236,21 +238,8 @@ function RecordRow({
           </span>
         )}
       </span>
-      {/* 方法はメモと混ざらないよう金額の下に置く（メモの有無で位置が動かないよう常に右寄せ）。 */}
-      <span className='flex shrink-0 flex-col items-end gap-0.5'>
-        {/* 支出・収入の判定は集計と同じ関数に揃える（精算や isPay=null は自分が送金側かで決まる）。 */}
-        <span
-          className={cn(
-            'font-semibold text-base',
-            amountToneClass(resolveDisplayIsPay(record))
-          )}
-        >
-          {formatPrice(record.price)}
-        </span>
-        <span className='text-muted-foreground text-xs'>
-          {record.methodName}
-        </span>
-      </span>
+      {/* 支出・収入の判定は集計と同じ関数に揃える（精算や isPay=null は自分が送金側かで決まる）。 */}
+      <RecordAmount isPay={resolveDisplayIsPay(record)} record={record} />
     </>
   );
 

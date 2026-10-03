@@ -123,6 +123,7 @@ export type RecordError =
   | 'foreignKey'
   | 'sameMonthOnly'
   | 'scopeLocked'
+  | 'partnerOnly'
   | 'noTarget'
   | 'methodRequired'
   | 'unknown';

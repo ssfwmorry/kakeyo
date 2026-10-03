@@ -11,8 +11,13 @@
 // ※ 'use server' の Server Actions は server-only 実体と異なり、元来 Client から呼ばれる
 //   公開 I/F（Next のビルドで server 参照へ変換される）ため barrel re-export で安全。
 
-export { PlannedRecordMark, RecordTile } from './components/record-marks';
-export { SETTLEMENT_DISPLAY } from './labels';
+export {
+  PlannedRecordMark,
+  RecordAmount,
+  RecordTile
+} from './components/record-marks';
+export { isPartnerInstead } from './domain/record-fields';
+export { insteadByLabel, recordLabels, SETTLEMENT_DISPLAY } from './labels';
 export type {
   NoteRecordDefault,
   PairedRecordItem,

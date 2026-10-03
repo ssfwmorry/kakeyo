@@ -17,6 +17,7 @@ import type { DayClassification } from '@/features/master';
 import { colorVar } from '@/features/master';
 import type { PlannedRecordListItem } from '@/features/planned-record';
 import { reorderPlannedRecordAction } from '@/features/planned-record/actions';
+import { recordLabels } from '@/features/record';
 import type {
   GroupedMethodList,
   GroupedTypeList
@@ -242,7 +243,7 @@ function PlannedRow({
         {...shared}
         trailing={
           <IconLock
-            aria-label='パートナーのみ編集できます'
+            aria-label={recordLabels.lock.partnerOnly}
             className='size-3.5 shrink-0 text-icon-muted'
             strokeWidth={2.2}
           />
