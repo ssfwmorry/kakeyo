@@ -1,4 +1,4 @@
-// カレンダーの年月ナビの純粋計算（'YYYY-MM' の前後移動・表示ラベル）。
+// カレンダーの年月ナビの純粋計算（'YYYY-MM' の前後移動）。
 // feature 境界を跨いで依存しないよう calendar 側にも小さく持つ純粋関数。
 
 const MIN_YEAR = 2000;
@@ -15,10 +15,4 @@ export function shiftMonth(yearMonth: string, delta: number): string {
   const newYear = Math.floor(clamped / 12);
   const newMonth = (clamped % 12) + 1;
   return `${String(newYear).padStart(4, '0')}-${String(newMonth).padStart(2, '0')}`;
-}
-
-// 'YYYY-MM' の表示ラベル（'2026年9月'）。
-export function monthLabel(yearMonth: string): string {
-  const [yearStr, monthStr] = yearMonth.split('-');
-  return `${yearStr}年${Number(monthStr)}月`;
 }

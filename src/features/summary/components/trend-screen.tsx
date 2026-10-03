@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { IconChevronLeft, IconChevronRight } from '@/components/icons';
 import { PairModeSegment } from '@/components/pair-mode-segment';
+import { StackedBarChart } from '@/components/stacked-bar-chart';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Segment } from '@/components/ui/segment';
 import { useHorizontalSwipe } from '@/components/use-horizontal-swipe';
@@ -25,6 +26,7 @@ import type {
 } from '@/features/summary/domain/chart-data';
 import { shiftYear, yearLabel } from '@/features/summary/domain/period';
 import type { TypeChip } from '@/features/summary/types';
+import type { ChartBar, ChartBars } from '@/lib/shared/domain/bar-chart';
 import { NO_SUB_TYPE_NAME } from '../domain/breakdown';
 import {
   buildLegend,
@@ -32,8 +34,6 @@ import {
   buildStackedBars,
   buildTrendTable,
   isSignedView,
-  type SignedBars,
-  type TrendBar,
   type TrendLegendRow,
   type TrendView,
   trendTargetName,
@@ -41,7 +41,6 @@ import {
 } from '../domain/trend';
 import { summaryLabels, trendHeadLabel } from '../labels';
 import { SummaryTabs } from './summary-tabs';
-import { TrendBarChart } from './trend-bar-chart';
 
 // 集計 › 推移（原典 SumTrend）。年単位で 12 か月の棒を出し、月をタップして選ぶ。
 //
@@ -200,8 +199,8 @@ export function TrendScreen({
   const yearTotal = trendYearTotal(view, table, chart.bars);
   const showValue = (value: number) =>
     isSignedView(view) ? signedAmount(value) : value.toLocaleString('ja-JP');
-  const toAriaLabel = (bar: TrendBar) =>
-    `${bar.month}月 ${target} ${showValue(bar.value)}円`;
+  const toAriaLabel = (bar: ChartBar) =>
+    `${bar.label} ${target} ${showValue(bar.value)}円`;
 
   return (
     <div className='flex flex-col gap-3 px-3' {...swipe}>
@@ -342,7 +341,7 @@ function buildChart({
   isBalance: boolean;
   payIncome: PayIncomeShowData;
   stack: StackShowData | null;
-}): SignedBars {
+}): ChartBars {
   if (isAll) {
     const values = payIncome.rows.map((row) =>
       isBalance ? row.payAndIncome : row.pay
@@ -694,12 +693,13 @@ function TrendChartCard({
   selectedMonth: number;
   selectedValue: number;
   showValue: (value: number) => string;
-  bars: TrendBar[];
+  bars: ChartBar[];
   zeroTop: number;
   legend: TrendLegendRow[];
   onSelectMonth: (month: number) => void;
-  toAriaLabel: (bar: TrendBar) => string;
+  toAriaLabel: (bar: ChartBar) => string;
 }) {
+  const selectedKey = String(selectedMonth);
   return (
     <div className='flex flex-col gap-3 rounded-2xl bg-card px-4 pt-4 pb-3'>
       <div className='flex items-end gap-2'>
@@ -734,10 +734,10 @@ function TrendChartCard({
         </div>
       </div>
 
-      <TrendBarChart
+      <StackedBarChart
         bars={bars}
-        onSelect={onSelectMonth}
-        selectedMonth={selectedMonth}
+        onSelect={(key) => onSelectMonth(Number(key))}
+        selectedKey={selectedKey}
         toAriaLabel={toAriaLabel}
         zeroTop={zeroTop}
       />

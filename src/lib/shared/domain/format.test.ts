@@ -7,6 +7,7 @@ import {
   formatSlashDate,
   formatSlashDateWeekJa,
   formatSlashMonthDay,
+  formatYearMonthJa,
   quoted
 } from './format';
 
@@ -52,6 +53,21 @@ describe('formatSlashDate / formatSlashMonthDay', () => {
   it('ゼロ埋めしない', () => {
     expect(formatSlashDate('2026-09-05')).toBe('2026/9/5');
     expect(formatSlashMonthDay('2026-09-05')).toBe('9/5');
+  });
+  it('today を渡すと今年以外にだけ年を付ける', () => {
+    expect(formatSlashMonthDay('2026-09-05', { today: '2026-09-25' })).toBe(
+      '9/5'
+    );
+    expect(formatSlashMonthDay('2025-12-31', { today: '2026-09-25' })).toBe(
+      '2025/12/31'
+    );
+  });
+});
+
+describe('formatYearMonthJa', () => {
+  it('先頭 0 を落とす', () => {
+    expect(formatYearMonthJa('2026-09')).toBe('2026年9月');
+    expect(formatYearMonthJa('2026-12')).toBe('2026年12月');
   });
 });
 

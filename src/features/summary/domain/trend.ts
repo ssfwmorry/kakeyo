@@ -1,50 +1,23 @@
+import {
+  buildStackedChartBars,
+  type ChartBar,
+  type ChartBars,
+  MIN_BAR_HEIGHT,
+  SCALE_HEIGHT,
+  TOP_PAD
+} from '@/lib/shared/domain/bar-chart';
 import type { PayIncomeShowData, StackBarRow, StackSeries } from './chart-data';
 
 // 集計 › 推移（原典 SumTrend）の棒グラフとテーブルの計算（純粋関数）。
-//
-// グラフは div の高さだけで描くので SVG は使わない（口座の折れ線とは違い、
-// 積み上げと 0 線の位置さえ出れば形が決まる）。
-// 描画領域は 160px で、上下に 5px ずつ余白を残した 150px を値に割り当てる。
+// 棒の形の決め方（描画領域・余白）は lib/shared/domain/bar-chart が持つ。
 
-// 棒の描画領域（px）。
-export const CHART_HEIGHT = 160;
-// 値に割り当てる高さ。上下の余白 5px ずつを差し引いたもの。
-const SCALE_HEIGHT = 150;
-// 描画領域の上端から値域が始まるまでの余白。
-const TOP_PAD = 5;
-// 0 でない値が潰れて見えなくならない最低の高さ。
-const MIN_BAR_HEIGHT = 2;
 // 積み上げない棒（全体）の唯一の区画に振るキー。
 const SINGLE_SERIES_KEY = 'total';
 
-// 積み上げの 1 区画。色は CSS の色として使える文字列
-// （全体は var(--primary) 等、カテゴリ別は colorVar が解決した var(--cat-*)）。
-export type BarSegment = {
-  // 系列のキー（全体は単色なので固定値）。
-  key: string;
-  height: number;
-  color: string;
-};
-
-// 棒 1 本。top は描画領域の上端からの位置。
-export type TrendBar = {
-  // 1..12。
-  month: number;
-  top: number;
-  height: number;
-  // 下向きの棒は角丸を下に付ける。
-  isNegative: boolean;
-  // 下から積む順（column-reverse で描く）。
-  segments: BarSegment[];
-  // 棒が表す合計（符号つき）。ラベルと選択月の値に使う。
-  value: number;
-};
-
-export type SignedBars = {
-  bars: TrendBar[];
-  // 0 線の位置（描画領域の上端から）。
-  zeroTop: number;
-};
+// 棒の key は月（1..12）の文字列。選択月（number）との変換は画面側で行う。
+function monthAxisLabel(month: number): string {
+  return `${month}月`;
+}
 
 // 収支のように正負が混ざる 12 本の棒。0 線をまたいで上下に伸びる。
 // 正負それぞれの最大値で 150px を分け合うので、0 線の位置は値によって動く。
@@ -52,7 +25,7 @@ export function buildSignedBars(
   values: number[],
   positiveColor: string,
   negativeColor: string
-): SignedBars {
+): ChartBars {
   // 全て 0 のときに 0 除算しないよう、正の最大は 1 で下限を張る。
   const positiveMax = Math.max(1, ...values.map((value) => Math.max(value, 0)));
   const negativeMax = Math.max(
@@ -66,8 +39,10 @@ export function buildSignedBars(
     const height =
       value === 0 ? 0 : Math.max(MIN_BAR_HEIGHT, Math.abs(value) * scale);
     const isNegative = value < 0;
+    const month = index + 1;
     return {
-      month: index + 1,
+      key: String(month),
+      label: monthAxisLabel(month),
       top: isNegative ? zeroTop : zeroTop - height,
       height,
       isNegative,
@@ -91,31 +66,15 @@ export function buildStackedBars(
   rows: StackBarRow[],
   series: StackSeries[],
   toColor: (colorName: string) => string
-): SignedBars {
-  const totals = rows.map((row) =>
-    series.reduce((total, one) => total + toValue(row[one.key]), 0)
+): ChartBars {
+  return buildStackedChartBars(
+    rows.map((row, index) => ({
+      key: String(index + 1),
+      label: monthAxisLabel(index + 1),
+      values: series.map((one) => toValue(row[one.key]))
+    })),
+    series.map((one) => ({ key: one.key, color: toColor(one.colorName) }))
   );
-  // 全て 0 のときに 0 除算しない。
-  const max = Math.max(1, ...totals);
-  const scale = SCALE_HEIGHT / max;
-
-  const bars = totals.map((total, index) => {
-    const height = total * scale;
-    return {
-      month: index + 1,
-      top: TOP_PAD + SCALE_HEIGHT - height,
-      height,
-      isNegative: false,
-      segments: series.map((one) => ({
-        key: one.key,
-        height: toValue(rows[index][one.key]) * scale,
-        color: toColor(one.colorName)
-      })),
-      value: total
-    };
-  });
-
-  return { bars, zeroTop: TOP_PAD + SCALE_HEIGHT };
 }
 
 // 凡例の 1 行。
@@ -217,7 +176,7 @@ export function trendTargetName(
 export function trendYearTotal(
   view: TrendView,
   table: TrendTable,
-  bars: TrendBar[]
+  bars: ChartBar[]
 ): number {
   if (view.kind === 'balance') {
     return table.sumBalance;

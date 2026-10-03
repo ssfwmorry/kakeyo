@@ -18,11 +18,12 @@ import {
 import { useNoteModal } from '@/features/record/components/note-modal';
 import { toRecordDefault } from '@/features/record/domain/record-default';
 import { fetchSummarizedRecordsAction } from '@/features/summary/actions';
-import { monthLabel, shiftMonth } from '@/features/summary/domain/period';
+import { shiftMonth } from '@/features/summary/domain/period';
 import {
   amountToneClass,
   formatMonthDayWeekJa,
-  formatPrice
+  formatPrice,
+  formatYearMonthJa
 } from '@/lib/shared/domain/format';
 import {
   groupRecordsByDay,
@@ -117,7 +118,7 @@ export function RecordsScreen({
             onClick={() => reload(shiftMonth(yearMonth, -1))}
           />
           <span className='font-semibold text-base'>
-            {monthLabel(yearMonth)}
+            {formatYearMonthJa(yearMonth)}
           </span>
           <MonthNavButton
             direction='next'

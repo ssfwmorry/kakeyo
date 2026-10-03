@@ -11,9 +11,6 @@ import { getDemoReferenceDate } from '@/features/demo/server/date';
 export const instant = false;
 
 // 口座タブ。
-//
-// 総資産 1 本の推移を出すので、口座ごとの積み上げ用 chartPoints は使わない。
-// tableRows（記録日ごとの残高・前行引き継ぎ済み）から合計を取り出して描く。
 
 export default function BankPage() {
   return (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { monthLabel, shiftMonth } from './period';
+import { shiftMonth } from './period';
 
 describe('shiftMonth', () => {
   it('前後の月へ移動する', () => {
@@ -24,12 +24,5 @@ describe('shiftMonth', () => {
     // 上限 2099-12 でさらに進めても頭打ち。
     expect(shiftMonth('2099-12', 1)).toBe('2099-12');
     expect(shiftMonth('2099-06', 12)).toBe('2099-12');
-  });
-});
-
-describe('monthLabel', () => {
-  it('日本語の年月ラベル（先頭 0 を落とす）', () => {
-    expect(monthLabel('2026-09')).toBe('2026年9月');
-    expect(monthLabel('2026-12')).toBe('2026年12月');
   });
 });

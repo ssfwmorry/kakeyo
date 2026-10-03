@@ -1,17 +1,15 @@
 import 'server-only';
 import { withDemoRead, withDemoWriteVoid } from '@/features/demo/server/inject';
 import * as demoBank from '@/features/demo/server/queries/bank';
-import { toDateStringJst } from '@/lib/shared/domain/date';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
-import { buildBalanceChart } from '../domain/balance-chart';
 import { buildBalanceTable, toBalanceSnapshots } from '../domain/balance-table';
 import type { BankError, BankItem, BankScreenData } from '../types';
 import * as bankRepo from './repositories/bank';
 import * as balanceRepo from './repositories/bank-balance';
 
-// 口座一覧・残高テーブル・チャート点列をまとめて返す。
+// 口座一覧と残高テーブルをまとめて返す。
 export async function getBankScreenData(
   session: SessionData
 ): Promise<BankScreenData> {
@@ -23,11 +21,9 @@ export async function getBankScreenData(
         bankRepo.getBankList(session),
         balanceRepo.getBankBalanceList(session)
       ]);
-      const snapshots = toBalanceSnapshots(balanceRows);
       return {
         banks,
-        tableRows: buildBalanceTable(banks, snapshots),
-        chartPoints: buildBalanceChart(banks, snapshots, toDateStringJst)
+        tableRows: buildBalanceTable(banks, toBalanceSnapshots(balanceRows))
       };
     }
   );

@@ -2,25 +2,41 @@
 
 import { cn } from 'cn';
 import Link from 'next/link';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { IconChevronRight } from '@/components/icons';
+import { StackedBarChart } from '@/components/stacked-bar-chart';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Segment } from '@/components/ui/segment';
 import type { BankItem, TableRow } from '@/features/bank';
 import { colorVar } from '@/features/master';
 import {
   diffToneClass,
   formatPrice,
-  formatSlashMonthDay
+  formatSlashMonthDay,
+  formatYearMonthJa
 } from '@/lib/shared/domain/format';
-import { buildMonthEndTrend } from '../domain/month-ends';
+import { buildBalanceBars } from '../domain/balance-bars';
+import {
+  type BalanceBucket,
+  bucketDiff,
+  buildBalanceBuckets,
+  latestBucketKey
+} from '../domain/balance-buckets';
+import {
+  DEFAULT_RANGE,
+  HISTORY_RANGES,
+  type HistoryRange
+} from '../domain/history-range';
+import { bankLabels } from '../labels';
 import { BalanceSheet } from './balance-sheet';
-import { TotalTrendChart } from './total-trend-chart';
 
 // 口座（原典 Bank）。総資産・推移・口座別の残高を上から積む。個人専用の画面なので
 // 「個人｜共有」は出さない。
 //
-// 「いま合計いくらか」を最初に出し、推移は総資産 1 本の折れ線にする。口座ごとの内訳は
-// その下のリストで見せ、口座そのものの増減は設定›口座で行う。
+// 「いま合計いくらか」を最初に出し、推移は口座を積み上げた棒で内訳ごと見せる。
+// 棒をタップすると総資産の値と下の口座リストがその区間の値に切り替わるので、
+// グラフ内に凡例や目盛りは置かない（口座リストの色の丸が凡例を兼ねる）。
+// 口座そのものの増減は設定›口座で行う。
 //
 // 残高の登録は見出し横のボタンからシートで開く。全口座が並び、打った口座だけが登録される。
 
@@ -38,7 +54,21 @@ export function BankScreen({
   headerLeft?: ReactNode;
 }) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const latest = tableRows.at(-1);
+  const [range, setRange] = useState<HistoryRange>(DEFAULT_RANGE);
+  // 選んだ区間。null は「値のある最新の区間」で、期間を切り替えたらそこへ戻す。
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+
+  const buckets = useMemo(
+    () => buildBalanceBuckets(tableRows, today, range),
+    [tableRows, today, range]
+  );
+  const currentKey = selectedKey ?? latestBucketKey(buckets);
+  const selectedIndex = buckets.findIndex(
+    (bucket) => bucket.key === currentKey
+  );
+  // 記録が 1 つも無ければどちらも undefined。
+  const selected = buckets[selectedIndex];
+  const previous = buckets[selectedIndex - 1];
 
   return (
     <div className='flex flex-col gap-3 px-3'>
@@ -48,7 +78,7 @@ export function BankScreen({
       </div>
 
       <div className='flex items-center'>
-        <h1 className='font-bold text-2xl'>口座</h1>
+        <h1 className='font-bold text-2xl'>{bankLabels.heading.bank}</h1>
         <button
           className='ml-auto h-9 rounded-full bg-secondary px-3.5 font-semibold text-primary text-sm'
           onClick={() => setIsSheetOpen(true)}
@@ -58,7 +88,19 @@ export function BankScreen({
         </button>
       </div>
 
-      <TotalCard latest={latest} rows={tableRows} today={today} />
+      <TotalCard
+        banks={banks}
+        buckets={buckets}
+        onChangeRange={(next) => {
+          setRange(next);
+          setSelectedKey(null);
+        }}
+        onSelect={setSelectedKey}
+        previous={previous}
+        range={range}
+        selected={selected}
+        today={today}
+      />
 
       <div className='-mb-1 flex items-center px-1'>
         <span className='flex-grow text-[13px] text-muted-foreground'>
@@ -76,13 +118,13 @@ export function BankScreen({
           />
         </Link>
       </div>
-      <BankList banks={banks} latest={latest} />
+      <BankList banks={banks} prices={selected?.prices} />
 
       {isSheetOpen ? (
         <BalanceSheet
           banks={banks}
           isOpen
-          latest={latest}
+          latest={tableRows.at(-1)}
           onOpenChange={setIsSheetOpen}
           today={today}
         />
@@ -91,31 +133,60 @@ export function BankScreen({
   );
 }
 
-// 総資産と推移。先月比は「今月末時点 − 先月末時点」で、出せないときは出さない。
+// 総資産と推移。値は選んでいる区間のもので、差分はその 1 つ前の区間との差。
+// 「時点」には区間末日ではなく採用した記録日を出す（5 月の棒で「4/30 時点」なら
+// 5 月は記録が無かったと読める）。
 function TotalCard({
-  rows,
-  latest,
-  today
+  banks,
+  buckets,
+  range,
+  selected,
+  previous,
+  today,
+  onChangeRange,
+  onSelect
 }: {
-  rows: TableRow[];
-  latest: TableRow | undefined;
+  banks: BankItem[];
+  buckets: BalanceBucket[];
+  range: HistoryRange;
+  // 選んでいる区間とその 1 つ前。無ければ undefined。
+  selected: BalanceBucket | undefined;
+  previous: BalanceBucket | undefined;
   today: string;
+  onChangeRange: (range: HistoryRange) => void;
+  onSelect: (key: string) => void;
 }) {
-  const trend = buildMonthEndTrend(rows, today);
-  const diff = trend?.lastMonthDiff ?? null;
+  const chart = buildBalanceBars(buckets, banks, colorVar);
+  const diff = bucketDiff(selected, previous);
+  const asOf = selected?.asOfDate ?? null;
 
   return (
     <section className='flex flex-col gap-2.5 rounded-2xl bg-card p-4'>
-      <span className='text-[13px] text-muted-foreground'>
-        総資産（
-        {latest === undefined
-          ? '未登録'
-          : `${formatSlashMonthDay(latest.createdDate)} 時点`}
-        ）
-      </span>
+      <div className='flex items-center'>
+        <span className='text-[13px] text-muted-foreground'>
+          {bankLabels.history.chartTarget}（
+          {asOf === null
+            ? '未登録'
+            : `${formatSlashMonthDay(asOf, { today })} 時点`}
+          ）
+        </span>
+        <Segment
+          className='ml-auto'
+          fit
+          label={bankLabels.history.rangeLabel}
+          onChange={onChangeRange}
+          options={HISTORY_RANGES.map((value) => ({
+            value,
+            label: bankLabels.history.range[value]
+          }))}
+          size='sm'
+          tone='background'
+          value={range}
+        />
+      </div>
       <div className='flex items-baseline gap-2'>
         <span className='font-bold text-3xl'>
-          {latest?.sum == null ? '—' : latest.sum.toLocaleString('ja-JP')}
+          {selected?.sum == null ? '—' : selected.sum.toLocaleString('ja-JP')}
         </span>
         <span className='font-semibold text-[15px]'>円</span>
         {diff === null ? null : (
@@ -125,22 +196,33 @@ function TotalCard({
               diffToneClass(diff)
             )}
           >
-            先月比 {formatPrice(diff)}
+            {bankLabels.history.diff[range]} {formatPrice(diff)}
           </span>
         )}
       </div>
-      {trend === null ? null : <TotalTrendChart trend={trend} />}
+      {selected === undefined ? null : (
+        <StackedBarChart
+          bars={chart.bars}
+          onSelect={onSelect}
+          selectedKey={selected.key}
+          toAriaLabel={(bar) =>
+            `${formatYearMonthJa(bar.key)} ${bankLabels.history.chartTarget} ${bar.value.toLocaleString('ja-JP')}円`
+          }
+          zeroTop={chart.zeroTop}
+        />
+      )}
     </section>
   );
 }
 
-// 口座ごとの最新残高。区切り線は色の丸の右から。
+// 口座ごとの残高（選んでいる区間の値）。区切り線は色の丸の右から。
 function BankList({
   banks,
-  latest
+  prices
 }: {
   banks: BankItem[];
-  latest: TableRow | undefined;
+  // banks と同じ並び（balance-table の仕様）。記録が無ければ undefined。
+  prices: (number | null)[] | undefined;
 }) {
   if (banks.length === 0) {
     return (
@@ -149,7 +231,7 @@ function BankList({
       </p>
     );
   }
-  if (latest === undefined) {
+  if (prices === undefined) {
     return (
       <p className='px-1 text-muted-foreground text-sm'>
         残高がまだ登録されていません。
@@ -160,8 +242,7 @@ function BankList({
   return (
     <div className='overflow-hidden rounded-2xl bg-card'>
       {banks.map((bank, index) => {
-        // bankPrices は banks と同じ並び（balance-table の仕様）。
-        const price = latest.bankPrices[index];
+        const price = prices[index];
         return (
           <div key={bank.id}>
             {index === 0 ? null : <div className='ml-9 h-px bg-border' />}

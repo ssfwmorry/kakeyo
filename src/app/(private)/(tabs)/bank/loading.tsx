@@ -2,7 +2,7 @@ import { SectionList } from '@/components/section-list';
 import { Skeleton, skeletonKeys } from '@/components/ui/skeleton';
 
 // 口座の骨格。総資産カードの枠と口座行は形が決まっているので実寸で置く。
-// 推移グラフは中身（折れ線）を出さず、面積だけを確保する（アスペクト比 326:96）。
+// 推移グラフは中身（棒）を出さず、描画領域とラベル行ぶんの高さだけを確保する。
 
 const BANK_ROWS = 2;
 
@@ -20,7 +20,7 @@ export default function BankLoading() {
         <div className='flex items-baseline gap-2'>
           <Skeleton className='h-9 w-40' />
         </div>
-        <Skeleton className='aspect-[326/96] w-full' />
+        <Skeleton className='h-[170px] w-full' />
       </section>
 
       <div className='-mb-1 flex items-center px-1'>

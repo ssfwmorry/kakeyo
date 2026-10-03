@@ -1,18 +1,15 @@
 import 'server-only';
-import { buildBalanceChart } from '@/features/bank/domain/balance-chart';
 import {
   buildBalanceTable,
   toBalanceSnapshots
 } from '@/features/bank/domain/balance-table';
 import type { BankItem, BankScreenData } from '@/features/bank/types';
-import { toDateStringJst } from '@/lib/shared/domain/date';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import { bankBalanceRows, bankRows } from '../dataset/banks';
 import { colorName } from '../dataset/colors';
 import { ownedBy } from '../dataset/scope';
 
-// bank のデモ射影。残高テーブルとチャートは実処理と同じドメイン関数で組み立て、
-// 表とグラフの値が食い違わないようにする。
+// bank のデモ射影。残高テーブルは実処理と同じドメイン関数で組み立てる。
 
 // getBankList 相当（個人専用テーブル）。
 export function getBankList(scope: SessionScope): BankItem[] {
@@ -32,9 +29,5 @@ export function getBankScreenData(scope: SessionScope): BankScreenData {
   const snapshots = toBalanceSnapshots(
     bankBalanceRows.filter((row) => bankIds.has(row.bankId))
   );
-  return {
-    banks,
-    tableRows: buildBalanceTable(banks, snapshots),
-    chartPoints: buildBalanceChart(banks, snapshots, toDateStringJst)
-  };
+  return { banks, tableRows: buildBalanceTable(banks, snapshots) };
 }

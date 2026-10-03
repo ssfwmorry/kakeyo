@@ -51,9 +51,22 @@ export function formatSlashDate(dateStr: string): string {
 }
 
 // 'YYYY-MM-DD' → '9/25'。総資産の「9/25 時点」など。
-export function formatSlashMonthDay(dateStr: string): string {
-  const { month, day } = parts(dateStr);
+// today を渡すと今年以外の日付は '2025/12/31' と年から出す（数年を遡る表示で年を見失わないため）。
+export function formatSlashMonthDay(
+  dateStr: string,
+  options: { today?: string } = {}
+): string {
+  const { year, month, day } = parts(dateStr);
+  if (options.today !== undefined && year !== parts(options.today).year) {
+    return formatSlashDate(dateStr);
+  }
   return `${month}/${day}`;
+}
+
+// 'YYYY-MM' → '2026年9月'。月ナビの見出しや読み上げ文言。
+export function formatYearMonthJa(yearMonth: string): string {
+  const [yearStr, monthStr] = yearMonth.split('-');
+  return `${yearStr}年${Number(monthStr)}月`;
 }
 
 // 金額を桁区切りだけで出す。支出・収入の別は符号ではなく文字色で示す。

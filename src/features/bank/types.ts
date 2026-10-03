@@ -13,18 +13,11 @@ export type BankItem = {
   hasBalance: boolean;
 };
 
-// 残高チャートの 1 点（積み上げ Area 用）。x=記録日(YYYY-MM-DD)、系列は bankId をキーに持つ。
-export type BalanceChartPoint = {
-  date: string;
-  // bankId(文字列) → その日の残高（補完後）。未登録は 0（積み上げに寄与しない）。
-  [bankId: string]: number | string;
-};
-
 // bank 画面が必要とする全データ（Server Component が組んで Client に渡す）。
+// 推移の棒は tableRows（記録日ごと・前行引き継ぎ済み）から Client 側で区間に写す。
 export type BankScreenData = {
   banks: BankItem[];
   tableRows: TableRow[];
-  chartPoints: BalanceChartPoint[];
 };
 
 // サービス層の失敗分類（機械可読・UI 文言なし）。

@@ -24,7 +24,8 @@ import { useHorizontalSwipe } from '@/components/use-horizontal-swipe';
 import { colorVar } from '@/features/master';
 import { fetchPieAction } from '@/features/summary/actions';
 import type { PieShowData } from '@/features/summary/domain/chart-data';
-import { monthLabel, shiftMonth } from '@/features/summary/domain/period';
+import { shiftMonth } from '@/features/summary/domain/period';
+import { formatYearMonthJa } from '@/lib/shared/domain/format';
 import {
   type BreakdownRow,
   type BreakdownSubRow,
@@ -182,7 +183,7 @@ export function SummaryScreen({
           onClick={() => setIsPickerOpen(true)}
           type='button'
         >
-          {monthLabel(yearMonth)}
+          {formatYearMonthJa(yearMonth)}
           <IconChevronDown
             aria-hidden='true'
             className='size-3.5 text-icon-muted'

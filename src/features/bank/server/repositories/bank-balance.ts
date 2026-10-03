@@ -5,13 +5,11 @@ import { bankBalances, banks } from '@/lib/server/db/schema';
 import { buildOwnerScopeWhere } from '@/lib/shared/db/scope';
 import type { SessionScope } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
+import { MAX_HISTORY_YEARS } from '../../domain/history-range';
 
 // bank_balances は user_id 列を持たない（price + created_at の履歴テーブル）。
 // そのため所有者絞り込みは親 bank を join して行う。
 // 個人専用（pair で共有しない）のため buildScopeWhere ではなく buildOwnerScopeWhere。
-
-// 履歴の遡及期間（5 年）。
-const HISTORY_YEARS = 5;
 
 // 取得系の 1 行（整形前の生に近い形）。合計補完は domain/balance-table が行う。
 export type BankBalanceRow = {
@@ -26,7 +24,7 @@ export async function getBankBalanceList(
   scope: SessionScope
 ): Promise<BankBalanceRow[]> {
   const threshold = new Date();
-  threshold.setFullYear(threshold.getFullYear() - HISTORY_YEARS);
+  threshold.setFullYear(threshold.getFullYear() - MAX_HISTORY_YEARS);
 
   const rows = await db
     .select({

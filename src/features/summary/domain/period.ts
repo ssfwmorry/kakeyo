@@ -27,12 +27,6 @@ export function shiftYear(year: number, delta: number): number {
   return Math.min(Math.max(year + delta, MIN_YEAR), MAX_YEAR);
 }
 
-// 'YYYY-MM' の表示ラベル（'2026年9月'）。
-export function monthLabel(yearMonth: string): string {
-  const [yearStr, monthStr] = yearMonth.split('-');
-  return `${yearStr}年${Number(monthStr)}月`;
-}
-
 export function yearLabel(year: number): string {
   return `${year}年`;
 }

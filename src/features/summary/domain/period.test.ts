@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { monthLabel, shiftMonth, shiftYear, yearLabel } from './period';
+import { shiftMonth, shiftYear, yearLabel } from './period';
 
 // 月/年ナビ計算の Vitest（純粋関数）。
 
@@ -34,10 +34,6 @@ describe('shiftYear', () => {
 });
 
 describe('labels', () => {
-  it('月ラベルはゼロ落とし', () => {
-    expect(monthLabel('2026-09')).toBe('2026年9月');
-    expect(monthLabel('2026-12')).toBe('2026年12月');
-  });
   it('年ラベル', () => {
     expect(yearLabel(2026)).toBe('2026年');
   });

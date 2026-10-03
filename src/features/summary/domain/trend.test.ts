@@ -17,7 +17,8 @@ describe('buildSignedBars', () => {
     // 正 100 : 負 50 なので 150px を 100px / 50px に分ける。
     expect(zeroTop).toBe(105);
     expect(bars[0]).toMatchObject({
-      month: 1,
+      key: '1',
+      label: '1月',
       top: 5,
       height: 100,
       isNegative: false,

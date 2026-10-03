@@ -19,6 +19,13 @@ export const bankLabels = {
     selectBank: '口座を選択',
     balanceYen: '残高（円）'
   },
+  // 総資産の推移で選べる期間と、区間の粗さに合わせた前区間比の呼び名。
+  history: {
+    rangeLabel: '推移の期間',
+    range: { '1y': '1年', '3y': '3年', '5y': '5年' },
+    diff: { '1y': '前月比', '3y': '前四半期比', '5y': '前半期比' },
+    chartTarget: '総資産'
+  },
   action: {
     addBalance: '残高追加',
     addRow: '＋行追加',

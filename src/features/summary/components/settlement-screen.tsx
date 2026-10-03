@@ -14,14 +14,15 @@ import { colorVar } from '@/features/master';
 import { type PairedRecordItem, PlannedRecordMark } from '@/features/record';
 import { completeSettlementAction } from '@/features/record/settlement-actions';
 import { fetchPairedRecordsAction } from '@/features/summary/actions';
-import { monthLabel, shiftMonth } from '@/features/summary/domain/period';
+import { shiftMonth } from '@/features/summary/domain/period';
 import type { MethodCard } from '@/features/type-method';
 import { lastDayOfMonthJst, toDateStringJst } from '@/lib/shared/domain/date';
 import {
   amountToneClass,
   formatMonthDayWeekJa,
   formatPrice,
-  formatSlashDateWeekJa
+  formatSlashDateWeekJa,
+  formatYearMonthJa
 } from '@/lib/shared/domain/format';
 import { parsePrice } from '@/lib/shared/domain/price';
 import { showToast } from '@/lib/shared/toast/show-toast';
@@ -173,7 +174,9 @@ export function SettlementScreen({
           isPending={isPending}
           onClick={() => load(shiftMonth(yearMonth, -1))}
         />
-        <span className='font-semibold text-base'>{monthLabel(yearMonth)}</span>
+        <span className='font-semibold text-base'>
+          {formatYearMonthJa(yearMonth)}
+        </span>
         <MonthNavButton
           direction='next'
           isPending={isPending}
