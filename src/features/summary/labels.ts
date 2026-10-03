@@ -2,8 +2,7 @@
 
 export const summaryLabels = {
   heading: {
-    summary: '集計',
-    monthPicker: '表示する月'
+    summary: '集計'
   },
   tab: {
     breakdown: '内訳',
@@ -117,8 +116,6 @@ export const summaryLabels = {
     noData: '表示するデータがありません'
   },
   note: {
-    monthPicker:
-      '選ぶとすぐにその月の内訳へ切り替わります。2023年より前は選べません。',
     records:
       'タップで記録を編集できます。相手が立て替えた記録は相手だけが編集できます。'
   }

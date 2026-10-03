@@ -8,7 +8,8 @@ import {
   useState,
   useTransition
 } from 'react';
-import { IconChevronLeft, IconPlus } from '@/components/icons';
+import { IconChevronDown, IconChevronLeft, IconPlus } from '@/components/icons';
+import { MonthPickerSheet } from '@/components/month-picker-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useHorizontalSwipe } from '@/components/use-horizontal-swipe';
 import type {
@@ -43,9 +44,9 @@ import { TodoChips } from './todo-chips';
 // セルが「日付・収支・予定の帯」の 3 段で帯が複数日にまたがるため、暦ライブラリの
 // レイアウトに載せず自前のグリッドで組む（段の割り当ては domain/event-lanes.ts）。
 //
-// 月移動は Server Action で取り直すが、応答を待たずに見出しとグリッドの枠を先に送る
-// （枠は年月だけで決まる）。日別の収支・予定はデータが追いつくまで空にする。前の月の値を
-// 残すと新しい枠に古い数字が乗るため。
+// 月移動（前後・ピッカーでのジャンプ）は Server Action で取り直すが、応答を待たずに
+// 見出しとグリッドの枠を先に送る（枠は年月だけで決まる）。日別の収支・予定はデータが
+// 追いつくまで空にする。前の月の値を残すと新しい枠に古い数字が乗るため。
 //
 // お知らせシートの開閉はこの画面が持つ。ヘッダーのベルと日別リストのリマインダー行の
 // 両方から同じシートを開くため。
@@ -75,6 +76,7 @@ export function CalendarScreen({
   const [month, setMonth] = useState<CalendarMonthData>(initial.month);
   const [selectedDate, setSelectedDate] = useState(initial.today);
   const [isPending, startTransition] = useTransition();
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [planSheet, setPlanSheet] = useState<PlanSheetState>({
     kind: 'closed'
   });
@@ -110,14 +112,14 @@ export function CalendarScreen({
       onSaved: reloadMonth
     });
 
-  const moveMonth = (delta: number) => {
-    const nextYearMonth = shiftMonth(yearMonth, delta);
-    // 見出しとグリッドの枠を先に送る。データはこの後で追いつく。
-    setYearMonth(nextYearMonth);
+  const showMonth = (target: string) => {
+    setYearMonth(target);
     // 月を変えたら選択日もその月の 1 日へ送る（前月の日を選んだままにしない）。
-    setSelectedDate(`${nextYearMonth}-01`);
-    loadMonth(nextYearMonth);
+    setSelectedDate(`${target}-01`);
+    loadMonth(target);
   };
+
+  const moveMonth = (delta: number) => showMonth(shiftMonth(yearMonth, delta));
 
   const swipe = useHorizontalSwipe({
     onSwipeLeft: () => moveMonth(1),
@@ -173,10 +175,27 @@ export function CalendarScreen({
         </div>
 
         <div className='flex items-center gap-2'>
-          <h1 className='font-bold text-3xl'>{Number(monthPart)}月</h1>
-          <span className='mt-1.5 text-[17px] text-muted-foreground'>
-            {year}
-          </span>
+          {/* 見出し自体をピッカーのトリガーにする。集計の月ラベルと揃え、右端の ‹ › に
+              ボタンを足して詰めるより大きく押せる。aria-label は付けない。付けると h1 の
+              名前が置き換わり、見出しとして読まれなくなる。 */}
+          <h1 className='font-bold text-3xl'>
+            <button
+              aria-haspopup='dialog'
+              className='flex items-center gap-2 rounded-lg text-foreground'
+              onClick={() => setIsPickerOpen(true)}
+              type='button'
+            >
+              {Number(monthPart)}月
+              <span className='mt-1.5 font-normal text-[17px] text-muted-foreground'>
+                {year}
+              </span>
+              <IconChevronDown
+                aria-hidden='true'
+                className='mt-1.5 size-4 text-icon-muted'
+                strokeWidth={2.4}
+              />
+            </button>
+          </h1>
           <span className='mt-2 flex items-baseline gap-1'>
             <span className='text-muted-foreground text-xs'>収支</span>
             {/* その月の値が届くまでは出さない（前月の金額が新しい見出しに残るのを防ぐ）。 */}
@@ -259,6 +278,18 @@ export function CalendarScreen({
             isStale ? [] : selectDayReminders(month.reminders, selectedDate)
           }
         />
+
+        {isPickerOpen ? (
+          <MonthPickerSheet
+            onOpenChange={setIsPickerOpen}
+            onSelect={(next) => {
+              setIsPickerOpen(false);
+              showMonth(next);
+            }}
+            todayYearMonth={initial.today.slice(0, 7)}
+            yearMonth={yearMonth}
+          />
+        ) : null}
 
         <CalendarPlanSheet
           hasPair={initial.hasPair}

@@ -15,6 +15,7 @@ import {
   IconChevronRight,
   IconShare
 } from '@/components/icons';
+import { MonthPickerSheet } from '@/components/month-picker-sheet';
 import { PairModeSegment } from '@/components/pair-mode-segment';
 import { SectionListEmpty } from '@/components/section-list';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -32,7 +33,6 @@ import {
 } from '../domain/breakdown';
 import { breakdownFootnote, summaryLabels, totalLabel } from '../labels';
 import { Donut } from './donut';
-import { MonthPickerSheet } from './month-picker-sheet';
 import { SummaryTabs } from './summary-tabs';
 
 // 集計 › 内訳（原典 SumBreakdown）。カテゴリ／方法の軸、立替の扱い、サブカテゴリの
@@ -291,6 +291,7 @@ export function SummaryScreen({
             setIsPickerOpen(false);
             load({ ...current, yearMonth: next });
           }}
+          todayYearMonth={initialYearMonth}
           yearMonth={yearMonth}
         />
       ) : null}
