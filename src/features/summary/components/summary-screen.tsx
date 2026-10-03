@@ -2,7 +2,13 @@
 
 import { cn } from 'cn';
 import Link from 'next/link';
-import { type ReactNode, useMemo, useState, useTransition } from 'react';
+import {
+  type ReactNode,
+  useMemo,
+  useRef,
+  useState,
+  useTransition
+} from 'react';
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -13,6 +19,7 @@ import { PairModeSegment } from '@/components/pair-mode-segment';
 import { SectionListEmpty } from '@/components/section-list';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Segment } from '@/components/ui/segment';
+import { useHorizontalSwipe } from '@/components/use-horizontal-swipe';
 import { colorVar } from '@/features/master';
 import { fetchPieAction } from '@/features/summary/actions';
 import type { PieShowData } from '@/features/summary/domain/chart-data';
@@ -110,32 +117,47 @@ export function SummaryScreen({
     isIncludeInstead: boolean;
   };
 
+  // 最後に要求した条件。応答が返った時点でこれと別物なら、その応答は捨てる。
+  // 月を連続で送ると応答の順序が入れ替わることがあり、無条件に入れると表示が
+  // 前の月へ巻き戻る。
+  const latest = useRef<Query | null>(null);
+
   // 取得中も前の内容を出したままにし、画面が空白になるのを避ける。
   const load = (next: Query) => {
+    latest.current = next;
     setYearMonth(next.yearMonth);
     setIsPay(next.isPay);
     setIsType(next.isType);
     setIsIncludeInstead(next.isIncludeInstead);
     startTransition(async () => {
-      setData(
-        await fetchPieAction({
-          isType: next.isType,
-          isPay: next.isPay,
-          isPair,
-          isIncludeInstead: next.isIncludeInstead,
-          yearMonth: next.yearMonth
-        })
-      );
+      const result = await fetchPieAction({
+        isType: next.isType,
+        isPay: next.isPay,
+        isPair,
+        isIncludeInstead: next.isIncludeInstead,
+        yearMonth: next.yearMonth
+      });
+      if (latest.current === next) {
+        setData(result);
+      }
     });
   };
 
   const current: Query = { yearMonth, isPay, isType, isIncludeInstead };
+
+  const moveMonth = (delta: number) =>
+    load({ ...current, yearMonth: shiftMonth(yearMonth, delta) });
+
+  const swipe = useHorizontalSwipe({
+    onSwipeLeft: () => moveMonth(1),
+    onSwipeRight: () => moveMonth(-1)
+  });
   const breakdown = useMemo(() => buildBreakdown(data.list), [data.list]);
   const kind = kindLabel(isType, isPay);
   const footnote = breakdownFootnote(hasPair, isPair, isIncludeInstead, kind);
 
   return (
-    <div className='flex flex-col gap-3 px-4'>
+    <div className='flex flex-col gap-3 px-4' {...swipe}>
       <div className='flex h-11 items-center justify-between'>
         <span>{headerLeft}</span>
         <div className='flex items-center gap-1.5'>
@@ -152,9 +174,7 @@ export function SummaryScreen({
         <MonthNavButton
           direction='prev'
           isPending={isPending}
-          onClick={() =>
-            load({ ...current, yearMonth: shiftMonth(yearMonth, -1) })
-          }
+          onClick={() => moveMonth(-1)}
         />
         <button
           aria-label='表示する月を選ぶ'
@@ -172,9 +192,7 @@ export function SummaryScreen({
         <MonthNavButton
           direction='next'
           isPending={isPending}
-          onClick={() =>
-            load({ ...current, yearMonth: shiftMonth(yearMonth, 1) })
-          }
+          onClick={() => moveMonth(1)}
         />
         <fieldset aria-label='支出か収入か' className='ml-auto flex gap-1.5'>
           <PayPill

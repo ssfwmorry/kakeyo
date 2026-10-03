@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { IconChevronLeft, IconPlus } from '@/components/icons';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useHorizontalSwipe } from '@/components/use-horizontal-swipe';
 import type {
   CalendarInitialData,
   CalendarMonthData,
@@ -118,6 +119,11 @@ export function CalendarScreen({
     loadMonth(nextYearMonth);
   };
 
+  const swipe = useHorizontalSwipe({
+    onSwipeLeft: () => moveMonth(1),
+    onSwipeRight: () => moveMonth(-1)
+  });
+
   const cells = useMemo(() => buildMonthGrid(yearMonth), [yearMonth]);
 
   const daySums = useMemo(
@@ -160,7 +166,7 @@ export function CalendarScreen({
 
   return (
     <NotifySheetStateProvider>
-      <div className='flex flex-col gap-3 px-4'>
+      <div className='flex flex-col gap-3 px-4' {...swipe}>
         <div className='flex h-11 items-center justify-between'>
           <span>{headerLeft}</span>
           <ThemeToggle />

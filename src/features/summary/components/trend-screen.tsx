@@ -1,11 +1,18 @@
 'use client';
 
 import { cn } from 'cn';
-import { type ReactNode, useMemo, useState, useTransition } from 'react';
+import {
+  type ReactNode,
+  useMemo,
+  useRef,
+  useState,
+  useTransition
+} from 'react';
 import { IconChevronLeft, IconChevronRight } from '@/components/icons';
 import { PairModeSegment } from '@/components/pair-mode-segment';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Segment } from '@/components/ui/segment';
+import { useHorizontalSwipe } from '@/components/use-horizontal-swipe';
 import { colorVar } from '@/features/master';
 import {
   fetchPayIncomeAction,
@@ -52,6 +59,41 @@ const NEGATIVE_COLOR = 'var(--destructive)';
 // カテゴリを絞らない（チップの「全て」）。
 const ALL_TYPES = null;
 
+type Query = {
+  year: number;
+  isAll: boolean;
+  isBalance: boolean;
+  isPay: boolean;
+  isIncludeInstead: boolean;
+  typeId: number | null;
+};
+
+async function fetchTrend(
+  query: Query,
+  isPair: boolean
+): Promise<
+  | { kind: 'all'; data: PayIncomeShowData }
+  | { kind: 'stack'; data: StackShowData }
+> {
+  if (query.isAll) {
+    const data = await fetchPayIncomeAction({
+      year: query.year,
+      isPair,
+      isIncludeInstead: query.isIncludeInstead
+    });
+    return { kind: 'all', data };
+  }
+  const data =
+    query.typeId === ALL_TYPES
+      ? await fetchTypePeriodAction({
+          year: query.year,
+          isPay: query.isPay,
+          isPair
+        })
+      : await fetchSubTypeAction({ year: query.year, typeId: query.typeId });
+  return { kind: 'stack', data };
+}
+
 export function TrendScreen({
   hasPair,
   isPair,
@@ -91,14 +133,6 @@ export function TrendScreen({
   const [isPending, startTransition] = useTransition();
 
   // いま出ている見方の取得条件。どれか 1 つでも変わったら取り直す。
-  type Query = {
-    year: number;
-    isAll: boolean;
-    isBalance: boolean;
-    isPay: boolean;
-    isIncludeInstead: boolean;
-    typeId: number | null;
-  };
   const current: Query = {
     year,
     isAll,
@@ -108,8 +142,13 @@ export function TrendScreen({
     typeId
   };
 
+  // 最後に要求した条件。連続操作で応答の順序が入れ替わっても古い年へ巻き戻らないよう、
+  // これと別物の応答は捨てる。
+  const latest = useRef<Query | null>(null);
+
   // 取得中も前の内容を出したままにし、画面が空白になるのを避ける（内訳と同じ）。
   const load = (next: Query, nextMonth = selectedMonth) => {
+    latest.current = next;
     setYear(next.year);
     setIsAll(next.isAll);
     setIsBalance(next.isBalance);
@@ -118,27 +157,26 @@ export function TrendScreen({
     setTypeId(next.typeId);
     setSelectedMonth(nextMonth);
     startTransition(async () => {
-      if (next.isAll) {
-        setPayIncome(
-          await fetchPayIncomeAction({
-            year: next.year,
-            isPair,
-            isIncludeInstead: next.isIncludeInstead
-          })
-        );
+      const result = await fetchTrend(next, isPair);
+      if (latest.current !== next) {
         return;
       }
-      setStack(
-        next.typeId === ALL_TYPES
-          ? await fetchTypePeriodAction({
-              year: next.year,
-              isPay: next.isPay,
-              isPair
-            })
-          : await fetchSubTypeAction({ year: next.year, typeId: next.typeId })
-      );
+      if (result.kind === 'all') {
+        setPayIncome(result.data);
+      } else {
+        setStack(result.data);
+      }
     });
   };
+
+  // 移った先では移動方向に近い端の月を選ぶ（前の年なら 12 月、次の年なら 1 月）。
+  const moveYear = (delta: number) =>
+    load({ ...current, year: shiftYear(year, delta) }, delta < 0 ? 12 : 1);
+
+  const swipe = useHorizontalSwipe({
+    onSwipeLeft: () => moveYear(1),
+    onSwipeRight: () => moveYear(-1)
+  });
 
   const currentChips = isPay ? chips.pay : chips.income;
   const view = toView({ isAll, isBalance, isPay, typeId, chips: currentChips });
@@ -166,7 +204,7 @@ export function TrendScreen({
     `${bar.month}月 ${target} ${showValue(bar.value)}円`;
 
   return (
-    <div className='flex flex-col gap-3 px-4'>
+    <div className='flex flex-col gap-3 px-4' {...swipe}>
       <div className='flex h-11 items-center justify-between'>
         <span>{headerLeft}</span>
         <div className='flex items-center gap-1.5'>
@@ -183,14 +221,13 @@ export function TrendScreen({
         <YearNavButton
           direction='prev'
           isPending={isPending}
-          // 前の年へ移ると 12 月、次の年へ移ると 1 月を選ぶ（原典どおり）。
-          onClick={() => load({ ...current, year: shiftYear(year, -1) }, 12)}
+          onClick={() => moveYear(-1)}
         />
         <span className='font-semibold text-base'>{yearLabel(year)}</span>
         <YearNavButton
           direction='next'
           isPending={isPending}
-          onClick={() => load({ ...current, year: shiftYear(year, 1) }, 1)}
+          onClick={() => moveYear(1)}
         />
         {/* 全体は「収支｜支出のみ」、カテゴリ別は「支出｜収入」。 */}
         <TrendPills
@@ -477,6 +514,7 @@ function TypeChips({
     <fieldset
       aria-label={summaryLabels.trend.chipsLabel}
       className='-mx-4 flex gap-1.5 overflow-x-auto px-4'
+      data-swipe-ignore
     >
       <TypeChipButton
         isSelected={typeId === ALL_TYPES}
