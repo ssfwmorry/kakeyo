@@ -123,7 +123,8 @@ export function BalanceSheet({
 
           <SheetSubmitButton
             className='mt-auto'
-            disabled={!hasInput || isPending}
+            disabled={!hasInput}
+            isPending={isPending}
             disabledLabel='残高を入れると登録できます'
             label='登録する'
           />

@@ -10,6 +10,7 @@ import {
   BottomSheetContent,
   BottomSheetTitle
 } from '@/components/ui/bottom-sheet';
+import { Spinner } from '@/components/ui/spinner';
 import { AutoLinkText } from '@/features/plan-reminder';
 import { formatSlashDateWeekJa } from '@/lib/shared/domain/format';
 import { showToast } from '@/lib/shared/toast/show-toast';
@@ -144,7 +145,15 @@ function NotifyRowItem({
           onClick={check}
           type='button'
         >
-          <IconCheck aria-hidden='true' className='size-4' strokeWidth={2.8} />
+          {isPending ? (
+            <Spinner />
+          ) : (
+            <IconCheck
+              aria-hidden='true'
+              className='size-4'
+              strokeWidth={2.8}
+            />
+          )}
           確認
         </button>
       </div>

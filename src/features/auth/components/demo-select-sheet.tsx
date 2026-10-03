@@ -9,6 +9,7 @@ import {
   BottomSheetContent,
   BottomSheetDescription
 } from '@/components/ui/bottom-sheet';
+import { Spinner } from '@/components/ui/spinner';
 import { DemoMode } from '@/features/demo';
 import { demoLoginAction } from '../actions/login-actions';
 import { authLabels } from '../labels';
@@ -107,10 +108,7 @@ function DemoOption({
         </span>
       </span>
       {isPending ? (
-        <span
-          aria-hidden='true'
-          className='size-4 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent'
-        />
+        <Spinner className='text-primary' />
       ) : (
         <IconChevronRight
           aria-hidden='true'

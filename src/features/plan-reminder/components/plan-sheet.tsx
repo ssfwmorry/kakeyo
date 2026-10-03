@@ -114,9 +114,10 @@ export function PlanSheet({
         // 保存はスクロール領域の外の帯に置く。中身が長くてもボタンは見えたまま。
         footer={
           <SheetSubmitButton
-            disabled={!canSave || isPending}
+            disabled={!canSave}
             disabledLabel={disabledSaveLabel(name, verb)}
             form={formId}
+            isPending={isPending}
             label={`${verb}する`}
           />
         }
@@ -482,11 +483,11 @@ function useDeleteFlow(id: number | undefined, onDeleted: () => void) {
     if (id === undefined) {
       return;
     }
-    setIsConfirming(false);
     startTransition(async () => {
       const formData = new FormData();
       formData.set('id', String(id));
       const next = await deletePlanAction(null, formData);
+      setIsConfirming(false);
       setResult(next);
       if (next.toast?.type === 'success') {
         onDeleted();

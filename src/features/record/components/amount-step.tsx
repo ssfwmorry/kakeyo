@@ -18,6 +18,7 @@ import { ConfirmAlert } from '@/components/ui/confirm-alert';
 import { InlineCalendar } from '@/components/ui/inline-calendar';
 import { RoundIconButton } from '@/components/ui/round-icon-button';
 import { Segment } from '@/components/ui/segment';
+import { SheetSubmitButton } from '@/components/ui/sheet-submit-button';
 import type { NoteRecordDefault } from '@/features/record';
 import { recordLabels } from '@/features/record/labels';
 import { recordUpsertSchema } from '@/features/record/schemas/record-schema';
@@ -98,6 +99,7 @@ export function AmountStep({
   useSubmissionErrorToast(result);
 
   const editingId = editing?.id;
+  const verb = editingId === undefined ? '登録' : '保存';
   const isFromPlanned = editing?.plannedRecordId != null;
   const dateRange = editableDateRange({
     savedDate: editing?.date,
@@ -177,13 +179,13 @@ export function AmountStep({
       />
       <Keypad onChange={(price) => patch({ price })} value={state.price} />
 
-      <SubmitBar
-        action={action}
-        canSubmit={canSubmit}
-        hasPrice={hasPrice}
-        isEditing={editingId !== undefined}
+      <SheetSubmitButton
+        bar
+        disabled={!canSubmit}
+        disabledLabel={disabledSubmitLabel({ needsMemo, hasPrice, verb })}
+        formAction={action}
         isPending={isPending}
-        needsMemo={needsMemo}
+        label={`${verb}する`}
       />
     </form>
   );
@@ -483,11 +485,11 @@ function DeleteButton({
   const [isConfirming, setIsConfirming] = useState(false);
 
   const remove = () => {
-    setIsConfirming(false);
     startTransition(async () => {
       const formData = new FormData();
       formData.set('id', String(id));
       const result = await deleteRecordAction(null, formData);
+      setIsConfirming(false);
       if (result.toast) {
         showToast(result.toast);
       }
@@ -516,47 +518,21 @@ function DeleteButton({
   );
 }
 
-// 全高固定シートの保存バー。シートの左右余白を打ち消して地を端まで伸ばす。
 // 押せない理由はメモ → 金額の順で 1 つだけ出す。
-function SubmitBar({
-  action,
-  canSubmit,
+function disabledSubmitLabel({
   needsMemo,
   hasPrice,
-  isEditing,
-  isPending
+  verb
 }: {
-  action: (formData: FormData) => void;
-  canSubmit: boolean;
   needsMemo: boolean;
   hasPrice: boolean;
-  isEditing: boolean;
-  isPending: boolean;
-}) {
-  const verb = isEditing ? '保存' : '登録';
-  const label = needsMemo
-    ? `メモを入れると${verb}できます`
-    : hasPrice
-      ? `${verb}する`
-      : `金額を入れると${verb}できます`;
-  return (
-    <div
-      className='-mx-4 shrink-0 bg-background px-4 pt-2.5'
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 34px)' }}
-    >
-      <button
-        className={cn(
-          'h-13 w-full rounded-xl font-bold text-[17px]',
-          canSubmit
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-disabled font-semibold text-[15px] text-muted-foreground'
-        )}
-        disabled={!canSubmit || isPending}
-        formAction={action}
-        type='submit'
-      >
-        {label}
-      </button>
-    </div>
-  );
+  verb: string;
+}): string | undefined {
+  if (needsMemo) {
+    return `メモを入れると${verb}できます`;
+  }
+  if (!hasPrice) {
+    return `金額を入れると${verb}できます`;
+  }
+  return undefined;
 }

@@ -115,8 +115,7 @@ function LoginForm({ onShowReset }: { onShowReset: () => void }) {
       />
       <SheetSubmitButton
         className='mt-3'
-        disabled={isPending}
-        disabledLabel={action.loggingIn}
+        isPending={isPending}
         label={action.login}
       />
       <TextLinkButton onClick={onShowReset}>{action.showReset}</TextLinkButton>
@@ -146,8 +145,7 @@ function ResetForm({ onBack }: { onBack: () => void }) {
       />
       <SheetSubmitButton
         className='mt-3'
-        disabled={isPending}
-        disabledLabel={action.sendingReset}
+        isPending={isPending}
         label={action.sendReset}
       />
       <TextLinkButton onClick={onBack}>{action.backToLogin}</TextLinkButton>

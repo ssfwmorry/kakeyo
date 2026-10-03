@@ -87,8 +87,8 @@ export function useDeleteFlow({
     if (deleteAction === undefined || target === null) {
       return;
     }
-    setIsConfirming(false);
     if (isKnownBlocked?.(target)) {
+      setIsConfirming(false);
       setResult({ error: 'foreignKey' });
       if (onForeignKey?.kind === 'alert') {
         setIsBlocked(true);
@@ -99,6 +99,7 @@ export function useDeleteFlow({
       const formData = new FormData();
       formData.set('id', String(target.id));
       const next = await deleteAction(null, formData);
+      setIsConfirming(false);
       setResult(next);
       if (next.toast?.type === 'success') {
         onDeleted?.(target);

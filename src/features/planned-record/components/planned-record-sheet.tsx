@@ -347,17 +347,14 @@ function DetailStep({
       />
       <Keypad onChange={(price) => patch({ price })} value={state.price} />
 
-      <div
-        className='-mx-4 shrink-0 bg-background px-4 pt-2.5'
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 34px)' }}
-      >
-        <SheetSubmitButton
-          disabled={!canSave || isPending}
-          disabledLabel='金額を入れると登録できます'
-          formAction={action}
-          label={isEdit ? '変更を保存' : '登録する'}
-        />
-      </div>
+      <SheetSubmitButton
+        bar
+        disabled={!canSave}
+        disabledLabel='金額を入れると登録できます'
+        formAction={action}
+        isPending={isPending}
+        label={isEdit ? '変更を保存' : '登録する'}
+      />
     </form>
   );
 }
@@ -586,11 +583,11 @@ function DeleteButton({
   const [isConfirming, setIsConfirming] = useState(false);
 
   const remove = () => {
-    setIsConfirming(false);
     startTransition(async () => {
       const formData = new FormData();
       formData.set('id', String(id));
       const result = await deletePlannedRecordAction(null, formData);
+      setIsConfirming(false);
       if (result.toast) {
         showToast(result.toast);
       }

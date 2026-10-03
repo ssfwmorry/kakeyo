@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useFormToast } from '@/components/form/use-form-toast';
 import { IconClose, IconShare } from '@/components/icons';
+import { Spinner } from '@/components/ui/spinner';
 import type { MemoItem } from '@/features/memo';
 import { deleteMemoAction } from '@/features/memo/actions';
 import type { FormActionResult } from '@/lib/shared/types/formResult';
@@ -12,6 +13,7 @@ import { TodoSheet } from './todo-sheet';
 // 末尾の「＋ 追加」で追加シートを開く。
 //
 // 削除は × で即時（確認なし）。TODO は短い文なので、消しても書き直しが軽い。
+// 確認を挟まないぶん、押した × をそのままスピナーにして処理中を見せる。
 // 共有の TODO は人のアイコンを添えて区別する。
 
 export function TodoChips({
@@ -82,12 +84,16 @@ function TodoChip({ memo }: { memo: MemoItem }) {
       <span className='truncate'>{memo.memo}</span>
       <button
         aria-label={`${memo.memo}を削除`}
-        className='flex size-7 shrink-0 items-center justify-center rounded-full text-icon-muted disabled:opacity-50'
+        className='flex size-7 shrink-0 items-center justify-center rounded-full text-icon-muted'
         disabled={isPending}
         onClick={remove}
         type='button'
       >
-        <IconClose aria-hidden='true' className='size-3' strokeWidth={2.6} />
+        {isPending ? (
+          <Spinner className='size-3 border-[1.5px]' />
+        ) : (
+          <IconClose aria-hidden='true' className='size-3' strokeWidth={2.6} />
+        )}
       </button>
     </span>
   );

@@ -86,7 +86,8 @@ export function TodoSheet({
           </div>
 
           <SheetSubmitButton
-            disabled={!canAdd || isPending}
+            disabled={!canAdd}
+            isPending={isPending}
             disabledLabel='やることを入れると追加できます'
             label='追加する'
           />

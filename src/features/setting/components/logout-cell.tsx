@@ -20,10 +20,10 @@ export function LogoutCell({ leading }: { leading: ReactNode }) {
   const [isPending, startTransition] = useTransition();
   const [isConfirming, setIsConfirming] = useState(false);
 
+  // redirect を投げる Server Action。遷移で画面が離れるため戻り値は扱わず、
+  // 確認は閉じずに処理中のまま遷移を待つ。
   const logout = () => {
-    setIsConfirming(false);
     startTransition(() => {
-      // redirect を投げる Server Action。遷移で画面が離れるため戻り値は扱わない。
       void logoutAction();
     });
   };

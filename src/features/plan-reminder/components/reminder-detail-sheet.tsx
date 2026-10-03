@@ -34,11 +34,11 @@ export function ReminderDetailSheet({
   const [isPending, startTransition] = useTransition();
 
   const remove = () => {
-    setIsConfirming(false);
     startTransition(async () => {
       const formData = new FormData();
       formData.set('id', String(reminder.id));
       const result = await deleteReminderAction(null, formData);
+      setIsConfirming(false);
       if (result.toast) {
         showToast(result.toast);
       }

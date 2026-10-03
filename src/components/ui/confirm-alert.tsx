@@ -2,6 +2,7 @@
 
 import { AlertDialog } from '@base-ui/react/alert-dialog';
 import { cn } from 'cn';
+import { Spinner } from '@/components/ui/spinner';
 
 // 削除など取り返しのつかない操作の確認。画面中央の幅 290 の小さなアラート
 // （共通仕様「削除の確認」。Dialog をシートにする規則の例外として原典が描いている形）。
@@ -14,6 +15,9 @@ import { cn } from 'cn';
 // 起動元がヘッダーのゴミ箱・行頭の −・行末のボタンとまちまちで、
 // 起動元の見た目をここで決めたくないため。
 //
+// pending のあいだはアラートを開いたまま確定ボタンにスピナーを出し、やめる・暗幕・Esc
+// での閉じも止める。押した場所にそのまま処理中が出て、成功したら確認とシートが一度に
+// 閉じる（先に確認だけ閉じると、シートが残って何も起きていないように見える）。
 
 export function ConfirmAlert({
   open,
@@ -42,7 +46,7 @@ export function ConfirmAlert({
   return (
     <AlertDialog.Root
       onOpenChange={(next) => {
-        if (!next) {
+        if (!next && !pending) {
           onCancel();
         }
       }}
@@ -74,7 +78,8 @@ export function ConfirmAlert({
             >
               {isOk ? null : (
                 <button
-                  className='h-12 border-r text-base text-foreground'
+                  className='h-12 border-r text-base text-foreground disabled:opacity-50'
+                  disabled={pending}
                   onClick={onCancel}
                   type='button'
                 >
@@ -83,13 +88,14 @@ export function ConfirmAlert({
               )}
               <button
                 className={cn(
-                  'h-12 font-bold text-base disabled:opacity-50',
+                  'inline-flex h-12 items-center justify-center gap-2 font-bold text-base',
                   isOk ? 'text-primary' : 'text-destructive'
                 )}
                 disabled={pending}
                 onClick={onConfirm}
                 type='button'
               >
+                {pending ? <Spinner /> : null}
                 {confirmText}
               </button>
             </div>

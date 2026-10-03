@@ -117,9 +117,10 @@ export function ReminderAddSheet({
         aria-label='リマインダーを追加'
         footer={
           <SheetSubmitButton
-            disabled={!canSave || isPending}
+            disabled={!canSave}
             disabledLabel='名前を入れると追加できます'
             form={form.id}
+            isPending={isPending}
             label='追加する'
           />
         }

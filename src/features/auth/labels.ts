@@ -10,10 +10,7 @@ export const authLabels = {
   },
   action: {
     login: 'ログイン',
-    // 送信中は押せないボタンの文字で伝える（スピナーは置かない）。
-    loggingIn: 'ログイン中…',
     sendReset: '再設定メールを送る',
-    sendingReset: '送信中…',
     showReset: 'パスワードを忘れたときは',
     backToLogin: 'ログインに戻る',
     demo: 'デモページを見る',

@@ -185,7 +185,8 @@ export function MasterSheet<Schema extends ZodType>({
 
           <SheetSubmitButton
             className='mt-1'
-            disabled={!canSave || isSaving}
+            disabled={!canSave}
+            isPending={isSaving}
             disabledLabel={`${nameLabel}を入れると${verb}できます`}
             label={`${verb}する`}
           />
