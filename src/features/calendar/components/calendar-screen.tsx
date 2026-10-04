@@ -11,11 +11,11 @@ import {
 import { IconChevronDown, IconChevronLeft, IconPlus } from '@/components/icons';
 import { MonthPickerSheet } from '@/components/month-picker-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Spinner } from '@/components/ui/spinner';
 import { useHorizontalSwipe } from '@/components/use-horizontal-swipe';
 import type {
   CalendarInitialData,
-  CalendarMonthData,
-  DaySum
+  CalendarMonthData
 } from '@/features/calendar';
 import { getCalendarMonthAction } from '@/features/calendar/actions';
 import {
@@ -120,20 +120,17 @@ export function CalendarScreen({
     onSwipeRight: () => moveMonth(-1)
   });
 
-  const cells = useMemo(() => buildMonthGrid(yearMonth), [yearMonth]);
+  const cells = useMemo(
+    () => buildMonthGrid(month.yearMonth),
+    [month.yearMonth]
+  );
 
   const daySums = useMemo(
-    () =>
-      isStale
-        ? new Map<string, DaySum>()
-        : new Map(month.days.map((day) => [day.dateStr, day])),
-    [isStale, month.days]
+    () => new Map(month.days.map((day) => [day.dateStr, day])),
+    [month.days]
   );
 
   const lanes = useMemo(() => {
-    if (isStale) {
-      return assignEventLanes([]);
-    }
     const events: LaneEvent[] = [
       ...month.plans.map((plan) => ({
         colorName: plan.planTypeColorName ?? 'grey',
@@ -153,9 +150,10 @@ export function CalendarScreen({
       }))
     ];
     return assignEventLanes(events);
-  }, [isStale, month.plans, month.reminders]);
+  }, [month.plans, month.reminders]);
 
   const selectedHolidayName = daySums.get(selectedDate)?.holidayName ?? null;
+  const shouldShowGrid = !isStale;
 
   const [year, monthPart] = yearMonth.split('-');
 
@@ -207,18 +205,32 @@ export function CalendarScreen({
           </div>
         </div>
 
-        {/* 枠と日付は yearMonth だけで決まるので月送りの直後に正しくなる。
-            収支と予定の帯は daySums / lanes が空になるぶんだけ欠け、届いた時点で埋まる。
-            日付まで薄くなるのは避けたいので opacity は掛けず、更新中は aria-busy で示す。 */}
-        <div aria-busy={isPending}>
-          <MonthGrid
-            cells={cells}
-            daySums={daySums}
-            lanes={lanes}
-            onSelect={setSelectedDate}
-            selectedDate={selectedDate}
-            today={initial.today}
-          />
+        {/* 月データが揃うまで、前の月のグリッドをそのまま維持して高さを保ち、
+            その上にだけ薄くしてスピナーを乗せる。空セルの瞬間表示で高さが崩れるのを防ぐ。 */}
+        <div
+          aria-busy={isPending || isStale}
+          className='relative -mx-3 border-y bg-card'
+        >
+          <div
+            className={cn(
+              'transition-opacity duration-150',
+              !shouldShowGrid && 'opacity-30'
+            )}
+          >
+            <MonthGrid
+              cells={cells}
+              daySums={daySums}
+              lanes={lanes}
+              onSelect={setSelectedDate}
+              selectedDate={selectedDate}
+              today={initial.today}
+            />
+          </div>
+          {!shouldShowGrid ? (
+            <div className='pointer-events-none absolute inset-0 flex items-center justify-center bg-card/30'>
+              <Spinner className='size-8 text-primary' />
+            </div>
+          ) : null}
         </div>
 
         <div className='grid grid-cols-2 gap-2.5'>
