@@ -26,7 +26,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'かけよ',
-  description: '個人・ペア向けの家計簿アプリ'
+  description: '個人・ペア向けの家計簿アプリ',
+  // iOS Safari は manifest の display / name / icons を見ないため、「ホーム画面に
+  // 追加」で全画面起動させるには Apple 独自の meta が別途要る。
+  appleWebApp: {
+    capable: true,
+    title: 'かけよ',
+    // 'default' はステータスバーを塗らず下の theme-color を透かす。黒帯（'black'）
+    // や本文への被り（'black-translucent'）を避けるためこれを選ぶ。
+    statusBarStyle: 'default'
+  }
 };
 
 // OS の設定に応じたステータスバーの色。アプリ内での上書きは ThemeColorMeta が担う。

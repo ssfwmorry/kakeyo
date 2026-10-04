@@ -5,9 +5,7 @@ import { THEME_COLOR } from '@/features/pwa/theme-color';
 // 要件はホーム画面追加・全画面表示（installable + standalone）。
 // オフラインキャッシュ（next-pwa/Workbox）は採用せず、依存を増やさない。
 //
-// icons: 192/512 の通常アイコンと maskable を用意。
-// TODO(icon): public/ の各 icon-*.png は 32x32 素材を拡大した暫定プレースホルダ。
-//             正式リリース前に高解像度のブランドアイコンへ差し替える。
+// icons の PNG は public/icon.svg から生成する（生成条件はそちらに書いてある）。
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'かけよ',

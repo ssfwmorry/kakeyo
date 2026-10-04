@@ -24,6 +24,7 @@
 //                          オフライン時はそのまま失敗させる（UI 側でトースト表示）。
 
 const STATIC_CACHE = 'kakeyo-static-v1';
+// ログアウト時にアプリ側からも消すため、src/features/pwa/cache-names.ts と同じ名前にする。
 const PAGE_CACHE = 'kakeyo-pages-v1';
 const CURRENT_CACHES = [STATIC_CACHE, PAGE_CACHE];
 
