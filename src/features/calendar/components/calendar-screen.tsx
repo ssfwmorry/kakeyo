@@ -209,7 +209,7 @@ export function CalendarScreen({
             その上にだけ薄くしてスピナーを乗せる。空セルの瞬間表示で高さが崩れるのを防ぐ。 */}
         <div
           aria-busy={isPending || isStale}
-          className='relative -mx-3 border-y bg-card'
+          className='relative border-y bg-card'
         >
           <div
             className={cn(
