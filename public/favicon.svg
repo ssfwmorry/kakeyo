@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- favicon の原本。src/app/favicon.ico（16/32/48/256px を収めた ICO）をこれから
+       生成する。タブでは 16px まで縮み、アプリアイコン（public/icon.svg）の貯金箱と
+       コインは潰れて判別できないため、円記号だけに単純化した別絵柄にしてある。
+
+       地は白文字とのコントラストを確保できる濃さを選んだ（#9dc3e6 では 1.8:1 しか
+       なく白が沈む）。線は 42 幅。これ以上太いと 16px で円記号の横線がくっつく。 -->
+  <rect width="512" height="512" rx="96" fill="#4a7da8"/>
+  <path d="M146 142 l110 104 l110 -104"
+        stroke="#ffffff" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M256 246 v134 M160 300 h192 M160 366 h192"
+        stroke="#ffffff" stroke-width="42" stroke-linecap="round" fill="none"/>
+</svg>

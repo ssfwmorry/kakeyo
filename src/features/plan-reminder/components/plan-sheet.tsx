@@ -26,7 +26,7 @@ import { deletePlanAction, savePlanAction } from '../actions';
 
 // 予定の追加・編集シート（原典 PlanAdd / PlanEdit）。カレンダーの上に出る。
 //
-// 上から「×｜予定を追加｜ゴミ箱」、個人｜共有、予定名、日付（単日／期間）と期間スイッチ、
+// 上から「×｜予定を追加｜個人｜共有・ゴミ箱」、予定名、日付（単日／期間）と期間スイッチ、
 // カテゴリのチップ、メモ。下端に張り付く保存ボタン。削除はヘッダー右のゴミ箱から
 // 中央の確認を経て行う。
 //
@@ -121,29 +121,29 @@ export function PlanSheet({
           />
         }
       >
+        {/* 区分の切替はヘッダー右・ゴミ箱の左に並べる。 */}
         <SheetHeader
+          className='mb-3'
           left='close'
           onLeft={close}
           right={
-            isEdit ? (
-              <SheetTrashButton
-                disabled={remove.isPending}
-                label='この予定を削除'
-                onClick={remove.ask}
+            <span className='flex items-center gap-2'>
+              <ScopeSegment
+                hasPair={hasPair}
+                isPair={isPair}
+                onChange={changeIsPair}
               />
-            ) : undefined
+              {isEdit ? (
+                <SheetTrashButton
+                  disabled={remove.isPending}
+                  label='この予定を削除'
+                  onClick={remove.ask}
+                />
+              ) : null}
+            </span>
           }
           title={title}
         />
-
-        {/* ヘッダー右はゴミ箱が使うので、見出しの下に独立した行で置く。 */}
-        <div className='mb-3 flex justify-end'>
-          <ScopeSegment
-            hasPair={hasPair}
-            isPair={isPair}
-            onChange={changeIsPair}
-          />
-        </div>
 
         <form action={action} className='flex flex-col gap-3.5' id={formId}>
           <HiddenFields
@@ -196,7 +196,7 @@ export function PlanSheet({
             </span>
             <textarea
               aria-label={planReminderLabels.entity.memo}
-              className='h-21 resize-none rounded-xl bg-card px-3.5 py-3 text-[15px] text-foreground leading-relaxed outline-none'
+              className='h-36 resize-none rounded-xl bg-card px-3.5 py-3 text-[15px] text-foreground leading-relaxed outline-none'
               name='memo'
               onChange={(event) => setMemo(event.target.value)}
               placeholder='任意。URL を貼るとリンクになります'
@@ -414,6 +414,7 @@ function DateSection({
 }
 
 // カテゴリのチップ。今のモードのカテゴリから必ず 1 つ選ぶ。選択中は色の淡い地に色の枠。
+// 寸法は記録画面の方法のピル（MethodPills）に揃える。
 function TypeChips({
   planTypes,
   value,
@@ -463,7 +464,7 @@ function TypeChip({
   return (
     <button
       aria-pressed={isSelected}
-      className='flex h-9 items-center gap-1.5 rounded-full border-[1.5px] px-3 font-semibold text-sm'
+      className='flex h-[30px] items-center gap-1.5 rounded-full border-[1.5px] px-3 font-semibold text-[13px]'
       onClick={onSelect}
       style={
         isSelected
@@ -482,7 +483,7 @@ function TypeChip({
     >
       <span
         aria-hidden='true'
-        className='size-2.5 rounded-full'
+        className='size-2 rounded-full'
         style={{ backgroundColor: color }}
       />
       {label}

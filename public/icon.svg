@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- かけよのアプリアイコン原本。PNG はすべてこの 1 枚から sharp で生成する
+       （差し替えは稀なので生成スクリプトは置かず、必要時に都度書き捨てる）。
+       ホーム画面のアイコンは 180px 以上で描かれ、元の 32x32 素材では拡大ボケが
+       出るため、意匠・配色はそのままベクタで引き直した。
+
+       生成条件。地の色 #f4f5f4 は THEME_COLOR.light と同値なので揃えて変えること:
+         - public/icon-{192,512}.png: 透過のまま
+         - public/icon-maskable-{192,512}.png: OS が任意形状に切り抜くので
+           絵柄を 80% に縮めて地を塗る
+         - src/app/apple-icon.png (180): iOS は透過を黒で合成するため不透明にする -->
+  <defs>
+    <!-- 胴の丸みは線ではなくグラデーションで出す（縁が帯に見えないように） -->
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8fb7dc"/>
+      <stop offset="0.35" stop-color="#9dc3e6"/>
+      <stop offset="1" stop-color="#8bb3d9"/>
+    </linearGradient>
+    <!-- 胴に隠れる部分を切り落として、コインを天面の奥に置く -->
+    <clipPath id="aboveLid">
+      <rect x="0" y="0" width="512" height="226"/>
+    </clipPath>
+  </defs>
+
+  <!-- コイン -->
+  <g clip-path="url(#aboveLid)">
+    <circle cx="232" cy="132" r="80" fill="#f0c53f"/>
+    <circle cx="276" cy="140" r="80" fill="#ffd966"/>
+    <!-- 円記号。切り取り線より下は隠れるので、上半分に収まる大きさにする -->
+    <path d="M244 100 l32 30 l32 -30 M276 130 v56 M250 152 h52 M250 174 h52"
+          stroke="#e0b93f" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- 円筒の胴 -->
+  <path d="M96 232 v126 a160 58 0 0 0 320 0 v-126 z" fill="url(#body)"/>
+  <!-- 天面 -->
+  <ellipse cx="256" cy="232" rx="160" ry="58" fill="#b4d2ee"/>
+  <!-- 投入口 -->
+  <rect x="196" y="222" width="120" height="20" rx="10" fill="#7fa6ca"/>
+
+  <!-- 円記号 -->
+  <path d="M196 300 l60 56 l60 -56 M256 356 v84 M206 384 h100 M206 414 h100"
+        stroke="#6f7a84" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

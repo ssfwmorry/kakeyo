@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from 'cn';
 import type { ReactNode } from 'react';
 import { IconChevronLeft, IconClose, IconTrash } from '@/components/icons';
 import { BottomSheetTitle } from '@/components/ui/bottom-sheet';
@@ -18,7 +19,8 @@ export function SheetHeader({
   onLeft,
   title,
   tag,
-  right
+  right,
+  className
 }: {
   // 'close' = ×（閉じる）。{ back } = ‹（戻る。値は aria-label）。ReactNode で任意の要素も置ける。
   left: SheetHeaderLeft;
@@ -29,9 +31,15 @@ export function SheetHeader({
   // タイトルの右に添える小さなタグ（「共有」など）。
   tag?: ReactNode;
   right?: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className='grid h-11 shrink-0 grid-cols-[minmax(44px,auto)_1fr_minmax(44px,auto)] items-center'>
+    <div
+      className={cn(
+        'grid h-11 shrink-0 grid-cols-[minmax(44px,auto)_1fr_minmax(44px,auto)] items-center',
+        className
+      )}
+    >
       <span className='justify-self-start'>
         <LeftControl left={left} onLeft={onLeft} />
       </span>

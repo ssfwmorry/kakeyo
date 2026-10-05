@@ -84,6 +84,15 @@ export function DayDetailList({
   );
 }
 
+// 行のメモ。全文を折り返して出す（改行も保つ）。長い URL は語中でも折る。
+function RowMemo({ memo }: { memo: string }) {
+  return (
+    <span className='whitespace-pre-wrap break-words text-muted-foreground text-xs leading-relaxed'>
+      {memo}
+    </span>
+  );
+}
+
 // 行の下の区切り線。inset は左端の印の幅。
 function Divider({ inset }: { inset: 14 | 62 }) {
   return (
@@ -104,8 +113,9 @@ function Chevron() {
 // 押すと編集シートが開く。リマインダー由来の予定（reminderId あり）も同じシートで
 // 直せる（元のリマインダーには影響しない）。
 //
-// メモは行の 2 段目に出す。シートを開かないと読めないと、日を眺めるだけで毎回開くことになる。
-// 無い予定は 1 行のままにして、行を名前の分の高さに留める。
+// メモは行の 2 段目に全文を出す。シートを開かないと読めないと、日を眺めるだけで毎回開くことになる。
+// メモの分だけ行が伸びるので高さは固定せず、名前と「予定」は上端に揃える
+// （縦中央だと、長いメモの横で宙に浮いて見える）。名前は行の見出しなので 1 行で留める。
 function PlanRow({
   plan,
   isLast,
@@ -120,15 +130,18 @@ function PlanRow({
     <>
       <button
         className={cn(
-          'flex w-full items-center gap-3 px-3.5 text-left text-foreground',
-          memo === null ? 'h-12' : 'h-15'
+          'flex w-full items-start gap-3 px-3.5 text-left text-foreground',
+          memo === null ? 'h-12 items-center' : 'py-3'
         )}
         onClick={onEdit}
         type='button'
       >
         <span
           aria-hidden='true'
-          className='h-6 w-1 shrink-0 rounded-sm'
+          className={cn(
+            'w-1 shrink-0 rounded-sm',
+            memo === null ? 'h-6' : 'mt-0.5 h-5'
+          )}
           style={{
             backgroundColor: colorVar(
               plan.planTypeColorName ?? plan.reminderColorName
@@ -137,11 +150,7 @@ function PlanRow({
         />
         <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
           <span className='truncate text-[15px]'>{plan.name}</span>
-          {memo === null ? null : (
-            <span className='truncate text-muted-foreground text-xs'>
-              {memo}
-            </span>
-          )}
+          {memo === null ? null : <RowMemo memo={memo} />}
         </span>
         <span className='shrink-0 text-muted-foreground text-xs'>予定</span>
         <Chevron />
@@ -166,15 +175,13 @@ function ReminderRow({
     <>
       <IconBell
         aria-hidden='true'
-        className='size-4 shrink-0'
+        className={cn('size-4 shrink-0', memo === null ? null : 'mt-0.5')}
         strokeWidth={2}
         style={{ color: colorVar(reminder.colorName) }}
       />
       <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
         <span className='truncate text-[15px]'>{reminder.name}</span>
-        {memo === null ? null : (
-          <span className='truncate text-muted-foreground text-xs'>{memo}</span>
-        )}
+        {memo === null ? null : <RowMemo memo={memo} />}
       </span>
       <span className='shrink-0 text-muted-foreground text-xs'>
         リマインダー
@@ -183,8 +190,8 @@ function ReminderRow({
     </>
   );
   const rowClass = cn(
-    'flex w-full items-center gap-3 px-3.5 text-left text-foreground',
-    memo === null ? 'h-12' : 'h-15'
+    'flex w-full items-start gap-3 px-3.5 text-left text-foreground',
+    memo === null ? 'h-12 items-center' : 'py-3'
   );
 
   return (
