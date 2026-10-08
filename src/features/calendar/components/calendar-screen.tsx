@@ -133,7 +133,7 @@ export function CalendarScreen({
   const lanes = useMemo(() => {
     const events: LaneEvent[] = [
       ...month.plans.map((plan) => ({
-        colorName: plan.planTypeColorName ?? 'grey',
+        colorName: plan.planTypeColorName,
         endDate: plan.endDate,
         id: `plan-${plan.id}`,
         isReminder: false,

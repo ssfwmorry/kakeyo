@@ -402,3 +402,21 @@ drop table develop.short_cuts;
 ```
 
 本番 DB はまだ VUE 実装から三章されているので NG
+
+## 20261008\_開発 DB から reminders.reminder_type と plans.reminder_id を削除する
+
+リマインダーのチェックで plan を残す仕様（reminder_type=10 Stock）を廃止する。
+チェックは次回日付への更新だけになるので、型の区別（reminder_type）と、
+そこから作られた plan への紐付け（plans.reminder_id）がどちらも不要になる。
+
+過去に「予定に残す」で作られた plan 行は通常の予定として残す（紐付けだけ外れる）。
+
+```sql
+alter table develop.plans drop constraint plans_reminder_id_fkey;
+alter table develop.plans drop column reminder_id;
+alter table develop.reminders drop column reminder_type;
+-- リマインダー由来だとNULLにセットしていたが、今回機能を落としたことでNULLが使わなくなった
+alter table develop.plans alter column plan_type_id set not null;
+```
+
+`develop.get_plan_list` も reminder 結合を外して更新する。

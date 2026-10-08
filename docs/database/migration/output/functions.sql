@@ -1,4 +1,4 @@
--- now: 2025-08-24 13:03
+-- now: 2026-10-08 23:06
 -- migration-sort: 1
 drop function if exists develop.swap_method(id1 int, id2 int);
 
@@ -565,7 +565,6 @@ returns table (
   plan_type_id integer,
   plan_type_name varchar(10),
   plan_type_color_classification_name varchar(10),
-  reminder_color_classification_name varchar(10),
   is_pair boolean -- not null
 )
 as $$
@@ -578,17 +577,12 @@ as $$
       plan_types.id as plan_type_id,
       plan_types.name as plan_type_name,
       type_colors.name as plan_type_color_classification_name,
-      reminder_colors.name as reminder_color_classification_name,
       pairs.id is not null as is_pair
     from develop.plans
     left join develop.plan_types on
         plans.plan_type_id = plan_types.id
     left join develop.color_classifications as type_colors on
         plan_types.color_classification_id = type_colors.id
-    left join develop.reminders on
-        plans.reminder_id = reminders.id
-    left join develop.color_classifications as reminder_colors on
-        reminders.color_classification_id = reminder_colors.id
     left join develop.pairs on
         plans.pair_id = pairs.id
     where

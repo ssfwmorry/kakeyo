@@ -118,10 +118,9 @@ export const plans = pgTable('plans', {
   pairId: integer('pair_id'),
   startDate: date('start_date', { mode: 'date' }).notNull(),
   endDate: date('end_date', { mode: 'date' }).notNull(),
-  planTypeId: integer('plan_type_id'),
+  planTypeId: integer('plan_type_id').notNull(),
   name: varchar('name', { length: 30 }).notNull(),
-  memo: text('memo'),
-  reminderId: integer('reminder_id')
+  memo: text('memo')
 });
 
 export const planTypes = pgTable('plan_types', {
@@ -169,7 +168,6 @@ export const reminders = pgTable('reminders', {
   userId: varchar('user_id', { length: 28 }),
   pairId: integer('pair_id'),
   name: varchar('name', { length: 10 }).notNull(),
-  reminderType: smallint('reminder_type').notNull(),
   conditionId: integer('condition_id').notNull(),
   date: date('date', { mode: 'date' }).notNull(),
   memo: text('memo'),

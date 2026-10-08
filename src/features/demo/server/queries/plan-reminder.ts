@@ -1,8 +1,7 @@
 import 'server-only';
 import {
   groupPlanTypeList,
-  groupReminderList,
-  toPlanItems
+  groupReminderList
 } from '@/features/plan-reminder/grouping';
 import type { PlanRow } from '@/features/plan-reminder/server/repositories/plan';
 import type { PlanTypeRow } from '@/features/plan-reminder/server/repositories/plan-type';
@@ -44,21 +43,18 @@ export function getPlanTypeCardList(scope: SessionScope): GroupedPlanTypeList {
   return groupPlanTypeList(rows);
 }
 
-// planInclude 相当（plan_type の名前・色を join。reminder 由来の予定は無い）。
+// planInclude 相当（plan_type の名前・色を join）。
 function toPlanRow(row: DemoPlan): PlanRow {
-  const planType =
-    row.planTypeId === null ? null : findPlanType(row.planTypeId);
+  const planType = findPlanType(row.planTypeId);
   return {
     id: row.id,
     startDate: row.startDate,
     endDate: row.endDate,
     name: row.name,
     memo: row.memo,
-    planTypeId: planType?.id ?? null,
-    planTypeName: planType?.name ?? null,
-    planTypeColorName: planType ? colorName(planType.colorId) : null,
-    reminderColorName: null,
-    reminderId: row.reminderId,
+    planTypeId: planType.id,
+    planTypeName: planType.name,
+    planTypeColorName: colorName(planType.colorId),
     isPair: row.pairId !== null
   };
 }
@@ -72,7 +68,7 @@ export function getPlanList(
     .filter((row) => row.startDate >= range.start && row.startDate <= range.end)
     .sort((a, b) => a.startDate.localeCompare(b.startDate))
     .map(toPlanRow);
-  return toPlanItems(rows);
+  return rows;
 }
 
 // findPlanForEdit 相当: scope 内の plan 1 件（見つからなければ null = 新規扱い）。
@@ -81,14 +77,13 @@ export function getPlanForEdit(
   id: number
 ): PlanItem | null {
   const row = visibleTo(scope, planRows).find((r) => r.id === id);
-  return row ? toPlanItems([toPlanRow(row)])[0] : null;
+  return row ? toPlanRow(row) : null;
 }
 
 function toReminderRow(row: DemoReminder): ReminderRow {
   return {
     id: row.id,
     name: row.name,
-    reminderType: row.reminderType,
     date: row.date,
     memo: row.memo,
     colorClassificationId: row.colorId,
@@ -108,4 +103,13 @@ export function getReminderList(scope: SessionScope): GroupedReminderList {
     .sort((a, b) => a.colorId - b.colorId)
     .map(toReminderRow);
   return groupReminderList(rows);
+}
+
+// findReminderInScope 相当: scope 内の reminder 1 件（不存在は null）。
+export function findReminderInScope(
+  scope: SessionScope,
+  id: number
+): ReminderRow | null {
+  const row = visibleTo(scope, reminderRows).find((r) => r.id === id);
+  return row ? toReminderRow(row) : null;
 }

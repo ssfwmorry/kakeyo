@@ -1,6 +1,10 @@
 import 'server-only';
 import { cache } from 'react';
-import { withDemoRead, withDemoWriteVoid } from '@/features/demo/server/inject';
+import {
+  withDemoRead,
+  withDemoWrite,
+  withDemoWriteVoid
+} from '@/features/demo/server/inject';
 import * as demoPlanReminder from '@/features/demo/server/queries/plan-reminder';
 import { isForeignKeyError } from '@/lib/server/db/errors';
 import { resolveOwner } from '@/lib/server/pair/owner';
@@ -9,12 +13,8 @@ import { planReorder } from '@/lib/shared/domain/reorder';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
-import {
-  ConditionType,
-  calcNextReminderDate,
-  ReminderType
-} from '../domain/reminder-condition';
-import { groupPlanTypeList, groupReminderList, toPlanItems } from '../grouping';
+import { calcNextReminderDate } from '../domain/reminder-condition';
+import { groupPlanTypeList, groupReminderList } from '../grouping';
 import type {
   GroupedPlanTypeList,
   GroupedReminderList,
@@ -49,16 +49,12 @@ export async function getPlanList(
   return withDemoRead(
     session,
     () => demoPlanReminder.getPlanList(session, range),
-    async () => {
-      const rows = await planRepo.findPlanRows(session, range);
-      return toPlanItems(rows);
-    }
+    () => planRepo.findPlanRows(session, range)
   );
 }
 
 // 予定シートの編集のプリフィル用に plan 1 件を取得する。
 // scope 外・不存在は null（呼び出し側で新規扱いにするかを決める）。
-// PlanRow は PlanItem と同形のためそのまま返す（toPlanItems は配列整形のみで単件は不要）。
 export async function getPlanForEdit(
   session: SessionData,
   id: Id
@@ -206,7 +202,6 @@ export async function insertReminder(
   session: SessionData,
   input: {
     name: string;
-    reminderType: number;
     date: string;
     memo: string | null;
     colorId: Id;
@@ -226,7 +221,6 @@ export async function insertReminder(
   return withDemoWriteVoid(session, async () => {
     await reminderRepo.insertReminderWithCondition({
       name: input.name,
-      reminderType: input.reminderType,
       date: input.date,
       memo: input.memo,
       colorClassificationId: input.colorId,
@@ -249,7 +243,7 @@ export async function deleteReminder(
       return err('notInScope');
     }
     try {
-      await reminderRepo.deleteReminderWithCondition(session, {
+      await reminderRepo.deleteReminderWithCondition({
         reminderId: target.id,
         conditionId: target.conditionId
       });
@@ -260,50 +254,44 @@ export async function deleteReminder(
   });
 }
 
-// リマインダーのチェック（消化）。次回日付を算出して更新、Stock 型なら plan 化する。
+// リマインダーのチェック（消化）。次回日付を算出して date を進める。
+// Action がトースト文言に使うので、対象の名前を返す（名前のために一覧を引き直さない）。
 export async function checkReminder(
   session: SessionData,
   reminderId: Id
-): Promise<Result<void, PlanReminderError>> {
-  return withDemoWriteVoid(session, async () => {
-    const target = await reminderRepo.findReminderInScope(session, reminderId);
-    if (!target) {
-      return err('notInScope');
+): Promise<Result<{ name: string }, PlanReminderError>> {
+  return withDemoWrite(
+    session,
+    () => ({
+      name:
+        demoPlanReminder.findReminderInScope(session, reminderId)?.name ?? ''
+    }),
+    async () => {
+      const target = await reminderRepo.findReminderInScope(
+        session,
+        reminderId
+      );
+      if (!target) {
+        return err('notInScope');
+      }
+      const nextDate = calcNextReminderDate({
+        conditionType: target.conditionType,
+        month: target.month,
+        monthDay: target.monthDay,
+        baseType: target.baseType,
+        currentDate: target.date,
+        today: todayJst()
+      });
+      if (nextDate === null) {
+        return err('unknown');
+      }
+      await reminderRepo.checkReminderUpdate({
+        reminderId: target.id,
+        nextDate
+      });
+      return ok({ name: target.name });
     }
-    const nextDate = calcNextReminderDate({
-      conditionType: target.conditionType,
-      month: target.month,
-      monthDay: target.monthDay,
-      baseType: target.baseType,
-      currentDate: target.date,
-      today: todayJst()
-    });
-    if (nextDate === null) {
-      return err('unknown');
-    }
-    // Stock 型かつ conditionType=MONTH（Nヶ月後指定）のときのみ「現在の date」を
-    // 予定として残す。MONTH_DAY（月日指定）では Stock でも plan を作らない
-    // （＝余分な予定を作らない）。
-    // 所有列は reminder の所有に合わせる（pairId があればペア、なければ本人）。
-    const isStockMonth =
-      target.reminderType === ReminderType.stock &&
-      target.conditionType === ConditionType.month;
-    const plan = isStockMonth
-      ? {
-          userId: target.pairId === null ? session.userUid : null,
-          pairId: target.pairId,
-          date: target.date,
-          name: target.name,
-          memo: target.memo
-        }
-      : null;
-    await reminderRepo.checkReminderUpdate({
-      reminderId: target.id,
-      nextDate,
-      plan
-    });
-    return ok(undefined);
-  });
+  );
 }
 
 // 任意順の並べ替え。全 id が scope 内かつ同じ所有（self / pair）に揃っていることを

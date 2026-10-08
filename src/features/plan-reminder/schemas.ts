@@ -1,10 +1,6 @@
 import { z } from 'zod';
 import { entityIdSchema } from '@/lib/shared/domain/entityId';
-import {
-  BaseType,
-  ConditionType,
-  ReminderType
-} from './domain/reminder-condition';
+import { BaseType, ConditionType } from './domain/reminder-condition';
 import { planReminderLabels } from './labels';
 
 // plan / planType / reminder の各フォームの入力スキーマ。
@@ -73,11 +69,6 @@ export const reminderInsertSchema = z
       .positive(validation.colorRequired),
     date: z.string().min(1, validation.dateRequired),
     memo: optionalTrimmedText,
-    reminderType: z.coerce
-      .number()
-      .refine((v): v is ReminderType =>
-        Object.values(ReminderType).includes(v as ReminderType)
-      ),
     conditionType: z.coerce
       .number()
       .refine((v): v is ConditionType =>
@@ -122,7 +113,7 @@ export const deleteSchema = z.object({
   id: entityIdSchema()
 });
 
-export { BaseType, ConditionType, ReminderType };
+export { BaseType, ConditionType };
 export type PlanTypeUpsertInput = z.infer<typeof planTypeUpsertSchema>;
 export type PlanUpsertInput = z.infer<typeof planUpsertSchema>;
 export type ReminderInsertInput = z.infer<typeof reminderInsertSchema>;

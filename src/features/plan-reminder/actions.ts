@@ -99,7 +99,6 @@ export async function insertReminderAction(
     colorId,
     date,
     memo,
-    reminderType,
     conditionType,
     month,
     baseType,
@@ -107,7 +106,6 @@ export async function insertReminderAction(
   } = submission.value;
   const result = await service.insertReminder(session, {
     name,
-    reminderType,
     date,
     memo,
     colorId,

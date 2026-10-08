@@ -1,8 +1,7 @@
 import type { ReminderItem } from '@/features/plan-reminder';
 import {
   BaseType,
-  ConditionType,
-  ReminderType
+  ConditionType
 } from '@/features/plan-reminder/domain/reminder-condition';
 
 // リマインダーの条件を文にする純関数。一覧の補足・詳細・追加シートの要約が使う。
@@ -38,13 +37,6 @@ export function ruleText(rule: ReminderRule): string {
   const base =
     rule.baseType === BaseType.date ? 'リマインド日' : 'チェックした日';
   return `${base}から${rule.month ?? 1}か月後`;
-}
-
-// 「予定に残す」「残さない（次の日付に進むだけ）」。
-export function reminderTypeText(reminderType: number): string {
-  return reminderType === ReminderType.stock
-    ? '予定に残す'
-    : '残さない（次の日付に進むだけ）';
 }
 
 // 追加シートの要約。名前が空なら前半を省く。

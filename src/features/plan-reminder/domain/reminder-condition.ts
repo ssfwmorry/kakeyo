@@ -17,13 +17,6 @@ export const BaseType = {
 } as const;
 export type BaseType = (typeof BaseType)[keyof typeof BaseType];
 
-// reminder_type: 5(Flow)=チェックで日付更新のみ / 10(Stock)=チェックで plan 化。
-export const ReminderType = {
-  flow: 5,
-  stock: 10
-} as const;
-export type ReminderType = (typeof ReminderType)[keyof typeof ReminderType];
-
 // 次回日付計算に渡す条件（DB 由来の condition 行を写したもの）。
 export type NextDateInput = {
   conditionType: number;

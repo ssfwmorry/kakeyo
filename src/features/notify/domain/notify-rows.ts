@@ -1,9 +1,5 @@
 import type { ReminderItem } from '@/features/plan-reminder';
-import {
-  ConditionType,
-  calcNextReminderDate,
-  ReminderType
-} from '@/features/plan-reminder/domain/reminder-condition';
+import { calcNextReminderDate } from '@/features/plan-reminder/domain/reminder-condition';
 import { diffDaysJst } from '@/lib/shared/domain/date';
 
 // お知らせシートに出す 1 行。リマインダーのうち期日を過ぎたものだけを、
@@ -23,8 +19,6 @@ export type NotifyRow = {
   overdueDays: number;
   // 「確認」を押したあとの次の期日。条件が壊れていて計算できないときは null。
   nextDate: string | null;
-  // 確認するとこの日の予定がカレンダーに残るか（「予定に残す」型かつ「〜か月後」型。README D16）。
-  keepsPlan: boolean;
 };
 
 // 期日を過ぎた（date < today）リマインダーを日付の昇順で並べる（README D12。当日分は一覧側）。
@@ -49,9 +43,6 @@ export function buildNotifyRows(
         baseType: reminder.baseType,
         currentDate: reminder.date,
         today
-      }),
-      keepsPlan:
-        reminder.reminderType === ReminderType.stock &&
-        reminder.conditionType === ConditionType.month
+      })
     }));
 }

@@ -12,8 +12,6 @@ function plan(id: number, startDate: string, endDate: string): PlanItem {
     planTypeId: 1,
     planTypeName: 'type',
     planTypeColorName: 'red',
-    reminderColorName: null,
-    reminderId: null,
     isPair: false
   };
 }
@@ -22,7 +20,6 @@ function reminder(id: number, date: string): ReminderItem {
   return {
     id,
     name: `reminder-${id}`,
-    reminderType: 1,
     date,
     memo: null,
     colorClassificationId: 1,

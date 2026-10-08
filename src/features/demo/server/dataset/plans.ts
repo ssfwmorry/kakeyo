@@ -3,7 +3,7 @@ import { planTypes } from './plan-types';
 import { defineTable } from './table';
 import { type Owned, owner } from './users';
 
-// plans（予定）。日付は YYYY-MM-DD（JST 暦日）。reminder 由来の予定は無い（reminderId=null）。
+// plans（予定）。日付は YYYY-MM-DD（JST 暦日）。
 
 export type DemoPlan = Owned & {
   id: number;
@@ -11,8 +11,7 @@ export type DemoPlan = Owned & {
   endDate: string;
   name: string;
   memo: string | null;
-  planTypeId: number | null;
-  reminderId: number | null;
+  planTypeId: number;
 };
 
 export const [plans, planRows] = defineTable({
@@ -22,8 +21,7 @@ export const [plans, planRows] = defineTable({
     endDate: '2026-09-24',
     name: 'WEB 会議',
     memo: 'zoom',
-    planTypeId: planTypes.work.id,
-    reminderId: null
+    planTypeId: planTypes.work.id
   },
   hotSpring: {
     ...owner.self,
@@ -31,8 +29,7 @@ export const [plans, planRows] = defineTable({
     endDate: '2026-09-27',
     name: '温泉旅行',
     memo: null,
-    planTypeId: planTypes.private.id,
-    reminderId: null
+    planTypeId: planTypes.private.id
   },
   pairFamilyDinner: {
     ...owner.pair,
@@ -40,7 +37,6 @@ export const [plans, planRows] = defineTable({
     endDate: '2026-09-28',
     name: '両家で食事',
     memo: '18:00〜',
-    planTypeId: planTypes.pairFamily.id,
-    reminderId: null
+    planTypeId: planTypes.pairFamily.id
   }
 } satisfies Record<string, Omit<DemoPlan, 'id'>>);

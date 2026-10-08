@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ReminderItem } from '@/features/plan-reminder';
 import {
   BaseType,
-  ConditionType,
-  ReminderType
+  ConditionType
 } from '@/features/plan-reminder/domain/reminder-condition';
 import { buildNotifyRows } from './notify-rows';
 
@@ -13,7 +12,6 @@ function reminder(overrides: Partial<ReminderItem>): ReminderItem {
   return {
     id: 1,
     name: '電気代の支払い',
-    reminderType: ReminderType.flow,
     date: '2026-09-20',
     memo: null,
     colorClassificationId: 1,
@@ -73,24 +71,5 @@ describe('buildNotifyRows', () => {
       TODAY
     );
     expect(row.nextDate).toBe('2027-09-15');
-  });
-
-  it('予定に残すのは「予定に残す」型かつ「〜か月後」型のときだけ', () => {
-    const rows = buildNotifyRows(
-      [
-        reminder({ id: 1, reminderType: ReminderType.stock }),
-        reminder({ id: 2, reminderType: ReminderType.flow }),
-        reminder({
-          id: 3,
-          reminderType: ReminderType.stock,
-          conditionType: ConditionType.monthDay,
-          monthDay: '09-20',
-          month: null,
-          baseType: null
-        })
-      ],
-      TODAY
-    );
-    expect(rows.map((row) => row.keepsPlan)).toEqual([true, false, false]);
   });
 });

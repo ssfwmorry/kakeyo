@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ReminderItem } from '@/features/plan-reminder';
-import {
-  reminderTypeText,
-  ruleText,
-  summaryText,
-  upcomingReminders
-} from './describe';
+import { ruleText, summaryText, upcomingReminders } from './describe';
 
 describe('ruleText', () => {
   it('毎年は月日を出す', () => {
@@ -26,13 +21,6 @@ describe('ruleText', () => {
     expect(
       ruleText({ conditionType: 5, month: 1, monthDay: null, baseType: 10 })
     ).toBe('リマインド日から1か月後');
-  });
-});
-
-describe('reminderTypeText', () => {
-  it('予定に残すか残さないか', () => {
-    expect(reminderTypeText(10)).toBe('予定に残す');
-    expect(reminderTypeText(5)).toBe('残さない（次の日付に進むだけ）');
   });
 });
 
@@ -85,7 +73,6 @@ describe('upcomingReminders', () => {
   const item = (id: number, date: string): ReminderItem => ({
     id,
     name: `r${id}`,
-    reminderType: 5,
     date,
     memo: null,
     colorClassificationId: 1,

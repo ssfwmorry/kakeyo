@@ -443,10 +443,9 @@ create policy "develop.planned_records all"
 | pair_id      |  int   |   -    |    -     |       -        |   pairs.uid   | user_id とどちらか必須                                    |
 | start_date   |  date  |   -    |    v     |       -        |       -       | -                                                         |
 | end_date     |  date  |   -    |    v     |       -        |       -       | -                                                         |
-| plan_type_id |  int   |   -    |    -     |       -        | plan_types.id | -                                                         |
+| plan_type_id |  int   |   -    |    v     |       -        | plan_types.id | -                                                         |
 | name         | string | max 30 |    v     |       -        |       -       | -                                                         |
 | memo         | string |   -    |    -     |       -        |       -       | -                                                         |
-| reminder_id  |  int   |   -    |    -     |       -        | reminders.id  | reminders.reminder_type=10(Stock)の場合に作られたかどうか |
 
 #### migration
 
@@ -460,15 +459,13 @@ create table develop.plans (
     pair_id      integer,
     start_date   date         not null,
     end_date     date         not null,
-    plan_type_id integer,
+    plan_type_id integer      not null,
     name         varchar(30)  not null check (length(name) <= 30),
     memo         text,
-    reminder_id  integer,
 
     foreign key (user_id) references develop.users (uid),
     foreign key (pair_id) references develop.pairs (id),
     foreign key (plan_type_id) references develop.plan_types (id)
-    foreign key (reminder_id) references develop.reminders (id)
 );
 
 alter table develop.plans
@@ -712,7 +709,6 @@ create policy "develop.conditions all"
 | user_id                 | string  |   28   |    -     |       -        |        users.uid         | pair_id とどちらか必須                                                     |
 | pair_id                 |   int   |   -    |    -     |       -        |         pairs.id         | user_id とどちらか必須                                                     |
 | name                    | string  | max 10 |    v     |       -        |            -             | -                                                                          |
-| reminder_type           | tinyint |   -    |    v     |       -        |            -             | 5(Flow): チェック後に日付が変わる, 10(Stock): チェック後に plan として残る |
 | condition_id            |   int   |   -    |    v     |       -        |      conditions.id       | -                                                                          |
 | date                    |  date   |   -    |    v     |       -        |            -             | -                                                                          |
 | memo                    | string  |   -    |    -     |       -        |            -             | -                                                                          |
@@ -728,7 +724,6 @@ create table develop.reminders (
     user_id                 varchar(28),
     pair_id                 integer,
     name                    varchar(10) not null check (length(name) <= 10),
-    reminder_type           smallint    not null,
     condition_id            integer     not null,
     date                    date        not null,
     memo                    text,

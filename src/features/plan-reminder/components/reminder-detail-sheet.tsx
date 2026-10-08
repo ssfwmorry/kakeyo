@@ -14,7 +14,7 @@ import { AutoLinkText } from '@/features/plan-reminder';
 import { deleteReminderAction } from '@/features/plan-reminder/actions';
 import { formatMonthDayWeekJa, quoted } from '@/lib/shared/domain/format';
 import { showToast } from '@/lib/shared/toast/show-toast';
-import { reminderTypeText, ruleText } from '../domain/describe';
+import { ruleText } from '../domain/describe';
 
 // リマインダーの詳細シート（原典 SetReminderDetail）。編集は無く、見るか消すか。
 //
@@ -82,9 +82,6 @@ export function ReminderDetailSheet({
             </span>
           </DetailRow>
           <DetailRow label='その次'>{ruleText(reminder)}</DetailRow>
-          <DetailRow label='チェックしたあと'>
-            {reminderTypeText(reminder.reminderType)}
-          </DetailRow>
           {reminder.memo === null || reminder.memo === '' ? null : (
             <DetailRow isMultiline label='メモ'>
               <span className='whitespace-pre-wrap break-words leading-normal'>
@@ -99,7 +96,7 @@ export function ReminderDetailSheet({
         </p>
 
         <ConfirmAlert
-          description={`${quoted(reminder.name)}のお知らせが来なくなります。予定に残した分は消えません。`}
+          description={`${quoted(reminder.name)}のお知らせが来なくなります。`}
           onCancel={() => setIsConfirming(false)}
           onConfirm={remove}
           open={isConfirming}

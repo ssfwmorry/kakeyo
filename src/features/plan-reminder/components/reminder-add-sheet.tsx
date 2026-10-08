@@ -24,8 +24,7 @@ import { insertReminderAction } from '@/features/plan-reminder/actions';
 import { daysInMonthFixed } from '@/features/plan-reminder/domain/month-days';
 import {
   BaseType,
-  ConditionType,
-  ReminderType
+  ConditionType
 } from '@/features/plan-reminder/domain/reminder-condition';
 import { reminderInsertSchema } from '@/features/plan-reminder/schemas';
 import { addDaysJst } from '@/lib/shared/domain/date';
@@ -35,8 +34,8 @@ import { type ReminderRule, summaryText } from '../domain/describe';
 
 // リマインダーの追加シート（原典 SetReminderAdd / SetReminderAddYearly）。
 //
-// 上から「名前・メモ」「色」「いつ（最初の日・次の日の決め方）」「チェックしたあと」、
-// 要約、下端に張り付く「追加する」。編集は無く、内容を変えるときは削除して追加し直す。
+// 上から「名前・メモ」「色」「いつ（最初の日・次の日の決め方）」、要約、
+// 下端に張り付く「追加する」。編集は無く、内容を変えるときは削除して追加し直す。
 //
 // 「次の日」は 2 種: 〜か月後（チェックした日か、お知らせの日から数える）と 毎年（月日）。
 // 毎年に切り替えた瞬間に、最初の日の月日を初期値にする。
@@ -50,11 +49,6 @@ const CONDITION_OPTIONS = [
   { value: 'year', label: '毎年' }
 ] as const;
 
-const TYPE_OPTIONS = [
-  { value: 'stock', label: '予定に残す', sub: 'カレンダーに記録が残る' },
-  { value: 'flow', label: '残さない', sub: '次の日付に進むだけ' }
-] as const;
-
 type Draft = {
   name: string;
   memo: string;
@@ -64,7 +58,6 @@ type Draft = {
   months: number;
   yearMonth: number;
   yearDay: number;
-  isStock: boolean;
 };
 
 export function ReminderAddSheet({
@@ -100,8 +93,7 @@ export function ReminderAddSheet({
       isFromDate: false,
       months: 1,
       yearMonth: (first?.getMonth() ?? 0) + 1,
-      yearDay: first?.getDate() ?? 1,
-      isStock: true
+      yearDay: first?.getDate() ?? 1
     };
   });
   const patch = (next: Partial<Draft>) =>
@@ -181,17 +173,6 @@ export function ReminderAddSheet({
             </div>
           </div>
 
-          <div className='flex flex-col gap-1.5'>
-            <SectionLabel>チェックしたあと</SectionLabel>
-            <Segment
-              label='チェックしたあと'
-              onChange={(value) => patch({ isStock: value === 'stock' })}
-              options={TYPE_OPTIONS}
-              size='xl'
-              value={draft.isStock ? 'stock' : 'flow'}
-            />
-          </div>
-
           {first === undefined ? null : (
             <p className='rounded-xl bg-secondary px-3.5 py-3 text-[13px] text-foreground leading-relaxed'>
               {summaryText({
@@ -234,12 +215,6 @@ function HiddenFields({ draft, rule }: { draft: Draft; rule: ReminderRule }) {
       <input name='name' readOnly type='hidden' value={draft.name} />
       <input name='memo' readOnly type='hidden' value={draft.memo} />
       <input name='date' readOnly type='hidden' value={draft.date} />
-      <input
-        name='reminderType'
-        readOnly
-        type='hidden'
-        value={draft.isStock ? ReminderType.stock : ReminderType.flow}
-      />
       <input
         name='conditionType'
         readOnly

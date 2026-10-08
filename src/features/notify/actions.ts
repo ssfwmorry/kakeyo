@@ -21,17 +21,13 @@ export async function checkReminderAction(
   reminderId: number
 ): Promise<FormActionResult> {
   const session = await requireAuth();
-  // 文言用の名前は scope 内の一覧から引く（クライアントから受けた値は表示にも使わない）。
-  const target = (await service.getReminderList(session)).all.find(
-    (reminder) => reminder.id === reminderId
-  );
+  // 文言用の名前はサービスが返す scope 内の値を使う（クライアントから受けた値は表示にも使わない）。
   const result = await service.checkReminder(session, reminderId);
   revalidatePath('/', 'layout');
   return toFormResult(result, {
-    success:
-      target === undefined
-        ? L.snackbar.checked
-        : `${quoted(target.name)}を${L.snackbar.checked}`,
+    success: result.ok
+      ? `${quoted(result.data.name)}を${L.snackbar.checked}`
+      : L.snackbar.checked,
     errorMessage: planReminderErrorMessage,
     fallbackError: L.snackbar.failed
   });

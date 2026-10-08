@@ -829,7 +829,6 @@ $$ language sql;
   - end_date
   - name
   - memo
-  - reminder_id
   - is_pair
   - plan_type_id
     - plan 編集用に使用
@@ -847,11 +846,9 @@ returns table (
   end_date date, -- not null
   name varchar(30), -- not null
   memo text,
-  reminder_id integer,
   plan_type_id integer,
   plan_type_name varchar(10),
   plan_type_color_classification_name varchar(10),
-  reminder_color_classification_name varchar(10),
   is_pair boolean -- not null
 )
 as $$
@@ -861,21 +858,15 @@ as $$
       plans.end_date,
       plans.name,
       plans.memo,
-      plans.reminder_id,
       plan_types.id as plan_type_id,
       plan_types.name as plan_type_name,
       type_colors.name as plan_type_color_classification_name,
-      reminder_colors.name as reminder_color_classification_name,
       pairs.id is not null as is_pair
     from develop.plans
     left join develop.plan_types on
         plans.plan_type_id = plan_types.id
     left join develop.color_classifications as type_colors on
         plan_types.color_classification_id = type_colors.id
-    left join develop.reminders on
-        plans.reminder_id = reminders.id
-    left join develop.color_classifications as reminder_colors on
-        reminders.color_classification_id = reminder_colors.id
     left join develop.pairs on
         plans.pair_id = pairs.id
     where

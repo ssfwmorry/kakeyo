@@ -43,3 +43,16 @@ export async function withDemoWriteVoid<E = string>(
   }
   return real();
 }
+
+// 更新系（成功時に値を返す）: 更新対象の名前など、Action がトースト文言に使う値を
+// 返したいときに使う。デモ時は DB に触れないので、代わりに demo が返す値で成功扱い。
+export async function withDemoWrite<T, E = string>(
+  session: DemoSession,
+  demo: () => T,
+  real: () => Promise<Result<T, E>>
+): Promise<Result<T, E>> {
+  if (session.isDemo) {
+    return ok<T, E>(demo());
+  }
+  return real();
+}

@@ -110,8 +110,7 @@ function Chevron() {
   );
 }
 
-// 押すと編集シートが開く。リマインダー由来の予定（reminderId あり）も同じシートで
-// 直せる（元のリマインダーには影響しない）。
+// 押すと編集シートが開く。
 //
 // メモは行の 2 段目に全文を出す。シートを開かないと読めないと、日を眺めるだけで毎回開くことになる。
 // メモの分だけ行が伸びるので高さは固定せず、名前と「予定」は上端に揃える
@@ -142,11 +141,7 @@ function PlanRow({
             'w-1 shrink-0 rounded-sm',
             memo === null ? 'h-6' : 'mt-0.5 h-5'
           )}
-          style={{
-            backgroundColor: colorVar(
-              plan.planTypeColorName ?? plan.reminderColorName
-            )
-          }}
+          style={{ backgroundColor: colorVar(plan.planTypeColorName) }}
         />
         <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
           <span className='truncate text-[15px]'>{plan.name}</span>

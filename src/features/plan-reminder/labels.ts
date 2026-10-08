@@ -31,9 +31,6 @@ export const planReminderLabels = {
   },
   // reminder の条件表示・選択肢。
   reminder: {
-    checkKeep: 'チェック後に予定として',
-    keep: '残す',
-    notKeep: '残さない',
     nextPlan: '次の予定',
     afterMonths: '〜ヶ月後',
     monthDay: '月日',
@@ -43,8 +40,7 @@ export const planReminderLabels = {
     day: '日',
     months: 'ヶ月後',
     from: 'から',
-    nextYearPrefix: '来年の',
-    deleteConfirm: '予定への連携もなくなります。本当に削除してもよいですか？'
+    nextYearPrefix: '来年の'
   },
   // plan/reminder 固有の失敗分類の文言。
   error: {

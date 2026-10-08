@@ -1,10 +1,8 @@
-import type { PlanRow } from './server/repositories/plan';
 import type { PlanTypeRow } from './server/repositories/plan-type';
 import type { ReminderRow } from './server/repositories/reminder';
 import type {
   GroupedPlanTypeList,
   GroupedReminderList,
-  PlanItem,
   PlanTypeCard,
   ReminderItem
 } from './types';
@@ -29,29 +27,11 @@ export function groupPlanTypeList(rows: PlanTypeRow[]): GroupedPlanTypeList {
   };
 }
 
-// plan 行 → 画面用 PlanItem（日付・色名はリポジトリで整形済み）。
-export function toPlanItems(rows: PlanRow[]): PlanItem[] {
-  return rows.map((row) => ({
-    id: row.id,
-    startDate: row.startDate,
-    endDate: row.endDate,
-    name: row.name,
-    memo: row.memo,
-    planTypeId: row.planTypeId,
-    planTypeName: row.planTypeName,
-    planTypeColorName: row.planTypeColorName,
-    reminderColorName: row.reminderColorName,
-    reminderId: row.reminderId,
-    isPair: row.isPair
-  }));
-}
-
 // reminder 行 → self/pair/all 振り分け。
 export function groupReminderList(rows: ReminderRow[]): GroupedReminderList {
   const items: ReminderItem[] = rows.map((row) => ({
     id: row.id,
     name: row.name,
-    reminderType: row.reminderType,
     date: row.date,
     memo: row.memo,
     colorClassificationId: row.colorClassificationId,

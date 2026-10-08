@@ -162,22 +162,11 @@ function NotifyRowItem({
           <AutoLinkText text={row.memo} />
         </span>
       ) : null}
-      <span className='pl-[42px] text-muted-foreground text-xs leading-normal'>
-        <NextNote row={row} />
-      </span>
+      {row.nextDate === null ? null : (
+        <span className='pl-[42px] text-muted-foreground text-xs leading-normal'>
+          確認すると {formatSlashDateWeekJa(row.nextDate)} に次のお知らせ
+        </span>
+      )}
     </div>
-  );
-}
-
-// 「確認すると 10/20（火） に次のお知らせ。この日の予定はカレンダーに残ります」。
-function NextNote({ row }: { row: NotifyRow }) {
-  if (row.nextDate === null) {
-    return null;
-  }
-  return (
-    <>
-      確認すると {formatSlashDateWeekJa(row.nextDate)} に次のお知らせ
-      {row.keepsPlan ? '。この日の予定はカレンダーに残ります' : ''}
-    </>
   );
 }

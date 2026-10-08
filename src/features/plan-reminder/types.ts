@@ -27,11 +27,9 @@ export type PlanItem = {
   endDate: string;
   name: string;
   memo: string | null;
-  planTypeId: Id | null;
-  planTypeName: string | null;
-  planTypeColorName: string | null;
-  reminderColorName: string | null;
-  reminderId: Id | null;
+  planTypeId: Id;
+  planTypeName: string;
+  planTypeColorName: string;
   isPair: boolean;
 };
 
@@ -39,7 +37,6 @@ export type PlanItem = {
 export type ReminderItem = {
   id: Id;
   name: string;
-  reminderType: number;
   date: string;
   memo: string | null;
   colorClassificationId: Id;
