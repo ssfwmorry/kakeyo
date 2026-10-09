@@ -467,3 +467,40 @@ drop table develop.conditions;
 旧実装は `reminders.date` を基準に月加算していたため「一度ズレたら戻らない」
 （1/31 → 2/28 → 3/28 …）問題があったが、`month` kind は rule 側に `day` を保持するため
 2 月で 28 に丸めても 3 月は 31 に復帰する。
+
+## 20261009\_本番 DB を最新版に更新
+
+VUE 実装が使われなくなったので、機能維持に使っていた DB 定義を DROP するのが目的。
+この対応によって、develop と整合が合っている状態となる。
+RPC はそのまま残す。あとで削除する。
+
+```sql
+drop table public.short_cuts;
+
+alter table public.plans drop constraint plans_reminder_id_fkey;
+alter table public.plans drop column reminder_id;
+alter table public.reminders drop column reminder_type;
+alter table public.plans alter column plan_type_id set not null;
+
+alter table public.reminders add column rule jsonb not null default '{}'::jsonb;
+update public.reminders r set rule = (
+  select case
+    when c.condition_type = 10 then
+      jsonb_build_object('kind','year',
+        'month', split_part(c.month_day,'-',1)::int,
+        'day',   split_part(c.month_day,'-',2)::int)
+    when c.condition_type = 5 and c.base_type = 10 then
+      jsonb_build_object('kind','month','interval',c.month,
+        'day', extract(day from r.date)::int)
+    when c.condition_type = 5 and c.base_type = 5 then
+      jsonb_build_object('kind','afterCheck','months',c.month)
+  end
+  from public.conditions c where c.id = r.condition_id
+);
+select count(*) from public.reminders where rule = '{}'::jsonb;
+alter table public.reminders drop column condition_id;
+alter table public.reminders alter column rule drop default;
+drop table public.conditions;
+```
+
+`public.get_plan_list`
