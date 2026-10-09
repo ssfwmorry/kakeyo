@@ -9,6 +9,7 @@ import { SETTLEMENT_DISPLAY } from '@/features/record/labels';
 import type {
   NoteRecordDefault,
   PairedRecordItem,
+  PairUserNames,
   RecordListItem,
   SummarizedRecordItem,
   SummarizedRecordQuery
@@ -189,9 +190,11 @@ export function getPairedRecords(
     }));
 }
 
-// findCounterpartUserName 相当: ペアの相手の名前。solo デモは相手がいない。
-export function getPairPartnerName(scope: SessionScope): string | null {
-  return scope.pairId === null ? null : demoUsers.partner.name;
+// findPairUserNames 相当: ペアの 2 人の名前。solo デモは相手がいない。
+export function getPairUserNames(scope: SessionScope): PairUserNames | null {
+  return scope.pairId === null
+    ? null
+    : { self: demoUsers.self.name, partner: demoUsers.partner.name };
 }
 
 // findRecordForEdit 相当（note = 記録編集用）: scope 内の record 1 件をプリフィル初期値へ写す。

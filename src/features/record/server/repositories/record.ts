@@ -44,6 +44,7 @@ import { SETTLEMENT_DISPLAY } from '../../labels';
 import type {
   NoteRecordDefault,
   PairedRecordItem,
+  PairUserNames,
   RecordListItem,
   SummarizedRecordItem,
   SummarizedRecordQuery
@@ -539,12 +540,12 @@ export async function findCounterpartUserId(
   return pair.user1Id === scope.userUid ? pair.user2Id : pair.user1Id;
 }
 
-// 精算の相手の名前を引く（精算画面のバッジ「◯◯との精算」）。findCounterpartUserId と
-// 同じく session.pairId で自分のペアに限定する。
-export async function findCounterpartUserName(
+// ペアの 2 人の名前を引く。findCounterpartUserId と同じく session.pairId で
+// 自分のペアに限定する。
+export async function findPairUserNames(
   scope: SessionScope,
   pairId: Id
-): Promise<string | null> {
+): Promise<PairUserNames | null> {
   const user1 = alias(users, 'user1');
   const user2 = alias(users, 'user2');
   const [pair] = await db
@@ -561,7 +562,11 @@ export async function findCounterpartUserName(
   if (!pair) {
     return null;
   }
-  return pair.user1Id === scope.userUid ? pair.user2Name : pair.user1Name;
+  const isUser1 = pair.user1Id === scope.userUid;
+  return {
+    self: isUser1 ? pair.user1Name : pair.user2Name,
+    partner: isUser1 ? pair.user2Name : pair.user1Name
+  };
 }
 
 // CREATE（精算 record）。record_type=15・is_pay=null・type なし。

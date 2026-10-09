@@ -58,6 +58,13 @@ export type SummarizedRecordItem = {
   isScopeLocked: boolean;
 };
 
+// ペアの 2 人の名前（精算画面用）。立替を「自分 / 相手」ではなく実名で並べ、
+// どちらがいくら立て替えたかを対等に見比べられるようにする。
+export type PairUserNames = {
+  self: string;
+  partner: string;
+};
+
 // get_paired_record_list の 1 行（精算画面用）。is_settled 以外は編集不可のため
 // id/表示に必要な最小列のみ返す。type_name/色は '精算' 補完済み。
 export type PairedRecordItem = {

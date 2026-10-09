@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   breakdownFootnote,
+  insteadByName,
   settlementDiffText,
   settlementDoneTitle,
   settlementResultNoun,
@@ -48,7 +49,12 @@ describe('settlement の文言', () => {
   });
 
   it('精算 record の向きは負担する側から', () => {
-    expect(settlementTransferText(true, 'ゆか')).toBe('自分 → ゆか');
-    expect(settlementTransferText(false, 'ゆか')).toBe('ゆか → 自分');
+    const names = { self: 'たろう', partner: 'ゆか' };
+    expect(settlementTransferText(true, names)).toBe('たろう → ゆか');
+    expect(settlementTransferText(false, names)).toBe('ゆか → たろう');
+  });
+
+  it('立替者の見出しは名前を冠する', () => {
+    expect(insteadByName('たろう')).toBe('たろうの立替');
   });
 });

@@ -34,6 +34,12 @@ export function splitPairedRecords(
   };
 }
 
+// 立替を 1 本の並びにする（日付昇順）。率を決める判断材料はカテゴリと金額で、
+// 誰が立て替えたかは行の中に添えれば足りるため、画面は自分・相手で列を分けない。
+export function insteadList(buckets: SettlementBuckets): PairedRecordItem[] {
+  return [...buckets.mine, ...buckets.partner].sort(byDatetimeAsc);
+}
+
 // 未精算の立替か。
 export function isOpenInstead(item: PairedRecordItem): boolean {
   return item.isInstead && item.isSettled !== true;
@@ -80,16 +86,25 @@ export function toAssignments(
   return assignments;
 }
 
-// 率ごとのグループ（分類の一覧）。集計に加えて、チップに出す各 record の金額を持つ。
+// 率ごとのグループ（分類の一覧）。集計に加えて、チップに出す各 record の金額と名前を持つ。
+// 名前を添えるのは、同額の立替が複数あると金額だけでは見分けられないため。
 export type RateGroup = RateReport & {
-  chips: { id: Id; price: number; isMe: boolean }[];
+  chips: { id: Id; price: number; isMe: boolean; name: string }[];
 };
 
-export function buildRateGroups(assignments: RateAssignment[]): RateGroup[] {
+export function buildRateGroups(
+  assignments: RateAssignment[],
+  nameById: ReadonlyMap<Id, string>
+): RateGroup[] {
   return summarizeByRate(assignments).map((report) => ({
     ...report,
     chips: assignments
       .filter((assignment) => assignment.rateIndex === report.rateIndex)
-      .map(({ id, price, isMe }) => ({ id, price, isMe }))
+      .map(({ id, price, isMe }) => ({
+        id,
+        price,
+        isMe,
+        name: nameById.get(id) ?? ''
+      }))
   }));
 }

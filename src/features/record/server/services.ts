@@ -13,6 +13,7 @@ import {
 import type {
   NoteRecordDefault,
   PairedRecordItem,
+  PairUserNames,
   RecordError,
   RecordListItem,
   SummarizedRecordItem,
@@ -67,18 +68,18 @@ export async function getPairedRecords(
   );
 }
 
-// 精算画面用: ペアの相手の名前。ペア未設定なら null。
-export async function getPairPartnerName(
+// 精算画面用: ペアの 2 人の名前。ペア未設定なら null。
+export async function getPairUserNames(
   session: SessionData
-): Promise<string | null> {
+): Promise<PairUserNames | null> {
   return withDemoRead(
     session,
-    () => demoRecord.getPairPartnerName(session),
+    () => demoRecord.getPairUserNames(session),
     async () => {
       if (session.pairId === null) {
         return null;
       }
-      return recordRepo.findCounterpartUserName(session, session.pairId);
+      return recordRepo.findPairUserNames(session, session.pairId);
     }
   );
 }

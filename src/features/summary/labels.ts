@@ -55,22 +55,32 @@ export const summaryLabels = {
     steps: ['準備', '分類', '精算'],
     ready: {
       lead: '立替の記録それぞれに精算率（自分：相手）を割り当てて、この月の精算額を出します。',
-      mine: '自分の立替（未精算）',
-      partner: '相手の立替（未精算）',
       start: '分類を始める'
     },
     classify: {
-      hint: '下の立替の記録をタップして、精算率を選んでください。',
+      hint: '立替を選んで、まとめて精算率を割り当てられます。',
       sum: '合計',
       asIs: '自分の支払',
       toBe: '自分の負担',
-      legendMine: '自分の立替',
-      legendPartner: '相手の立替',
       result: '精算額',
       cancel: 'キャンセル',
       confirm: '分類を確定',
       confirmDisabled: '精算率を選ぶと確定できます',
-      note: '精算率を選ばなかった立替は、未精算のまま翌月以降に残ります。'
+      note: '精算率を選ばなかった立替は、未精算のまま翌月以降に残ります。',
+      // 率ごとのグループ（既定は畳む）。
+      groupsHeading: '分類ずみ',
+      groupsLabel: '率ごとの分類'
+    },
+    // 立替の一覧と、まとめて率を割り当てる操作。
+    list: {
+      heading: '立替',
+      unassigned: '未分類',
+      empty: '立替はありません',
+      rateUnset: '未設定',
+      selectAll: 'すべて選ぶ',
+      clearSelection: '選択を解除',
+      bulkAssign: 'まとめて精算率を選ぶ',
+      toggleLabel: 'この立替を選ぶ'
     },
     finish: {
       result: '分類結果',
@@ -78,7 +88,7 @@ export const summaryLabels = {
       price: '精算金額',
       cancel: 'キャンセル',
       complete: '精算を完了する',
-      needMethod: '精算方法を選ぶと完了できます',
+      needMethod: '精算方法を追加すると完了できます',
       needPrice: '精算金額を入れると完了できます',
       noMethod: '設定の「方法」で精算方法を追加してください'
     },
@@ -93,24 +103,19 @@ export const summaryLabels = {
       note: '精算の対象外',
       empty: '共有の記録はありません'
     },
-    columns: {
-      mine: '自分の立替',
-      partner: '相手の立替',
-      empty: '立替はありません'
-    },
     settled: '精算済み',
-    // 精算 record の「だれからだれへ」。相手の名前が引けないときの呼び名。
-    self: '自分',
+    // 名前が引けないときの呼び名。立替者は原則ユーザ名で出す。
+    selfFallback: '自分',
     partnerFallback: '相手',
     rateSheet: {
       heading: '精算率を選ぶ',
       hintLeft: '自分が多く負担',
       hintCenter: '自分：相手',
       hintRight: '相手が多く負担',
-      pick: '精算率を選ぶ',
-      mine: '自分の立替',
-      partner: '相手の立替'
-    }
+      pick: '精算率を選ぶ'
+    },
+    // 複数件にまとめて割り当てるときの見出し（「3件 · 合計 7,500円」）。
+    rateSheetMany: '合計'
   },
   empty: {
     noData: '表示するデータがありません'
@@ -197,12 +202,28 @@ export function settlementFinishNote(monthEndLabel: string): string {
   return `${monthEndLabel}付けで「精算」の記録を作り、分類した立替をすべて精算済みにします。精算額が0円のときは記録を作らず、精算済みにするだけです。`;
 }
 
-// 精算 record の「だれからだれへ」（「ゆか → 自分」）。
+// 畳んだ率グループの見出し（「分類ずみ 3件」）。
+export function settlementAssignedText(count: number): string {
+  return `${summaryLabels.settlement.classify.groupsHeading} ${count}件`;
+}
+
+// 複数件へまとめて割り当てるときのシートの見出し（「3件 · 合計 7,500円」）。
+export function settlementManyTitle(count: number, sum: number): string {
+  const total = sum.toLocaleString('ja-JP');
+  return `${count}件 · ${summaryLabels.settlement.rateSheetMany} ${total}円`;
+}
+
+// 立替者の見出し（「たろうの立替」）。
+export function insteadByName(userName: string): string {
+  return `${userName}の立替`;
+}
+
+// 精算 record の「だれからだれへ」（「たろう → はなこ」）。
 export function settlementTransferText(
   isPayerSelf: boolean,
-  partnerName: string
+  names: { self: string; partner: string }
 ): string {
   return isPayerSelf
-    ? `${summaryLabels.settlement.self} → ${partnerName}`
-    : `${partnerName} → ${summaryLabels.settlement.self}`;
+    ? `${names.self} → ${names.partner}`
+    : `${names.partner} → ${names.self}`;
 }

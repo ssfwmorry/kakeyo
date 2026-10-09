@@ -21,6 +21,7 @@ export { insteadByLabel, recordLabels, SETTLEMENT_DISPLAY } from './labels';
 export type {
   NoteRecordDefault,
   PairedRecordItem,
+  PairUserNames,
   RecordError,
   RecordListItem,
   SummarizedRecordItem,

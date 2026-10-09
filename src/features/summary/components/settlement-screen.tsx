@@ -4,14 +4,22 @@ import { cn } from 'cn';
 import { type ReactNode, useMemo, useState, useTransition } from 'react';
 import {
   IconCheck,
+  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
+  IconPencil,
   IconShare
 } from '@/components/icons';
 import { SectionListEmpty } from '@/components/section-list';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { colorVar } from '@/features/master';
-import { type PairedRecordItem, PlannedRecordMark } from '@/features/record';
+import {
+  type PairedRecordItem,
+  type PairUserNames,
+  PlannedRecordMark
+} from '@/features/record';
+import { MethodPills } from '@/features/record/components/method-pills';
+import { resolveMethodId } from '@/features/record/domain/method-order';
 import { completeSettlementAction } from '@/features/record/settlement-actions';
 import { fetchPairedRecordsAction } from '@/features/summary/actions';
 import { shiftMonth } from '@/features/summary/domain/period';
@@ -39,6 +47,7 @@ import {
 } from '../domain/settlement-rate';
 import {
   buildRateGroups,
+  insteadList,
   isOpenInstead,
   openSum,
   type RateGroup,
@@ -48,6 +57,8 @@ import {
   toAssignments
 } from '../domain/settlement-view';
 import {
+  insteadByName,
+  settlementAssignedText,
   settlementBadge,
   settlementDiffText,
   settlementDoneTitle,
@@ -67,6 +78,10 @@ import { SummaryTabs } from './summary-tabs';
 // 3 ステップ（準備 → 分類 → 精算）の state をこの画面が 1 つで持ち、率の割当は
 // record id → 率の index の Map で持つ。月を動かすと途中の分類は捨てる。
 //
+// 分類の段は「左 = 立替、右 = 率」の 1 本の並びで、立替を複数選んでまとめて率を
+// 割り当てられる。立替ごとにシートを開き直す往復をなくすのが狙いで、精算額と確定は
+// 一覧の下に貼り付けて、率を選んだ結果がその場で見えるようにしている。
+//
 // ヘッダーに「個人｜共有」は無い（精算はペア固有で、モードに依らない）。
 
 const labels = summaryLabels.settlement;
@@ -77,7 +92,7 @@ export function SettlementScreen({
   initialYearMonth,
   initialRecords,
   methods,
-  partnerName,
+  userNames,
   headerLeft
 }: {
   initialYearMonth: string;
@@ -85,8 +100,8 @@ export function SettlementScreen({
   initialRecords: PairedRecordItem[];
   // 精算方法の候補（方法マスタの「精算」）。
   methods: MethodCard[];
-  // ペアの相手の名前。引けなければ null。
-  partnerName: string | null;
+  // ペアの 2 人の名前。引けなければ null。
+  userNames: PairUserNames | null;
   // ヘッダー左に置くもの（お知らせのベル）。
   headerLeft?: ReactNode;
 }) {
@@ -96,7 +111,10 @@ export function SettlementScreen({
 
   const [step, setStep] = useState<Step>('ready');
   const [rates, setRates] = useState<ReadonlyMap<Id, number>>(new Map());
-  const [sheetRecordId, setSheetRecordId] = useState<Id | null>(null);
+  // シートを開いている対象。空なら閉じている。1 件でも複数件でも同じシートを使う。
+  const [sheetTargetIds, setSheetTargetIds] = useState<readonly Id[]>([]);
+  // チェックを入れている立替。まとめて率を割り当てる対象。
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<Id>>(new Set());
   const [methodId, setMethodId] = useState<Id | null>(null);
   // 精算金額の入力。null は差額のまま（触っていない）。
   const [priceInput, setPriceInput] = useState<string | null>(null);
@@ -105,7 +123,8 @@ export function SettlementScreen({
   const resetFlow = () => {
     setStep('ready');
     setRates(new Map());
-    setSheetRecordId(null);
+    setSheetTargetIds([]);
+    setSelectedIds(new Set());
     setMethodId(null);
     setPriceInput(null);
   };
@@ -121,20 +140,48 @@ export function SettlementScreen({
 
   const buckets = useMemo(() => splitPairedRecords(records), [records]);
   const status = settlementStatus(buckets);
-  const insteads = useMemo(
-    () => [...buckets.mine, ...buckets.partner],
-    [buckets]
-  );
+  const insteads = useMemo(() => insteadList(buckets), [buckets]);
   const { assignments, groups, totalDiff, direction, price } =
     useSettlementMath(insteads, rates, priceInput);
 
   const month = Number(yearMonth.split('-')[1]);
-  const sheetRecord =
-    insteads.find((item) => item.id === sheetRecordId) ?? null;
+  const sheetRecords = insteads.filter((item) =>
+    sheetTargetIds.includes(item.id)
+  );
+  // 名前が引けないときだけ「自分 / 相手」に落とす。
+  const names: PairUserNames = {
+    self: userNames?.self ?? labels.selfFallback,
+    partner: userNames?.partner ?? labels.partnerFallback
+  };
+  // 既定はマスタの並びの先頭（入力画面と同じ決め方）。state は未選択のまま持ち、
+  // 実際に使う id はここで解決する。
+  const selectedMethodId = resolveMethodId({
+    methods,
+    selected: methodId,
+    isEditing: false
+  });
 
-  const assignRate = (id: Id, rateIndex: number) => {
-    setRates((prev) => new Map(prev).set(id, rateIndex));
-    setSheetRecordId(null);
+  // 対象ぜんぶに同じ率を入れる。選び終えたらシートも選択も畳み、次の 1 組へ進める。
+  const assignRate = (rateIndex: number) => {
+    setRates((prev) => {
+      const next = new Map(prev);
+      for (const id of sheetTargetIds) {
+        next.set(id, rateIndex);
+      }
+      return next;
+    });
+    setSheetTargetIds([]);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelected = (id: Id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
   const submit = () => {
@@ -144,7 +191,7 @@ export function SettlementScreen({
         ids: collectAssignedIds(assignments),
         isPay: direction.isPay,
         // 記録を作らない（0 円）ときは方法を送らない。
-        methodId: price > 0 ? methodId : null,
+        methodId: price > 0 ? selectedMethodId : null,
         price
       });
       if (result.toast !== undefined) {
@@ -182,14 +229,14 @@ export function SettlementScreen({
           isPending={isPending}
           onClick={() => load(shiftMonth(yearMonth, 1))}
         />
-        {partnerName === null ? null : (
+        {userNames === null ? null : (
           <span className='ml-auto flex h-6 items-center gap-1 rounded-xl bg-secondary px-2.5 font-bold text-primary text-xs'>
             <IconShare
               aria-hidden='true'
               className='size-3'
               strokeWidth={2.4}
             />
-            {settlementBadge(partnerName)}
+            {settlementBadge(userNames.partner)}
           </span>
         )}
       </div>
@@ -206,20 +253,15 @@ export function SettlementScreen({
                 buckets={buckets}
                 groups={groups}
                 isSubmitting={isSubmitting}
-                methodId={methodId}
+                methodId={selectedMethodId}
                 methods={methods}
+                names={names}
                 onBack={() => {
                   setMethodId(null);
                   setStep('classify');
                 }}
-                onCancel={resetFlow}
                 onChangeMethod={setMethodId}
                 onChangePrice={setPriceInput}
-                onConfirm={() => {
-                  setMethodId(null);
-                  setPriceInput(null);
-                  setStep('finish');
-                }}
                 onStart={() => setStep('classify')}
                 onSubmit={submit}
                 price={price}
@@ -234,35 +276,41 @@ export function SettlementScreen({
           )}
         </div>
 
-        <CoupleSection
-          items={buckets.couple}
-          partner={partnerName ?? labels.partnerFallback}
-        />
-
-        <div className='mt-1 grid grid-cols-2 gap-2'>
-          <InsteadColumn
-            isClassifying={step === 'classify'}
-            items={buckets.mine}
-            onOpen={setSheetRecordId}
+        {step === 'classify' ? (
+          <ClassifySection
+            insteads={insteads}
+            names={names}
+            onAssignOne={(id) => setSheetTargetIds([id])}
+            onCancel={resetFlow}
+            onConfirm={() => {
+              setMethodId(null);
+              setPriceInput(null);
+              setStep('finish');
+            }}
+            onOpenBulk={() => setSheetTargetIds([...selectedIds])}
+            onSelectAll={(ids) => setSelectedIds(new Set(ids))}
+            onToggle={toggleSelected}
             rates={rates}
-            title={labels.columns.mine}
+            selectedIds={selectedIds}
+            totalDiff={totalDiff}
           />
-          <InsteadColumn
-            isClassifying={step === 'classify'}
-            items={buckets.partner}
-            onOpen={setSheetRecordId}
-            rates={rates}
-            title={labels.columns.partner}
-          />
-        </div>
+        ) : (
+          <>
+            <InsteadSection insteads={insteads} names={names} rates={rates} />
+            {/* 分類中は出さない。精算の対象外なので、率を割り当てる間は邪魔になる
+                （貼り付いた精算額の下に潜り込んでしまう）。 */}
+            <CoupleSection items={buckets.couple} names={names} />
+          </>
+        )}
       </div>
 
-      {sheetRecord === null ? null : (
+      {sheetRecords.length === 0 ? null : (
         <RateSheet
-          onOpenChange={(open) => !open && setSheetRecordId(null)}
-          onSelect={(rateIndex) => assignRate(sheetRecord.id, rateIndex)}
-          rateIndex={rates.get(sheetRecord.id)}
-          record={sheetRecord}
+          names={names}
+          onOpenChange={(open) => !open && setSheetTargetIds([])}
+          onSelect={assignRate}
+          rateIndex={sharedRateIndex(sheetRecords, rates)}
+          records={sheetRecords}
         />
       )}
     </div>
@@ -302,7 +350,14 @@ function useSettlementMath(
     () => toAssignments(insteads, rates),
     [insteads, rates]
   );
-  const groups = useMemo(() => buildRateGroups(assignments), [assignments]);
+  const nameById = useMemo(
+    () => new Map(insteads.map((item) => [item.id, categoryName(item)])),
+    [insteads]
+  );
+  const groups = useMemo(
+    () => buildRateGroups(assignments, nameById),
+    [assignments, nameById]
+  );
   const totalDiff = totalSettlementDiff(groups);
   const direction = resolveSettlement(assignments);
 
@@ -326,13 +381,12 @@ function FlowPanel({
   totalDiff,
   methods,
   methodId,
+  names,
   priceInput,
   price,
   yearMonth,
   isSubmitting,
   onStart,
-  onCancel,
-  onConfirm,
   onBack,
   onChangeMethod,
   onChangePrice,
@@ -344,30 +398,22 @@ function FlowPanel({
   totalDiff: number;
   methods: MethodCard[];
   methodId: Id | null;
+  names: PairUserNames;
   priceInput: string;
   price: number;
   yearMonth: string;
   isSubmitting: boolean;
   onStart: () => void;
-  onCancel: () => void;
-  onConfirm: () => void;
   onBack: () => void;
   onChangeMethod: (methodId: Id) => void;
   onChangePrice: (value: string) => void;
   onSubmit: () => void;
 }) {
   if (step === 'ready') {
-    return <ReadyPanel buckets={buckets} onStart={onStart} />;
+    return <ReadyPanel buckets={buckets} names={names} onStart={onStart} />;
   }
   if (step === 'classify') {
-    return (
-      <ClassifyPanel
-        groups={groups}
-        onCancel={onCancel}
-        onConfirm={onConfirm}
-        totalDiff={totalDiff}
-      />
-    );
+    return <ClassifyPanel groups={groups} />;
   }
   return (
     <FinishPanel
@@ -463,9 +509,11 @@ function StepItem({
 // ① 準備。未精算の立替の合計を自分・相手で示し、分類を始める。
 function ReadyPanel({
   buckets,
+  names,
   onStart
 }: {
   buckets: SettlementBuckets;
+  names: PairUserNames;
   onStart: () => void;
 }) {
   return (
@@ -474,9 +522,12 @@ function ReadyPanel({
         {labels.ready.lead}
       </span>
       <div className='grid grid-cols-2 gap-2'>
-        <SumTile label={labels.ready.mine} value={openSum(buckets.mine)} />
         <SumTile
-          label={labels.ready.partner}
+          label={insteadByName(names.self)}
+          value={openSum(buckets.mine)}
+        />
+        <SumTile
+          label={insteadByName(names.partner)}
           value={openSum(buckets.partner)}
         />
       </div>
@@ -496,90 +547,56 @@ function SumTile({ label, value }: { label: string; value: number }) {
   );
 }
 
-// ② 分類。率ごとのグループと精算額を出す。立替の行は画面下の 2 列で選ぶ。
-function ClassifyPanel({
-  groups,
-  totalDiff,
-  onCancel,
-  onConfirm
-}: {
-  groups: RateGroup[];
-  totalDiff: number;
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
-  const hasGroups = groups.length > 0;
-  return (
-    <div className='flex flex-col gap-3'>
-      {hasGroups ? null : (
-        <div className='rounded-xl bg-background px-3 py-3.5 text-center text-[13px] text-muted-foreground leading-relaxed'>
-          {labels.classify.hint}
-        </div>
-      )}
-
-      {groups.map((group) => (
-        <RateGroupRow group={group} key={group.rateIndex} />
-      ))}
-
-      <span className='flex items-center gap-2.5 text-[11px] text-muted-foreground'>
-        <span className='flex items-center gap-1'>
-          <span
-            aria-hidden='true'
-            className='h-3 w-[18px] rounded-md border border-dash'
-          />
-          {labels.classify.legendMine}
-        </span>
-        <span className='flex items-center gap-1'>
-          <span
-            aria-hidden='true'
-            className='h-3 w-[18px] rounded-md bg-muted'
-          />
-          {labels.classify.legendPartner}
-        </span>
-      </span>
-
-      {hasGroups ? (
-        <div className='flex items-baseline gap-1.5 rounded-xl bg-secondary p-3'>
-          <span className='text-[13px] text-muted-foreground'>
-            {labels.classify.result}
-          </span>
-          <span
-            className={cn(
-              'ml-auto font-bold text-[22px]',
-              diffColor(totalDiff)
-            )}
-          >
-            {Math.abs(totalDiff).toLocaleString('ja-JP')}
-          </span>
-          <span className={cn('font-semibold text-sm', diffColor(totalDiff))}>
-            {settlementResultVerb(totalDiff)}
-          </span>
-        </div>
-      ) : null}
-
-      <div className='flex gap-2'>
-        <SecondaryButton label={labels.classify.cancel} onClick={onCancel} />
-        <PrimaryButton
-          disabled={!hasGroups}
-          disabledLabel={labels.classify.confirmDisabled}
-          label={labels.classify.confirm}
-          onClick={onConfirm}
-        />
+// ② 分類。率ごとのグループ。件数が増えるとチップで画面が埋まるので、既定では畳む。
+function ClassifyPanel({ groups }: { groups: RateGroup[] }) {
+  if (groups.length === 0) {
+    return (
+      <div className='rounded-xl bg-background px-3 py-3.5 text-center text-[13px] text-muted-foreground leading-relaxed'>
+        {labels.classify.hint}
       </div>
+    );
+  }
 
-      <span className='text-muted-foreground text-xs leading-relaxed'>
-        {labels.classify.note}
+  const assigned = groups.reduce(
+    (count, group) => count + group.chips.length,
+    0
+  );
+
+  return (
+    <div className='flex flex-col gap-1'>
+      <span className='px-0.5 font-semibold text-[13px] text-muted-foreground'>
+        {settlementAssignedText(assigned)}
       </span>
+      <ul aria-label={labels.classify.groupsLabel} className='flex flex-col'>
+        {groups.map((group) => (
+          <RateGroupRow group={group} key={group.rateIndex} />
+        ))}
+      </ul>
     </div>
   );
 }
 
-// 率のグループ 1 つ。バッジ・件数・差額と、金額のチップ、集計の 1 行。
+// 率のグループ 1 つ。閉じているときは率・件数・差額だけ。開くと中身の立替と集計を出す。
 function RateGroupRow({ group }: { group: RateGroup }) {
+  const [isOpen, setIsOpen] = useState(false);
   const color = rateColor(group.rateIndex);
+
   return (
-    <div className='flex flex-col gap-1.5 border-line-soft border-b pb-2.5'>
-      <div className='flex items-center gap-2'>
+    <li className='border-line-soft border-b'>
+      <button
+        aria-expanded={isOpen}
+        className='flex w-full items-center gap-2 py-2.5 text-left text-foreground'
+        onClick={() => setIsOpen((prev) => !prev)}
+        type='button'
+      >
+        <IconChevronDown
+          aria-hidden='true'
+          className={cn(
+            'size-3.5 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none',
+            !isOpen && '-rotate-90'
+          )}
+          strokeWidth={2.6}
+        />
         <span
           className='flex h-6 items-center gap-1.5 rounded-xl px-2.5 font-bold text-xs'
           style={{ backgroundColor: rateTint(group.rateIndex), color }}
@@ -602,26 +619,36 @@ function RateGroupRow({ group }: { group: RateGroup }) {
         >
           {settlementDiffText(group.diff)}
         </span>
-      </div>
-      <div className='flex flex-wrap gap-1'>
-        {group.chips.map((chip) => (
-          <span
-            className={cn(
-              'flex h-6 items-center rounded-xl border px-2 text-xs',
-              chip.isMe ? 'border-dash bg-card' : 'border-transparent bg-muted'
-            )}
-            key={chip.id}
-          >
-            {chip.price.toLocaleString('ja-JP')}
+      </button>
+
+      {isOpen ? (
+        <div className='flex flex-col gap-1.5 pb-2.5 pl-[22px]'>
+          <div className='flex flex-wrap gap-1'>
+            {group.chips.map((chip) => (
+              <span
+                className={cn(
+                  'flex h-6 items-center gap-1.5 rounded-xl border px-2 text-xs',
+                  chip.isMe
+                    ? 'border-dash bg-card'
+                    : 'border-transparent bg-muted'
+                )}
+                key={chip.id}
+              >
+                <span className='max-w-28 truncate'>{chip.name}</span>
+                <span className='font-semibold'>
+                  {chip.price.toLocaleString('ja-JP')}
+                </span>
+              </span>
+            ))}
+          </div>
+          <span className='text-muted-foreground text-xs'>
+            {labels.classify.sum} {group.sum.toLocaleString('ja-JP')} ·{' '}
+            {labels.classify.asIs} {group.asIs.toLocaleString('ja-JP')} ·{' '}
+            {labels.classify.toBe} {group.toBe.toLocaleString('ja-JP')}
           </span>
-        ))}
-      </div>
-      <span className='text-muted-foreground text-xs'>
-        {labels.classify.sum} {group.sum.toLocaleString('ja-JP')} ·{' '}
-        {labels.classify.asIs} {group.asIs.toLocaleString('ja-JP')} ·{' '}
-        {labels.classify.toBe} {group.toBe.toLocaleString('ja-JP')}
-      </span>
-    </div>
+        </div>
+      ) : null}
+    </li>
   );
 }
 
@@ -652,6 +679,7 @@ function FinishPanel({
   onSubmit: () => void;
 }) {
   // 金額があるときは方法が要る。差額なし（0 円）は記録を作らないので方法は要らない。
+  // 方法は既定で先頭が入るため、未選択になるのはマスタに精算方法が 1 件も無いときだけ。
   const needsMethod = price > 0 && methodId === null;
   const needsPrice = price === 0 && totalDiff !== 0;
   const canFinish = !needsMethod && !needsPrice;
@@ -662,9 +690,11 @@ function FinishPanel({
 
   return (
     <div className='flex flex-col gap-3'>
-      <div className='overflow-hidden rounded-xl bg-background'>
-        <div className='flex h-12 items-center gap-2 px-3'>
-          <span className='w-[72px] text-[13px] text-muted-foreground'>
+      {/* 読むだけの行は地のまま、選ぶ・直す行は白い面に載せる。「白い面 = 触れる」は
+          この app の入力欄（TextField）と同じ合図で、ここだけ地と逆になっていた。 */}
+      <div className='flex flex-col gap-2.5 rounded-xl bg-background p-3'>
+        <div className='flex items-center gap-2'>
+          <span className='w-[72px] shrink-0 text-[13px] text-muted-foreground'>
             {labels.finish.result}
           </span>
           <span className={cn('font-bold text-base', diffColor(totalDiff))}>
@@ -673,52 +703,27 @@ function FinishPanel({
               : `${Math.abs(totalDiff).toLocaleString('ja-JP')}円の${settlementResultNoun(totalDiff)}`}
           </span>
         </div>
-        <div className='flex flex-col gap-2 border-border border-t px-3 pt-2.5 pb-3'>
+
+        <div className='flex flex-col gap-1.5'>
           <span className='text-[13px] text-muted-foreground'>
             {labels.finish.method}
           </span>
           {methods.length === 0 ? (
+            // 精算方法はペア共有の方法マスタにしか無いので、入力画面より案内を具体的にする。
             <span className='text-muted-foreground text-sm'>
               {labels.finish.noMethod}
             </span>
           ) : (
-            <div className='flex flex-wrap gap-2'>
-              {methods.map((method) => {
-                const isSelected = method.id === methodId;
-                return (
-                  <button
-                    aria-pressed={isSelected}
-                    className={cn(
-                      'h-9 rounded-full px-3.5 font-semibold text-sm',
-                      isSelected
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-card text-foreground'
-                    )}
-                    key={method.id}
-                    onClick={() => onChangeMethod(method.id)}
-                    type='button'
-                  >
-                    {method.name}
-                  </button>
-                );
-              })}
-            </div>
+            // 入力画面と同じピル。選び方を画面ごとに変えない。
+            <MethodPills
+              methodId={methodId}
+              methods={methods}
+              onChange={onChangeMethod}
+            />
           )}
         </div>
-        <label className='flex h-13 items-center gap-2 border-border border-t px-3'>
-          <span className='w-[72px] text-[13px] text-muted-foreground'>
-            {labels.finish.price}
-          </span>
-          <input
-            aria-label={labels.finish.price}
-            className='h-10 min-w-0 flex-grow bg-transparent text-right font-bold text-foreground text-xl outline-none'
-            inputMode='numeric'
-            onChange={(event) => onChangePrice(event.target.value)}
-            type='text'
-            value={priceInput}
-          />
-          <span className='text-muted-foreground text-sm'>円</span>
-        </label>
+
+        <PriceField onChange={onChangePrice} value={priceInput} />
       </div>
 
       <div className='flex gap-2'>
@@ -737,6 +742,40 @@ function FinishPanel({
         )}
       </span>
     </div>
+  );
+}
+
+// 精算金額の入力。既定は差額だが直せる。鉛筆と白い面で触れることを示す
+// （白い面 = 入力欄はこの app 共通の合図。TextField と同じ）。
+function PriceField({
+  value,
+  onChange
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className='flex items-center gap-2'>
+      <span className='w-[72px] shrink-0 text-[13px] text-muted-foreground'>
+        {labels.finish.price}
+      </span>
+      <span className='flex h-12 min-w-0 flex-grow items-center gap-1.5 rounded-xl bg-card px-3 focus-within:outline-2 focus-within:outline-primary focus-within:outline-offset-2'>
+        <IconPencil
+          aria-hidden='true'
+          className='size-3.5 shrink-0 text-muted-foreground'
+          strokeWidth={2.4}
+        />
+        <input
+          aria-label={labels.finish.price}
+          className='min-w-0 flex-grow bg-transparent text-right font-bold text-[22px] text-foreground outline-none'
+          inputMode='numeric'
+          onChange={(event) => onChange(event.target.value)}
+          type='text'
+          value={value}
+        />
+        <span className='shrink-0 text-muted-foreground text-sm'>円</span>
+      </span>
+    </label>
   );
 }
 
@@ -826,10 +865,10 @@ function SecondaryButton({
 // 二人のお金（共有・精算）。精算の対象外なので一覧に出すだけ。
 function CoupleSection({
   items,
-  partner
+  names
 }: {
   items: PairedRecordItem[];
-  partner: string;
+  names: PairUserNames;
 }) {
   return (
     <section className='flex flex-col gap-1.5'>
@@ -850,7 +889,7 @@ function CoupleSection({
               isFirst={index === 0}
               item={item}
               key={item.id}
-              partner={partner}
+              names={names}
             />
           ))
         )}
@@ -862,17 +901,17 @@ function CoupleSection({
 function CoupleRow({
   item,
   isFirst,
-  partner
+  names
 }: {
   item: PairedRecordItem;
   isFirst: boolean;
-  partner: string;
+  names: PairUserNames;
 }) {
   const color = colorVar(item.typeColorClassificationName);
   const sub = [
     formatSlashDateWeekJa(toDateStringJst(item.datetime)),
     // 精算 record は user_id が負担する側なので、isSelf が「自分から」を表す。
-    item.isSettlement ? settlementTransferText(item.isSelf, partner) : null
+    item.isSettlement ? settlementTransferText(item.isSelf, names) : null
   ]
     .filter((part) => part !== null)
     .join(' · ');
@@ -917,181 +956,439 @@ function CoupleRow({
   );
 }
 
-// 立替の列（自分／相手）。見出しに未精算の合計、下に record のカードを積む。
-function InsteadColumn({
-  title,
-  items,
+// 分類中の立替の一覧と、精算額・確定。
+function ClassifySection({
+  insteads,
+  names,
   rates,
-  isClassifying,
-  onOpen
+  selectedIds,
+  totalDiff,
+  onToggle,
+  onSelectAll,
+  onOpenBulk,
+  onAssignOne,
+  onCancel,
+  onConfirm
 }: {
-  title: string;
-  items: PairedRecordItem[];
+  insteads: PairedRecordItem[];
+  names: PairUserNames;
   rates: ReadonlyMap<Id, number>;
-  isClassifying: boolean;
-  onOpen: (id: Id) => void;
+  selectedIds: ReadonlySet<Id>;
+  totalDiff: number;
+  onToggle: (id: Id) => void;
+  onSelectAll: (ids: Id[]) => void;
+  onOpenBulk: () => void;
+  onAssignOne: (id: Id) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
 }) {
+  const open = insteads.filter(isOpenInstead);
+  const unassigned = open.filter((item) => !rates.has(item.id));
+  const hasGroups = open.some((item) => rates.has(item.id));
+  const selectedCount = selectedIds.size;
+  // 未割当がまだあるなら、まずそれを選ぶのが次の手。無ければ全件を選び直せるようにする。
+  const selectAllTargets = unassigned.length > 0 ? unassigned : open;
+  const isAllSelected =
+    selectAllTargets.length > 0 &&
+    selectAllTargets.every((item) => selectedIds.has(item.id));
+
   return (
-    <div className='flex min-w-0 flex-col gap-1.5'>
-      <div className='flex items-baseline px-1'>
+    <section className='flex flex-col gap-1.5'>
+      <div className='flex items-center gap-2 px-1'>
         <h2 className='font-semibold text-[13px] text-muted-foreground'>
-          {title}
+          {labels.list.heading}
         </h2>
-        <span className='ml-auto text-muted-foreground text-xs'>
-          {openSum(items).toLocaleString('ja-JP')}
-        </span>
+        {unassigned.length > 0 ? (
+          <span className='text-muted-foreground text-xs'>
+            {labels.list.unassigned} {unassigned.length}件
+          </span>
+        ) : null}
+        {open.length === 0 ? null : (
+          <button
+            className='ml-auto font-semibold text-primary text-xs'
+            onClick={() =>
+              onSelectAll(
+                isAllSelected ? [] : selectAllTargets.map((item) => item.id)
+              )
+            }
+            type='button'
+          >
+            {isAllSelected ? labels.list.clearSelection : labels.list.selectAll}
+          </button>
+        )}
       </div>
-      {items.length === 0 ? (
-        <p className='rounded-xl bg-card px-3 py-3 text-center text-muted-foreground text-xs'>
-          {labels.columns.empty}
-        </p>
-      ) : (
-        items.map((item) => (
-          <InsteadCard
-            isClassifying={isClassifying}
-            item={item}
-            key={item.id}
-            onOpen={() => onOpen(item.id)}
-            rateIndex={rates.get(item.id)}
-          />
-        ))
-      )}
-    </div>
+
+      <InsteadList
+        insteads={insteads}
+        isSelectable
+        names={names}
+        onAssignOne={onAssignOne}
+        onToggle={onToggle}
+        rates={rates}
+        selectedIds={selectedIds}
+      />
+
+      <span className='px-1 text-muted-foreground text-xs leading-relaxed'>
+        {labels.classify.note}
+      </span>
+
+      {/* 下に留め置いた精算額のぶん、一覧の末尾に場所を空ける（最後の行が隠れないように）。
+          まとめ選びのバーが出ている間はその高さ 56 を足す。 */}
+      <div
+        aria-hidden='true'
+        className={cn(
+          'shrink-0',
+          selectedCount === 0 ? 'h-[116px]' : 'h-[172px]'
+        )}
+      />
+
+      {/* fixed をシェル幅（max-w-md）に収めるのはタブバーと同じ作り。
+          bottom はバーの下端余白 + 高さ 56 + 間 8。 */}
+      <div
+        className='fixed inset-x-0 z-30 mx-auto flex w-full max-w-md flex-col gap-2 px-3'
+        style={{
+          bottom: 'calc(max(12px, env(safe-area-inset-bottom)) + 64px)'
+        }}
+      >
+        {selectedCount === 0 ? null : (
+          <button
+            className='flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-base text-primary-foreground shadow-[0_6px_20px_rgba(22,25,26,0.18)]'
+            onClick={onOpenBulk}
+            type='button'
+          >
+            <span className='flex h-6 min-w-6 items-center justify-center rounded-xl bg-primary-foreground/20 px-1.5 font-bold text-xs'>
+              {selectedCount}
+            </span>
+            {labels.list.bulkAssign}
+          </button>
+        )}
+
+        <div className='flex flex-col gap-2 rounded-2xl bg-card p-3 shadow-[0_6px_20px_rgba(22,25,26,0.10)]'>
+          <div className='flex items-baseline gap-1.5 rounded-xl bg-secondary px-3 py-2.5'>
+            <span className='text-[13px] text-muted-foreground'>
+              {labels.classify.result}
+            </span>
+            <span
+              className={cn(
+                'ml-auto font-bold text-[22px]',
+                diffColor(totalDiff)
+              )}
+            >
+              {Math.abs(totalDiff).toLocaleString('ja-JP')}
+            </span>
+            <span className={cn('font-semibold text-sm', diffColor(totalDiff))}>
+              {settlementResultVerb(totalDiff)}
+            </span>
+          </div>
+          <div className='flex gap-2'>
+            <SecondaryButton
+              label={labels.classify.cancel}
+              onClick={onCancel}
+            />
+            <PrimaryButton
+              disabled={!hasGroups}
+              disabledLabel={labels.classify.confirmDisabled}
+              label={labels.classify.confirm}
+              onClick={onConfirm}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
-// 立替 1 件のカード。分類中は押して率を選ぶ。割当済みは率の色で塗り、精算済みは薄くする。
-function InsteadCard({
+// 分類していないときの立替の一覧。操作は持たない。
+function InsteadSection({
+  insteads,
+  names,
+  rates
+}: {
+  insteads: PairedRecordItem[];
+  names: PairUserNames;
+  rates: ReadonlyMap<Id, number>;
+}) {
+  return (
+    <section className='flex flex-col gap-1.5'>
+      <div className='flex items-baseline px-1'>
+        <h2 className='font-semibold text-[13px] text-muted-foreground'>
+          {labels.list.heading}
+        </h2>
+        <span className='ml-auto text-muted-foreground text-xs'>
+          {openSum(insteads).toLocaleString('ja-JP')}
+        </span>
+      </div>
+      <InsteadList
+        insteads={insteads}
+        isSelectable={false}
+        names={names}
+        rates={rates}
+      />
+    </section>
+  );
+}
+
+function InsteadList({
+  insteads,
+  names,
+  rates,
+  selectedIds,
+  isSelectable,
+  onToggle,
+  onAssignOne
+}: {
+  insteads: PairedRecordItem[];
+  names: PairUserNames;
+  rates: ReadonlyMap<Id, number>;
+  selectedIds?: ReadonlySet<Id>;
+  isSelectable: boolean;
+  onToggle?: (id: Id) => void;
+  onAssignOne?: (id: Id) => void;
+}) {
+  if (insteads.length === 0) {
+    return (
+      <p className='rounded-2xl bg-card px-3 py-4 text-center text-muted-foreground text-xs'>
+        {labels.list.empty}
+      </p>
+    );
+  }
+
+  return (
+    <ul className='overflow-hidden rounded-2xl bg-card'>
+      {insteads.map((item, index) => (
+        <InsteadRow
+          isFirst={index === 0}
+          isSelectable={isSelectable}
+          isSelected={selectedIds?.has(item.id) ?? false}
+          item={item}
+          key={item.id}
+          names={names}
+          onAssignOne={onAssignOne}
+          onToggle={onToggle}
+          rateIndex={rates.get(item.id)}
+        />
+      ))}
+    </ul>
+  );
+}
+
+// 立替 1 件の行。分類中は左半分がまとめ選びのチェック、右半分が 1 件だけの率選び。
+function InsteadRow({
   item,
+  names,
   rateIndex,
-  isClassifying,
-  onOpen
+  isSelected,
+  isSelectable,
+  isFirst,
+  onToggle,
+  onAssignOne
 }: {
   item: PairedRecordItem;
+  names: PairUserNames;
   rateIndex: number | undefined;
-  isClassifying: boolean;
-  onOpen: () => void;
+  isSelected: boolean;
+  isSelectable: boolean;
+  isFirst: boolean;
+  onToggle?: (id: Id) => void;
+  onAssignOne?: (id: Id) => void;
 }) {
   const isOpen = isOpenInstead(item);
   const isAssigned = rateIndex !== undefined && isOpen;
-  const isTappable = isClassifying && isOpen;
+  const canPick = isSelectable && isOpen;
   const date = formatSlashDateWeekJa(toDateStringJst(item.datetime));
-  const amount = item.price.toLocaleString('ja-JP');
+  const owner = item.isSelf ? names.self : names.partner;
+  const sub = [date, owner, item.memo]
+    .filter((part) => part !== null && part !== '')
+    .join(' · ');
 
   return (
-    <button
-      aria-label={insteadAriaLabel({
-        item,
-        date,
-        amount,
-        rateIndex,
-        isTappable
-      })}
+    // 区切り線は行そのものに引く。左右で別の要素に引くと、線のぶんだけ中身の起点が
+    // ずれて率が行の中心から外れる。
+    <li
       className={cn(
-        'relative flex w-full flex-col gap-[3px] overflow-hidden rounded-xl py-2 pr-2.5 pl-3.5 text-left text-foreground',
-        !isOpen && 'opacity-60'
+        'relative flex items-stretch',
+        !isFirst && 'border-border border-t',
+        !isOpen && 'opacity-60',
+        isSelected && 'bg-secondary'
       )}
-      disabled={!isTappable}
-      onClick={onOpen}
-      style={{
-        backgroundColor: isAssigned ? rateTint(rateIndex) : 'var(--card)'
-      }}
-      type='button'
     >
+      {/* 割当済みは率の色の帯で示す（行の地を塗ると選択中の色と混ざるため）。 */}
       <span
         aria-hidden='true'
-        className='absolute inset-y-0 left-0 w-[5px]'
+        className='absolute inset-y-0 left-0 w-[4px]'
         style={{
           backgroundColor: isAssigned ? rateColor(rateIndex) : 'transparent'
         }}
       />
-      <CardStatusLine
-        date={date}
-        isNew={isTappable && !isAssigned}
-        isSettled={!isOpen}
-      />
-      <span className='flex w-full items-center gap-1.5 overflow-hidden whitespace-nowrap text-[13px]'>
-        <span
-          aria-hidden='true'
-          className='size-2 shrink-0 rounded-full'
-          style={{
-            backgroundColor: colorVar(item.typeColorClassificationName)
-          }}
-        />
-        <span className='truncate'>{categoryName(item)}</span>
-        <PlannedRecordMark isPlannedRecord={item.isPlannedRecord} size={13} />
-      </span>
-      <span className='flex w-full items-baseline gap-1'>
-        {isAssigned ? (
-          <span
-            className='flex h-[18px] items-center self-center rounded-[9px] bg-card px-1.5 font-bold text-[10px]'
-            style={{ color: rateColor(rateIndex) }}
-          >
-            {RATE_LABEL_LIST[rateIndex]}
-          </span>
+
+      <button
+        aria-label={insteadAriaLabel({ item, date, owner, rateIndex })}
+        aria-pressed={canPick ? isSelected : undefined}
+        className='flex min-w-0 flex-grow items-center gap-2.5 py-2.5 pl-3 text-left text-foreground'
+        disabled={!canPick}
+        onClick={() => onToggle?.(item.id)}
+        type='button'
+      >
+        {isSelectable ? (
+          <CheckBox isChecked={isSelected} isDisabled={!isOpen} />
         ) : null}
-        <span className='ml-auto font-bold text-base'>{amount}</span>
-      </span>
-      <span className='min-h-3.5 w-full truncate text-[11px] text-muted-foreground'>
-        {item.memo ?? ''}
-      </span>
+        <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
+          <span className='flex items-center gap-1.5 text-[15px]'>
+            <span
+              aria-hidden='true'
+              className='size-2 shrink-0 rounded-full'
+              style={{
+                backgroundColor: colorVar(item.typeColorClassificationName)
+              }}
+            />
+            <span className='truncate'>{categoryName(item)}</span>
+            <PlannedRecordMark
+              isPlannedRecord={item.isPlannedRecord}
+              size={13}
+            />
+            <span className='ml-auto shrink-0 font-bold text-base'>
+              {item.price.toLocaleString('ja-JP')}
+            </span>
+          </span>
+          <span className='truncate text-muted-foreground text-xs'>{sub}</span>
+        </span>
+      </button>
+
+      <RateCell
+        canPick={canPick}
+        isSettled={!isOpen}
+        onPick={() => onAssignOne?.(item.id)}
+        rateIndex={rateIndex}
+      />
+    </li>
+  );
+}
+
+// 行の右側。押すとこの 1 件だけの率選びに入る（左半分のまとめ選びと押し分ける）。
+function RateCell({
+  rateIndex,
+  canPick,
+  isSettled,
+  onPick
+}: {
+  rateIndex: number | undefined;
+  canPick: boolean;
+  isSettled: boolean;
+  onPick: () => void;
+}) {
+  const body = isSettled ? (
+    <span className='flex items-center gap-0.5 font-bold text-primary text-xs'>
+      <IconCheck aria-hidden='true' className='size-3' strokeWidth={3} />
+      {labels.settled}
+    </span>
+  ) : rateIndex === undefined ? (
+    <span
+      className={cn(
+        'flex h-7 items-center rounded-xl px-2.5 text-xs',
+        canPick
+          ? 'bg-muted font-semibold text-foreground'
+          : 'text-muted-foreground'
+      )}
+    >
+      {labels.list.rateUnset}
+    </span>
+  ) : (
+    <span
+      className='flex h-7 items-center gap-1.5 rounded-xl px-2.5 font-bold text-xs'
+      style={{
+        backgroundColor: rateTint(rateIndex),
+        color: rateColor(rateIndex)
+      }}
+    >
+      <span
+        aria-hidden='true'
+        className='size-2 rounded-full'
+        style={{ backgroundColor: rateColor(rateIndex) }}
+      />
+      {RATE_LABEL_LIST[rateIndex]}
+    </span>
+  );
+
+  // 率はカテゴリ・金額の行に並べる（行全体で中央寄せにすると、下のメモの行のぶん
+  // カテゴリより下にずれて見える）。h-6 は text-[15px] の 1 行の高さ。
+  const inner = (
+    <span className='flex w-[108px] shrink-0 items-start justify-end pt-2.5 pr-3.5'>
+      <span className='flex h-6 items-center'>{body}</span>
+    </span>
+  );
+
+  if (!canPick) {
+    return inner;
+  }
+  return (
+    <button
+      aria-label={labels.rateSheet.pick}
+      className='flex items-start text-foreground'
+      onClick={onPick}
+      type='button'
+    >
+      {inner}
     </button>
   );
 }
 
-// 読み上げ: 日付・カテゴリ・金額・誰の立替か。割当済みなら率、押せるなら操作を続ける。
+// チェックボックス。実体はボタンの中の飾りなので、input は置かず見た目だけ描く。
+function CheckBox({
+  isChecked,
+  isDisabled
+}: {
+  isChecked: boolean;
+  isDisabled: boolean;
+}) {
+  return (
+    <span
+      aria-hidden='true'
+      className={cn(
+        'flex size-5 shrink-0 items-center justify-center rounded-md border-2',
+        isDisabled && 'opacity-40',
+        isChecked
+          ? 'border-primary bg-primary text-primary-foreground'
+          : 'border-muted-foreground/40'
+      )}
+    >
+      {isChecked ? (
+        <IconCheck aria-hidden='true' className='size-3' strokeWidth={3.2} />
+      ) : null}
+    </span>
+  );
+}
+
+// 読み上げ: 日付・カテゴリ・金額・誰の立替か。割当済みなら率も添える。
 function insteadAriaLabel({
   item,
   date,
-  amount,
-  rateIndex,
-  isTappable
+  owner,
+  rateIndex
 }: {
   item: PairedRecordItem;
   date: string;
-  amount: string;
+  owner: string;
   rateIndex: number | undefined;
-  isTappable: boolean;
 }): string {
-  const who = item.isSelf ? labels.columns.mine : labels.columns.partner;
+  const amount = item.price.toLocaleString('ja-JP');
   return [
-    `${date} ${categoryName(item)} ${amount}円（${who}）`,
-    rateIndex === undefined ? null : `精算率 ${RATE_LABEL_LIST[rateIndex]}`,
-    isTappable ? labels.rateSheet.pick : null
+    `${date} ${categoryName(item)} ${amount}円（${owner}）`,
+    rateIndex === undefined ? null : `精算率 ${RATE_LABEL_LIST[rateIndex]}`
   ]
     .filter((part) => part !== null)
     .join(' ');
 }
 
-// カードの 1 行目: 日付と、右端に「未割当の印（丸）」か「精算済み」。
-function CardStatusLine({
-  date,
-  isNew,
-  isSettled
-}: {
-  date: string;
-  isNew: boolean;
-  isSettled: boolean;
-}) {
-  return (
-    <span className='flex w-full items-center gap-1 text-[11px] text-muted-foreground'>
-      {date}
-      {isNew ? (
-        <span
-          aria-hidden='true'
-          className='ml-auto size-2 rounded-full bg-primary'
-        />
-      ) : null}
-      {isSettled ? (
-        <span className='ml-auto flex items-center gap-0.5 font-bold text-primary'>
-          <IconCheck
-            aria-hidden='true'
-            className='size-[11px]'
-            strokeWidth={3}
-          />
-          {labels.settled}
-        </span>
-      ) : null}
-    </span>
-  );
+// 対象が揃って同じ率なら、その率をシートで選択中として示す。揃っていなければ示さない。
+function sharedRateIndex(
+  records: PairedRecordItem[],
+  rates: ReadonlyMap<Id, number>
+): number | undefined {
+  const first = rates.get(records[0]?.id ?? (0 as Id));
+  if (first === undefined) {
+    return undefined;
+  }
+  return records.every((record) => rates.get(record.id) === first)
+    ? first
+    : undefined;
 }

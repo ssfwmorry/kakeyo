@@ -4,7 +4,7 @@ import { requireAuth } from '@/features/auth/server/requireAuth';
 import { getDemoReferenceYearMonth } from '@/features/demo/server/date';
 import {
   getPairedRecords,
-  getPairPartnerName
+  getPairUserNames
 } from '@/features/record/server/services';
 import { SettlementScreen } from '@/features/summary/components/settlement-screen';
 import { getMethodCardList } from '@/features/summary/server/services';
@@ -26,10 +26,10 @@ export default async function SummarySettlementPage() {
   }
   const yearMonth = await getDemoReferenceYearMonth(session);
 
-  const [records, methods, partnerName] = await Promise.all([
+  const [records, methods, userNames] = await Promise.all([
     getPairedRecords(session, yearMonth),
     getMethodCardList(session),
-    getPairPartnerName(session)
+    getPairUserNames(session)
   ]);
 
   return (
@@ -39,7 +39,7 @@ export default async function SummarySettlementPage() {
       initialYearMonth={yearMonth}
       // 精算方法はペア共有の方法マスタにだけある。
       methods={methods.both.pair}
-      partnerName={partnerName}
+      userNames={userNames}
     />
   );
 }

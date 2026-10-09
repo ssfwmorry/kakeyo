@@ -3,6 +3,7 @@ import type { PairedRecordItem } from '@/features/record';
 import { RecordType } from '@/lib/shared/types/recordType';
 import {
   buildRateGroups,
+  insteadList,
   openSum,
   settlementStatus,
   splitPairedRecords,
@@ -62,6 +63,18 @@ describe('splitPairedRecords', () => {
   });
 });
 
+describe('insteadList', () => {
+  it('自分と相手の立替を日付昇順の 1 本に戻す', () => {
+    const buckets = splitPairedRecords([
+      item(1, 5, 1000),
+      item(2, 2, 500, { isSelf: false }),
+      shared(3, 10, 3000),
+      item(4, 8, 700, { isSelf: false })
+    ]);
+    expect(insteadList(buckets).map((r) => r.id)).toEqual([2, 1, 4]);
+  });
+});
+
 describe('openSum / settlementStatus', () => {
   it('未精算の立替だけを合計する', () => {
     expect(
@@ -108,12 +121,19 @@ describe('toAssignments / buildRateGroups', () => {
     ]);
   });
 
-  it('率ごとに集計し、チップに各 record の金額と立替者を持つ', () => {
-    const groups = buildRateGroups([
-      { id: 1, price: 1000, isMe: true, rateIndex: 5 },
-      { id: 2, price: 400, isMe: false, rateIndex: 5 },
-      { id: 3, price: 900, isMe: false, rateIndex: 0 }
-    ]);
+  it('率ごとに集計し、チップに各 record の金額と立替者と名前を持つ', () => {
+    const groups = buildRateGroups(
+      [
+        { id: 1, price: 1000, isMe: true, rateIndex: 5 },
+        { id: 2, price: 400, isMe: false, rateIndex: 5 },
+        { id: 3, price: 900, isMe: false, rateIndex: 0 }
+      ],
+      new Map([
+        [1, '食費 › 外食'],
+        [2, '日用品'],
+        [3, '交通費']
+      ])
+    );
     expect(groups).toHaveLength(2);
     expect(groups[0]).toMatchObject({
       rateIndex: 0,
@@ -130,8 +150,18 @@ describe('toAssignments / buildRateGroups', () => {
       diff: -300
     });
     expect(groups[1].chips).toEqual([
-      { id: 1, price: 1000, isMe: true },
-      { id: 2, price: 400, isMe: false }
+      { id: 1, price: 1000, isMe: true, name: '食費 › 外食' },
+      { id: 2, price: 400, isMe: false, name: '日用品' }
+    ]);
+  });
+
+  it('名前の引けない record はチップの名前を空にする', () => {
+    const groups = buildRateGroups(
+      [{ id: 1, price: 1000, isMe: true, rateIndex: 5 }],
+      new Map()
+    );
+    expect(groups[0].chips).toEqual([
+      { id: 1, price: 1000, isMe: true, name: '' }
     ]);
   });
 });
