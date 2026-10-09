@@ -1,12 +1,13 @@
 'use client';
 
 import { cn } from 'cn';
-import { IconBell, IconChevronRight } from '@/components/icons';
+import { IconBell, IconChevronRight, IconShare } from '@/components/icons';
 import type { DaySum } from '@/features/calendar';
 import { resolveDisplayIsPay } from '@/features/calendar/domain/record-sign';
 import { colorVar } from '@/features/master';
 import { useOpenNotifySheet } from '@/features/notify/components/notify-sheet-state';
 import type { PlanItem, ReminderItem } from '@/features/plan-reminder';
+import { planReminderLabels } from '@/features/plan-reminder/labels';
 import {
   isPartnerInstead,
   type NoteRecordDefault,
@@ -19,9 +20,9 @@ import { toRecordDefault } from '@/features/record/domain/record-default';
 
 // 選んだ日の予定・リマインダー・記録を 1 枚のカードに積む（原典 Calendar の日別カード）。
 //
-// 3 種が同じカードに同居し、左端の印だけで種類を見分ける
-// （予定 = 色の縦棒、リマインダー = ベル、記録 = 色タイル）。
-// 区切り線は左端の印の右から始まる（予定・リマインダーは 14、記録は 62）。
+// 3 種が同じカードに同居し、左端の印で種類を見分ける
+// （予定 = 色の縦棒、リマインダー = ベル、記録 = 色タイル）。縦棒は色の分類しか
+// 伝えないため、予定だけは右端に種類名も残す（ベルと色タイルは印だけで足りる）。
 
 export function DayDetailList({
   daySum,
@@ -100,6 +101,18 @@ function Divider({ inset }: { inset: 14 | 62 }) {
   );
 }
 
+// 縦棒とベルがカテゴリ色を帯びるので、共有の印はアクセント色に固定して読み分ける。
+function ShareMark() {
+  return (
+    <IconShare
+      aria-label='共有'
+      className='size-3.5 shrink-0 text-primary'
+      role='img'
+      strokeWidth={2}
+    />
+  );
+}
+
 function Chevron() {
   return (
     <IconChevronRight
@@ -113,8 +126,8 @@ function Chevron() {
 // 押すと編集シートが開く。
 //
 // メモは行の 2 段目に全文を出す。シートを開かないと読めないと、日を眺めるだけで毎回開くことになる。
-// メモの分だけ行が伸びるので高さは固定せず、名前と「予定」は上端に揃える
-// （縦中央だと、長いメモの横で宙に浮いて見える）。名前は行の見出しなので 1 行で留める。
+// メモの分だけ行が伸びるので高さは固定せず、縦棒と「予定」は上端に揃える
+// （縦中央だと、長いメモの横で宙に浮いて見える）。
 function PlanRow({
   plan,
   isLast,
@@ -144,10 +157,15 @@ function PlanRow({
           style={{ backgroundColor: colorVar(plan.planTypeColorName) }}
         />
         <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
-          <span className='truncate text-[15px]'>{plan.name}</span>
+          <span className='flex items-center gap-1.5 text-[15px]'>
+            <span className='truncate'>{plan.name}</span>
+            {plan.isPair ? <ShareMark /> : null}
+          </span>
           {memo === null ? null : <RowMemo memo={memo} />}
         </span>
-        <span className='shrink-0 text-muted-foreground text-xs'>予定</span>
+        <span className='shrink-0 text-muted-foreground text-xs'>
+          {planReminderLabels.heading.plan}
+        </span>
         <Chevron />
       </button>
       {isLast ? null : <Divider inset={14} />}
@@ -169,17 +187,18 @@ function ReminderRow({
   const body = (
     <>
       <IconBell
-        aria-hidden='true'
+        aria-label={planReminderLabels.heading.reminder}
         className={cn('size-4 shrink-0', memo === null ? null : 'mt-0.5')}
+        role='img'
         strokeWidth={2}
         style={{ color: colorVar(reminder.colorName) }}
       />
       <span className='flex min-w-0 flex-grow flex-col gap-0.5'>
-        <span className='truncate text-[15px]'>{reminder.name}</span>
+        <span className='flex items-center gap-1.5 text-[15px]'>
+          <span className='truncate'>{reminder.name}</span>
+          {reminder.isPair ? <ShareMark /> : null}
+        </span>
         {memo === null ? null : <RowMemo memo={memo} />}
-      </span>
-      <span className='shrink-0 text-muted-foreground text-xs'>
-        リマインダー
       </span>
       <Chevron />
     </>
