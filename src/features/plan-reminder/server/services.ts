@@ -13,7 +13,10 @@ import { planReorder } from '@/lib/shared/domain/reorder';
 import type { SessionData } from '@/lib/shared/types/auth';
 import type { Id } from '@/lib/shared/types/id';
 import { err, ok, type Result } from '@/lib/shared/types/result';
-import { calcNextReminderDate } from '../domain/reminder-condition';
+import {
+  calcNextReminderDate,
+  type ReminderRule
+} from '../domain/reminder-condition';
 import { groupPlanTypeList, groupReminderList } from '../grouping';
 import type {
   GroupedPlanTypeList,
@@ -206,12 +209,7 @@ export async function insertReminder(
     memo: string | null;
     colorId: Id;
     isPair: boolean;
-    condition: {
-      conditionType: number;
-      month: number | null;
-      monthDay: string | null;
-      baseType: number | null;
-    };
+    rule: ReminderRule;
   }
 ): Promise<Result<void, PlanReminderError>> {
   const owner = resolveOwner(session, input.isPair);
@@ -219,14 +217,14 @@ export async function insertReminder(
     return owner;
   }
   return withDemoWriteVoid(session, async () => {
-    await reminderRepo.insertReminderWithCondition({
+    await reminderRepo.insertReminder({
       name: input.name,
       date: input.date,
       memo: input.memo,
       colorClassificationId: input.colorId,
       userId: owner.data.userId,
       pairId: owner.data.pairId,
-      condition: input.condition
+      rule: input.rule
     });
     return ok(undefined);
   });
@@ -237,16 +235,12 @@ export async function deleteReminder(
   reminderId: Id
 ): Promise<Result<void, PlanReminderError>> {
   return withDemoWriteVoid(session, async () => {
-    // scope 内か検証し、削除に必要な condition_id もここで得る。
     const target = await reminderRepo.findReminderInScope(session, reminderId);
     if (!target) {
       return err('notInScope');
     }
     try {
-      await reminderRepo.deleteReminderWithCondition({
-        reminderId: target.id,
-        conditionId: target.conditionId
-      });
+      await reminderRepo.deleteReminder(target.id);
       return ok(undefined);
     } catch (error) {
       return err(toDeleteError(error));
@@ -275,10 +269,7 @@ export async function checkReminder(
         return err('notInScope');
       }
       const nextDate = calcNextReminderDate({
-        conditionType: target.conditionType,
-        month: target.month,
-        monthDay: target.monthDay,
-        baseType: target.baseType,
+        rule: target.rule,
         currentDate: target.date,
         today: todayJst()
       });

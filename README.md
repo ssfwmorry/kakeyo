@@ -4,8 +4,6 @@
 
 - 横断のコーディング規約・画面の動作確認手順: [AGENTS.md](AGENTS.md)
 - DB の定義（DDL・関数・データ・移行の記録）: [docs/database/](docs/database/)
-- 新デザイン適用の計画と決定事項: [docs/new-design/](docs/new-design/)
-- 移行後に残っている作業: [migration-plan/残タスク.md](migration-plan/残タスク.md)
 
 ## Project Setup
 

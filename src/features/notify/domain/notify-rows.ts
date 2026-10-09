@@ -12,16 +12,16 @@ export type NotifyRow = {
   id: number;
   name: string;
   colorName: string;
-  // 期日（YYYY-MM-DD）。
   date: string;
   memo: string | null;
-  // 今日から見て何日過ぎているか（1 以上）。
+  // 1 以上（当日分は一覧側が持つため 0 は現れない）。
   overdueDays: number;
   // 「確認」を押したあとの次の期日。条件が壊れていて計算できないときは null。
   nextDate: string | null;
 };
 
-// 期日を過ぎた（date < today）リマインダーを日付の昇順で並べる（README D12。当日分は一覧側）。
+// 期日を過ぎた（date < today）ものだけを日付の昇順で並べる。
+// 当日分はまだ消化の対象ではないので、設定の一覧側に任せてここには出さない。
 export function buildNotifyRows(
   reminders: ReminderItem[],
   today: string
@@ -37,10 +37,7 @@ export function buildNotifyRows(
       memo: reminder.memo,
       overdueDays: diffDaysJst(today, reminder.date),
       nextDate: calcNextReminderDate({
-        conditionType: reminder.conditionType,
-        month: reminder.month,
-        monthDay: reminder.monthDay,
-        baseType: reminder.baseType,
+        rule: reminder.rule,
         currentDate: reminder.date,
         today
       })

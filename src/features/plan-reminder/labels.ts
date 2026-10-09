@@ -29,19 +29,6 @@ export const planReminderLabels = {
     noPlanType: '設定画面でカテゴリを追加してください',
     planTypeSelect: 'カテゴリを選択'
   },
-  // reminder の条件表示・選択肢。
-  reminder: {
-    nextPlan: '次の予定',
-    afterMonths: '〜ヶ月後',
-    monthDay: '月日',
-    baseNow: 'リマインドのチェック日',
-    baseDate: 'リマインド日',
-    month: '月',
-    day: '日',
-    months: 'ヶ月後',
-    from: 'から',
-    nextYearPrefix: '来年の'
-  },
   // plan/reminder 固有の失敗分類の文言。
   error: {
     pairRequired: 'ペア設定が必要です'
@@ -58,6 +45,6 @@ export const planReminderLabels = {
     colorRequired: '色を選択してください',
     dateRequired: '日付を選択してください',
     periodInvalid: '終了日は開始日以降にしてください',
-    conditionInvalid: '次の予定の条件を入力してください'
+    conditionInvalid: '繰り返しの条件を入力してください'
   }
 } as const;

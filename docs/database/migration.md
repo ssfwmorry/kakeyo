@@ -401,7 +401,7 @@ alter table public.users add column supabase_user_uid uuid unique; -- NULL 許�
 drop table develop.short_cuts;
 ```
 
-本番 DB はまだ VUE 実装から三章されているので NG
+本番 DB はまだ VUE 実装から参照されているので NG
 
 ## 20261008\_開発 DB から reminders.reminder_type と plans.reminder_id を削除する
 
@@ -420,3 +420,50 @@ alter table develop.plans alter column plan_type_id set not null;
 ```
 
 `develop.get_plan_list` も reminder 結合を外して更新する。
+
+## 20261009\_開発 DB の conditions を廃止し reminders.rule(jsonb) に寄せる
+
+繰り返し条件を 2 パターン（〜ヶ月後 / 毎年 MM-DD）から 6 パターン
+（週ごと・第 N 曜日・月ごと・月末・毎年・先送り）へ拡張する。
+
+`conditions` は reminder 1 件に condition 1 件の 1:1 で、別テーブルである必然性がない。
+柔軟化すると `month` / `month_day` / `base_type` の 3 カラムでは表せず、カラムを足しても
+「どの条件型でどれが必須か」を DB 側で表現できない。条件の形は TypeScript の判別共用体 +
+Zod で保証するほうが正確なので、DB には jsonb として持たせ読み出し境界でパースする。
+
+```sql
+alter table develop.reminders add column rule jsonb not null default '{}'::jsonb;
+
+update develop.reminders r set rule = (
+  select case
+    -- 10:MONTH_DAY（毎年 MM-DD）
+    when c.condition_type = 10 then
+      jsonb_build_object('kind','year',
+        'month', split_part(c.month_day,'-',1)::int,
+        'day',   split_part(c.month_day,'-',2)::int)
+    -- 5:MONTH + 10:DATE（リマインド日から N ヶ月後）→ 新 month kind と意味が一致
+    when c.condition_type = 5 and c.base_type = 10 then
+      jsonb_build_object('kind','month','interval',c.month,
+        'day', extract(day from r.date)::int)
+    -- 5:MONTH + 5:NOW（チェックした日から N ヶ月後）
+    when c.condition_type = 5 and c.base_type = 5 then
+      jsonb_build_object('kind','afterCheck','months',c.month)
+  end
+  from develop.conditions c where c.id = r.condition_id
+);
+
+-- 0 件であることを確認してから次へ進む
+select count(*) from develop.reminders where rule = '{}'::jsonb;
+
+alter table develop.reminders drop column condition_id;
+alter table develop.reminders alter column rule drop default;
+-- RLS ポリシーはテーブルごと消えるので個別の drop policy は不要
+drop table develop.conditions;
+```
+
+`base_type=DATE`（リマインド日から N ヶ月後）は新しい `month` kind と意味が一致するので
+素直に移る。`day` は現在の `reminders.date` から取る。
+
+旧実装は `reminders.date` を基準に月加算していたため「一度ズレたら戻らない」
+（1/31 → 2/28 → 3/28 …）問題があったが、`month` kind は rule 側に `day` を保持するため
+2 月で 28 に丸めても 3 月は 31 に復帰する。

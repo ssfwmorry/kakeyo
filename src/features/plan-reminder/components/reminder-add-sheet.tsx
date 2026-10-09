@@ -3,7 +3,7 @@
 import { getFormProps, useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod/v4';
 import { cn } from 'cn';
-import { useEffect, useState } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import { useFormAction } from '@/components/form/use-form-action';
 import { useSubmissionErrorToast } from '@/components/form/use-submission-error-toast';
 import {
@@ -22,42 +22,78 @@ import { SheetSubmitButton } from '@/components/ui/sheet-submit-button';
 import type { ColorClassification } from '@/features/master';
 import { insertReminderAction } from '@/features/plan-reminder/actions';
 import { daysInMonthFixed } from '@/features/plan-reminder/domain/month-days';
-import {
-  BaseType,
-  ConditionType
+import type {
+  Nth,
+  ReminderRule,
+  Weekday
 } from '@/features/plan-reminder/domain/reminder-condition';
 import { reminderInsertSchema } from '@/features/plan-reminder/schemas';
-import { addDaysJst } from '@/lib/shared/domain/date';
-import { formatMonthDayWeekJa } from '@/lib/shared/domain/format';
+import {
+  addDaysJst,
+  nthOfMonthJst,
+  weekdayJst
+} from '@/lib/shared/domain/date';
+import {
+  formatMonthDayWeekJa,
+  weekdayLabelJa
+} from '@/lib/shared/domain/format';
 import { formatLocalDate, parseLocalDate } from '@/lib/shared/domain/localDate';
-import { type ReminderRule, summaryText } from '../domain/describe';
+import { summaryText } from '../domain/describe';
 
 // リマインダーの追加シート（原典 SetReminderAdd / SetReminderAddYearly）。
 //
 // 上から「名前・メモ」「色」「いつ（最初の日・次の日の決め方）」、要約、
 // 下端に張り付く「追加する」。編集は無く、内容を変えるときは削除して追加し直す。
 //
-// 「次の日」は 2 種: 〜か月後（チェックした日か、お知らせの日から数える）と 毎年（月日）。
-// 毎年に切り替えた瞬間に、最初の日の月日を初期値にする。
+// 「次の日」は 6 kind あるが、フラットな 6 択は横幅に収まらないので、nthWeek を
+// 「週ごと」配下、monthEnd を「月ごと」配下のトグルに畳んでトップレベルを 4 択にする。
 
-const MIN_MONTHS = 1;
-const MAX_MONTHS = 36;
+// month kind は特定の月に紐付かない（31 日を保持したまま短い月で押し込む）ので、
+// 日の上限は月に依らず 31 で固定する。
+const MAX_DAY_OF_MONTH = 31;
+
+// 上限は reminderRuleSchema の interval / months と揃える。
+const MIN_INTERVAL = 1;
+const MAX_WEEK_INTERVAL = 52;
+const MAX_MONTH_INTERVAL = 36;
 const DEFAULT_OFFSET_DAYS = 7;
 
-const CONDITION_OPTIONS = [
-  { value: 'month', label: '〜か月後' },
-  { value: 'year', label: '毎年' }
-] as const;
+type RuleTab = 'week' | 'month' | 'year' | 'afterCheck';
 
+const CONDITION_OPTIONS = [
+  { value: 'week', label: '週ごと' },
+  { value: 'month', label: '月ごと' },
+  { value: 'year', label: '毎年' },
+  { value: 'afterCheck', label: '先送り' }
+] as const satisfies readonly { value: RuleTab; label: string }[];
+
+const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6] as const satisfies readonly Weekday[];
+
+const NTH_OPTIONS = [
+  { value: 1, label: '第1' },
+  { value: 2, label: '第2' },
+  { value: 3, label: '第3' },
+  { value: 4, label: '第4' },
+  { value: 5, label: '第5' },
+  { value: 'last', label: '最終' }
+] as const satisfies readonly { value: Nth; label: string }[];
+
+// kind ごとの値を平坦に持ち、toRule で判別共用体に畳む。
 type Draft = {
   name: string;
   memo: string;
   date: string;
-  isYearly: boolean;
-  isFromDate: boolean;
-  months: number;
+  tab: RuleTab;
+  weekInterval: number;
+  weekday: Weekday;
+  isNthWeek: boolean;
+  nths: Nth[];
+  monthInterval: number;
+  monthDay: number;
+  isMonthEnd: boolean;
   yearMonth: number;
   yearDay: number;
+  afterMonths: number;
 };
 
 export function ReminderAddSheet({
@@ -89,11 +125,17 @@ export function ReminderAddSheet({
       name: '',
       memo: '',
       date,
-      isYearly: false,
-      isFromDate: false,
-      months: 1,
+      tab: 'month',
+      weekInterval: 1,
+      weekday: weekdayJst(date),
+      isNthWeek: false,
+      nths: [nthOfMonthJst(date)],
+      monthInterval: 1,
+      monthDay: first?.getDate() ?? 1,
+      isMonthEnd: false,
       yearMonth: (first?.getMonth() ?? 0) + 1,
-      yearDay: first?.getDate() ?? 1
+      yearDay: first?.getDate() ?? 1,
+      afterMonths: 1
     };
   });
   const patch = (next: Partial<Draft>) =>
@@ -191,45 +233,40 @@ export function ReminderAddSheet({
   );
 }
 
-// 入力中の値を DB の condition と同じ形にする（要約と hidden の両方がこれを使う）。
+// 平坦な Draft を判別共用体に畳む（要約と hidden の両方がこれを使う）。
 function toRule(draft: Draft): ReminderRule {
-  if (draft.isYearly) {
-    return {
-      conditionType: ConditionType.monthDay,
-      month: null,
-      monthDay: `${String(draft.yearMonth).padStart(2, '0')}-${String(draft.yearDay).padStart(2, '0')}`,
-      baseType: null
-    };
+  switch (draft.tab) {
+    case 'week':
+      return draft.isNthWeek
+        ? { kind: 'nthWeek', nths: draft.nths, weekday: draft.weekday }
+        : {
+            kind: 'week',
+            interval: draft.weekInterval,
+            weekday: draft.weekday
+          };
+    case 'month':
+      return draft.isMonthEnd
+        ? { kind: 'monthEnd', interval: draft.monthInterval }
+        : {
+            kind: 'month',
+            interval: draft.monthInterval,
+            day: draft.monthDay
+          };
+    case 'year':
+      return { kind: 'year', month: draft.yearMonth, day: draft.yearDay };
+    case 'afterCheck':
+      return { kind: 'afterCheck', months: draft.afterMonths };
   }
-  return {
-    conditionType: ConditionType.month,
-    month: draft.months,
-    monthDay: null,
-    baseType: draft.isFromDate ? BaseType.date : BaseType.now
-  };
 }
 
+// rule は JSON 1 本で送る（kind ごとに hidden を出し分けない）。
 function HiddenFields({ draft, rule }: { draft: Draft; rule: ReminderRule }) {
   return (
     <>
       <input name='name' readOnly type='hidden' value={draft.name} />
       <input name='memo' readOnly type='hidden' value={draft.memo} />
       <input name='date' readOnly type='hidden' value={draft.date} />
-      <input
-        name='conditionType'
-        readOnly
-        type='hidden'
-        value={rule.conditionType}
-      />
-      {rule.month === null ? null : (
-        <input name='month' readOnly type='hidden' value={rule.month} />
-      )}
-      {rule.baseType === null ? null : (
-        <input name='baseType' readOnly type='hidden' value={rule.baseType} />
-      )}
-      {rule.monthDay === null ? null : (
-        <input name='monthDay' readOnly type='hidden' value={rule.monthDay} />
-      )}
+      <input name='rule' readOnly type='hidden' value={JSON.stringify(rule)} />
     </>
   );
 }
@@ -327,7 +364,7 @@ function FirstDateRow({
   );
 }
 
-// 「次の日」の決め方。〜か月後はどの日から数えるかと月数、毎年は月日。
+// 「次の日」の決め方。トップレベル 4 択 + kind ごとのピッカー。
 function NextRuleBlock({
   draft,
   patch
@@ -335,15 +372,21 @@ function NextRuleBlock({
   draft: Draft;
   patch: (next: Partial<Draft>) => void;
 }) {
-  const setYearly = () => {
-    // 毎年に切り替えた瞬間は、最初の日の月日から始める。
+  // 切り替えた瞬間の初期値は「最初の日」から導く。
+  const selectTab = (tab: RuleTab) => {
     const first = parseLocalDate(draft.date);
+    const day = first?.getDate() ?? 1;
     patch({
-      isYearly: true,
-      yearMonth: (first?.getMonth() ?? 0) + 1,
-      yearDay: first?.getDate() ?? 1
+      tab,
+      ...(tab === 'week' && { weekday: weekdayJst(draft.date) }),
+      ...(tab === 'month' && { monthDay: day }),
+      ...(tab === 'year' && {
+        yearMonth: (first?.getMonth() ?? 0) + 1,
+        yearDay: day
+      })
     });
   };
+
   return (
     <div className='flex flex-col gap-2.5 border-line-soft border-t px-3.5 pt-2.5 pb-3.5'>
       <div className='flex items-center gap-2.5'>
@@ -357,81 +400,269 @@ function NextRuleBlock({
         <Segment
           className='flex-grow'
           label='次の日の決め方'
-          onChange={(value) =>
-            value === 'year' ? setYearly() : patch({ isYearly: false })
-          }
+          onChange={selectTab}
           options={CONDITION_OPTIONS}
           size='lg'
           tone='background'
-          value={draft.isYearly ? 'year' : 'month'}
+          value={draft.tab}
         />
       </div>
-      {draft.isYearly ? (
-        <YearlyPicker draft={draft} patch={patch} />
-      ) : (
-        <MonthlyPicker draft={draft} patch={patch} />
-      )}
+      <Picker draft={draft} patch={patch} />
     </div>
   );
 }
 
-function MonthlyPicker({
-  draft,
-  patch
-}: {
+type PickerProps = {
   draft: Draft;
   patch: (next: Partial<Draft>) => void;
-}) {
+};
+
+// tab ごとのピッカー。Record が網羅を強制するので、tab を増やすと追従漏れが型で出る。
+const PICKERS: Record<RuleTab, (props: PickerProps) => ReactElement> = {
+  week: WeekPicker,
+  month: MonthPicker,
+  year: YearlyPicker,
+  afterCheck: AfterCheckPicker
+};
+
+function Picker({ draft, patch }: PickerProps) {
+  const Selected = PICKERS[draft.tab];
+  return <Selected draft={draft} patch={patch} />;
+}
+
+// 週ごと。「第 N 曜日にする」を ON にすると nthWeek に変わる。
+function WeekPicker({ draft, patch }: PickerProps) {
+  // 最後の 1 つは外せない（空配列は不正なので解除を無視する）。
+  const toggleNth = (nth: Nth) => {
+    const has = draft.nths.includes(nth);
+    if (has && draft.nths.length === 1) {
+      return;
+    }
+    patch({
+      nths: has ? draft.nths.filter((v) => v !== nth) : [...draft.nths, nth]
+    });
+  };
+
   return (
     <div className='flex flex-col gap-2.5 pl-7'>
-      <fieldset aria-label='どの日から数えるか' className='flex gap-2'>
-        <BasePill
-          isSelected={!draft.isFromDate}
-          label='チェックした日から'
-          onClick={() => patch({ isFromDate: false })}
-        />
-        <BasePill
-          isSelected={draft.isFromDate}
-          label='リマインド日から'
-          onClick={() => patch({ isFromDate: true })}
-        />
-      </fieldset>
+      {draft.isNthWeek ? null : (
+        <div className='flex items-center gap-2.5'>
+          <Stepper
+            decLabel='間隔をへらす'
+            incLabel='間隔をふやす'
+            onChange={(weekInterval) => patch({ weekInterval })}
+            max={MAX_WEEK_INTERVAL}
+            min={MIN_INTERVAL}
+            value={draft.weekInterval}
+          />
+          <span className='text-[15px]'>週ごとの</span>
+        </div>
+      )}
+      <WeekdayRow
+        onChange={(weekday) => patch({ weekday })}
+        value={draft.weekday}
+      />
+      <CheckRow
+        isChecked={draft.isNthWeek}
+        label='第 N 曜日にする'
+        onChange={(isNthWeek) =>
+          patch({
+            isNthWeek,
+            // ON にした瞬間は、最初の日が属する週番号 1 つだけを入れる。
+            ...(isNthWeek ? { nths: [nthOfMonthJst(draft.date)] } : {})
+          })
+        }
+      />
+      {draft.isNthWeek ? (
+        <fieldset aria-label='第何週か' className='flex flex-wrap gap-1.5'>
+          {NTH_OPTIONS.map((option) => (
+            <TogglePill
+              isSelected={draft.nths.includes(option.value)}
+              key={option.label}
+              label={option.label}
+              onClick={() => toggleNth(option.value)}
+            />
+          ))}
+        </fieldset>
+      ) : null}
+    </div>
+  );
+}
+
+// 月ごと。「月末にする」を ON にすると monthEnd に変わる。
+function MonthPicker({ draft, patch }: PickerProps) {
+  return (
+    <div className='flex flex-col gap-2.5 pl-7'>
       <div className='flex items-center gap-2.5'>
-        <StepButton
-          label='1か月へらす'
-          onClick={() =>
-            patch({ months: Math.max(draft.months - 1, MIN_MONTHS) })
-          }
-          size={36}
-        >
-          −
-        </StepButton>
-        <span className='min-w-14 text-center font-bold text-[20px]'>
-          {draft.months}
-        </span>
-        <StepButton
-          label='1か月ふやす'
-          onClick={() =>
-            patch({ months: Math.min(draft.months + 1, MAX_MONTHS) })
-          }
-          size={36}
-        >
-          ＋
-        </StepButton>
-        <span className='text-[15px]'>か月後</span>
+        <Stepper
+          decLabel='間隔をへらす'
+          incLabel='間隔をふやす'
+          onChange={(monthInterval) => patch({ monthInterval })}
+          max={MAX_MONTH_INTERVAL}
+          min={MIN_INTERVAL}
+          value={draft.monthInterval}
+        />
+        <span className='text-[15px]'>か月ごとの</span>
+        {draft.isMonthEnd ? (
+          <span className='text-[15px]'>月末</span>
+        ) : (
+          <>
+            <Stepper
+              decLabel='前の日'
+              incLabel='次の日'
+              onChange={(monthDay) => patch({ monthDay })}
+              max={MAX_DAY_OF_MONTH}
+              min={1}
+              size={32}
+              value={draft.monthDay}
+            />
+            <span className='text-[15px]'>日</span>
+          </>
+        )}
       </div>
+      <CheckRow
+        isChecked={draft.isMonthEnd}
+        label='月末にする'
+        onChange={(isMonthEnd) => patch({ isMonthEnd })}
+      />
+    </div>
+  );
+}
+
+function AfterCheckPicker({ draft, patch }: PickerProps) {
+  return (
+    <div className='flex items-center gap-2.5 pl-7'>
+      <span className='text-[15px]'>チェックした日から</span>
+      <Stepper
+        decLabel='1か月へらす'
+        incLabel='1か月ふやす'
+        onChange={(afterMonths) => patch({ afterMonths })}
+        max={MAX_MONTH_INTERVAL}
+        min={MIN_INTERVAL}
+        value={draft.afterMonths}
+      />
+      <span className='text-[15px]'>か月後</span>
+    </div>
+  );
+}
+
+function WeekdayRow({
+  value,
+  onChange
+}: {
+  value: Weekday;
+  onChange: (weekday: Weekday) => void;
+}) {
+  return (
+    <fieldset aria-label='曜日' className='flex gap-1.5'>
+      {WEEKDAYS.map((weekday) => (
+        <TogglePill
+          isSelected={value === weekday}
+          key={weekday}
+          label={weekdayLabelJa(weekday)}
+          onClick={() => onChange(weekday)}
+        />
+      ))}
+    </fieldset>
+  );
+}
+
+function CheckRow({
+  label,
+  isChecked,
+  onChange
+}: {
+  label: string;
+  isChecked: boolean;
+  onChange: (isChecked: boolean) => void;
+}) {
+  return (
+    <label className='flex items-center gap-2 text-[14px] text-foreground'>
+      <input
+        checked={isChecked}
+        className='size-4 accent-primary'
+        onChange={(event) => onChange(event.target.checked)}
+        type='checkbox'
+      />
+      {label}
+    </label>
+  );
+}
+
+function TogglePill({
+  label,
+  isSelected,
+  onClick
+}: {
+  label: string;
+  isSelected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-pressed={isSelected}
+      className={cn(
+        'h-8 min-w-9 shrink-0 rounded-full px-2 font-semibold text-[13px]',
+        isSelected
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-background text-foreground'
+      )}
+      onClick={onClick}
+      type='button'
+    >
+      {label}
+    </button>
+  );
+}
+
+// −/+ で 1 ずつ動かす数値入力（min/max で丸める）。
+function Stepper({
+  value,
+  min,
+  max,
+  size = 36,
+  decLabel,
+  incLabel,
+  onChange
+}: {
+  value: number;
+  min: number;
+  max: number;
+  size?: 32 | 36;
+  decLabel: string;
+  incLabel: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className='flex items-center gap-1.5'>
+      <StepButton
+        label={decLabel}
+        onClick={() => onChange(Math.max(value - 1, min))}
+        size={size}
+      >
+        −
+      </StepButton>
+      <span
+        className={cn(
+          'text-center font-bold',
+          size === 36 ? 'min-w-10 text-[20px]' : 'min-w-6 text-[18px]'
+        )}
+      >
+        {value}
+      </span>
+      <StepButton
+        label={incLabel}
+        onClick={() => onChange(Math.min(value + 1, max))}
+        size={size}
+      >
+        ＋
+      </StepButton>
     </div>
   );
 }
 
 // 月と日は循環し、日はその月の日数で丸める（2 月は 28 日固定）。
-function YearlyPicker({
-  draft,
-  patch
-}: {
-  draft: Draft;
-  patch: (next: Partial<Draft>) => void;
-}) {
+function YearlyPicker({ draft, patch }: PickerProps) {
   const wrap = (value: number, min: number, max: number) =>
     value < min ? max : value > max ? min : value;
   const setMonth = (month: number) =>
@@ -480,32 +711,6 @@ function YearlyPicker({
       </StepButton>
       <span className='text-[15px]'>日</span>
     </div>
-  );
-}
-
-function BasePill({
-  label,
-  isSelected,
-  onClick
-}: {
-  label: string;
-  isSelected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      aria-pressed={isSelected}
-      className={cn(
-        'h-9 flex-grow basis-0 whitespace-nowrap rounded-full px-2.5 font-semibold text-[13px]',
-        isSelected
-          ? 'bg-primary text-primary-foreground'
-          : 'bg-background text-foreground'
-      )}
-      onClick={onClick}
-      type='button'
-    >
-      {label}
-    </button>
   );
 }
 

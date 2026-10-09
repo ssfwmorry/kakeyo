@@ -3,6 +3,7 @@ import {
   boolean,
   date,
   integer,
+  jsonb,
   pgTable,
   serial,
   smallint,
@@ -155,20 +156,13 @@ export const bankBalances = pgTable('bank_balances', {
     .notNull()
 });
 
-export const conditions = pgTable('conditions', {
-  id: serial('id').primaryKey(),
-  month: integer('month'),
-  monthDay: varchar('month_day', { length: 5 }),
-  conditionType: smallint('condition_type').notNull(),
-  baseType: smallint('base_type')
-});
-
 export const reminders = pgTable('reminders', {
   id: serial('id').primaryKey(),
   userId: varchar('user_id', { length: 28 }),
   pairId: integer('pair_id'),
   name: varchar('name', { length: 10 }).notNull(),
-  conditionId: integer('condition_id').notNull(),
+  // 繰り返し条件。形は ReminderRule（判別共用体）が正。
+  rule: jsonb('rule').notNull(),
   date: date('date', { mode: 'date' }).notNull(),
   memo: text('memo'),
   colorClassificationId: smallint('color_classification_id').notNull()

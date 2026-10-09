@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   addDaysJst,
+  addMonthsClampJst,
+  addMonthsOverflowJst,
+  addMonthsToYearMonthJst,
   dateInMonthJst,
   dateOnlyValueJst,
   dateWithCurrentTimeJst,
@@ -12,11 +15,14 @@ import {
   formatMonthDayJst,
   lastDayOfMonthJst,
   listDatesJst,
+  nthOfMonthJst,
+  nthWeekdayOfMonthJst,
   startOfDayJst,
   startOfMonthJst,
   startOfNextMonthJst,
   toDateStringJst,
-  toYearMonthJst
+  toYearMonthJst,
+  weekdayJst
 } from './date';
 
 describe('dateOnlyValueJst', () => {
@@ -232,5 +238,78 @@ describe('firstDayOfMonthJst / lastDayOfMonthJst', () => {
   it('閏年の 2 月は 29 日', () => {
     expect(lastDayOfMonthJst('2028-02-10')).toBe('2028-02-29');
     expect(lastDayOfMonthJst('2026-02-10')).toBe('2026-02-28');
+  });
+});
+
+describe('weekdayJst', () => {
+  it('0=日 … 6=土 を返す', () => {
+    expect(weekdayJst('2026-09-27')).toBe(0); // 日
+    expect(weekdayJst('2026-09-25')).toBe(5); // 金
+    expect(weekdayJst('2026-09-26')).toBe(6); // 土
+  });
+});
+
+describe('nthOfMonthJst', () => {
+  it('日からその月の第何週かを出す（1〜5 に収まる）', () => {
+    expect(nthOfMonthJst('2026-10-01')).toBe(1);
+    expect(nthOfMonthJst('2026-10-07')).toBe(1);
+    expect(nthOfMonthJst('2026-10-08')).toBe(2);
+    expect(nthOfMonthJst('2026-10-28')).toBe(4);
+    expect(nthOfMonthJst('2026-10-29')).toBe(5);
+    expect(nthOfMonthJst('2026-10-31')).toBe(5);
+  });
+});
+
+describe('nthWeekdayOfMonthJst', () => {
+  it('第 N 曜日を返す（2026-10 の水曜は 7, 14, 21, 28）', () => {
+    expect(nthWeekdayOfMonthJst('2026-10', 1, 3)).toBe('2026-10-07');
+    expect(nthWeekdayOfMonthJst('2026-10', 2, 3)).toBe('2026-10-14');
+    expect(nthWeekdayOfMonthJst('2026-10', 4, 3)).toBe('2026-10-28');
+  });
+
+  it('第 5 週が無い月は null', () => {
+    expect(nthWeekdayOfMonthJst('2026-10', 5, 3)).toBeNull();
+    // 2026-12 の水曜は 2, 9, 16, 23, 30 の 5 回ある。
+    expect(nthWeekdayOfMonthJst('2026-12', 5, 3)).toBe('2026-12-30');
+  });
+
+  it("'last' は月の最後の該当曜日", () => {
+    expect(nthWeekdayOfMonthJst('2026-10', 'last', 3)).toBe('2026-10-28');
+    expect(nthWeekdayOfMonthJst('2026-12', 'last', 3)).toBe('2026-12-30');
+  });
+
+  it('月初が該当曜日の月でも第 1 週を取り違えない', () => {
+    // 2026-05-01 は金曜。
+    expect(nthWeekdayOfMonthJst('2026-05', 1, 5)).toBe('2026-05-01');
+  });
+});
+
+describe('addMonthsOverflowJst', () => {
+  it('存在しない日は翌月へ繰り越す', () => {
+    expect(addMonthsOverflowJst('2026-08-31', 3)).toBe('2026-12-01');
+    expect(addMonthsOverflowJst('2026-01-31', 1)).toBe('2026-03-03');
+  });
+
+  it('存在する日はそのまま', () => {
+    expect(addMonthsOverflowJst('2026-09-25', 3)).toBe('2026-12-25');
+  });
+});
+
+describe('addMonthsClampJst', () => {
+  it('月末を超える day はその月の末日へ押し込む', () => {
+    expect(addMonthsClampJst('2026-01-31', 1, 31)).toBe('2026-02-28');
+    expect(addMonthsClampJst('2024-01-31', 1, 31)).toBe('2024-02-29');
+  });
+
+  it('day は元の値を保つので翌月に復帰する', () => {
+    expect(addMonthsClampJst('2026-02-28', 1, 31)).toBe('2026-03-31');
+  });
+});
+
+describe('addMonthsToYearMonthJst', () => {
+  it('年を跨いで進む', () => {
+    expect(addMonthsToYearMonthJst('2026-11', 1)).toBe('2026-12');
+    expect(addMonthsToYearMonthJst('2026-12', 1)).toBe('2027-01');
+    expect(addMonthsToYearMonthJst('2026-10', 15)).toBe('2028-01');
   });
 });

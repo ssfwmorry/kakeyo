@@ -112,6 +112,84 @@ export function lastDayOfMonthJst(dateStr: string): string {
   return dayjs(dateStr).endOf('month').format(DATE_FORMAT);
 }
 
+// YYYY-MM（暦月）を months ヶ月ずらす。暦月の文字列計算なので tz 変換は挟まない。
+export function addMonthsToYearMonthJst(
+  yearMonth: string,
+  months: number
+): string {
+  const total =
+    Number(yearMonth.slice(0, 4)) * 12 +
+    (Number(yearMonth.slice(5, 7)) - 1) +
+    months;
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}`;
+}
+
+// 曜日（0=日 … 6=土）と、月内で何番目かの週（1〜5 か最終週）。
+// 暦の概念なので feature ではなくここに置き、曜日を扱う層が共通で使う。
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type Nth = 1 | 2 | 3 | 4 | 5 | 'last';
+
+// YYYY-MM-DD（JST の暦日）の曜日。
+// 暦日の文字列そのものなので tz 変換は挟まない。
+export function weekdayJst(dateStr: string): Weekday {
+  // dayjs の day() は 0〜6 しか返さないので Weekday に収まる。
+  return dayjs(dateStr).day() as Weekday;
+}
+
+// 日（1〜31）が属する月で、その曜日の何番目か。1〜5 に必ず収まる。
+export function nthOfMonthJst(dateStr: string): Nth {
+  const day = Number(dateStr.slice(8, 10));
+  return (Math.floor((day - 1) / 7) + 1) as Nth;
+}
+
+// yearMonth（YYYY-MM）の「第 nth の weekday」を YYYY-MM-DD で返す。
+// 第 5 週が存在しない月は null（呼び出し側が候補から捨てる）。
+export function nthWeekdayOfMonthJst(
+  yearMonth: string,
+  nth: Nth,
+  weekday: Weekday
+): string | null {
+  const first = dayjs(`${yearMonth}-01`);
+  if (nth === 'last') {
+    const last = first.endOf('month');
+    // 末日から遡って直近の weekday。
+    return last
+      .subtract((last.day() - weekday + 7) % 7, 'day')
+      .format(DATE_FORMAT);
+  }
+  // 月初から最初の weekday を求め、(nth - 1) 週進める。
+  const offset = (weekday - first.day() + 7) % 7;
+  const target = first.add(offset + (nth - 1) * 7, 'day');
+  return target.month() === first.month() ? target.format(DATE_FORMAT) : null;
+}
+
+// YYYY-MM-DD に months ヶ月加算し、存在しない日は翌月へ繰り越す。
+// 「およそ N ヶ月後」という相対的な間隔なので、月末で手前に縮める（clamp）より
+// 溢れた分を送るほうが意図に合う（8/31 + 3 ヶ月 → 11/31 は無い → 12/1）。
+// 繰り越しは dateInMonthJst（day が月の日数を超えると翌月へ繰り上がる）がそのまま持つ性質。
+export function addMonthsOverflowJst(dateStr: string, months: number): string {
+  return dateInMonthJst(
+    dateStr.slice(0, 7),
+    months,
+    Number(dateStr.slice(8, 10))
+  );
+}
+
+// YYYY-MM-DD に months ヶ月加算し、その月の day 日にする（月末を超えるなら末日へ押し込む）。
+// day を rule 側に保持したまま呼ぶため、2 月で 28 に丸めても翌月は元の day に復帰する。
+export function addMonthsClampJst(
+  dateStr: string,
+  months: number,
+  day: number
+): string {
+  const [year, month] = dateStr.split('-').map(Number);
+  const shifted = dayjs(`${year}-${String(month).padStart(2, '0')}-01`).add(
+    months,
+    'month'
+  );
+  return shifted.date(Math.min(day, shifted.daysInMonth())).format(DATE_FORMAT);
+}
+
 // 2 つの暦日（YYYY-MM-DD）の差を日数で返す（a − b）。「N 日過ぎています」の算出に使う。
 // 暦日の文字列同士の計算なので tz 変換は挟まない。
 export function diffDaysJst(a: string, b: string): number {
@@ -149,6 +227,6 @@ const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'] as cons
 // 'YYYY-MM-DD' → 'M月D日(曜)'。
 // 暦日は JST の文字列そのものなので、tz 変換を挟まず暦日として曜日を引く。
 export function formatDateWithWeekdayJst(dateStr: string): string {
-  const weekday = WEEKDAY_LABELS[dayjs(dateStr).day()];
+  const weekday = WEEKDAY_LABELS[weekdayJst(dateStr)];
   return `${formatDateLabelJst(dateStr)}(${weekday})`;
 }

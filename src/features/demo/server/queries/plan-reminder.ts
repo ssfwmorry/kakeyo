@@ -89,11 +89,7 @@ function toReminderRow(row: DemoReminder): ReminderRow {
     colorClassificationId: row.colorId,
     colorName: colorName(row.colorId),
     pairId: row.pairId,
-    conditionId: row.id,
-    conditionType: row.condition.conditionType,
-    month: row.condition.month,
-    monthDay: row.condition.monthDay,
-    baseType: row.condition.baseType
+    rule: row.rule
   };
 }
 

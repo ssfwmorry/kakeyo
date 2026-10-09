@@ -25,11 +25,7 @@ function reminder(id: number, date: string): ReminderItem {
     colorClassificationId: 1,
     colorName: 'blue',
     isPair: false,
-    conditionId: 1,
-    conditionType: 1,
-    month: null,
-    monthDay: null,
-    baseType: null
+    rule: { kind: 'month', interval: 1, day: 1 }
   };
 }
 

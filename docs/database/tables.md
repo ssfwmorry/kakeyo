@@ -16,8 +16,7 @@
 - 40: [planned_records](#planned_records)
 - 45: [records(planned_records の後)](#records)
 - 50: [plan_types](#plan_types)
-- 52: [conditions](#conditions)
-- 53: [reminders(conditions の後)](#reminders)
+- 53: [reminders](#reminders)
 - 55: [plans(plan_types, reminders の後)](#plans)
 - 60: [memos](#memos)
 - 65: [banks](#banks)
@@ -654,51 +653,6 @@ create policy "develop.bank_balances all"
 ;
 ```
 
-### conditions
-
-#### schema
-
-| name           |  type   | size  | required | auto_increment |  key  | remarks                                       |
-| :------------- | :-----: | :---: | :------: | :------------: | :---: | :-------------------------------------------- |
-| id             |   int   |   -   |    v     |       v        |  PK   | -                                             |
-| condition_type | tinyint |   -   |    -     |       -        |   -   | 5(MONTH): ~ヶ月後, 10(MONTH_DAY): 月日        |
-| month          |   int   |   -   |    -     |       -        |   -   | N ヶ月後                                      |
-| month_day      | string  |   -   |    -     |       -        |   -   | 'MM-DD'                                       |
-| base_type      | tinyint |   -   |    -     |       -        |   -   | 5(NOW): 基準が現在日付, 10(DATE): 基準が date |
-
-##### 起こり得る状況
-
-| condition_type | month | month_day | base_type | 状況説明                        |
-| :------------: | :---: | :-------: | :-------: | :------------------------------ |
-|    5:MONTH     |   Q   |     -     |   5:NOW   | 現在日付から Q ヶ月後に次の予定 |
-|    5:MONTH     |   Q   |     -     |  10:DATE  | ある日付から Q ヶ月後に次の予定 |
-|  10:MONTH_DAY  |   -   |   MM-DD   |     -     | 翌年の MM-DD に次の予定         |
-
-#### migration
-
-```sql
--- migration-sort: 52
-drop table if exists develop.conditions cascade;
-create table develop.conditions (
-    id             serial  primary key,
-    month          int,
-    month_day      varchar(5),
-    condition_type smallint not null,
-    base_type      smallint
-);
-
-alter table develop.conditions
-    enable row level security;
-
-create policy "develop.conditions all"
-    on develop.conditions for all
-    to anon
-    using (
-        true
-    )
-;
-```
-
 ### reminders
 
 #### schema
@@ -709,10 +663,26 @@ create policy "develop.conditions all"
 | user_id                 | string  |   28   |    -     |       -        |        users.uid         | pair_id とどちらか必須                                                     |
 | pair_id                 |   int   |   -    |    -     |       -        |         pairs.id         | user_id とどちらか必須                                                     |
 | name                    | string  | max 10 |    v     |       -        |            -             | -                                                                          |
-| condition_id            |   int   |   -    |    v     |       -        |      conditions.id       | -                                                                          |
-| date                    |  date   |   -    |    v     |       -        |            -             | -                                                                          |
+| rule                    |  jsonb  |   -    |    v     |       -        |            -             | 繰り返し条件。形は ReminderRule（判別共用体）が正。下記参照                |
+| date                    |  date   |   -    |    v     |       -        |            -             | 直近（次回）の日付                                                         |
 | memo                    | string  |   -    |    -     |       -        |            -             | -                                                                          |
 | color_classification_id | tinyint |   -    |    v     |       -        | color_classifications.id | [定義](#color_classification)を参照                                        |
+
+##### rule の形
+
+繰り返し条件。DB 側では形を保証できないため、読み出し境界（リポジトリ）で必ず Zod
+（`ReminderRule`）にパースし、壊れていれば次回日付を計算しない扱いにする。
+
+| kind         | フィールド                        | 意味                                   |
+| :----------- | :-------------------------------- | :------------------------------------- |
+| `week`       | `interval` / `weekday`            | N 週間ごとの M 曜日（0=日）            |
+| `nthWeek`    | `nths[]` / `weekday`              | 第 N M 曜日（N は 1〜5 か `last`。複数可） |
+| `month`      | `interval` / `day`                | X ヶ月ごとの Y 日（月末超過は押し込み） |
+| `monthEnd`   | `interval`                        | X ヶ月ごとの月末                       |
+| `year`       | `month` / `day`                   | 毎年 M 月 D 日                         |
+| `afterCheck` | `months`                          | チェックした日から N ヶ月後（繰り越し） |
+
+第 2・第 4 水曜なら `{"kind": "nthWeek", "nths": [2, 4], "weekday": 3}`。
 
 #### migration
 
@@ -724,14 +694,13 @@ create table develop.reminders (
     user_id                 varchar(28),
     pair_id                 integer,
     name                    varchar(10) not null check (length(name) <= 10),
-    condition_id            integer     not null,
+    rule                    jsonb       not null,
     date                    date        not null,
     memo                    text,
     color_classification_id smallint    not null,
 
     foreign key (user_id) references develop.users (uid),
     foreign key (pair_id) references develop.pairs (id),
-    foreign key (condition_id) references develop.conditions (id),
     foreign key (color_classification_id) references develop.color_classifications (id)
 );
 

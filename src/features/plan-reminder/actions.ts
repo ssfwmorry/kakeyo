@@ -94,23 +94,14 @@ export async function insertReminderAction(
   }
   const session = await requireAuth();
   const isPair = await getEffectivePairMode(session);
-  const {
-    name,
-    colorId,
-    date,
-    memo,
-    conditionType,
-    month,
-    baseType,
-    monthDay
-  } = submission.value;
+  const { name, colorId, date, memo, rule } = submission.value;
   const result = await service.insertReminder(session, {
     name,
     date,
     memo,
     colorId,
     isPair,
-    condition: { conditionType, month, monthDay, baseType }
+    rule
   });
   revalidateSetting();
   return toResult(result, L.snackbar.created, submission.reply());

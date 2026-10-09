@@ -1,4 +1,4 @@
--- now: 2026-10-08 23:21
+-- now: 2026-10-09 11:40
 -- migration-sort: 1
 insert into develop.users (uid, mail)
 values

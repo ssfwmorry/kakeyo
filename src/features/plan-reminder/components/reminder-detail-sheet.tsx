@@ -81,7 +81,7 @@ export function ReminderDetailSheet({
               {formatMonthDayWeekJa(reminder.date, { today })}
             </span>
           </DetailRow>
-          <DetailRow label='その次'>{ruleText(reminder)}</DetailRow>
+          <DetailRow label='その次'>{ruleText(reminder.rule)}</DetailRow>
           {reminder.memo === null || reminder.memo === '' ? null : (
             <DetailRow isMultiline label='メモ'>
               <span className='whitespace-pre-wrap break-words leading-normal'>

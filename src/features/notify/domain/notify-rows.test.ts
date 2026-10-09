@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import type { ReminderItem } from '@/features/plan-reminder';
-import {
-  BaseType,
-  ConditionType
-} from '@/features/plan-reminder/domain/reminder-condition';
 import { buildNotifyRows } from './notify-rows';
 
 const TODAY = '2026-09-25';
@@ -17,11 +13,7 @@ function reminder(overrides: Partial<ReminderItem>): ReminderItem {
     colorClassificationId: 1,
     colorName: 'orange',
     isPair: false,
-    conditionId: 1,
-    conditionType: ConditionType.month,
-    month: 1,
-    monthDay: null,
-    baseType: BaseType.date,
+    rule: { kind: 'month', interval: 1, day: 20 },
     ...overrides
   };
 }
@@ -42,16 +34,26 @@ describe('buildNotifyRows', () => {
 
   it('過ぎた日数と次回日付を計算する', () => {
     const [row] = buildNotifyRows(
-      [reminder({ date: '2026-09-20', month: 1, baseType: BaseType.date })],
+      [
+        reminder({
+          date: '2026-09-20',
+          rule: { kind: 'month', interval: 1, day: 20 }
+        })
+      ],
       TODAY
     );
     expect(row.overdueDays).toBe(5);
     expect(row.nextDate).toBe('2026-10-20');
   });
 
-  it('「チェックした日から」は今日を基準にする', () => {
+  it('先送り（afterCheck）は今日を基準にする', () => {
     const [row] = buildNotifyRows(
-      [reminder({ date: '2026-09-20', month: 2, baseType: BaseType.now })],
+      [
+        reminder({
+          date: '2026-09-20',
+          rule: { kind: 'afterCheck', months: 2 }
+        })
+      ],
       TODAY
     );
     expect(row.nextDate).toBe('2026-11-25');
@@ -62,14 +64,20 @@ describe('buildNotifyRows', () => {
       [
         reminder({
           date: '2026-09-15',
-          conditionType: ConditionType.monthDay,
-          monthDay: '09-15',
-          month: null,
-          baseType: null
+          rule: { kind: 'year', month: 9, day: 15 }
         })
       ],
       TODAY
     );
     expect(row.nextDate).toBe('2027-09-15');
+  });
+
+  it('rule が壊れていれば nextDate は null（行自体は出す）', () => {
+    const [row] = buildNotifyRows(
+      [reminder({ date: '2026-09-20', rule: null })],
+      TODAY
+    );
+    expect(row.overdueDays).toBe(5);
+    expect(row.nextDate).toBeNull();
   });
 });

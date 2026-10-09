@@ -12,8 +12,13 @@ function parts(dateStr: string): { year: number; month: number; day: number } {
   return { year, month, day };
 }
 
+// 曜日番号（0=日 … 6=土）→ '日'〜'土'。曜日ラベルの単一の正。
+export function weekdayLabelJa(weekday: number): string {
+  return WEEKDAY_LABELS[weekday] ?? '';
+}
+
 function weekday(dateStr: string): string {
-  return WEEKDAY_LABELS[dayjs(dateStr).day()];
+  return weekdayLabelJa(dayjs(dateStr).day());
 }
 
 // 'YYYY-MM-DD' → '9月25日（金）'。日別見出し・入力の日付・削除確認の本文。

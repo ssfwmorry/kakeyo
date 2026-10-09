@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { entityIdSchema } from '@/lib/shared/domain/entityId';
-import { BaseType, ConditionType } from './domain/reminder-condition';
+import { reminderRuleSchema } from './domain/reminder-condition';
 import { planReminderLabels } from './labels';
 
 // plan / planType / reminder の各フォームの入力スキーマ。
@@ -55,65 +55,39 @@ export const planUpsertSchema = z
     }
   });
 
-// リマインダー insert。condition_type により month/monthDay/baseType の必須が変わるため superRefine で分岐。
-export const reminderInsertSchema = z
-  .object({
-    name: z
-      .string()
-      .trim()
-      .min(1, validation.reminderNameRequired)
-      .max(10, validation.reminderNameMax),
-    colorId: z.coerce
-      .number({ message: validation.colorRequired })
-      .int()
-      .positive(validation.colorRequired),
-    date: z.string().min(1, validation.dateRequired),
-    memo: optionalTrimmedText,
-    conditionType: z.coerce
-      .number()
-      .refine((v): v is ConditionType =>
-        Object.values(ConditionType).includes(v as ConditionType)
-      ),
-    // 〜ヶ月後（conditionType=month のとき使う。件数なので positive のまま）。
-    month: z
-      .union([z.coerce.number().int().positive(), z.literal('')])
-      .optional()
-      .transform((v) => (v === undefined || v === '' ? null : v)),
-    baseType: z
-      .union([z.coerce.number().int(), z.literal('')])
-      .optional()
-      .transform((v) => (v === undefined || v === '' ? null : v)),
-    // 月日 'MM-DD'（conditionType=monthDay のとき使う）。
-    monthDay: optionalTrimmedText
-  })
-  .superRefine((value, ctx) => {
-    if (value.conditionType === ConditionType.month) {
-      if (value.month === null || value.baseType === null) {
-        ctx.addIssue({
-          code: 'custom',
-          message: validation.conditionInvalid,
-          path: ['month']
-        });
+// リマインダー insert。繰り返し条件は hidden の JSON 文字列 1 本で受け、
+// パースしてから discriminatedUnion で検証する（kind ごとの必須項目は型が保証する）。
+export const reminderInsertSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, validation.reminderNameRequired)
+    .max(10, validation.reminderNameMax),
+  colorId: z.coerce
+    .number({ message: validation.colorRequired })
+    .int()
+    .positive(validation.colorRequired),
+  date: z.string().min(1, validation.dateRequired),
+  memo: optionalTrimmedText,
+  rule: z
+    .string()
+    .min(1, validation.conditionInvalid)
+    .transform((value, ctx) => {
+      try {
+        return JSON.parse(value) as unknown;
+      } catch {
+        ctx.addIssue({ code: 'custom', message: validation.conditionInvalid });
+        return z.NEVER;
       }
-      return;
-    }
-    if (value.conditionType === ConditionType.monthDay) {
-      if (value.monthDay === null) {
-        ctx.addIssue({
-          code: 'custom',
-          message: validation.conditionInvalid,
-          path: ['monthDay']
-        });
-      }
-    }
-  });
+    })
+    .pipe(reminderRuleSchema)
+});
 
 // 削除（id のみ）。plan / planType / reminder 共通。
 export const deleteSchema = z.object({
   id: entityIdSchema()
 });
 
-export { BaseType, ConditionType };
 export type PlanTypeUpsertInput = z.infer<typeof planTypeUpsertSchema>;
 export type PlanUpsertInput = z.infer<typeof planUpsertSchema>;
 export type ReminderInsertInput = z.infer<typeof reminderInsertSchema>;

@@ -37,11 +37,7 @@ export function groupReminderList(rows: ReminderRow[]): GroupedReminderList {
     colorClassificationId: row.colorClassificationId,
     colorName: row.colorName,
     isPair: row.pairId !== null,
-    conditionId: row.conditionId,
-    conditionType: row.conditionType,
-    month: row.month,
-    monthDay: row.monthDay,
-    baseType: row.baseType
+    rule: row.rule
   }));
   return {
     self: items.filter((item) => !item.isPair),

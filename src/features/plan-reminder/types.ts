@@ -1,4 +1,5 @@
 import type { Id } from '@/lib/shared/types/id';
+import type { ReminderRule } from './domain/reminder-condition';
 
 // plan / reminder 画面の FE 型（server-only を含まない。
 // Client Component / barrel / Vitest から利用可）。
@@ -33,7 +34,7 @@ export type PlanItem = {
   isPair: boolean;
 };
 
-// reminder + condition + 色名を束ねた表示用 1 件。
+// reminder + 色名を束ねた表示用 1 件。rule は壊れていれば null（表示・計算側が吸収する）。
 export type ReminderItem = {
   id: Id;
   name: string;
@@ -42,11 +43,7 @@ export type ReminderItem = {
   colorClassificationId: Id;
   colorName: string;
   isPair: boolean;
-  conditionId: Id;
-  conditionType: number;
-  month: number | null;
-  monthDay: string | null;
-  baseType: number | null;
+  rule: ReminderRule | null;
 };
 
 // 自分/ペア/全件に振り分けた reminder 一覧（self/pair/all）。

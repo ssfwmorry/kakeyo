@@ -1,4 +1,4 @@
--- now: 2026-10-08 23:06
+-- now: 2026-10-09 11:40
 -- migration-sort: 1
 drop table if exists develop.day_classifications cascade;
 
@@ -296,27 +296,6 @@ create policy "develop.plan_types all"
     )
 ;
 
--- migration-sort: 52
-drop table if exists develop.conditions cascade;
-create table develop.conditions (
-    id             serial  primary key,
-    month          int,
-    month_day      varchar(5),
-    condition_type smallint not null,
-    base_type      smallint
-);
-
-alter table develop.conditions
-    enable row level security;
-
-create policy "develop.conditions all"
-    on develop.conditions for all
-    to anon
-    using (
-        true
-    )
-;
-
 -- migration-sort: 53
 drop table if exists develop.reminders cascade;
 create table develop.reminders (
@@ -324,14 +303,13 @@ create table develop.reminders (
     user_id                 varchar(28),
     pair_id                 integer,
     name                    varchar(10) not null check (length(name) <= 10),
-    condition_id            integer     not null,
+    rule                    jsonb       not null,
     date                    date        not null,
     memo                    text,
     color_classification_id smallint    not null,
 
     foreign key (user_id) references develop.users (uid),
     foreign key (pair_id) references develop.pairs (id),
-    foreign key (condition_id) references develop.conditions (id),
     foreign key (color_classification_id) references develop.color_classifications (id)
 );
 
