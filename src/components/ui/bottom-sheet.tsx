@@ -16,8 +16,9 @@ import type { ReactNode } from 'react';
 //
 // 高さは 2 種類。どちらも中身が収まらなければ内側で縦にスクロールする:
 // - content: 内容に応じた高さ。上限は画面の 94%。
-// - full: 上端 56px を残して画面下端まで固定。入力フローのようにテンキーを下に
-//   張り付ける画面が使う。
+// - full: 上端 24px を残して画面下端まで固定。入力フローのようにテンキーを下に
+//   張り付ける画面が使う。背面が覗く帯をこれ以上広げると、その分だけ下端の送信ボタンが
+//   画面の外へ出る（375×667 では中身が収まり切らない）。
 //
 // full の中で下に張り付けたい要素（mt-auto）を持つ flex-1 の子は min-h-0 を付けない。
 // 付けると子が親の高さに縮んで中身だけがはみ出し、親のスクロールが効かない。
@@ -53,7 +54,7 @@ export function BottomSheetContent({
           className={cn(
             // シェルと同じ幅に収める。PC 幅で画面いっぱいに広がらないようにする。
             'flex w-full max-w-md flex-col rounded-t-[20px] bg-background text-foreground',
-            isFull ? 'h-[calc(100dvh-56px)]' : 'max-h-[94dvh]',
+            isFull ? 'h-[calc(100dvh-24px)]' : 'max-h-[94dvh]',
             className
           )}
           data-slot='bottom-sheet-content'

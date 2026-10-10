@@ -119,7 +119,7 @@ export function AmountStep({
   const canSubmit = !needsMethod && !needsMemo;
 
   return (
-    <form {...getFormProps(form)} className='flex flex-1 flex-col gap-3.5'>
+    <form {...getFormProps(form)} className='flex flex-1 flex-col gap-2'>
       {editingId === undefined ? null : (
         <input name='id' readOnly type='hidden' value={editingId} />
       )}

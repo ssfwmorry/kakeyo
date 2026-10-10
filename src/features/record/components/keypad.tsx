@@ -16,7 +16,7 @@ import {
 const DIGITS = [7, 8, 9, 4, 5, 6, 1, 2, 3] as const;
 
 const KEY_CLASS =
-  'h-12.5 rounded-xl font-medium text-[23px] text-foreground tabular-nums';
+  'h-12 rounded-xl font-medium text-[23px] text-foreground tabular-nums';
 
 export function Keypad({
   value,

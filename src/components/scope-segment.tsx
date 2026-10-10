@@ -10,6 +10,9 @@ import { IconLock } from '@/components/icons';
 //
 // isLocked のときは薄くして右に鍵を添え、押せない理由を lockedLabel で伝える。
 // hasPair が false なら出さない（共有側にデータが無いので切り替える意味がない・README D6）。
+//
+// 置き場所はどれも h44 のヘッダーなので、そこに収まる最大の高さを取る。
+// 入力の途中で押す切替なので、片手でも外さない大きさを優先する。
 
 export function ScopeSegment({
   isPair,
@@ -76,7 +79,7 @@ function SegmentButton({
     <button
       aria-pressed={isSelected}
       className={cn(
-        'h-7 rounded-[7px] px-3 font-semibold text-[13px]',
+        'h-8.5 rounded-[7px] px-3.5 font-semibold text-[14px]',
         isSelected
           ? 'bg-segment-on text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.12)]'
           : 'bg-transparent font-normal text-muted-foreground'

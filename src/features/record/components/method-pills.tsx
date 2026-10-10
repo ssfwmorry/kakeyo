@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from 'cn';
+import { IconCreditCard } from '@/components/icons';
 import { recordLabels } from '@/features/record/labels';
 import type { MethodCard } from '@/features/type-method';
 import type { Id } from '@/lib/shared/types/id';
@@ -26,7 +27,7 @@ export function MethodPills({
     );
   }
   return (
-    <div className='-mx-4 flex max-h-[87px] flex-wrap gap-1.5 overflow-y-auto px-4'>
+    <div className='flex max-h-[84px] min-w-0 flex-grow flex-wrap gap-1.5 overflow-y-auto'>
       {methods.map((method) => {
         const isSelected = method.id === methodId;
         return (
@@ -50,7 +51,8 @@ export function MethodPills({
   );
 }
 
-// 見出し付きの方法の候補。
+// 方法の候補。見出しの 1 行は縦の余裕を奪うので、代わりにピルの先頭へカードのアイコンを
+// 添えて何の並びかを示す。
 export function MethodField({
   isPay,
   methods,
@@ -63,18 +65,15 @@ export function MethodField({
   onChange: (methodId: Id) => void;
 }) {
   return (
-    <div className='flex shrink-0 flex-col gap-1.5'>
-      <FieldLabel>{isPay ? '支払方法' : '受取方法'}</FieldLabel>
+    <fieldset
+      aria-label={isPay ? '支払方法' : '受取方法'}
+      className='flex shrink-0 items-start gap-2'
+    >
+      <IconCreditCard
+        aria-hidden='true'
+        className='mt-[7px] size-4.5 shrink-0 text-muted-foreground'
+      />
       <MethodPills methodId={methodId} methods={methods} onChange={onChange} />
-    </div>
-  );
-}
-
-// 方法などの見出し。12px の補足色。
-export function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span className='font-semibold text-[12px] text-muted-foreground'>
-      {children}
-    </span>
+    </fieldset>
   );
 }

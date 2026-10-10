@@ -16,6 +16,8 @@ import { Spinner } from '@/components/ui/spinner';
 // 足りないように読めるため、押せない理由と処理中は別の状態として扱う。
 //
 // bar を付けると、全高固定のシートで下端に張り付く保存バー（地色の帯）に包む。
+// 余った高さを吸うのは上の金額行（mt-auto）に任せ、帯は上下とも固定の余白だけ持つ。
+// 下はホームインジケータと指の届く範囲を空ける床。env が 0 になる端末でもここは詰めない。
 
 export function SheetSubmitButton({
   label,
@@ -54,7 +56,7 @@ export function SheetSubmitButton({
   }
   return (
     <div
-      className='-mx-4 mt-auto shrink-0 bg-background px-4 pt-2.5'
+      className='-mx-4 shrink-0 bg-background px-4 pt-1.5'
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 34px)' }}
     >
       {button}

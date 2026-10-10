@@ -6,6 +6,8 @@ import { amountToneClass, formatPrice } from '@/lib/shared/domain/format';
 
 // テンキーの上の金額。左に「クリア」、右に大きな金額。
 // mt-auto を持ち、上の内容が短くてもテンキーごと下に張り付く。
+//
+// 画面の中で一番大きい字はここだけに持たせる（今いくら打ったかが入力中の唯一の問い）。
 
 export function AmountRow({
   isPay,
@@ -20,7 +22,7 @@ export function AmountRow({
   onClear: () => void;
 }) {
   return (
-    <div className='mt-auto flex h-14 shrink-0 items-center gap-2 px-1'>
+    <div className='mt-auto flex h-10 shrink-0 items-center gap-2 px-1'>
       <button
         aria-label='金額を0にする'
         className='flex h-9 shrink-0 items-center gap-1.5 rounded-[18px] bg-muted py-0 pr-3.5 pl-[11px] font-semibold text-[13px] text-foreground'
@@ -41,10 +43,10 @@ export function AmountRow({
           amountToneClass(isPay)
         )}
       >
-        <span className='whitespace-nowrap font-bold text-[44px] tracking-[-0.01em]'>
+        <span className='whitespace-nowrap font-bold text-[32px] tracking-[-0.01em]'>
           {formatPrice(price)}
         </span>
-        <span className='font-semibold text-lg'>円</span>
+        <span className='font-semibold text-base'>円</span>
       </output>
     </div>
   );
