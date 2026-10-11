@@ -15,7 +15,9 @@
     "deploy": "vercel --prod",
     "deploy:preview": "vercel",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "deploy:railway": "railway up",
+    "railway": "railway"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -47,6 +49,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
+    "@railway/cli": "^5.64.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
@@ -54,12 +57,16 @@
     "@types/react-dom": "^19",
     "dotenv": "^18.0.1",
     "drizzle-kit": "^0.31.11",
+    "railway": "^3.13.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vercel": "^60.0.1",
     "vitest": "^5.0.1"
   },
   "packageManager": "pnpm@10.17.0",
+  "engines": {
+    "node": "22.x"
+  },
   "pnpm": {
     "ignoredBuiltDependencies": [
       "sharp",
