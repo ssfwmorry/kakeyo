@@ -57,7 +57,9 @@ export function SheetSubmitButton({
   return (
     <div
       className='-mx-4 shrink-0 bg-background px-4 pt-1.5'
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 34px)' }}
+      style={{
+        paddingBottom: 'max(calc(env(safe-area-inset-bottom) + 10px), 34px)'
+      }}
     >
       {button}
     </div>
