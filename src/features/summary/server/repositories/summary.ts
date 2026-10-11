@@ -5,7 +5,7 @@ import type { SessionScope } from '@/lib/shared/types/auth';
 import type { PieSummaryQuery, TypeSummaryPeriodQuery } from '../../types';
 
 // 集計 6 本は record_type 0/5/10/15 分岐・is_pay・精算/立替の非対称処理の
-// CASE WHEN を改変せず生 SQL で書く（家計の数字ズレを防ぐ最重要ポイント）。
+// CASE WHEN をそのまま生 SQL で書く（家計の数字ズレを防ぐ最重要ポイント）。
 //
 // テーブルのスキーマ修飾（develop / public）は接続時の search_path に委ねる。
 //

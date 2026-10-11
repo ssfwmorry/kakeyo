@@ -43,6 +43,14 @@ export async function getMethodList(
 }
 
 // READ（画面用）。色分け・並べ替え・is_pair 判定に必要な列を含めて返す。
+// 色名は結合せず colorClassificationId を、isPair も pairId を渡して呼び出し側に委ねる。
+// self/pair のグルーピングは service 層が行うため、ここは sort 昇順のみ。
+//
+// 組み立てられる SQL:
+//
+//   select * from methods
+//   where methods.user_id = :userUid or methods.pair_id = :pairId
+//   order by methods.sort;
 export async function findMethodRows(
   scope: SessionScope
 ): Promise<MethodRow[]> {

@@ -69,7 +69,19 @@ function toPlanRow(row: PlanSelectedRow): PlanRow {
   };
 }
 
-// READ。期間（start_date が [start, end] の範囲）で絞る。
+// READ。組み立てられる SQL:
+//
+//   select plans.id, plans.start_date, plans.end_date, plans.name, plans.memo,
+//          plans.pair_id,
+//          plan_types.id, plan_types.name,
+//          color_classifications.name
+//   from plans
+//   inner join plan_types on plans.plan_type_id = plan_types.id
+//   inner join color_classifications on
+//       plan_types.color_classification_id = color_classifications.id
+//   where (plans.user_id = :userUid or plans.pair_id = :pairId)
+//       and plans.start_date between :start and :end
+//   order by plans.start_date;
 export async function findPlanRows(
   scope: SessionScope,
   range: { start: string; end: string }

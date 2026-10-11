@@ -189,7 +189,8 @@ function buildOwnerSqlFilter(
         )`;
 }
 
-// 1 ヶ月分の実体化。挿入行数を返す。userUid が null なら全ユーザーが対象（Cron 専用）。
+// 1 ヶ月分の実体化。挿入行数を返す。userUid が null なら
+// buildOwnerSqlFilter が空になり全ユーザーが対象
 async function insertRecordsFromPlannedRecords(
   yearMonth: string,
   userUid: string | null

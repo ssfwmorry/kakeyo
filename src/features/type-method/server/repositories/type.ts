@@ -58,9 +58,19 @@ export async function getTypeList(
 }
 
 // READ（画面用）。色分け・並べ替え・is_pair 判定に必要な列を含めて返す。
+// 色名の結合と isPair の算出は行わず、colorClassificationId / pairId を渡して
+// 呼び出し側に委ねる。
+//
+// 組み立てられる SQL（type × sub_type の横長行を TS 側で type ごとに畳み込む）:
+//
+//   select types.id, types.name, types.is_pay, types.sort,
+//          types.color_classification_id, types.pair_id,
+//          sub_types.id, sub_types.name, sub_types.sort
+//   from types
+//   left join sub_types on sub_types.type_id = types.id
+//   where types.user_id = :userUid or types.pair_id = :pairId
+//   order by types.sort, sub_types.sort;
 export async function findTypeRows(scope: SessionScope): Promise<TypeRow[]> {
-  // type と sub_type を 1 クエリで引き、type ごとに sub_type をまとめ直す。
-  // 並びは type.sort → sub_type.sort（どちらも昇順）。
   const rows = await db
     .select({
       id: types.id,

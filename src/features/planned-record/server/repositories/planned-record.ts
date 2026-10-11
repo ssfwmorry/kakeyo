@@ -87,8 +87,34 @@ type PlannedRecordSelectedRow = {
   userName: string | null;
 };
 
-// READ: 定期一覧（設定タブ用）。
-// self/pair の分けは service 側のグルーピングで行い、ここは各グループ内の sort 昇順のみ担う。
+// READ: 定期一覧（設定タブ用）。self/pair の分けは service 側のグルーピングで行う。
+// isSelf / isPair / pairUserName は user_id・pair_id から TS 側
+// （toPlannedRecordListItem）で導出する。
+//
+// 組み立てられる SQL:
+//
+//   select planned_records.id, planned_records.user_id, planned_records.pair_id,
+//          planned_records.is_pay, planned_records.price, planned_records.memo,
+//          planned_records.sort,
+//          day_classifications.id, day_classifications.name,
+//          methods.id, methods.name, method_color.name,
+//          types.id, types.name, type_color.name,
+//          sub_types.id, sub_types.name,
+//          users.name
+//   from planned_records
+//   inner join day_classifications on
+//       planned_records.day_classification_id = day_classifications.id
+//   inner join methods on planned_records.method_id = methods.id
+//   inner join color_classifications as method_color on
+//       methods.color_classification_id = method_color.id
+//   inner join types on planned_records.type_id = types.id
+//   inner join color_classifications as type_color on
+//       types.color_classification_id = type_color.id
+//   left join sub_types on planned_records.sub_type_id = sub_types.id
+//   left join users on planned_records.user_id = users.uid
+//   where planned_records.user_id = :userUid
+//       or planned_records.pair_id = :pairId
+//   order by planned_records.sort;
 export async function findPlannedRecordRows(
   scope: SessionScope
 ): Promise<PlannedRecordListItem[]> {

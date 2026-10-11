@@ -13,7 +13,7 @@ import (
 )
 
 var (
-  inputFiles []string= []string{"functions.md", "settings.md", "tables.md", "data.md"}
+  inputFiles []string= []string{"settings.md", "tables.md"}
 )
 
 const (

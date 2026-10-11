@@ -21,7 +21,20 @@ export type PlanTypeRow = {
   pairId: Id | null;
 };
 
-// READ（画面用）。色名を結合し sort 昇順で返す。is_pair は pairId の有無で判定。
+// READ（画面用）。isPair は pairId の有無で呼び出し側が判定する。
+//
+// 組み立てられる SQL:
+//
+//   select plan_types.id, plan_types.name, plan_types.sort,
+//          plan_types.color_classification_id,
+//          color_classifications.name as color_name,
+//          plan_types.pair_id
+//   from plan_types
+//   inner join color_classifications on
+//       plan_types.color_classification_id = color_classifications.id
+//   where plan_types.user_id = :userUid
+//       or plan_types.pair_id = :pairId
+//   order by plan_types.pair_id, plan_types.sort;
 export async function findPlanTypeRows(
   scope: SessionScope
 ): Promise<PlanTypeRow[]> {

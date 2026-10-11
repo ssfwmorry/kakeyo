@@ -504,3 +504,34 @@ drop table public.conditions;
 ```
 
 `public.get_plan_list`
+
+## 20261011_develop・public DB の RPC を削除
+
+Next.js 移行で RPC の呼び出しは全て TS 実装（Drizzle / 生 SQL）に置き換わり、
+Supabase RPC Functionは 使用していない。定義だけが DB に残っていたので削除する。
+
+```sql
+drop function if exists develop.swap_method(id1 int, id2 int);
+drop function if exists develop.swap_type(id1 int, id2 int);
+drop function if exists develop.swap_sub_type(id1 int, id2 int);
+drop function if exists develop.swap_plan_type(id1 int, id2 int);
+drop function if exists develop.swap_planned_record(id1 int, id2 int);
+drop function if exists develop.get_month_sum(input_user_id varchar(30), input_year_month varchar(7));
+drop function if exists develop.get_method_summary(input_user_id varchar(30), input_is_pay boolean, input_is_pair boolean, input_is_include_instead boolean, input_year varchar(5), input_month varchar(4));
+drop function if exists develop.get_type_summary(input_user_id varchar(30), input_is_pay boolean, input_is_pair boolean, input_is_include_instead boolean, input_year varchar(5), input_month varchar(4));
+drop function if exists develop.get_pay_and_income_list(input_user_id varchar(30), input_year varchar(5), input_is_pair boolean, input_is_include_instead boolean);
+drop function if exists develop.post_records(input_user_id varchar(30), input_year_month varchar(7));
+drop function if exists develop.get_plan_type_list(input_user_id varchar(30));
+drop function if exists develop.get_type_list(input_user_id varchar(30));
+drop function if exists develop.get_method_list(input_user_id varchar(30));
+drop function if exists develop.get_planned_record_list(input_user_id varchar(30));
+drop function if exists develop.get_plan_list(input_user_id varchar(30), input_start_date varchar(10), input_end_date varchar(10));
+drop function if exists develop.get_record_list(input_user_id varchar(30), input_start_datetime varchar(19), input_end_datetime varchar(19));
+drop function if exists develop.get_summarized_record_list(input_user_id varchar(30), input_is_pay boolean, input_is_type boolean, input_is_pair boolean, input_is_include_instead boolean, input_year_month varchar(8), input_id int, input_sub_type_id int);
+drop function if exists develop.get_sub_type_summary(input_year varchar(5), input_type_id int);
+drop function if exists develop.get_type_summary_period(input_user_id varchar(30), input_is_pay boolean, input_is_pair boolean, input_year varchar(5));
+drop function if exists develop.get_paired_record_list(input_user_id varchar(30), input_year_month varchar(8));
+drop function if exists develop.get_types; -- 以前の消し忘れが残っていたので削除
+
+-- 記載は省略しているが、publicも実行済み
+```

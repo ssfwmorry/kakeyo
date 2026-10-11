@@ -139,6 +139,27 @@ type RecordSelectedRow = {
 };
 
 // type / sub_type / user は任意（精算 record は type を持たない）なので左結合する。
+//
+// 取得系 3 本（カレンダー / 明細 / 精算）はこの select + join を土台に where だけが
+// 異なる。isSelf / isPair / pairUserName は user_id・pair_id から TS 側（toOwnership）
+// で導出する。
+//
+//   select records.id, records.user_id, records.pair_id,
+//          records.datetime, records.is_pay, records.price, records.memo,
+//          records.is_settled, records.record_type, records.planned_record_id,
+//          records.method_id, methods.name, method_color.name,
+//          records.type_id, types.name, type_color.name,
+//          records.sub_type_id, sub_types.name,
+//          users.name
+//   from records
+//   inner join methods on records.method_id = methods.id
+//   inner join color_classifications as method_color on
+//       methods.color_classification_id = method_color.id
+//   left join types on records.type_id = types.id
+//   left join color_classifications as type_color on
+//       types.color_classification_id = type_color.id
+//   left join sub_types on records.sub_type_id = sub_types.id
+//   left join users on records.user_id = users.uid
 function selectRecords() {
   return db
     .select(recordColumns)
@@ -178,7 +199,13 @@ function toOwnership(
 }
 
 // READ: 期間内 record（カレンダー用）。
-// datetime は [start, end]（両端含む）で絞る。scope は自分 or ペア。
+//
+// selectRecords に足す where:
+//
+//   where (records.user_id = :userUid or records.pair_id = :pairId)
+//       and records.datetime >= :start
+//       and records.datetime <= :end
+//   order by records.datetime;
 export async function getRecordList(
   scope: SessionScope,
   start: Date,
@@ -196,8 +223,19 @@ export async function getRecordList(
   return rows.map((row) => toRecordListItem(row, scope.userUid));
 }
 
-// READ: 条件検索 record（records 明細画面用）。
-// 精算(15)は取得されない。ペア関係 × 立替込みの分岐は where で表現する。
+// READ: 条件検索 record（records 明細画面用）。type 未設定の精算(15)は取得されない。
+//
+// selectRecords に足す where（target は buildSummarizedTargetWhere、
+// pair は buildSummarizedPairWhere が組み立てる）:
+//
+//   where (records.user_id = :userUid or records.pair_id = :pairId)
+//       and records.datetime >= :monthStart
+//       and records.datetime < :nextMonthStart
+//       and records.type_id is not null
+//       and records.is_pay = :isPay
+//       and <target>   -- type_id(+sub_type_id) または method_id の一致
+//       and <pair>     -- ペア関係 × 立替込みの 4 分岐
+//   order by records.datetime desc;
 export async function getSummarizedRecordList(
   scope: SessionScope,
   query: SummarizedRecordQuery
@@ -220,7 +258,14 @@ export async function getSummarizedRecordList(
 }
 
 // READ: ペアの record（精算画面用）。
-// pair_id を持つ record のみ。scope で自分のペアに限定。
+//
+// selectRecords に足す where:
+//
+//   where (records.user_id = :userUid or records.pair_id = :pairId)
+//       and records.pair_id is not null
+//       and records.datetime >= :monthStart
+//       and records.datetime < :nextMonthStart
+//   order by records.datetime desc;
 export async function getPairedRecordList(
   scope: SessionScope,
   yearMonth: string
